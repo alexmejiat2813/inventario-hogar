@@ -61,10 +61,24 @@ async function loadInventories() {
 async function loadUser() {
   const user = await apiFetch('GET', '/api/me');
   if (!user) return;
-  document.getElementById('user-name').textContent = user.name;
+
+  // Profile button
   if (user.photo) {
     const av = document.getElementById('user-avatar');
     av.src = user.photo; av.alt = user.name; av.hidden = false;
+  } else {
+    document.getElementById('avatar-placeholder').textContent = user.name?.[0] ?? '?';
+  }
+
+  // Dropdown header
+  document.getElementById('dropdown-name').textContent  = user.name  ?? '';
+  document.getElementById('dropdown-email').textContent = user.email ?? '';
+  if (user.photo) {
+    const da = document.getElementById('dropdown-avatar');
+    da.src = user.photo; da.alt = user.name; da.hidden = false;
+    document.getElementById('dropdown-avatar-ph').hidden = true;
+  } else {
+    document.getElementById('dropdown-avatar-ph').textContent = user.name?.[0] ?? '?';
   }
 }
 
@@ -114,6 +128,22 @@ async function handleJoin(e) {
   } finally {
     btn.disabled = false;
   }
+}
+
+// ── Profile dropdown ─────────────────────────────────────────────────────────
+
+function openProfileDropdown() {
+  document.getElementById('profile-dropdown').hidden = false;
+  document.getElementById('profile-btn').setAttribute('aria-expanded', 'true');
+}
+function closeProfileDropdown() {
+  document.getElementById('profile-dropdown').hidden = true;
+  document.getElementById('profile-btn').setAttribute('aria-expanded', 'false');
+}
+function toggleProfileDropdown() {
+  document.getElementById('profile-dropdown').hidden
+    ? openProfileDropdown()
+    : closeProfileDropdown();
 }
 
 // ── Modal helpers ─────────────────────────────────────────────────────────────
@@ -179,6 +209,7 @@ function initEvents() {
   // Escape key
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    closeProfileDropdown();
     document.querySelectorAll('.modal-overlay:not([hidden])').forEach(o => closeModal(o.id));
   });
 
@@ -188,8 +219,20 @@ function initEvents() {
     if (btn) enterInventory(parseInt(btn.dataset.id));
   });
 
+  // Profile dropdown
+  document.getElementById('profile-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleProfileDropdown();
+  });
+  document.addEventListener('click', e => {
+    if (!document.getElementById('profile-menu-wrap').contains(e.target)) {
+      closeProfileDropdown();
+    }
+  });
+
   // Logout
   document.getElementById('btn-logout').addEventListener('click', async () => {
+    closeProfileDropdown();
     await fetch('/auth/logout', { method: 'POST' });
     window.location.href = '/login';
   });
