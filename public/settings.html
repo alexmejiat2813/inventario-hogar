@@ -112,6 +112,11 @@
     .type-cantidad{ background: #dcfce7; color: #166534; }
 
     .empty-row td { text-align: center; color: #94a3b8; padding: 2.5rem 1rem; }
+    .section-note {
+      font-size: .875rem; color: #64748b; margin-bottom: 1rem;
+      padding: .75rem 1rem; background: #f8fafc; border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
 
     /* Modal */
     .modal-overlay {
@@ -206,6 +211,8 @@
       <button class="tab-btn active" data-tab="categories" data-i18n="settings.tabs.categories">Categorías</button>
       <button class="tab-btn"        data-tab="units"      data-i18n="settings.tabs.units">Unidades</button>
       <button class="tab-btn"        data-tab="catalog"    data-i18n="settings.tabs.catalog">Catálogo</button>
+      <button class="tab-btn"        data-tab="stores"     data-i18n="settings.tabs.stores">Establecimientos</button>
+      <button class="tab-btn"        data-tab="currency"   data-i18n="settings.tabs.currency">Moneda</button>
     </div>
   </div>
 
@@ -273,6 +280,86 @@
         </thead>
         <tbody id="catalog-tbody"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- ══ Tab: Establecimientos ══ -->
+  <div class="content" id="tab-stores" hidden>
+    <div class="section-head">
+      <h2 class="section-title" data-i18n="settings.stores.title">Establecimientos</h2>
+      <button class="btn btn-primary btn-sm" id="btn-add-store">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span data-i18n="settings.stores.add">+ Agregar establecimiento</span>
+      </button>
+    </div>
+    <p class="section-note stores-no-inv" hidden data-i18n="settings.stores.noInventory">Abrí un inventario para gestionar los establecimientos.</p>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th data-i18n="settings.stores.colEmoji">Icono</th>
+            <th data-i18n="settings.stores.colName">Nombre</th>
+            <th data-i18n="settings.stores.colActions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="stores-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ Tab: Moneda ══ -->
+  <div class="content" id="tab-currency" hidden>
+    <div class="section-head">
+      <h2 class="section-title" data-i18n="settings.currency.title">Moneda</h2>
+    </div>
+    <p class="section-note currency-no-inv" hidden data-i18n="settings.currency.noInventory">Abrí un inventario para configurar la moneda.</p>
+    <div class="currency-card" style="max-width:400px;">
+      <div class="form-group">
+        <label class="form-label" for="currency-select" data-i18n="settings.currency.label">Moneda del inventario activo</label>
+        <select class="form-select" id="currency-select">
+          <option value="USD">USD — $ (Dólar)</option>
+          <option value="CAD">CAD — C$ (Dólar Canadiense)</option>
+          <option value="EUR">EUR — € (Euro)</option>
+          <option value="GBP">GBP — £ (Libra)</option>
+          <option value="MXN">MXN — $ (Peso Mexicano)</option>
+          <option value="COP">COP — $ (Peso Colombiano)</option>
+          <option value="BRL">BRL — R$ (Real Brasileño)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-save-currency" style="margin-top:.25rem" data-i18n="settings.currency.save">Guardar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Establecimiento -->
+  <div class="modal-overlay" id="store-modal-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="store-modal-title" data-i18n="settings.stores.modal.addTitle">Agregar establecimiento</h2>
+        <button class="modal-close" id="store-modal-close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="store-form" novalidate>
+        <input type="hidden" id="store-id">
+        <div class="form-row">
+          <div class="form-group" style="grid-column:1/span 2">
+            <label class="form-label" for="store-name-input" data-i18n="settings.stores.modal.name">Nombre</label>
+            <input class="form-input" type="text" id="store-name-input"
+                   data-i18n-ph="settings.stores.modal.namePlaceholder"
+                   placeholder="Ej: Walmart" maxlength="60" required autocomplete="off">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="store-emoji-input" data-i18n="settings.stores.modal.emoji">Icono</label>
+          <input class="form-input" type="text" id="store-emoji-input"
+                 data-i18n-ph="settings.stores.modal.emojiPlaceholder"
+                 placeholder="🏪" maxlength="4" autocomplete="off">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" id="store-modal-cancel" data-i18n="settings.stores.modal.cancel">Cancelar</button>
+          <button type="submit" class="btn-save"   id="store-modal-save"   data-i18n="settings.stores.modal.save">Guardar</button>
+        </div>
+      </form>
     </div>
   </div>
 

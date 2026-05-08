@@ -1,9 +1,30 @@
 require('dotenv').config();
 const express  = require('express');
 const path     = require('path');
+const fs       = require('fs');
 const session  = require('express-session');
 const passport = require('./auth');
+const multer   = require('multer');
 const db       = require('./database');
+
+const RECEIPTS_DIR = path.join(__dirname, 'public', 'uploads', 'receipts');
+if (!fs.existsSync(RECEIPTS_DIR)) fs.mkdirSync(RECEIPTS_DIR, { recursive: true });
+
+const receiptStorage = multer.diskStorage({
+  destination: RECEIPTS_DIR,
+  filename(req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `receipt-${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+const uploadReceipt = multer({
+  storage: receiptStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter(req, file, cb) {
+    if (/^image\/(jpeg|jpg|png|webp|heic|heif)/.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Formato de imagen no válido'));
+  },
+});
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -110,9 +131,10 @@ app.post('/auth/logout', (req, res, next) => {
 });
 
 // ── Static assets ──────────────────────────────────────────────────────────────
-app.use('/css',     express.static(path.join(__dirname, 'public/css')));
-app.use('/js',      express.static(path.join(__dirname, 'public/js')));
-app.use('/locales', express.static(path.join(__dirname, 'public/locales')));
+app.use('/css',      express.static(path.join(__dirname, 'public/css')));
+app.use('/js',       express.static(path.join(__dirname, 'public/js')));
+app.use('/locales',  express.static(path.join(__dirname, 'public/locales')));
+app.use('/uploads',  express.static(path.join(__dirname, 'public/uploads')));
 
 const CATALOG_CATEGORIES = ['Alimentos', 'Bebidas', 'Aseo Personal', 'Aseo del Hogar', 'Alacena'];
 
@@ -140,6 +162,11 @@ app.get('/catalog', requireAuthPage, (req, res) =>
 app.get('/settings', requireAuthPage, (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'settings.html'))
 );
+
+app.get('/history', requireAuthPage, (req, res) => {
+  if (!req.session.activeInventoryId) return res.redirect('/inventories');
+  res.sendFile(path.join(__dirname, 'public', 'history.html'));
+});
 
 // ── All API routes require auth ────────────────────────────────────────────────
 app.use('/api', requireAuthApi);
@@ -240,7 +267,7 @@ app.delete('/api/inventories/:id/members/:userId', requireMember, requireOwner, 
 });
 
 // ── Products ───────────────────────────────────────────────────────────────────
-app.use(['/api/products', '/api/stats', '/api/shopping'], requireInventory);
+app.use(['/api/products', '/api/stats', '/api/shopping', '/api/stores', '/api/purchases'], requireInventory);
 
 app.get('/api/products', (req, res) => {
   try {
@@ -468,6 +495,115 @@ app.delete('/api/shopping', (req, res) => {
     res.json({ ok: true });
   } catch { res.status(500).json({ error: 'Error al limpiar la lista' }); }
 });
+
+// ── Inventory currency ─────────────────────────────────────────────────────────
+const VALID_CURRENCIES = ['CAD','USD','COP','EUR','MXN','BRL','GBP'];
+
+app.put('/api/inventories/:id/currency', requireMember, requireOwner, (req, res) => {
+  try {
+    const { currency } = req.body;
+    if (!VALID_CURRENCIES.includes(currency)) return res.status(400).json({ error: 'Moneda inválida' });
+    const inv = db.updateInventoryCurrency(req.inventoryId, currency);
+    res.json({ currency: inv.currency });
+  } catch { res.status(500).json({ error: 'Error al actualizar la moneda' }); }
+});
+
+// ── Stores ─────────────────────────────────────────────────────────────────────
+app.get('/api/stores', (req, res) => {
+  try { res.json(db.getStores(req.inventoryId)); }
+  catch { res.status(500).json({ error: 'Error al obtener establecimientos' }); }
+});
+
+app.post('/api/stores', requireEditorOrOwner, (req, res) => {
+  try {
+    const { name, emoji } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    res.status(201).json(db.createStore({ inventoryId: req.inventoryId, name: name.trim(), emoji: emoji || '🏪' }));
+  } catch { res.status(500).json({ error: 'Error al crear el establecimiento' }); }
+});
+
+app.put('/api/stores/:storeId', requireEditorOrOwner, (req, res) => {
+  try {
+    const storeId = parseInt(req.params.storeId);
+    if (isNaN(storeId)) return res.status(400).json({ error: 'ID inválido' });
+    const store = db.getStore(storeId);
+    if (!store || store.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Establecimiento no encontrado' });
+    const { name, emoji } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    res.json(db.updateStore(storeId, { name: name.trim(), emoji: emoji || '🏪' }));
+  } catch { res.status(500).json({ error: 'Error al actualizar el establecimiento' }); }
+});
+
+app.delete('/api/stores/:storeId', requireEditorOrOwner, (req, res) => {
+  try {
+    const storeId = parseInt(req.params.storeId);
+    if (isNaN(storeId)) return res.status(400).json({ error: 'ID inválido' });
+    const store = db.getStore(storeId);
+    if (!store || store.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Establecimiento no encontrado' });
+    db.deleteStore(storeId);
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Error al eliminar el establecimiento' }); }
+});
+
+// ── Purchases ──────────────────────────────────────────────────────────────────
+app.get('/api/purchases/summary', (req, res) => {
+  try { res.json(db.getMonthlySummary(req.inventoryId)); }
+  catch { res.status(500).json({ error: 'Error al obtener resumen' }); }
+});
+
+app.get('/api/purchases', (req, res) => {
+  try {
+    const { month, store_id } = req.query;
+    res.json(db.getPurchaseSessions(req.inventoryId, {
+      month:   month    || null,
+      storeId: store_id ? parseInt(store_id) : null,
+    }));
+  } catch { res.status(500).json({ error: 'Error al obtener historial' }); }
+});
+
+app.post('/api/purchases', requireEditorOrOwner, (req, res) => {
+  try {
+    const { items, currency, purchase_date } = req.body;
+    if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
+    const session = db.createPurchaseSession({
+      inventoryId:  req.inventoryId,
+      userId:       req.user.id,
+      items,
+      currency:     currency     || 'USD',
+      purchaseDate: purchase_date || new Date().toISOString().slice(0,10),
+      receiptImage: null,
+    });
+    res.status(201).json(session);
+  } catch { res.status(500).json({ error: 'Error al registrar la compra' }); }
+});
+
+app.get('/api/purchases/:sessionId', (req, res) => {
+  try {
+    const sessionId = parseInt(req.params.sessionId);
+    if (isNaN(sessionId)) return res.status(400).json({ error: 'ID inválido' });
+    const session = db.getPurchaseSession(sessionId);
+    if (!session || session.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Sesión no encontrada' });
+    res.json(session);
+  } catch { res.status(500).json({ error: 'Error al obtener la sesión' }); }
+});
+
+app.post('/api/purchases/:sessionId/receipt', requireEditorOrOwner,
+  uploadReceipt.single('receipt'),
+  (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      if (isNaN(sessionId)) return res.status(400).json({ error: 'ID inválido' });
+      const session = db.getPurchaseSession(sessionId);
+      if (!session || session.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Sesión no encontrada' });
+      if (!req.file) return res.status(400).json({ error: 'No se recibió imagen' });
+      const imagePath = '/uploads/receipts/' + req.file.filename;
+      db.updateReceiptImage(sessionId, imagePath);
+      res.json({ receipt_image: imagePath });
+    } catch (err) {
+      res.status(500).json({ error: err.message || 'Error al subir la imagen' });
+    }
+  }
+);
 
 app.listen(PORT, () => {
   console.log('\n🏠  Inventario Hogar');

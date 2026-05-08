@@ -115,6 +115,7 @@
     "back": "Volver",
     "title": "Lista de compras",
     "clear": "Limpiar",
+    "registerBtn": "Registrar compra",
     "empty": {
       "title": "¡Todo está bien abastecido!",
       "sub": "Ningún producto está por debajo del mínimo.\nEl inventario está completo."
@@ -132,6 +133,27 @@
       "save": "Guardar",
       "saving": "Guardando…",
       "updated": "Cantidad actualizada"
+    },
+    "register": {
+      "title": "Confirmar compra",
+      "total": "Total",
+      "noStore": "Sin establecimiento",
+      "receipt": "Foto del recibo (opcional)",
+      "receiptBtn": "Subir foto",
+      "receiptChange": "Cambiar foto",
+      "receiptRemove": "Quitar",
+      "cancel": "Cancelar",
+      "confirm": "Registrar compra",
+      "confirming": "Registrando…",
+      "success": "Compra registrada",
+      "error": "Error al registrar la compra"
+    },
+    "fields": {
+      "store": "Establecimiento",
+      "noStore": "Sin establecimiento",
+      "qty": "Cantidad",
+      "price": "Precio unit.",
+      "subtotal": "Subtotal"
     },
     "reset": "Lista reiniciada",
     "loadError": "No se pudo cargar la lista"
@@ -229,13 +251,39 @@
       "duplicate": "Ya existe un producto con ese nombre"
     }
   },
+  "history": {
+    "title": "Historial de compras",
+    "back": "Inventario",
+    "empty": {
+      "title": "Sin historial",
+      "sub": "Aún no hay compras registradas."
+    },
+    "filter": {
+      "allMonths": "Todos los meses",
+      "allStores": "Todos los establecimientos"
+    },
+    "summary": {
+      "thisMonth": "Este mes",
+      "lastMonth": "Mes anterior",
+      "purchases": "compras",
+      "noData": "—"
+    },
+    "session": {
+      "product": "producto",
+      "products": "productos",
+      "viewReceipt": "Ver recibo",
+      "noStore": "Sin establecimiento"
+    }
+  },
   "settings": {
     "title": "Configuración",
     "back": "Atrás",
     "tabs": {
       "categories": "Categorías",
       "units": "Unidades",
-      "catalog": "Catálogo"
+      "catalog": "Catálogo",
+      "stores": "Establecimientos",
+      "currency": "Moneda"
     },
     "categories": {
       "title": "Categorías",
@@ -308,6 +356,38 @@
         "deleted": "Producto eliminado del catálogo",
         "confirmDelete": "¿Eliminar \"{{name}}\" del catálogo?"
       }
+    },
+    "stores": {
+      "title": "Establecimientos",
+      "add": "+ Agregar establecimiento",
+      "noInventory": "Abrí un inventario para gestionar los establecimientos.",
+      "colEmoji": "Icono",
+      "colName": "Nombre",
+      "colActions": "Acciones",
+      "empty": "No hay establecimientos",
+      "modal": {
+        "addTitle": "Agregar establecimiento",
+        "editTitle": "Editar establecimiento",
+        "name": "Nombre",
+        "namePlaceholder": "Ej: Walmart",
+        "emoji": "Icono",
+        "emojiPlaceholder": "🏪",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "saving": "Guardando…",
+        "added": "Establecimiento agregado",
+        "updated": "Establecimiento actualizado",
+        "deleted": "Establecimiento eliminado",
+        "confirmDelete": "¿Eliminar \"{{name}}\"?"
+      }
+    },
+    "currency": {
+      "title": "Moneda",
+      "label": "Moneda del inventario activo",
+      "noInventory": "Abrí un inventario para configurar la moneda.",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "saved": "Moneda actualizada"
     }
   },
   "error": {

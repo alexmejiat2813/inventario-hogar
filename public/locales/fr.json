@@ -115,6 +115,7 @@
     "back": "Retour",
     "title": "Liste de courses",
     "clear": "Effacer",
+    "registerBtn": "Enregistrer l'achat",
     "empty": {
       "title": "Tout est bien approvisionné !",
       "sub": "Aucun produit n'est en dessous du minimum.\nL'inventaire est complet."
@@ -132,6 +133,27 @@
       "save": "Enregistrer",
       "saving": "Enregistrement…",
       "updated": "Quantité mise à jour"
+    },
+    "register": {
+      "title": "Confirmer l'achat",
+      "total": "Total",
+      "noStore": "Sans établissement",
+      "receipt": "Photo du ticket (optionnel)",
+      "receiptBtn": "Télécharger une photo",
+      "receiptChange": "Changer la photo",
+      "receiptRemove": "Supprimer",
+      "cancel": "Annuler",
+      "confirm": "Enregistrer l'achat",
+      "confirming": "Enregistrement…",
+      "success": "Achat enregistré",
+      "error": "Erreur lors de l'enregistrement"
+    },
+    "fields": {
+      "store": "Établissement",
+      "noStore": "Sans établissement",
+      "qty": "Quantité",
+      "price": "Prix unit.",
+      "subtotal": "Sous-total"
     },
     "reset": "Liste réinitialisée",
     "loadError": "Impossible de charger la liste"
@@ -229,13 +251,39 @@
       "duplicate": "Un produit avec ce nom existe déjà"
     }
   },
+  "history": {
+    "title": "Historique des achats",
+    "back": "Inventaire",
+    "empty": {
+      "title": "Aucun historique",
+      "sub": "Aucun achat enregistré pour l'instant."
+    },
+    "filter": {
+      "allMonths": "Tous les mois",
+      "allStores": "Tous les établissements"
+    },
+    "summary": {
+      "thisMonth": "Ce mois",
+      "lastMonth": "Mois précédent",
+      "purchases": "achats",
+      "noData": "—"
+    },
+    "session": {
+      "product": "produit",
+      "products": "produits",
+      "viewReceipt": "Voir le ticket",
+      "noStore": "Sans établissement"
+    }
+  },
   "settings": {
     "title": "Paramètres",
     "back": "Retour",
     "tabs": {
       "categories": "Catégories",
       "units": "Unités",
-      "catalog": "Catalogue"
+      "catalog": "Catalogue",
+      "stores": "Établissements",
+      "currency": "Devise"
     },
     "categories": {
       "title": "Catégories",
@@ -308,6 +356,38 @@
         "deleted": "Produit supprimé du catalogue",
         "confirmDelete": "Supprimer « {{name}} » du catalogue ?"
       }
+    },
+    "stores": {
+      "title": "Établissements",
+      "add": "+ Ajouter un établissement",
+      "noInventory": "Ouvrez un inventaire pour gérer les établissements.",
+      "colEmoji": "Icône",
+      "colName": "Nom",
+      "colActions": "Actions",
+      "empty": "Aucun établissement",
+      "modal": {
+        "addTitle": "Ajouter un établissement",
+        "editTitle": "Modifier l'établissement",
+        "name": "Nom",
+        "namePlaceholder": "Ex : Walmart",
+        "emoji": "Icône",
+        "emojiPlaceholder": "🏪",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "added": "Établissement ajouté",
+        "updated": "Établissement mis à jour",
+        "deleted": "Établissement supprimé",
+        "confirmDelete": "Supprimer « {{name}} » ?"
+      }
+    },
+    "currency": {
+      "title": "Devise",
+      "label": "Devise de l'inventaire actif",
+      "noInventory": "Ouvrez un inventaire pour configurer la devise.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Devise mise à jour"
     }
   },
   "error": {

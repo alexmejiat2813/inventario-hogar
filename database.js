@@ -87,9 +87,46 @@ db.exec(`
     checked_at   TEXT,
     UNIQUE(inventory_id, product_id)
   );
+
+  CREATE TABLE IF NOT EXISTS stores (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id INTEGER NOT NULL REFERENCES inventories(id) ON DELETE CASCADE,
+    name         TEXT    NOT NULL,
+    emoji        TEXT    NOT NULL DEFAULT '🏪',
+    created_at   TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS purchase_sessions (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id   INTEGER NOT NULL REFERENCES inventories(id) ON DELETE CASCADE,
+    user_id        INTEGER NOT NULL REFERENCES users(id),
+    total_amount   REAL    NOT NULL DEFAULT 0,
+    currency       TEXT    NOT NULL DEFAULT 'USD',
+    purchase_date  TEXT    NOT NULL,
+    receipt_image  TEXT,
+    created_at     TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS purchase_items (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id      INTEGER NOT NULL REFERENCES purchase_sessions(id) ON DELETE CASCADE,
+    product_id      INTEGER REFERENCES products(id)  ON DELETE SET NULL,
+    product_name    TEXT    NOT NULL,
+    store_id        INTEGER REFERENCES stores(id)    ON DELETE SET NULL,
+    quantity_bought REAL    NOT NULL DEFAULT 0,
+    unit            TEXT    NOT NULL DEFAULT 'unidades',
+    unit_price      REAL,
+    subtotal        REAL,
+    created_at      TEXT    DEFAULT (datetime('now','localtime'))
+  );
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
+const invCols = db.prepare('PRAGMA table_info(inventories)').all().map(c => c.name);
+if (!invCols.includes('currency')) {
+  db.exec("ALTER TABLE inventories ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'");
+}
+
 const productCols = db.prepare('PRAGMA table_info(products)').all().map(c => c.name);
 if (!productCols.includes('inventory_id')) {
   db.exec('ALTER TABLE products ADD COLUMN inventory_id INTEGER REFERENCES inventories(id) ON DELETE CASCADE');
@@ -609,5 +646,130 @@ module.exports = {
     const catMap = Object.fromEntries(raw.map(r => [r.category, r.count]));
     const cats = db.prepare('SELECT name FROM categories ORDER BY name').all().map(c => c.name);
     return { total, critical, byCategory: cats.map(cat => ({ category: cat, count: catMap[cat] || 0 })) };
+  },
+
+  // ── Inventory currency ─────────────────────────────────────────────────────
+  updateInventoryCurrency(inventoryId, currency) {
+    db.prepare('UPDATE inventories SET currency = ? WHERE id = ?').run(currency, inventoryId);
+    return this.getInventory(inventoryId);
+  },
+
+  // ── Stores ─────────────────────────────────────────────────────────────────
+  getStores(inventoryId) {
+    return db.prepare('SELECT * FROM stores WHERE inventory_id = ? ORDER BY name').all(inventoryId);
+  },
+  getStore(id) {
+    return db.prepare('SELECT * FROM stores WHERE id = ?').get(id);
+  },
+  createStore({ inventoryId, name, emoji }) {
+    const { lastInsertRowid } = db.prepare(
+      'INSERT INTO stores (inventory_id, name, emoji) VALUES (?, ?, ?)'
+    ).run(inventoryId, name, emoji || '🏪');
+    return this.getStore(lastInsertRowid);
+  },
+  updateStore(id, { name, emoji }) {
+    db.prepare('UPDATE stores SET name = ?, emoji = ? WHERE id = ?').run(name, emoji || '🏪', id);
+    return this.getStore(id);
+  },
+  deleteStore(id) {
+    return db.prepare('DELETE FROM stores WHERE id = ?').run(id).changes > 0;
+  },
+
+  // ── Purchases ──────────────────────────────────────────────────────────────
+  createPurchaseSession({ inventoryId, userId, items, currency, purchaseDate, receiptImage }) {
+    let totalAmount = 0;
+    items.forEach(item => { if (item.subtotal) totalAmount += +item.subtotal; });
+
+    db.exec('BEGIN');
+    try {
+      const { lastInsertRowid: sessionId } = db.prepare(`
+        INSERT INTO purchase_sessions
+          (inventory_id, user_id, total_amount, currency, purchase_date, receipt_image)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(inventoryId, userId, totalAmount, currency, purchaseDate, receiptImage || null);
+
+      const insItem = db.prepare(`
+        INSERT INTO purchase_items
+          (session_id, product_id, product_name, store_id, quantity_bought, unit, unit_price, subtotal)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      const updQty = db.prepare(`
+        UPDATE products
+        SET current_qty = current_qty + ?,
+            updated_at  = datetime('now','localtime')
+        WHERE id = ? AND inventory_id = ?
+      `);
+
+      items.forEach(item => {
+        insItem.run(
+          sessionId,
+          item.productId   || null,
+          item.productName,
+          item.storeId     || null,
+          +(item.quantityBought) || 0,
+          item.unit        || 'unidades',
+          item.unitPrice   != null ? +item.unitPrice  : null,
+          item.subtotal    != null ? +item.subtotal   : null
+        );
+        if (item.productId && +(item.quantityBought) > 0) {
+          updQty.run(+(item.quantityBought), +item.productId, inventoryId);
+        }
+      });
+
+      db.exec('COMMIT');
+      return db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+  },
+
+  updateReceiptImage(sessionId, imagePath) {
+    db.prepare('UPDATE purchase_sessions SET receipt_image = ? WHERE id = ?').run(imagePath, sessionId);
+  },
+
+  getPurchaseSessions(inventoryId, { month, storeId } = {}) {
+    let sql = `
+      SELECT ps.id, ps.purchase_date, ps.total_amount, ps.currency,
+             ps.receipt_image, ps.created_at, u.name AS user_name,
+             (SELECT COUNT(*) FROM purchase_items WHERE session_id = ps.id) AS item_count
+      FROM purchase_sessions ps
+      JOIN users u ON u.id = ps.user_id
+      WHERE ps.inventory_id = ?
+    `;
+    const params = [inventoryId];
+    if (month)   { sql += ` AND strftime('%Y-%m', ps.purchase_date) = ?`; params.push(month); }
+    if (storeId) {
+      sql += ` AND ps.id IN (SELECT DISTINCT session_id FROM purchase_items WHERE store_id = ?)`;
+      params.push(storeId);
+    }
+    sql += ` ORDER BY ps.purchase_date DESC, ps.created_at DESC`;
+    return db.prepare(sql).all(...params);
+  },
+
+  getPurchaseSession(id) {
+    const session = db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(id);
+    if (!session) return null;
+    session.items = db.prepare(`
+      SELECT pi.*, s.name AS store_name, s.emoji AS store_emoji
+      FROM purchase_items pi
+      LEFT JOIN stores s ON s.id = pi.store_id
+      WHERE pi.session_id = ?
+      ORDER BY pi.store_id, pi.product_name
+    `).all(id);
+    return session;
+  },
+
+  getMonthlySummary(inventoryId) {
+    return db.prepare(`
+      SELECT strftime('%Y-%m', purchase_date) AS month,
+             SUM(total_amount) AS total,
+             COUNT(*) AS sessions
+      FROM purchase_sessions
+      WHERE inventory_id = ?
+      GROUP BY month
+      ORDER BY month DESC
+      LIMIT 3
+    `).all(inventoryId);
   },
 };

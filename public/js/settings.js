@@ -7,6 +7,8 @@ const state = {
   categories: [],
   units:      [],
   catalog:    [],
+  stores:     [],
+  inventory:  null,
   activeTab:  'categories',
 };
 
@@ -31,6 +33,14 @@ async function loadAll() {
   state.categories = cats    || [];
   state.units      = units   || [];
   state.catalog    = catalog || [];
+
+  try { state.inventory = await api('GET', '/api/active-inventory'); }
+  catch { state.inventory = null; }
+
+  if (state.inventory) {
+    try { state.stores = await api('GET', '/api/stores') || []; }
+    catch { state.stores = []; }
+  }
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -105,10 +115,63 @@ function esc(str) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Render stores ─────────────────────────────────────────────────────────────
+function renderStores() {
+  const noInvEl = document.querySelector('.stores-no-inv');
+  const tableEl = document.querySelector('#tab-stores .table-wrap');
+  const addBtn  = document.getElementById('btn-add-store');
+
+  if (!state.inventory) {
+    if (noInvEl) noInvEl.hidden = false;
+    if (tableEl) tableEl.hidden = true;
+    if (addBtn)  addBtn.hidden  = true;
+    return;
+  }
+  if (noInvEl) noInvEl.hidden = true;
+  if (tableEl) tableEl.hidden = false;
+  if (addBtn)  addBtn.hidden  = false;
+
+  const tbody = document.getElementById('stores-tbody');
+  if (!state.stores.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="3">${t('settings.stores.empty')}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = state.stores.map(s => `
+    <tr data-id="${s.id}">
+      <td class="col-emoji">${esc(s.emoji || '')}</td>
+      <td>${esc(s.name)}</td>
+      <td>
+        <div class="col-actions">
+          <button class="btn btn-sm btn-edit" data-action="edit-store" data-id="${s.id}"
+            data-name="${esc(s.name)}" data-emoji="${esc(s.emoji || '')}">${t('inventory.card.edit')}</button>
+          <button class="btn btn-sm btn-delete" data-action="del-store" data-id="${s.id}"
+            data-name="${esc(s.name)}">✕</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ── Render currency ───────────────────────────────────────────────────────────
+function renderCurrency() {
+  const noInvEl = document.querySelector('.currency-no-inv');
+  const formEl  = document.querySelector('.currency-card');
+
+  if (!state.inventory) {
+    if (noInvEl) noInvEl.hidden = false;
+    if (formEl)  formEl.hidden  = true;
+    return;
+  }
+  if (noInvEl) noInvEl.hidden = true;
+  if (formEl)  formEl.hidden  = false;
+
+  const sel = document.getElementById('currency-select');
+  if (sel) sel.value = state.inventory.currency || 'USD';
+}
+
 // ── Tab switching ─────────────────────────────────────────────────────────────
 function switchTab(tab) {
   state.activeTab = tab;
-  ['categories','units','catalog'].forEach(id => {
+  ['categories','units','catalog','stores','currency'].forEach(id => {
     document.getElementById('tab-' + id).hidden = (id !== tab);
   });
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -233,6 +296,73 @@ async function deleteUnit(id, name) {
   } catch (err) { toast(err.message, 'error'); }
 }
 
+// ── Store modal ───────────────────────────────────────────────────────────────
+function openStoreModal(item = null) {
+  document.getElementById('store-id').value          = item?.id    ?? '';
+  document.getElementById('store-name-input').value  = item?.name  ?? '';
+  document.getElementById('store-emoji-input').value = item?.emoji ?? '';
+  document.getElementById('store-modal-title').textContent =
+    item ? t('settings.stores.modal.editTitle') : t('settings.stores.modal.addTitle');
+  const saveBtn = document.getElementById('store-modal-save');
+  saveBtn.textContent = t('settings.stores.modal.save');
+  saveBtn.disabled = false;
+  document.getElementById('store-modal-overlay').hidden = false;
+  document.getElementById('store-name-input').focus();
+}
+function closeStoreModal() { document.getElementById('store-modal-overlay').hidden = true; }
+
+async function saveStore(e) {
+  e.preventDefault();
+  const id    = document.getElementById('store-id').value;
+  const name  = document.getElementById('store-name-input').value.trim();
+  const emoji = document.getElementById('store-emoji-input').value.trim() || '';
+  if (!name) { document.getElementById('store-name-input').classList.add('invalid'); return; }
+  const saveBtn = document.getElementById('store-modal-save');
+  saveBtn.disabled = true; saveBtn.textContent = t('settings.stores.modal.saving');
+  try {
+    if (id) {
+      await api('PUT', `/api/stores/${id}`, { name, emoji });
+      toast(t('settings.stores.modal.updated'));
+    } else {
+      await api('POST', '/api/stores', { name, emoji });
+      toast(t('settings.stores.modal.added'));
+    }
+    closeStoreModal();
+    state.stores = await api('GET', '/api/stores') || [];
+    renderStores();
+  } catch (err) {
+    toast(err.message, 'error');
+    saveBtn.disabled = false; saveBtn.textContent = t('settings.stores.modal.save');
+  }
+}
+
+async function deleteStore(id, name) {
+  if (!confirm(t('settings.stores.modal.confirmDelete', { name }))) return;
+  try {
+    await api('DELETE', `/api/stores/${id}`);
+    toast(t('settings.stores.modal.deleted'), 'info');
+    state.stores = await api('GET', '/api/stores') || [];
+    renderStores();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+// ── Currency ──────────────────────────────────────────────────────────────────
+async function saveCurrency() {
+  const currency = document.getElementById('currency-select')?.value;
+  if (!currency || !state.inventory) return;
+  const saveBtn = document.getElementById('btn-save-currency');
+  saveBtn.disabled = true; saveBtn.textContent = t('settings.currency.saving');
+  try {
+    await api('PUT', `/api/inventories/${state.inventory.id}/currency`, { currency });
+    state.inventory.currency = currency;
+    toast(t('settings.currency.saved'));
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    saveBtn.disabled = false; saveBtn.textContent = t('settings.currency.save');
+  }
+}
+
 // ── Catalog product modal ─────────────────────────────────────────────────────
 function openCpModal(item) {
   document.getElementById('cp-id').value         = item.id;
@@ -309,15 +439,28 @@ function initEvents() {
     if (e.target === e.currentTarget) closeCpModal();
   });
 
+  // Store modal
+  document.getElementById('btn-add-store').addEventListener('click', () => openStoreModal());
+  document.getElementById('store-form').addEventListener('submit', saveStore);
+  document.getElementById('store-modal-close').addEventListener('click', closeStoreModal);
+  document.getElementById('store-modal-cancel').addEventListener('click', closeStoreModal);
+  document.getElementById('store-modal-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeStoreModal();
+  });
+
+  // Currency save
+  document.getElementById('btn-save-currency').addEventListener('click', saveCurrency);
+
   // Table action buttons (event delegation)
   document.getElementById('categories-tbody').addEventListener('click', handleTableClick);
   document.getElementById('units-tbody').addEventListener('click', handleTableClick);
   document.getElementById('catalog-tbody').addEventListener('click', handleTableClick);
+  document.getElementById('stores-tbody').addEventListener('click', handleTableClick);
 
   // Escape closes modals
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    closeCatModal(); closeUnitModal(); closeCpModal();
+    closeCatModal(); closeUnitModal(); closeCpModal(); closeStoreModal();
   });
 
   // Clear invalid on input
@@ -331,6 +474,8 @@ function initEvents() {
     renderCategories();
     renderUnits();
     renderCatalog();
+    renderStores();
+    renderCurrency();
   });
 }
 
@@ -344,8 +489,10 @@ function handleTableClick(e) {
   if (action === 'del-cat')   deleteCategory(numId, name);
   if (action === 'edit-unit') openUnitModal({ id: numId, name, abbreviation: abbr, type });
   if (action === 'del-unit')  deleteUnit(numId, name);
-  if (action === 'edit-cp')   openCpModal({ id: numId, name, category });
-  if (action === 'del-cp')    deleteCatalogProduct(numId, name);
+  if (action === 'edit-cp')     openCpModal({ id: numId, name, category });
+  if (action === 'del-cp')      deleteCatalogProduct(numId, name);
+  if (action === 'edit-store')  openStoreModal({ id: numId, name, emoji });
+  if (action === 'del-store')   deleteStore(numId, name);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -363,6 +510,8 @@ async function init() {
     renderCategories();
     renderUnits();
     renderCatalog();
+    renderStores();
+    renderCurrency();
   } catch (err) {
     console.error(err);
   }
