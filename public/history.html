@@ -183,6 +183,30 @@
     }
     .toast--show  { opacity: 1; transform: translateY(0); }
     .toast-error  { background: #dc2626; }
+
+    /* ── Inv tabs ── */
+    .inv-tabs-bar {
+      background: white; border-bottom: 1.5px solid #e2e8f0;
+      box-shadow: 0 1px 6px rgba(0,0,0,.04);
+    }
+    .inv-tabs-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 1rem;
+      display: flex; overflow-x: auto; scrollbar-width: none;
+    }
+    .inv-tabs-inner::-webkit-scrollbar { display: none; }
+    .inv-tab {
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .65rem 1rem; font-size: .875rem; font-weight: 600;
+      color: #64748b; border-bottom: 2px solid transparent;
+      white-space: nowrap; flex-shrink: 0; text-decoration: none;
+      transition: color .15s, border-color .15s;
+    }
+    .inv-tab:hover  { color: #1e293b; }
+    .inv-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+    @media (max-width: 480px) {
+      .inv-tab { padding: .6rem .8rem; }
+      .tab-label { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -201,6 +225,23 @@
       </div>
     </div>
   </header>
+
+  <nav class="inv-tabs-bar">
+    <div class="inv-tabs-inner">
+      <a href="/inventory" class="inv-tab">
+        <span>📊</span><span class="tab-label" data-i18n="invTabs.dashboard">Dashboard</span>
+      </a>
+      <a href="/inventory?tab=stock" class="inv-tab">
+        <span>📦</span><span class="tab-label" data-i18n="invTabs.stock">Stock</span>
+      </a>
+      <a href="/shopping-list" class="inv-tab">
+        <span>🛒</span><span class="tab-label" data-i18n="invTabs.shopping">Compras</span>
+      </a>
+      <span class="inv-tab active">
+        <span>📋</span><span class="tab-label" data-i18n="invTabs.history">Historial</span>
+      </span>
+    </div>
+  </nav>
 
   <main class="main">
     <!-- Monthly summary -->

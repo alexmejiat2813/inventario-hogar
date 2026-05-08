@@ -30,6 +30,7 @@ const state = {
   existingPhotos:   [],
   pendingPhotos:    [],
   editingProductId: null,
+  activeTab:        'dashboard',
 };
 
 // ── API ───────────────────────────────────────────────────────
@@ -316,6 +317,22 @@ function render() {
   renderStats();
   renderProducts();
   updateCartBadge();
+}
+
+// ── Tab navigation ────────────────────────────────────────────
+
+function switchTab(tabName) {
+  state.activeTab = tabName;
+  document.querySelectorAll('#inv-tabs-bar .inv-tab[data-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  const dashPanel  = document.getElementById('panel-dashboard');
+  const stockPanel = document.getElementById('panel-stock');
+  if (dashPanel)  dashPanel.hidden  = (tabName !== 'dashboard');
+  if (stockPanel) stockPanel.hidden = (tabName !== 'stock');
+  if (tabName === 'dashboard' && typeof loadDashboard === 'function') {
+    loadDashboard();
+  }
 }
 
 // ── Category filter ───────────────────────────────────────────
@@ -952,6 +969,16 @@ function initEvents() {
     el.addEventListener('input', () => el.classList.remove('invalid'));
   });
 
+  // Inventory tab bar
+  const tabBar = document.getElementById('inv-tabs-bar');
+  if (tabBar) {
+    tabBar.addEventListener('click', e => {
+      const tab = e.target.closest('.inv-tab[data-tab]');
+      if (!tab) return;
+      switchTab(tab.dataset.tab);
+    });
+  }
+
   // Language changes: re-render dynamic content
   document.addEventListener('langchange', () => {
     updateInventoryHeader();
@@ -972,6 +999,10 @@ async function init() {
     await Promise.all([loadData(), loadModalData()]);
     updateInventoryHeader();
     render();
+    // Determine starting tab from URL query param
+    const urlTab = new URLSearchParams(window.location.search).get('tab');
+    switchTab(urlTab === 'stock' ? 'stock' : 'dashboard');
+    if (typeof initDashboard === 'function') initDashboard();
   } catch (err) {
     console.error(err);
     showToast(t('error.server'), 'error');

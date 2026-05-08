@@ -402,6 +402,27 @@
       "saved": "Currency updated"
     }
   },
+  "invTabs": {
+    "dashboard": "Dashboard",
+    "stock": "Stock",
+    "shopping": "Shopping",
+    "history": "History"
+  },
+  "dashboard": {
+    "period": {
+      "month": "This month",
+      "3m": "3 months",
+      "6m": "6 months",
+      "year": "This year"
+    },
+    "monthlyTitle": "Monthly spend (last 6 months)",
+    "byCategoryTitle": "By category",
+    "byStoreTitle": "By store",
+    "topTitle": "Top 5 most purchased",
+    "noData": "No data for this period",
+    "thisMonthSpend": "Spent this month",
+    "vsLastMonth": "vs last month"
+  },
   "error": {
     "server": "Could not connect to the server",
     "load": "Error loading data"

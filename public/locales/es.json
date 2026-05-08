@@ -402,6 +402,27 @@
       "saved": "Moneda actualizada"
     }
   },
+  "invTabs": {
+    "dashboard": "Dashboard",
+    "stock": "Stock",
+    "shopping": "Compras",
+    "history": "Historial"
+  },
+  "dashboard": {
+    "period": {
+      "month": "Este mes",
+      "3m": "3 meses",
+      "6m": "6 meses",
+      "year": "Este año"
+    },
+    "monthlyTitle": "Gasto mensual (últimos 6 meses)",
+    "byCategoryTitle": "Por categoría",
+    "byStoreTitle": "Por establecimiento",
+    "topTitle": "Top 5 más comprados",
+    "noData": "Sin datos para este período",
+    "thisMonthSpend": "Gasto este mes",
+    "vsLastMonth": "vs mes anterior"
+  },
   "error": {
     "server": "No se pudo conectar con el servidor",
     "load": "Error al cargar datos"

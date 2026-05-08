@@ -683,6 +683,17 @@ app.post('/api/purchases/:sessionId/receipt', requireEditorOrOwner,
   }
 );
 
+// ── Dashboard ──────────────────────────────────────────────────────────────────
+app.get('/api/inventories/:id/dashboard', requireMember, (req, res) => {
+  try {
+    const period = ['month','3m','6m','year'].includes(req.query.period) ? req.query.period : 'month';
+    res.json(db.getDashboardData(req.inventoryId, period));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener el dashboard' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log('\n🏠  Inventario Hogar');
   console.log(`📡  Servidor corriendo en http://localhost:${PORT}`);

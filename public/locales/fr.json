@@ -402,6 +402,27 @@
       "saved": "Devise mise à jour"
     }
   },
+  "invTabs": {
+    "dashboard": "Dashboard",
+    "stock": "Stock",
+    "shopping": "Courses",
+    "history": "Historique"
+  },
+  "dashboard": {
+    "period": {
+      "month": "Ce mois",
+      "3m": "3 mois",
+      "6m": "6 mois",
+      "year": "Cette année"
+    },
+    "monthlyTitle": "Dépenses mensuelles (6 derniers mois)",
+    "byCategoryTitle": "Par catégorie",
+    "byStoreTitle": "Par établissement",
+    "topTitle": "Top 5 plus achetés",
+    "noData": "Aucune donnée pour cette période",
+    "thisMonthSpend": "Dépenses ce mois",
+    "vsLastMonth": "vs mois précédent"
+  },
   "error": {
     "server": "Impossible de se connecter au serveur",
     "load": "Erreur lors du chargement des données"

@@ -815,4 +815,78 @@ module.exports = {
       LIMIT 3
     `).all(inventoryId);
   },
+
+  getDashboardData(inventoryId, period = 'month') {
+    const daysMap = { month: 30, '3m': 90, '6m': 180, year: 365 };
+    const days = daysMap[period] || 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    const start = startDate.toISOString().slice(0, 10);
+
+    const now = new Date();
+    const thisMonthStr = now.toISOString().slice(0, 7);
+    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthStr = prevDate.toISOString().slice(0, 7);
+
+    const { total }    = db.prepare('SELECT COUNT(*) AS total    FROM products WHERE inventory_id = ?').get(inventoryId);
+    const { critical } = db.prepare('SELECT COUNT(*) AS critical FROM products WHERE inventory_id = ? AND current_qty < min_qty').get(inventoryId);
+
+    const { amount: thisMonth }  = db.prepare(`
+      SELECT COALESCE(SUM(total_amount),0) AS amount FROM purchase_sessions
+      WHERE inventory_id = ? AND strftime('%Y-%m', purchase_date) = ?
+    `).get(inventoryId, thisMonthStr);
+
+    const { amount: lastMonthAmt } = db.prepare(`
+      SELECT COALESCE(SUM(total_amount),0) AS amount FROM purchase_sessions
+      WHERE inventory_id = ? AND strftime('%Y-%m', purchase_date) = ?
+    `).get(inventoryId, lastMonthStr);
+
+    let variation = null;
+    if (lastMonthAmt > 0) variation = Math.round(((thisMonth - lastMonthAmt) / lastMonthAmt) * 100);
+
+    const monthlySpend = db.prepare(`
+      SELECT strftime('%Y-%m', purchase_date) AS month,
+             COALESCE(SUM(total_amount),0) AS total
+      FROM purchase_sessions
+      WHERE inventory_id = ? AND purchase_date >= date('now','localtime','-6 months')
+      GROUP BY month ORDER BY month
+    `).all(inventoryId);
+
+    const byCategory = db.prepare(`
+      SELECT category, COUNT(*) AS count
+      FROM products WHERE inventory_id = ?
+      GROUP BY category ORDER BY count DESC
+    `).all(inventoryId);
+
+    const byStore = db.prepare(`
+      SELECT COALESCE(s.name,'Sin establecimiento') AS store_name,
+             COALESCE(s.emoji,'🏪') AS store_emoji,
+             COALESCE(SUM(pi.subtotal),0) AS total
+      FROM purchase_items pi
+      LEFT JOIN stores s ON s.id = pi.store_id
+      JOIN purchase_sessions ps ON ps.id = pi.session_id
+      WHERE ps.inventory_id = ? AND ps.purchase_date >= ?
+      GROUP BY pi.store_id ORDER BY total DESC LIMIT 6
+    `).all(inventoryId, start);
+
+    const topProducts = db.prepare(`
+      SELECT pi.product_name,
+             SUM(pi.quantity_bought) AS total_qty,
+             COUNT(*) AS purchase_count,
+             MAX(pi.unit) AS unit
+      FROM purchase_items pi
+      JOIN purchase_sessions ps ON ps.id = pi.session_id
+      WHERE ps.inventory_id = ? AND ps.purchase_date >= ?
+      GROUP BY pi.product_name
+      ORDER BY purchase_count DESC, total_qty DESC LIMIT 5
+    `).all(inventoryId, start);
+
+    return {
+      summary: { total, critical, thisMonth, lastMonth: lastMonthAmt, variation },
+      monthlySpend,
+      byCategory,
+      byStore,
+      topProducts,
+    };
+  },
 };

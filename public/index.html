@@ -116,7 +116,87 @@
     </div>
   </header>
 
+  <!-- ===== INVENTORY TAB BAR ===== -->
+  <nav class="inv-tabs-bar" id="inv-tabs-bar">
+    <div>
+      <button class="inv-tab active" data-tab="dashboard">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label" data-i18n="invTabs.dashboard">Dashboard</span>
+      </button>
+      <button class="inv-tab" data-tab="stock">
+        <span class="tab-icon">📦</span>
+        <span class="tab-label" data-i18n="invTabs.stock">Stock</span>
+      </button>
+      <a href="/shopping-list" class="inv-tab">
+        <span class="tab-icon">🛒</span>
+        <span class="tab-label" data-i18n="invTabs.shopping">Compras</span>
+      </a>
+      <a href="/history" class="inv-tab">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label" data-i18n="invTabs.history">Historial</span>
+      </a>
+    </div>
+  </nav>
+
   <main class="main">
+
+    <!-- ===== DASHBOARD PANEL ===== -->
+    <div id="panel-dashboard" class="inv-panel">
+
+      <!-- Period filter -->
+      <div class="dash-period-bar">
+        <button class="dash-period-btn active" data-period="month" data-i18n="dashboard.period.month">Este mes</button>
+        <button class="dash-period-btn" data-period="3m" data-i18n="dashboard.period.3m">3 meses</button>
+        <button class="dash-period-btn" data-period="6m" data-i18n="dashboard.period.6m">6 meses</button>
+        <button class="dash-period-btn" data-period="year" data-i18n="dashboard.period.year">Este año</button>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="dash-summary-grid" id="dash-summary">
+        <div class="dash-stat-card skeleton"></div>
+        <div class="dash-stat-card skeleton"></div>
+        <div class="dash-stat-card skeleton"></div>
+        <div class="dash-stat-card skeleton"></div>
+      </div>
+
+      <!-- Monthly spend line chart -->
+      <div class="dash-card">
+        <h3 class="dash-card-title" data-i18n="dashboard.monthlyTitle">Gasto mensual (últimos 6 meses)</h3>
+        <div class="dash-chart-wrap" id="dash-monthly-wrap">
+          <div class="dash-chart-skeleton skeleton"></div>
+        </div>
+      </div>
+
+      <!-- Category + Store charts row -->
+      <div class="dash-charts-row">
+        <div class="dash-card">
+          <h3 class="dash-card-title" data-i18n="dashboard.byCategoryTitle">Por categoría</h3>
+          <div class="dash-chart-wrap dash-chart-wrap--sm" id="dash-cat-wrap">
+            <div class="dash-chart-skeleton skeleton"></div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <h3 class="dash-card-title" data-i18n="dashboard.byStoreTitle">Por establecimiento</h3>
+          <div class="dash-chart-wrap dash-chart-wrap--sm" id="dash-store-wrap">
+            <div class="dash-chart-skeleton skeleton"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top 5 products -->
+      <div class="dash-card">
+        <h3 class="dash-card-title" data-i18n="dashboard.topTitle">Top 5 más comprados</h3>
+        <div id="dash-top-list">
+          <div class="dash-row-skeleton skeleton"></div>
+          <div class="dash-row-skeleton skeleton"></div>
+          <div class="dash-row-skeleton skeleton"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== STOCK PANEL ===== -->
+    <div id="panel-stock" class="inv-panel" hidden>
 
     <!-- ===== STATS ===== -->
     <section class="stats-section">
@@ -175,6 +255,8 @@
         <p data-i18n="inventory.empty.sub">No hay productos en esta categoría.<br>Agrega uno con el botón de arriba.</p>
       </div>
     </section>
+
+    </div><!-- /panel-stock -->
 
   </main>
 
@@ -302,6 +384,8 @@
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <script src="/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/dashboard.js"></script>
 </body>
 </html>
