@@ -10,7 +10,8 @@ const state = {
   items:        [],
   inventory:    null,
   stores:       [],
-  purchaseData: {},        // { [productId]: { storeId, quantityBought, unitPrice } }
+  taxes:        [],
+  purchaseData: {},        // { [productId]: { storeId, quantityBought, unitPrice, taxId, taxRate, taxAmount } }
   expandedItems: new Set(),
   receiptFile:  null,
 };
@@ -46,9 +47,15 @@ function tSafe(key, fallback) {
   return (v && v !== key) ? v : (fallback ?? key.split('.').pop());
 }
 
+function calcSubtotal(pd) {
+  if (!pd || pd.quantityBought == null || pd.unitPrice == null) return null;
+  const base = +pd.quantityBought * +pd.unitPrice;
+  return pd.taxRate ? base * (1 + pd.taxRate / 100) : base;
+}
+
 function getSubtotalStr(pd) {
-  if (!pd || pd.quantityBought == null || pd.unitPrice == null) return '—';
-  const sub = +pd.quantityBought * +pd.unitPrice;
+  const sub = calcSubtotal(pd);
+  if (sub == null) return '—';
   return getCurrencySym() + ' ' + sub.toFixed(2);
 }
 
@@ -79,6 +86,13 @@ async function loadList() {
 async function loadStores() {
   const stores = await apiFetch('GET', '/api/stores');
   state.stores = stores || [];
+}
+
+async function loadTaxes() {
+  try {
+    const taxes = await apiFetch('GET', '/api/settings/taxes');
+    state.taxes = (taxes || []).filter(t => t.active);
+  } catch { state.taxes = []; }
 }
 
 // ── Render ────────────────────────────────────────────────────
@@ -153,9 +167,21 @@ function renderItem(item) {
     ),
   ].join('');
 
-  const subtotalVal = (pd.quantityBought != null && pd.unitPrice != null)
-    ? `<span class="field-subtotal field-subtotal--pos">${sym} ${(+pd.quantityBought * +pd.unitPrice).toFixed(2)}</span>`
-    : `<span class="field-subtotal" data-subtotal="${item.id}">—</span>`;
+  // Filter taxes applicable to this item's category
+  const applicableTaxes = state.taxes.filter(tax => {
+    const cats = JSON.parse(tax.categories || '[]');
+    return cats.length === 0 || cats.includes(item.category);
+  });
+  const hasTaxes = applicableTaxes.length > 0;
+
+  const taxOptions = [
+    `<option value="">${tSafe('shopping.fields.noTax','Sin impuesto')}</option>`,
+    ...applicableTaxes.map(tax =>
+      `<option value="${tax.id}" ${+pd.taxId === tax.id ? 'selected' : ''}>${esc(tax.name)} (${tax.rate}%)</option>`
+    ),
+  ].join('');
+
+  const sub = calcSubtotal(pd);
 
   return `
     <div class="list-item ${item.checked ? 'list-item--checked' : ''}" data-id="${item.id}">
@@ -206,9 +232,14 @@ function renderItem(item) {
           </div>
           <div class="field-col">
             <label class="field-label">${tSafe('shopping.fields.subtotal','Subtotal')}</label>
-            <span class="field-subtotal" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
+            <span class="field-subtotal ${sub != null ? 'field-subtotal--pos' : ''}" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
           </div>
         </div>
+        ${hasTaxes ? `
+        <div class="field-tax-row">
+          <label class="field-label">${tSafe('shopping.fields.tax','Impuesto')}</label>
+          <select class="field-select" data-field="tax" data-id="${item.id}" style="max-width:220px;">${taxOptions}</select>
+        </div>` : ''}
       </div>
     </div>`;
 }
@@ -257,14 +288,30 @@ function handleFieldChange(field, productId, value) {
     pd.quantityBought = value !== '' ? +value : null;
   } else if (field === 'price') {
     pd.unitPrice = value !== '' ? +value : null;
+  } else if (field === 'tax') {
+    if (value) {
+      const tax = state.taxes.find(t => t.id === +value);
+      pd.taxId   = +value;
+      pd.taxRate = tax ? +tax.rate : null;
+      pd.taxName = tax ? tax.name : null;
+    } else {
+      pd.taxId = null; pd.taxRate = null; pd.taxName = null;
+    }
+  }
+
+  // Recalculate tax amount
+  if (pd.quantityBought != null && pd.unitPrice != null && pd.taxRate) {
+    pd.taxAmount = +pd.quantityBought * +pd.unitPrice * (pd.taxRate / 100);
+  } else {
+    pd.taxAmount = null;
   }
 
   // Update subtotal display in-place (no full re-render)
   const el = document.querySelector(`[data-subtotal="${productId}"]`);
   if (el) {
-    el.textContent = getSubtotalStr(pd);
-    el.classList.toggle('field-subtotal--pos',
-      pd.quantityBought != null && pd.unitPrice != null);
+    const sub = calcSubtotal(pd);
+    el.textContent = sub != null ? getCurrencySym() + ' ' + sub.toFixed(2) : '—';
+    el.classList.toggle('field-subtotal--pos', sub != null);
   }
 }
 
@@ -320,6 +367,9 @@ function buildConfirmSummary(checkedItems) {
 
   // Group by store
   const groups = {};
+  let subtotalBeforeTax = 0;
+  const taxAccum = {};
+
   checkedItems.forEach(item => {
     const pd  = state.purchaseData[item.id] || {};
     const key = pd.storeId ? String(pd.storeId) : '__none__';
@@ -331,26 +381,36 @@ function buildConfirmSummary(checkedItems) {
         subtotal: 0,
       };
     }
-    const sub = (pd.quantityBought != null && pd.unitPrice != null)
+    const base = (pd.quantityBought != null && pd.unitPrice != null)
       ? +pd.quantityBought * +pd.unitPrice : null;
-    groups[key].items.push({ item, pd, sub });
-    if (sub) groups[key].subtotal += sub;
+    const sub = calcSubtotal(pd);
+    groups[key].items.push({ item, pd, base, sub });
+    if (base != null) subtotalBeforeTax += base;
+    if (sub != null)  groups[key].subtotal += sub;
+    if (pd.taxId && pd.taxAmount != null) {
+      const k = String(pd.taxId);
+      if (!taxAccum[k]) taxAccum[k] = { name: pd.taxName || '', rate: pd.taxRate || 0, amount: 0 };
+      taxAccum[k].amount += pd.taxAmount;
+    }
   });
 
-  let grand = 0;
-  let html  = '';
+  const totalTax   = Object.values(taxAccum).reduce((s, t) => s + t.amount, 0);
+  const grand      = subtotalBeforeTax + totalTax;
+  const hasTaxes   = totalTax > 0;
+
+  let html = '';
 
   Object.values(groups).forEach(g => {
-    grand += g.subtotal;
     html += `<div class="confirm-store-group">
       <div class="confirm-store-header">
         <span>${g.storeEmoji ? g.storeEmoji + ' ' : ''}${esc(g.storeName)}</span>
         ${g.subtotal > 0 ? `<span class="confirm-store-subtotal">${sym} ${g.subtotal.toFixed(2)}</span>` : ''}
       </div>`;
-    g.items.forEach(({ item, pd, sub }) => {
+    g.items.forEach(({ item, pd, base, sub }) => {
       const unit = tSafe('units.' + item.unit, item.unit);
+      const taxLabel = pd.taxName ? ` <span style="font-size:.72rem;color:#64748b;">(+${pd.taxRate}%)</span>` : '';
       html += `<div class="confirm-item">
-        <span class="confirm-item-name">${esc(item.name)}</span>
+        <span class="confirm-item-name">${esc(item.name)}${taxLabel}</span>
         <span class="confirm-item-detail">${pd.quantityBought != null ? `×${pd.quantityBought} ${unit}` : '—'}</span>
         <span class="confirm-item-price">${sub != null ? sym + sub.toFixed(2) : ''}</span>
       </div>`;
@@ -359,6 +419,20 @@ function buildConfirmSummary(checkedItems) {
   });
 
   if (grand > 0) {
+    if (hasTaxes) {
+      html += `<div style="padding:.5rem .5rem 0;border-top:1px solid #f1f5f9;margin-top:.5rem;">`;
+      html += `<div class="confirm-item" style="color:#64748b;">
+        <span class="confirm-item-name">${tSafe('shopping.register.subtotalBeforeTax','Subtotal (sin imp.)')}</span>
+        <span class="confirm-item-price">${sym} ${subtotalBeforeTax.toFixed(2)}</span>
+      </div>`;
+      Object.values(taxAccum).forEach(tax => {
+        html += `<div class="confirm-item" style="color:#64748b;">
+          <span class="confirm-item-name">${esc(tax.name)} (${tax.rate}%)</span>
+          <span class="confirm-item-price">+ ${sym} ${tax.amount.toFixed(2)}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
     html += `<div class="confirm-total-row">
       <span>${tSafe('shopping.register.total','Total')}</span>
       <span class="confirm-total-amount">${sym} ${grand.toFixed(2)}</span>
@@ -379,9 +453,10 @@ async function handleConfirm() {
   try {
     const today = new Date().toISOString().slice(0, 10);
     const items = checkedItems.map(item => {
-      const pd = state.purchaseData[item.id] || {};
-      const sub = (pd.quantityBought != null && pd.unitPrice != null)
+      const pd   = state.purchaseData[item.id] || {};
+      const base = (pd.quantityBought != null && pd.unitPrice != null)
         ? +pd.quantityBought * +pd.unitPrice : null;
+      const taxAmt = base != null && pd.taxRate ? base * (pd.taxRate / 100) : null;
       return {
         productId:      item.id,
         productName:    item.name,
@@ -389,7 +464,11 @@ async function handleConfirm() {
         quantityBought: pd.quantityBought != null ? +pd.quantityBought : 0,
         unit:           item.unit,
         unitPrice:      pd.unitPrice  != null ? +pd.unitPrice : null,
-        subtotal:       sub,
+        subtotal:       base != null ? base + (taxAmt || 0) : null,
+        taxId:          pd.taxId   || null,
+        taxRate:        pd.taxRate != null ? +pd.taxRate : null,
+        taxAmount:      taxAmt,
+        taxName:        pd.taxName || null,
       };
     });
 
@@ -537,7 +616,7 @@ async function init() {
   try {
     const ok = await loadInventory();
     if (!ok) return;
-    await Promise.all([loadList(), loadStores()]);
+    await Promise.all([loadList(), loadStores(), loadTaxes()]);
   } catch (err) {
     console.error(err);
     showToast(tSafe('shopping.loadError', 'Error al cargar'), 'error');

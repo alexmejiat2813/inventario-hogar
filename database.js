@@ -126,6 +126,16 @@ db.exec(`
     image_path TEXT    NOT NULL,
     created_at TEXT    DEFAULT (datetime('now','localtime'))
   );
+
+  CREATE TABLE IF NOT EXISTS tax_types (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id INTEGER NOT NULL REFERENCES inventories(id) ON DELETE CASCADE,
+    name         TEXT    NOT NULL,
+    rate         REAL    NOT NULL DEFAULT 0,
+    categories   TEXT    NOT NULL DEFAULT '[]',
+    active       INTEGER NOT NULL DEFAULT 1,
+    created_at   TEXT    DEFAULT (datetime('now','localtime'))
+  );
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -141,6 +151,16 @@ if (!productCols.includes('inventory_id')) {
 if (!productCols.includes('catalog_product_id')) {
   db.exec('ALTER TABLE products ADD COLUMN catalog_product_id INTEGER REFERENCES catalog_products(id) ON DELETE SET NULL');
 }
+
+const sessionCols = db.prepare('PRAGMA table_info(purchase_sessions)').all().map(c => c.name);
+if (!sessionCols.includes('subtotal_before_tax')) db.exec('ALTER TABLE purchase_sessions ADD COLUMN subtotal_before_tax REAL');
+if (!sessionCols.includes('total_tax'))           db.exec('ALTER TABLE purchase_sessions ADD COLUMN total_tax REAL');
+if (!sessionCols.includes('tax_breakdown'))       db.exec('ALTER TABLE purchase_sessions ADD COLUMN tax_breakdown TEXT');
+
+const itemCols = db.prepare('PRAGMA table_info(purchase_items)').all().map(c => c.name);
+if (!itemCols.includes('tax_id'))     db.exec('ALTER TABLE purchase_items ADD COLUMN tax_id INTEGER REFERENCES tax_types(id) ON DELETE SET NULL');
+if (!itemCols.includes('tax_rate'))   db.exec('ALTER TABLE purchase_items ADD COLUMN tax_rate REAL');
+if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD COLUMN tax_amount REAL');
 
 // ── Seed: categories ──────────────────────────────────────────────────────────
 {
@@ -718,23 +738,65 @@ module.exports = {
     return db.prepare('DELETE FROM stores WHERE id = ?').run(id).changes > 0;
   },
 
+  // ── Tax types ──────────────────────────────────────────────────────────────
+  getTaxTypes(inventoryId) {
+    return db.prepare('SELECT * FROM tax_types WHERE inventory_id = ? ORDER BY name').all(inventoryId);
+  },
+  getTaxType(id) {
+    return db.prepare('SELECT * FROM tax_types WHERE id = ?').get(id);
+  },
+  createTaxType({ inventoryId, name, rate, categories, active }) {
+    const { lastInsertRowid } = db.prepare(
+      'INSERT INTO tax_types (inventory_id, name, rate, categories, active) VALUES (?, ?, ?, ?, ?)'
+    ).run(inventoryId, name.trim(), +rate, JSON.stringify(categories || []), active ? 1 : 0);
+    return this.getTaxType(lastInsertRowid);
+  },
+  updateTaxType(id, { name, rate, categories, active }) {
+    db.prepare('UPDATE tax_types SET name=?, rate=?, categories=?, active=? WHERE id=?')
+      .run(name.trim(), +rate, JSON.stringify(categories || []), active ? 1 : 0, id);
+    return this.getTaxType(id);
+  },
+  deleteTaxType(id) {
+    return db.prepare('DELETE FROM tax_types WHERE id = ?').run(id).changes > 0;
+  },
+
   // ── Purchases ──────────────────────────────────────────────────────────────
   createPurchaseSession({ inventoryId, userId, items, currency, purchaseDate, receiptImage }) {
-    let totalAmount = 0;
-    items.forEach(item => { if (item.subtotal) totalAmount += +item.subtotal; });
+    let subtotalBeforeTax = 0;
+    let totalTax = 0;
+    const taxGroups = {};
+
+    items.forEach(item => {
+      const base = (item.quantityBought != null && item.unitPrice != null)
+        ? +(item.quantityBought) * +(item.unitPrice) : 0;
+      subtotalBeforeTax += base;
+      const taxAmt = item.taxAmount != null ? +item.taxAmount : 0;
+      totalTax += taxAmt;
+      if (item.taxId && taxAmt > 0) {
+        const k = String(item.taxId);
+        if (!taxGroups[k]) taxGroups[k] = { taxId: +item.taxId, taxName: item.taxName || '', taxRate: +item.taxRate || 0, taxAmount: 0 };
+        taxGroups[k].taxAmount += taxAmt;
+      }
+    });
+
+    const totalAmount = subtotalBeforeTax + totalTax;
+    const taxBreakdown = Object.keys(taxGroups).length ? JSON.stringify(Object.values(taxGroups)) : null;
 
     db.exec('BEGIN');
     try {
       const { lastInsertRowid: sessionId } = db.prepare(`
         INSERT INTO purchase_sessions
-          (inventory_id, user_id, total_amount, currency, purchase_date, receipt_image)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(inventoryId, userId, totalAmount, currency, purchaseDate, receiptImage || null);
+          (inventory_id, user_id, total_amount, currency, purchase_date, receipt_image,
+           subtotal_before_tax, total_tax, tax_breakdown)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(inventoryId, userId, totalAmount, currency, purchaseDate, receiptImage || null,
+             subtotalBeforeTax || null, totalTax || null, taxBreakdown);
 
       const insItem = db.prepare(`
         INSERT INTO purchase_items
-          (session_id, product_id, product_name, store_id, quantity_bought, unit, unit_price, subtotal)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          (session_id, product_id, product_name, store_id, quantity_bought, unit,
+           unit_price, subtotal, tax_id, tax_rate, tax_amount)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       const updQty = db.prepare(`
         UPDATE products
@@ -744,15 +806,22 @@ module.exports = {
       `);
 
       items.forEach(item => {
+        const base = (item.quantityBought != null && item.unitPrice != null)
+          ? +(item.quantityBought) * +(item.unitPrice) : null;
+        const taxAmt = item.taxAmount != null ? +item.taxAmount : null;
+        const sub = base != null ? base + (taxAmt || 0) : null;
         insItem.run(
           sessionId,
-          item.productId   || null,
+          item.productId    || null,
           item.productName,
-          item.storeId     || null,
+          item.storeId      || null,
           +(item.quantityBought) || 0,
-          item.unit        || 'unidades',
-          item.unitPrice   != null ? +item.unitPrice  : null,
-          item.subtotal    != null ? +item.subtotal   : null
+          item.unit         || 'unidades',
+          item.unitPrice    != null ? +item.unitPrice  : null,
+          sub,
+          item.taxId        || null,
+          item.taxRate      != null ? +item.taxRate    : null,
+          taxAmt
         );
         if (item.productId && +(item.quantityBought) > 0) {
           updQty.run(+(item.quantityBought), +item.productId, inventoryId);
@@ -761,6 +830,37 @@ module.exports = {
 
       db.exec('COMMIT');
       return db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+  },
+
+  deletePurchaseSession(sessionId, inventoryId, { revertInventory = false } = {}) {
+    const session = db.prepare(
+      'SELECT * FROM purchase_sessions WHERE id = ? AND inventory_id = ?'
+    ).get(sessionId, inventoryId);
+    if (!session) return null;
+
+    db.exec('BEGIN');
+    try {
+      if (revertInventory) {
+        const items = db.prepare('SELECT * FROM purchase_items WHERE session_id = ?').all(sessionId);
+        const updQty = db.prepare(`
+          UPDATE products
+          SET current_qty = MAX(0, current_qty - ?),
+              updated_at  = datetime('now','localtime')
+          WHERE id = ? AND inventory_id = ?
+        `);
+        items.forEach(item => {
+          if (item.product_id && +item.quantity_bought > 0) {
+            updQty.run(+item.quantity_bought, item.product_id, inventoryId);
+          }
+        });
+      }
+      db.prepare('DELETE FROM purchase_sessions WHERE id = ?').run(sessionId);
+      db.exec('COMMIT');
+      return { deleted: true, receipt_image: session.receipt_image };
     } catch (err) {
       db.exec('ROLLBACK');
       throw err;

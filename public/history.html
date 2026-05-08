@@ -167,6 +167,37 @@
     }
     .lightbox-close:hover { background: rgba(255,255,255,.25); }
 
+    /* ── Delete session modal ── */
+    .delete-modal { max-width: 440px; }
+    .delete-options { display: flex; flex-direction: column; gap: .625rem; margin-bottom: 1rem; }
+    .delete-option {
+      display: flex; align-items: flex-start; gap: .625rem;
+      padding: .75rem; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      cursor: pointer; transition: border-color .12s, background .12s;
+    }
+    .delete-option:hover { background: #f8fafc; }
+    .delete-option input[type=radio] { margin-top: .2rem; flex-shrink: 0; cursor: pointer; }
+    .delete-option-title { font-size: .875rem; font-weight: 700; color: #1e293b; }
+    .delete-option-sub   { font-size: .775rem; color: #64748b; margin-top: .15rem; }
+    .delete-confirm-section { margin-top: .25rem; }
+    .delete-confirm-label { font-size: .8rem; font-weight: 700; color: #64748b; display: block; margin-bottom: .375rem; }
+    .delete-confirm-input {
+      width: 100%; padding: .55rem .75rem;
+      border: 1.5px solid #e2e8f0; border-radius: 8px;
+      font-size: .9rem; font-weight: 600; outline: none;
+      transition: border-color .15s;
+    }
+    .delete-confirm-input:focus { border-color: #dc2626; }
+    .btn-delete-exec {
+      flex: 2; padding: .65rem;
+      background: #dc2626; color: white;
+      border: none; border-radius: 10px;
+      font-size: .9rem; font-weight: 700;
+      transition: background .15s;
+    }
+    .btn-delete-exec:hover:not(:disabled) { background: #b91c1c; }
+    .btn-delete-exec:disabled { opacity: .4; cursor: not-allowed; }
+
     /* ── Toast ── */
     .toast-container {
       position: fixed; bottom: 1.5rem; right: 1rem; left: 1rem; z-index: 400;
@@ -278,6 +309,44 @@
     <!-- Sessions list -->
     <div id="sessions-list"></div>
   </main>
+
+  <!-- Delete session modal -->
+  <div class="lightbox-overlay" id="delete-session-overlay" hidden style="align-items:flex-end;justify-content:center;padding:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);">
+    <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:440px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:lb-fade .15s ease;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem .875rem;border-bottom:1px solid #f1f5f9;flex-shrink:0;">
+        <h2 style="font-size:1.05rem;font-weight:800;" data-i18n="history.deleteSession.title">Eliminar compra</h2>
+        <button id="btn-delete-session-close" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border:none;border-radius:8px;color:#475569;font-size:1rem;">✕</button>
+      </div>
+      <div style="overflow-y:auto;flex:1;padding:1rem 1.5rem;">
+        <div class="delete-options">
+          <label class="delete-option">
+            <input type="radio" name="delete-mode" value="record" checked>
+            <div>
+              <div class="delete-option-title" data-i18n="history.deleteSession.optionRecord">Solo eliminar el registro</div>
+              <div class="delete-option-sub" data-i18n="history.deleteSession.optionRecordSub">Las cantidades en el inventario no se modifican</div>
+            </div>
+          </label>
+          <label class="delete-option">
+            <input type="radio" name="delete-mode" value="revert">
+            <div>
+              <div class="delete-option-title" data-i18n="history.deleteSession.optionRevert">Eliminar y revertir inventario</div>
+              <div class="delete-option-sub" data-i18n="history.deleteSession.optionRevertSub">Se descuentan del inventario las cantidades compradas</div>
+            </div>
+          </label>
+        </div>
+        <div class="delete-confirm-section">
+          <label class="delete-confirm-label" id="delete-confirm-label" data-i18n="history.deleteSession.confirmLabel">Escribí ELIMINAR para confirmar</label>
+          <input type="text" id="delete-confirm-input" class="delete-confirm-input"
+                 data-i18n-ph="history.deleteSession.confirmPlaceholder"
+                 placeholder="ELIMINAR" autocomplete="off">
+        </div>
+      </div>
+      <div style="display:flex;gap:.625rem;padding:1rem 1.5rem;border-top:1px solid #f1f5f9;flex-shrink:0;">
+        <button id="btn-delete-session-cancel" style="flex:1;padding:.65rem;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:.9rem;font-weight:600;" data-i18n="history.deleteSession.cancel">Cancelar</button>
+        <button id="btn-delete-session-confirm" class="btn-delete-exec" disabled data-i18n="history.deleteSession.btn">Eliminar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Lightbox -->
   <div class="lightbox-overlay" id="lightbox" hidden>

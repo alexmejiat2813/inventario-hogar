@@ -286,7 +286,7 @@ app.delete('/api/inventories/:id/members/:userId', requireMember, requireOwner, 
 });
 
 // ── Products ───────────────────────────────────────────────────────────────────
-app.use(['/api/products', '/api/stats', '/api/shopping', '/api/stores', '/api/purchases'], requireInventory);
+app.use(['/api/products', '/api/stats', '/api/shopping', '/api/stores', '/api/purchases', '/api/settings/taxes'], requireInventory);
 
 app.get('/api/products', (req, res) => {
   try {
@@ -552,6 +552,48 @@ app.delete('/api/settings/catalog/:id', (req, res) => {
   } catch { res.status(500).json({ error: 'Error al eliminar el producto del catálogo' }); }
 });
 
+// ── Settings: taxes ───────────────────────────────────────────────────────────
+app.get('/api/settings/taxes', (req, res) => {
+  try { res.json(db.getTaxTypes(req.inventoryId)); }
+  catch { res.status(500).json({ error: 'Error al obtener impuestos' }); }
+});
+
+app.post('/api/settings/taxes', requireEditorOrOwner, (req, res) => {
+  try {
+    const { name, rate, categories, active } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (rate == null || isNaN(+rate) || +rate < 0 || +rate > 100)
+      return res.status(400).json({ error: 'Porcentaje inválido (0–100)' });
+    const tax = db.createTaxType({ inventoryId: req.inventoryId, name, rate, categories: categories || [], active: active !== false });
+    res.status(201).json(tax);
+  } catch { res.status(500).json({ error: 'Error al crear el impuesto' }); }
+});
+
+app.put('/api/settings/taxes/:id', requireEditorOrOwner, (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const existing = db.getTaxType(id);
+    if (!existing || existing.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Impuesto no encontrado' });
+    const { name, rate, categories, active } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (rate == null || isNaN(+rate) || +rate < 0 || +rate > 100)
+      return res.status(400).json({ error: 'Porcentaje inválido (0–100)' });
+    res.json(db.updateTaxType(id, { name, rate, categories: categories || [], active: active !== false }));
+  } catch { res.status(500).json({ error: 'Error al actualizar el impuesto' }); }
+});
+
+app.delete('/api/settings/taxes/:id', requireEditorOrOwner, (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const existing = db.getTaxType(id);
+    if (!existing || existing.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Impuesto no encontrado' });
+    db.deleteTaxType(id);
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Error al eliminar el impuesto' }); }
+});
+
 // ── Shopping list ──────────────────────────────────────────────────────────────
 app.get('/api/shopping', (req, res) => {
   try { res.json(db.getShoppingList(req.inventoryId)); }
@@ -653,6 +695,21 @@ app.post('/api/purchases', requireEditorOrOwner, (req, res) => {
     });
     res.status(201).json(session);
   } catch { res.status(500).json({ error: 'Error al registrar la compra' }); }
+});
+
+app.delete('/api/purchases/:sessionId', requireEditorOrOwner, (req, res) => {
+  try {
+    const sessionId = parseInt(req.params.sessionId);
+    if (isNaN(sessionId)) return res.status(400).json({ error: 'ID inválido' });
+    const { revert_inventory } = req.body;
+    const result = db.deletePurchaseSession(sessionId, req.inventoryId, { revertInventory: !!revert_inventory });
+    if (!result) return res.status(404).json({ error: 'Sesión no encontrada' });
+    if (result.receipt_image) {
+      const filePath = path.join(__dirname, 'public', result.receipt_image);
+      fs.unlink(filePath, () => {});
+    }
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Error al eliminar la compra' }); }
 });
 
 app.get('/api/purchases/:sessionId', (req, res) => {

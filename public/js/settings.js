@@ -3,11 +3,42 @@
 const CATALOG_CATS = ['Alimentos','Bebidas','Aseo Personal','Aseo del Hogar','Alacena'];
 const TYPE_CLASS   = { peso: 'type-peso', volumen: 'type-volumen', cantidad: 'type-cantidad' };
 
+const TAX_PRESETS = {
+  CAD: [
+    { name: 'GST',  rate: 5,      categories: [] },
+    { name: 'HST',  rate: 13,     categories: [] },
+    { name: 'PST',  rate: 9.975,  categories: [] },
+  ],
+  COP: [
+    { name: 'IVA',    rate: 19,  categories: [] },
+    { name: 'IVA 5%', rate: 5,   categories: [] },
+    { name: 'Exento', rate: 0,   categories: [] },
+  ],
+  USD: [
+    { name: 'Sales Tax', rate: 8.5, categories: [] },
+  ],
+  EUR: [
+    { name: 'IVA',       rate: 21, categories: [] },
+    { name: 'IVA Red.',  rate: 10, categories: [] },
+    { name: 'IVA Super', rate: 4,  categories: [] },
+  ],
+  MXN: [
+    { name: 'IVA', rate: 16, categories: [] },
+  ],
+  BRL: [
+    { name: 'ICMS', rate: 17, categories: [] },
+  ],
+  GBP: [
+    { name: 'VAT', rate: 20, categories: [] },
+  ],
+};
+
 const state = {
   categories: [],
   units:      [],
   catalog:    [],
   stores:     [],
+  taxes:      [],
   inventory:  null,
   activeTab:  'categories',
 };
@@ -40,6 +71,8 @@ async function loadAll() {
   if (state.inventory) {
     try { state.stores = await api('GET', '/api/stores') || []; }
     catch { state.stores = []; }
+    try { state.taxes = await api('GET', '/api/settings/taxes') || []; }
+    catch { state.taxes = []; }
   }
 }
 
@@ -168,10 +201,142 @@ function renderCurrency() {
   if (sel) sel.value = state.inventory.currency || 'USD';
 }
 
+// ── Render taxes ──────────────────────────────────────────────────────────────
+function renderTaxes() {
+  const noInvEl     = document.querySelector('.taxes-no-inv');
+  const tableWrapEl = document.querySelector('.taxes-table-wrap');
+  const addBtn      = document.getElementById('btn-add-tax');
+  const suggestBtn  = document.getElementById('btn-suggest-taxes');
+
+  if (!state.inventory) {
+    if (noInvEl)     noInvEl.hidden     = false;
+    if (tableWrapEl) tableWrapEl.hidden = true;
+    if (addBtn)      addBtn.hidden      = true;
+    if (suggestBtn)  suggestBtn.hidden  = true;
+    return;
+  }
+  if (noInvEl)     noInvEl.hidden     = true;
+  if (tableWrapEl) tableWrapEl.hidden = false;
+  if (addBtn)      addBtn.hidden      = false;
+  if (suggestBtn)  suggestBtn.hidden  = false;
+
+  const tbody = document.getElementById('taxes-tbody');
+  if (!state.taxes.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">${t('settings.taxes.empty')}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = state.taxes.map(tax => {
+    const cats = JSON.parse(tax.categories || '[]');
+    const catLabel = cats.length ? cats.join(', ') : t('settings.taxes.allCategories');
+    const statusLabel = tax.active ? t('settings.taxes.active') : t('settings.taxes.inactive');
+    const statusColor = tax.active ? '#16a34a' : '#94a3b8';
+    return `<tr data-id="${tax.id}">
+      <td><strong>${esc(tax.name)}</strong></td>
+      <td>${tax.rate}%</td>
+      <td style="font-size:.8rem;color:#64748b;">${esc(catLabel)}</td>
+      <td><span style="font-size:.75rem;font-weight:700;color:${statusColor}">${statusLabel}</span></td>
+      <td>
+        <div class="col-actions">
+          <button class="btn btn-sm btn-edit" data-action="edit-tax" data-id="${tax.id}"
+            data-name="${esc(tax.name)}" data-rate="${tax.rate}"
+            data-categories='${tax.categories}' data-active="${tax.active}">${t('inventory.card.edit')}</button>
+          <button class="btn btn-sm btn-delete" data-action="del-tax" data-id="${tax.id}"
+            data-name="${esc(tax.name)}">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Tax modal ─────────────────────────────────────────────────────────────────
+function openTaxModal(item = null) {
+  document.getElementById('tax-id').value = item?.id ?? '';
+  document.getElementById('tax-name-input').value = item?.name ?? '';
+  document.getElementById('tax-rate-input').value = item?.rate ?? '';
+  document.getElementById('tax-active-toggle').checked = item ? !!item.active : true;
+  document.getElementById('tax-modal-title').textContent =
+    item ? t('settings.taxes.modal.editTitle') : t('settings.taxes.modal.addTitle');
+  const saveBtn = document.getElementById('tax-modal-save');
+  saveBtn.textContent = t('settings.taxes.modal.save');
+  saveBtn.disabled = false;
+
+  // Build category checkboxes
+  const selectedCats = item ? JSON.parse(item.categories || '[]') : [];
+  const container = document.getElementById('tax-categories-checkboxes');
+  container.innerHTML = state.categories.map(cat => {
+    const checked = selectedCats.includes(cat.name) ? 'checked' : '';
+    return `<label style="display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem;font-weight:600;cursor:pointer;">
+      <input type="checkbox" name="tax-cat" value="${esc(cat.name)}" ${checked} style="cursor:pointer;">
+      ${esc(cat.emoji || '')} ${esc(cat.name)}
+    </label>`;
+  }).join('');
+
+  document.getElementById('tax-modal-overlay').hidden = false;
+  document.getElementById('tax-name-input').focus();
+}
+function closeTaxModal() { document.getElementById('tax-modal-overlay').hidden = true; }
+
+async function saveTax(e) {
+  e.preventDefault();
+  const id     = document.getElementById('tax-id').value;
+  const name   = document.getElementById('tax-name-input').value.trim();
+  const rate   = document.getElementById('tax-rate-input').value;
+  const active = document.getElementById('tax-active-toggle').checked;
+  const categories = [...document.querySelectorAll('input[name="tax-cat"]:checked')].map(el => el.value);
+
+  if (!name) { document.getElementById('tax-name-input').classList.add('invalid'); return; }
+  if (rate === '' || isNaN(+rate)) { document.getElementById('tax-rate-input').classList.add('invalid'); return; }
+
+  const saveBtn = document.getElementById('tax-modal-save');
+  saveBtn.disabled = true; saveBtn.textContent = t('settings.taxes.modal.saving');
+  try {
+    if (id) {
+      await api('PUT', `/api/settings/taxes/${id}`, { name, rate: +rate, categories, active });
+      toast(t('settings.taxes.modal.updated'));
+    } else {
+      await api('POST', '/api/settings/taxes', { name, rate: +rate, categories, active });
+      toast(t('settings.taxes.modal.added'));
+    }
+    closeTaxModal();
+    state.taxes = await api('GET', '/api/settings/taxes') || [];
+    renderTaxes();
+  } catch (err) {
+    toast(err.message, 'error');
+    saveBtn.disabled = false; saveBtn.textContent = t('settings.taxes.modal.save');
+  }
+}
+
+async function deleteTax(id, name) {
+  if (!confirm(t('settings.taxes.modal.confirmDelete', { name }))) return;
+  try {
+    await api('DELETE', `/api/settings/taxes/${id}`);
+    toast(t('settings.taxes.modal.deleted'), 'info');
+    state.taxes = await api('GET', '/api/settings/taxes') || [];
+    renderTaxes();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function suggestTaxes() {
+  if (!state.inventory) return;
+  const currency = state.inventory.currency || 'USD';
+  const presets  = TAX_PRESETS[currency];
+  if (!presets?.length) {
+    toast(`Sin sugerencias para ${currency}`, 'info'); return;
+  }
+  try {
+    for (const p of presets) {
+      await api('POST', '/api/settings/taxes', { ...p, active: true });
+    }
+    state.taxes = await api('GET', '/api/settings/taxes') || [];
+    renderTaxes();
+    toast(t('settings.taxes.suggested'));
+  } catch (err) { toast(err.message, 'error'); }
+}
+
 // ── Tab switching ─────────────────────────────────────────────────────────────
 function switchTab(tab) {
   state.activeTab = tab;
-  ['categories','units','catalog','stores','currency'].forEach(id => {
+  ['categories','units','catalog','stores','currency','taxes'].forEach(id => {
     document.getElementById('tab-' + id).hidden = (id !== tab);
   });
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -448,6 +613,16 @@ function initEvents() {
     if (e.target === e.currentTarget) closeStoreModal();
   });
 
+  // Tax modal
+  document.getElementById('btn-add-tax').addEventListener('click', () => openTaxModal());
+  document.getElementById('btn-suggest-taxes').addEventListener('click', suggestTaxes);
+  document.getElementById('tax-form').addEventListener('submit', saveTax);
+  document.getElementById('tax-modal-close').addEventListener('click', closeTaxModal);
+  document.getElementById('tax-modal-cancel').addEventListener('click', closeTaxModal);
+  document.getElementById('tax-modal-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeTaxModal();
+  });
+
   // Currency save
   document.getElementById('btn-save-currency').addEventListener('click', saveCurrency);
 
@@ -456,11 +631,12 @@ function initEvents() {
   document.getElementById('units-tbody').addEventListener('click', handleTableClick);
   document.getElementById('catalog-tbody').addEventListener('click', handleTableClick);
   document.getElementById('stores-tbody').addEventListener('click', handleTableClick);
+  document.getElementById('taxes-tbody').addEventListener('click', handleTableClick);
 
   // Escape closes modals
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    closeCatModal(); closeUnitModal(); closeCpModal(); closeStoreModal();
+    closeCatModal(); closeUnitModal(); closeCpModal(); closeStoreModal(); closeTaxModal();
   });
 
   // Clear invalid on input
@@ -476,6 +652,7 @@ function initEvents() {
     renderCatalog();
     renderStores();
     renderCurrency();
+    renderTaxes();
   });
 }
 
@@ -493,6 +670,11 @@ function handleTableClick(e) {
   if (action === 'del-cp')      deleteCatalogProduct(numId, name);
   if (action === 'edit-store')  openStoreModal({ id: numId, name, emoji });
   if (action === 'del-store')   deleteStore(numId, name);
+  if (action === 'edit-tax') {
+    const cats = btn.dataset.categories || '[]';
+    openTaxModal({ id: numId, name, rate: parseFloat(btn.dataset.rate), categories: cats, active: +btn.dataset.active });
+  }
+  if (action === 'del-tax')  deleteTax(numId, name);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -512,6 +694,7 @@ async function init() {
     renderCatalog();
     renderStores();
     renderCurrency();
+    renderTaxes();
   } catch (err) {
     console.error(err);
   }

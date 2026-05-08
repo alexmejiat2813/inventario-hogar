@@ -146,6 +146,7 @@
     "register": {
       "title": "Confirmer l'achat",
       "total": "Total",
+      "subtotalBeforeTax": "Sous-total (HT)",
       "noStore": "Sans établissement",
       "receipt": "Photo du ticket (optionnel)",
       "receiptBtn": "Télécharger une photo",
@@ -162,7 +163,9 @@
       "noStore": "Sans établissement",
       "qty": "Quantité",
       "price": "Prix unit.",
-      "subtotal": "Sous-total"
+      "subtotal": "Sous-total",
+      "tax": "Taxe",
+      "noTax": "Sans taxe"
     },
     "reset": "Liste réinitialisée",
     "loadError": "Impossible de charger la liste"
@@ -284,7 +287,22 @@
       "product": "produit",
       "products": "produits",
       "viewReceipt": "Voir le ticket",
-      "noStore": "Sans établissement"
+      "noStore": "Sans établissement",
+      "subtotalBeforeTax": "Sous-total (HT)"
+    },
+    "deleteSession": {
+      "title": "Supprimer l'achat",
+      "optionRecord": "Supprimer uniquement l'enregistrement",
+      "optionRecordSub": "Les quantités en inventaire ne sont pas modifiées",
+      "optionRevert": "Supprimer et annuler l'inventaire",
+      "optionRevertSub": "Les quantités achetées sont déduites de l'inventaire",
+      "confirmLabel": "Écrivez SUPPRIMER pour confirmer",
+      "confirmWord": "SUPPRIMER",
+      "confirmPlaceholder": "SUPPRIMER",
+      "btn": "Supprimer",
+      "deleting": "Suppression…",
+      "success": "Achat supprimé",
+      "cancel": "Annuler"
     }
   },
   "settings": {
@@ -295,7 +313,8 @@
       "units": "Unités",
       "catalog": "Catalogue",
       "stores": "Établissements",
-      "currency": "Devise"
+      "currency": "Devise",
+      "taxes": "Taxes"
     },
     "categories": {
       "title": "Catégories",
@@ -400,6 +419,40 @@
       "save": "Enregistrer",
       "saving": "Enregistrement…",
       "saved": "Devise mise à jour"
+    },
+    "taxes": {
+      "title": "Taxes",
+      "add": "+ Ajouter une taxe",
+      "noInventory": "Ouvrez un inventaire pour gérer les taxes.",
+      "colName": "Nom",
+      "colRate": "%",
+      "colCategories": "S'applique à",
+      "colStatus": "Statut",
+      "colActions": "Actions",
+      "empty": "Aucune taxe définie",
+      "allCategories": "Toutes les catégories",
+      "active": "Active",
+      "inactive": "Inactive",
+      "suggest": "Suggérer selon la devise",
+      "suggested": "Taxes suggérées ajoutées",
+      "modal": {
+        "addTitle": "Ajouter une taxe",
+        "editTitle": "Modifier la taxe",
+        "name": "Nom",
+        "namePlaceholder": "Ex : TVA, GST...",
+        "rate": "Pourcentage (%)",
+        "ratePlaceholder": "Ex : 20",
+        "categories": "S'applique aux catégories",
+        "categoriesHint": "Laissez vide pour appliquer à tous les produits",
+        "active": "Active",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "added": "Taxe ajoutée",
+        "updated": "Taxe mise à jour",
+        "deleted": "Taxe supprimée",
+        "confirmDelete": "Supprimer la taxe « {{name}} » ?"
+      }
     }
   },
   "invTabs": {

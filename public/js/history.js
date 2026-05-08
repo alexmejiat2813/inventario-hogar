@@ -7,19 +7,20 @@ const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 const state = {
-  inventory:  null,
-  sessions:   [],
-  stores:     [],
-  summary:    [],
-  filterMonth: '',
-  filterStore: '',
-  expanded:   new Set(),
+  inventory:        null,
+  sessions:         [],
+  stores:           [],
+  summary:          [],
+  filterMonth:      '',
+  filterStore:      '',
+  expanded:         new Set(),
+  deleteSessionId:  null,
 };
 
 // ── API ───────────────────────────────────────────────────────
 
-async function apiFetch(url) {
-  const res  = await fetch(url);
+async function apiFetch(url, options = {}) {
+  const res  = await fetch(url, options);
   if (res.status === 401) { window.location.href = '/login'; return null; }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Error');
@@ -203,6 +204,7 @@ function renderSessions() {
       const hasTotal = +session.total_amount > 0;
       const hasReceipt = !!session.receipt_image;
 
+      const canDelete = state.inventory?.role === 'owner' || state.inventory?.role === 'editor';
       html += `
         <div class="session-card" data-session="${session.id}">
           <div class="session-header" data-action="toggle" data-id="${session.id}">
@@ -215,6 +217,7 @@ function renderSessions() {
                 ${hasTotal ? fmtCurrency(session.total_amount, session.currency || currency) : '—'}
               </span>
               ${hasReceipt ? `<a class="session-receipt-icon" data-action="receipt" data-src="${esc(session.receipt_image)}" title="${tSafe('history.session.viewReceipt','Ver recibo')}">🧾</a>` : ''}
+              ${canDelete ? `<button class="session-receipt-icon" data-action="delete-session" data-id="${session.id}" title="${tSafe('history.deleteSession.btn','Eliminar')}" style="background:none;border:none;font-size:1rem;color:#94a3b8;padding:0;" aria-label="Eliminar compra">🗑️</button>` : ''}
               <svg class="session-chevron ${isExpanded ? 'session-chevron--open' : ''}"
                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="6 9 12 15 18 9"/>
@@ -269,9 +272,10 @@ async function loadDetail(sessionId) {
         </div>`;
       g.items.forEach(item => {
         const unitLabel = item.unit || '';
+        const taxLabel  = item.tax_rate ? `<span style="font-size:.72rem;color:#94a3b8;margin-left:.25rem;">+${item.tax_rate}%</span>` : '';
         html += `<div class="detail-item">
           <span class="detail-item-bullet">•</span>
-          <span class="detail-item-name">${esc(item.product_name)}</span>
+          <span class="detail-item-name">${esc(item.product_name)}${taxLabel}</span>
           <span class="detail-item-qty">${item.quantity_bought > 0 ? `×${item.quantity_bought} ${unitLabel}` : ''}</span>
           <span class="detail-item-price">${item.subtotal != null ? s + (+item.subtotal).toFixed(2) : ''}</span>
         </div>`;
@@ -279,9 +283,81 @@ async function loadDetail(sessionId) {
       html += `</div>`;
     });
 
+    // Tax breakdown at bottom
+    if (session.tax_breakdown) {
+      try {
+        const breakdown = JSON.parse(session.tax_breakdown);
+        if (breakdown.length) {
+          html += `<div style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid #f1f5f9;">`;
+          if (session.subtotal_before_tax != null) {
+            html += `<div class="detail-item" style="color:#94a3b8;">
+              <span class="detail-item-bullet" style="visibility:hidden">•</span>
+              <span class="detail-item-name">${tSafe('history.session.subtotalBeforeTax','Subtotal')}</span>
+              <span></span>
+              <span class="detail-item-price">${s} ${(+session.subtotal_before_tax).toFixed(2)}</span>
+            </div>`;
+          }
+          breakdown.forEach(t => {
+            html += `<div class="detail-item" style="color:#94a3b8;">
+              <span class="detail-item-bullet" style="visibility:hidden">•</span>
+              <span class="detail-item-name">${esc(t.taxName)} (${t.taxRate}%)</span>
+              <span></span>
+              <span class="detail-item-price">+ ${s} ${(+t.taxAmount).toFixed(2)}</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+      } catch {}
+    }
+
     detailEl.innerHTML = html || '<p style="color:#94a3b8;font-size:.85rem">—</p>';
   } catch (err) {
     detailEl.innerHTML = `<p style="color:#dc2626;font-size:.85rem">${esc(err.message)}</p>`;
+  }
+}
+
+// ── Delete session ────────────────────────────────────────────
+
+function openDeleteModal(sessionId) {
+  state.deleteSessionId = sessionId;
+  document.getElementById('delete-confirm-input').value = '';
+  document.getElementById('btn-delete-session-confirm').disabled = true;
+  const radios = document.querySelectorAll('input[name="delete-mode"]');
+  if (radios.length) radios[0].checked = true;
+  document.getElementById('delete-session-overlay').hidden = false;
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-session-overlay').hidden = true;
+  state.deleteSessionId = null;
+}
+
+async function executeDeleteSession() {
+  if (!state.deleteSessionId) return;
+  const confirmWord = tSafe('history.deleteSession.confirmWord', 'ELIMINAR');
+  const inputVal = document.getElementById('delete-confirm-input').value.trim();
+  if (inputVal !== confirmWord) return;
+
+  const mode = document.querySelector('input[name="delete-mode"]:checked')?.value || 'record';
+  const btn  = document.getElementById('btn-delete-session-confirm');
+  btn.disabled = true;
+  btn.textContent = tSafe('history.deleteSession.deleting', 'Eliminando…');
+
+  try {
+    await apiFetch(`/api/purchases/${state.deleteSessionId}`, {
+      method:  'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ revert_inventory: mode === 'revert' }),
+    });
+    closeDeleteModal();
+    showToast(tSafe('history.deleteSession.success', 'Compra eliminada'), 'success');
+    state.expanded.delete(state.deleteSessionId);
+    await loadSessions();
+    renderSummary();
+  } catch (err) {
+    showToast(err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = tSafe('history.deleteSession.btn', 'Eliminar');
   }
 }
 
@@ -298,7 +374,7 @@ function closeLightbox() {
 
 // ── Toast ─────────────────────────────────────────────────────
 
-function showToast(message, type = 'error') {
+function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
@@ -314,14 +390,20 @@ function showToast(message, type = 'error') {
 // ── Events ────────────────────────────────────────────────────
 
 function initEvents() {
-  // Session toggle + receipt
+  // Session toggle + receipt + delete
   document.getElementById('sessions-list').addEventListener('click', async e => {
     const toggleBtn = e.target.closest('[data-action="toggle"]');
     const receiptBtn = e.target.closest('[data-action="receipt"]');
+    const deleteBtn  = e.target.closest('[data-action="delete-session"]');
 
     if (receiptBtn) {
       e.stopPropagation();
       openLightbox(receiptBtn.dataset.src);
+      return;
+    }
+    if (deleteBtn) {
+      e.stopPropagation();
+      openDeleteModal(parseInt(deleteBtn.dataset.id));
       return;
     }
     if (toggleBtn) {
@@ -333,6 +415,18 @@ function initEvents() {
       }
       renderSessions();
     }
+  });
+
+  // Delete session modal
+  document.getElementById('btn-delete-session-close').addEventListener('click', closeDeleteModal);
+  document.getElementById('btn-delete-session-cancel').addEventListener('click', closeDeleteModal);
+  document.getElementById('btn-delete-session-confirm').addEventListener('click', executeDeleteSession);
+  document.getElementById('delete-session-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeDeleteModal();
+  });
+  document.getElementById('delete-confirm-input').addEventListener('input', e => {
+    const confirmWord = tSafe('history.deleteSession.confirmWord', 'ELIMINAR');
+    document.getElementById('btn-delete-session-confirm').disabled = e.target.value.trim() !== confirmWord;
   });
 
   // Filters
@@ -351,7 +445,7 @@ function initEvents() {
     if (e.target === e.currentTarget) closeLightbox();
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'Escape') { closeLightbox(); closeDeleteModal(); }
   });
 
   document.addEventListener('langchange', () => renderSessions());

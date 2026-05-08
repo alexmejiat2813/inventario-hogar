@@ -146,6 +146,7 @@
     "register": {
       "title": "Confirm purchase",
       "total": "Total",
+      "subtotalBeforeTax": "Subtotal (before tax)",
       "noStore": "No store",
       "receipt": "Receipt photo (optional)",
       "receiptBtn": "Upload photo",
@@ -162,7 +163,9 @@
       "noStore": "No store",
       "qty": "Quantity",
       "price": "Unit price",
-      "subtotal": "Subtotal"
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "noTax": "No tax"
     },
     "reset": "List reset",
     "loadError": "Could not load the list"
@@ -284,7 +287,22 @@
       "product": "product",
       "products": "products",
       "viewReceipt": "View receipt",
-      "noStore": "No store"
+      "noStore": "No store",
+      "subtotalBeforeTax": "Subtotal (before tax)"
+    },
+    "deleteSession": {
+      "title": "Delete purchase",
+      "optionRecord": "Delete record only",
+      "optionRecordSub": "Inventory quantities remain unchanged",
+      "optionRevert": "Delete and revert inventory",
+      "optionRevertSub": "Purchased quantities are subtracted from inventory",
+      "confirmLabel": "Type DELETE to confirm",
+      "confirmWord": "DELETE",
+      "confirmPlaceholder": "DELETE",
+      "btn": "Delete",
+      "deleting": "Deleting…",
+      "success": "Purchase deleted",
+      "cancel": "Cancel"
     }
   },
   "settings": {
@@ -295,7 +313,8 @@
       "units": "Units",
       "catalog": "Catalog",
       "stores": "Stores",
-      "currency": "Currency"
+      "currency": "Currency",
+      "taxes": "Taxes"
     },
     "categories": {
       "title": "Categories",
@@ -400,6 +419,40 @@
       "save": "Save",
       "saving": "Saving…",
       "saved": "Currency updated"
+    },
+    "taxes": {
+      "title": "Taxes",
+      "add": "+ Add tax",
+      "noInventory": "Open an inventory to manage taxes.",
+      "colName": "Name",
+      "colRate": "%",
+      "colCategories": "Applies to",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "empty": "No taxes defined",
+      "allCategories": "All categories",
+      "active": "Active",
+      "inactive": "Inactive",
+      "suggest": "Suggest for currency",
+      "suggested": "Suggested taxes added",
+      "modal": {
+        "addTitle": "Add tax",
+        "editTitle": "Edit tax",
+        "name": "Name",
+        "namePlaceholder": "E.g.: GST, HST...",
+        "rate": "Percentage (%)",
+        "ratePlaceholder": "E.g.: 5",
+        "categories": "Applies to categories",
+        "categoriesHint": "Leave empty to apply to all products",
+        "active": "Active",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving…",
+        "added": "Tax added",
+        "updated": "Tax updated",
+        "deleted": "Tax deleted",
+        "confirmDelete": "Delete tax \"{{name}}\"?"
+      }
     }
   },
   "invTabs": {

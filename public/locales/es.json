@@ -146,6 +146,7 @@
     "register": {
       "title": "Confirmar compra",
       "total": "Total",
+      "subtotalBeforeTax": "Subtotal (sin imp.)",
       "noStore": "Sin establecimiento",
       "receipt": "Foto del recibo (opcional)",
       "receiptBtn": "Subir foto",
@@ -162,7 +163,9 @@
       "noStore": "Sin establecimiento",
       "qty": "Cantidad",
       "price": "Precio unit.",
-      "subtotal": "Subtotal"
+      "subtotal": "Subtotal",
+      "tax": "Impuesto",
+      "noTax": "Sin impuesto"
     },
     "reset": "Lista reiniciada",
     "loadError": "No se pudo cargar la lista"
@@ -284,7 +287,22 @@
       "product": "producto",
       "products": "productos",
       "viewReceipt": "Ver recibo",
-      "noStore": "Sin establecimiento"
+      "noStore": "Sin establecimiento",
+      "subtotalBeforeTax": "Subtotal (sin imp.)"
+    },
+    "deleteSession": {
+      "title": "Eliminar compra",
+      "optionRecord": "Solo eliminar el registro",
+      "optionRecordSub": "Las cantidades en el inventario no se modifican",
+      "optionRevert": "Eliminar y revertir inventario",
+      "optionRevertSub": "Se descuentan del inventario las cantidades compradas",
+      "confirmLabel": "Escribí ELIMINAR para confirmar",
+      "confirmWord": "ELIMINAR",
+      "confirmPlaceholder": "ELIMINAR",
+      "btn": "Eliminar",
+      "deleting": "Eliminando…",
+      "success": "Compra eliminada",
+      "cancel": "Cancelar"
     }
   },
   "settings": {
@@ -295,7 +313,8 @@
       "units": "Unidades",
       "catalog": "Catálogo",
       "stores": "Establecimientos",
-      "currency": "Moneda"
+      "currency": "Moneda",
+      "taxes": "Impuestos"
     },
     "categories": {
       "title": "Categorías",
@@ -400,6 +419,40 @@
       "save": "Guardar",
       "saving": "Guardando…",
       "saved": "Moneda actualizada"
+    },
+    "taxes": {
+      "title": "Impuestos",
+      "add": "+ Agregar impuesto",
+      "noInventory": "Abrí un inventario para gestionar los impuestos.",
+      "colName": "Nombre",
+      "colRate": "%",
+      "colCategories": "Aplica a",
+      "colStatus": "Estado",
+      "colActions": "Acciones",
+      "empty": "Sin impuestos definidos",
+      "allCategories": "Todas las categorías",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "suggest": "Sugerir según moneda",
+      "suggested": "Impuestos sugeridos agregados",
+      "modal": {
+        "addTitle": "Agregar impuesto",
+        "editTitle": "Editar impuesto",
+        "name": "Nombre",
+        "namePlaceholder": "Ej: IVA, GST...",
+        "rate": "Porcentaje (%)",
+        "ratePlaceholder": "Ej: 19",
+        "categories": "Aplica a categorías",
+        "categoriesHint": "Dejá vacío para aplicar a todos los productos",
+        "active": "Activo",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "saving": "Guardando…",
+        "added": "Impuesto agregado",
+        "updated": "Impuesto actualizado",
+        "deleted": "Impuesto eliminado",
+        "confirmDelete": "¿Eliminar el impuesto «{{name}}»?"
+      }
     }
   },
   "invTabs": {
