@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Database
+inventario.db
+inventario.db-shm
+inventario.db-wal
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
