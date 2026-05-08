@@ -3,22 +3,27 @@
    ============================================================ */
 
 const CAT_ICONS = {
-  Alimentos: '🍎',
-  Aseo:      '🧼',
-  Alacena:   '🏺',
-  Bebidas:   '🥤',
-  Otros:     '📦',
+  Alimentos:      '🍎',
+  Aseo:           '🧼',
+  'Aseo Personal':'🧴',
+  'Aseo del Hogar':'🧹',
+  Alacena:        '🫙',
+  Bebidas:        '🥤',
+  Otros:          '📦',
 };
 
 const ROLE_CLASS = { owner: 'role-owner', editor: 'role-editor', reader: 'role-reader' };
 
 const state = {
-  products:       [],
-  stats:          null,
-  activeCategory: 'all',
-  searchQuery:    '',
-  inventory:      null,
-  user:           null,
+  products:         [],
+  stats:            null,
+  activeCategory:   'all',
+  searchQuery:      '',
+  inventory:        null,
+  user:             null,
+  catalogProducts:  [],
+  categories:       [],
+  units:            [],
 };
 
 // ── API ───────────────────────────────────────────────────────
@@ -41,6 +46,88 @@ async function loadData() {
   if (!products || !stats) return;
   state.products = products;
   state.stats    = stats;
+}
+
+async function loadModalData() {
+  const [cats, units, catalog] = await Promise.all([
+    apiFetch('GET', '/api/settings/categories'),
+    apiFetch('GET', '/api/settings/units'),
+    apiFetch('GET', '/api/catalog'),
+  ]);
+  state.categories      = cats    || [];
+  state.units           = units   || [];
+  state.catalogProducts = catalog || [];
+}
+
+function populateCatalogSelect() {
+  const sel = document.getElementById('f-catalog-product');
+  sel.innerHTML = '';
+
+  // Placeholder
+  const ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = t('inventory.modal.productPlaceholder');
+  sel.appendChild(ph);
+
+  // Products grouped by category
+  const groups = {};
+  state.catalogProducts.forEach(p => {
+    if (!groups[p.category]) groups[p.category] = [];
+    groups[p.category].push(p);
+  });
+  Object.keys(groups).sort().forEach(cat => {
+    const og = document.createElement('optgroup');
+    og.label = `${CAT_ICONS[cat] || '📦'} ${cat}`;
+    groups[cat].forEach(p => {
+      const opt = document.createElement('option');
+      opt.value           = p.id;
+      opt.textContent     = p.name + (p.in_inventory ? ' ✓' : '');
+      opt.dataset.category = p.category;
+      if (p.in_inventory) opt.style.color = '#16a34a';
+      og.appendChild(opt);
+    });
+    sel.appendChild(og);
+  });
+
+  // Custom option
+  const custom = document.createElement('option');
+  custom.value       = '__custom__';
+  custom.textContent = t('inventory.modal.customProduct');
+  sel.appendChild(custom);
+}
+
+function populateCategorySelect(selectedValue = '') {
+  const sel = document.getElementById('f-category');
+  sel.innerHTML = '';
+  const ph = document.createElement('option');
+  ph.value = ''; ph.textContent = t('inventory.modal.categoryPlaceholder');
+  sel.appendChild(ph);
+  state.categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat.name;
+    opt.textContent = `${cat.emoji} ${cat.name}`;
+    if (cat.name === selectedValue) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function populateUnitSelect(selectedValue = 'unidades') {
+  const sel = document.getElementById('f-unit');
+  sel.innerHTML = '';
+  state.units.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.name;
+    const label = t('unitLabel.' + u.name);
+    opt.textContent = (label && !label.startsWith('unitLabel.')) ? label
+      : (u.abbreviation ? `${u.name} — ${u.abbreviation}` : u.name);
+    if (u.name === selectedValue) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  if (!sel.options.length) {
+    const opt = document.createElement('option');
+    opt.value = 'unidades'; opt.textContent = 'unidades';
+    sel.appendChild(opt);
+  }
 }
 
 async function loadUser() {
@@ -87,8 +174,8 @@ function updateInventoryHeader() {
   badge.textContent = t('roles.' + inv.role) || inv.role;
   badge.className = `role-badge-header ${ROLE_CLASS[inv.role] || ''}`;
 
-  document.getElementById('manage-section').hidden = (inv.role === 'reader');
-  document.getElementById('btn-add').hidden         = (inv.role === 'reader');
+  document.getElementById('manage-section').hidden  = (inv.role === 'reader');
+  document.getElementById('add-menu-wrap').hidden   = (inv.role === 'reader');
 }
 
 // ── Render helpers ────────────────────────────────────────────
@@ -230,27 +317,47 @@ function setCategory(category) {
 
 // ── Product modal ─────────────────────────────────────────────
 
+function setModalMode(mode) {
+  // mode: 'catalog' | 'custom' | 'edit'
+  const isCatalog = mode === 'catalog';
+  const isEdit    = mode === 'edit';
+  document.getElementById('fg-catalog-select').hidden = isEdit;
+  document.getElementById('fg-name').hidden           = isCatalog;
+  document.getElementById('fg-category').hidden       = isCatalog;
+}
+
 function openModal(product = null) {
   const overlay = document.getElementById('modal-overlay');
   const title   = document.getElementById('modal-title');
   clearValidation();
+  populateCategorySelect(product?.category || '');
+  populateUnitSelect(product?.unit || 'unidades');
 
   if (product) {
     title.textContent = t('inventory.modal.editTitle');
     document.getElementById('product-id').value = product.id;
+    document.getElementById('f-catalog-product-id').value = '';
     document.getElementById('f-name').value     = product.name;
     document.getElementById('f-category').value = product.category;
     document.getElementById('f-current').value  = product.current_qty;
     document.getElementById('f-min').value      = product.min_qty;
-    document.getElementById('f-unit').value     = product.unit;
+    setModalMode('edit');
   } else {
     title.textContent = t('inventory.modal.addTitle');
     document.getElementById('product-id').value = '';
+    document.getElementById('f-catalog-product-id').value = '';
     document.getElementById('product-form').reset();
+    populateCatalogSelect();
+    populateCategorySelect();
+    populateUnitSelect();
+    setModalMode('catalog');
   }
 
   overlay.hidden = false;
-  requestAnimationFrame(() => document.getElementById('f-name').focus());
+  const focusEl = product
+    ? document.getElementById('f-name')
+    : document.getElementById('f-catalog-product');
+  requestAnimationFrame(() => focusEl?.focus());
 }
 
 function closeModal() {
@@ -266,10 +373,35 @@ function clearValidation() {
 
 function validateForm() {
   let ok = true;
-  ['f-name', 'f-category', 'f-current', 'f-min', 'f-unit'].forEach(id => {
+  const isEdit    = !document.getElementById('fg-catalog-select') || document.getElementById('fg-catalog-select').hidden;
+  const isCatalog = !isEdit && !document.getElementById('fg-name').hidden === false;
+  const catSel    = document.getElementById('f-catalog-product');
+  const isCatalogMode = !document.getElementById('fg-catalog-select').hidden;
+
+  if (isCatalogMode) {
+    const val = catSel.value;
+    if (!val) { catSel.classList.add('invalid'); ok = false; }
+    else catSel.classList.remove('invalid');
+
+    if (val === '__custom__') {
+      ['f-name', 'f-category'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el.value.trim()) { el.classList.add('invalid'); ok = false; }
+        else el.classList.remove('invalid');
+      });
+    }
+  } else {
+    ['f-name', 'f-category'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) { el.classList.add('invalid'); ok = false; }
+      else el.classList.remove('invalid');
+    });
+  }
+
+  ['f-current', 'f-min', 'f-unit'].forEach(id => {
     const el = document.getElementById(id);
-    if (!el.value.trim()) { el.classList.add('invalid'); ok = false; }
-    else                   el.classList.remove('invalid');
+    if (!el.value && el.value !== '0') { el.classList.add('invalid'); ok = false; }
+    else el.classList.remove('invalid');
   });
   return ok;
 }
@@ -280,13 +412,39 @@ async function handleFormSubmit(e) {
   e.preventDefault();
   if (!validateForm()) return;
 
-  const id   = document.getElementById('product-id').value;
+  const id            = document.getElementById('product-id').value;
+  const catSelEl      = document.getElementById('f-catalog-product');
+  const isCatalogMode = !document.getElementById('fg-catalog-select').hidden;
+  const catalogSelVal = isCatalogMode ? catSelEl.value : '';
+  const isCustom      = catalogSelVal === '__custom__';
+
+  let name, category, catalogProductId = null;
+
+  if (isCatalogMode && catalogSelVal && !isCustom) {
+    // Adding from catalog
+    const selectedOpt = catSelEl.options[catSelEl.selectedIndex];
+    const catProd = state.catalogProducts.find(p => p.id === parseInt(catalogSelVal));
+    name             = catProd?.name || selectedOpt.textContent.replace(' ✓', '').trim();
+    category         = selectedOpt.dataset.category || catProd?.category || '';
+    catalogProductId = parseInt(catalogSelVal);
+    // Map catalog category to inventory category
+    const catMap = {
+      'Aseo Personal': 'Aseo', 'Aseo del Hogar': 'Aseo',
+      'Alimentos': 'Alimentos', 'Bebidas': 'Bebidas', 'Alacena': 'Alacena',
+    };
+    category = catMap[category] || category;
+  } else {
+    name     = document.getElementById('f-name').value.trim();
+    category = document.getElementById('f-category').value;
+  }
+
   const body = {
-    name:        document.getElementById('f-name').value.trim(),
-    category:    document.getElementById('f-category').value,
-    current_qty: parseFloat(document.getElementById('f-current').value),
-    min_qty:     parseFloat(document.getElementById('f-min').value),
-    unit:        document.getElementById('f-unit').value,
+    name,
+    category,
+    current_qty:        parseFloat(document.getElementById('f-current').value) || 0,
+    min_qty:            parseFloat(document.getElementById('f-min').value)     || 0,
+    unit:               document.getElementById('f-unit').value,
+    catalog_product_id: catalogProductId,
   };
 
   const saveBtn = document.getElementById('btn-save');
@@ -496,7 +654,28 @@ function toggleProfileDropdown() {
 // ── Events ────────────────────────────────────────────────────
 
 function initEvents() {
-  document.getElementById('btn-add').addEventListener('click', () => openModal());
+  // Add-menu (split button)
+  const addMenu      = document.getElementById('add-menu');
+  const addMenuWrap  = document.getElementById('add-menu-wrap');
+  document.getElementById('btn-add').addEventListener('click', () => {
+    addMenu.hidden = true;
+    openModal();
+  });
+  document.getElementById('btn-add-chevron').addEventListener('click', e => {
+    e.stopPropagation();
+    addMenu.hidden = !addMenu.hidden;
+  });
+  document.getElementById('add-from-catalog').addEventListener('click', () => {
+    addMenu.hidden = true;
+    window.location.href = '/catalog';
+  });
+  document.getElementById('add-custom').addEventListener('click', () => {
+    addMenu.hidden = true;
+    openModal();
+  });
+  document.addEventListener('click', e => {
+    if (!addMenuWrap.contains(e.target)) addMenu.hidden = true;
+  });
 
   // Profile dropdown
   document.getElementById('profile-btn').addEventListener('click', e => {
@@ -516,6 +695,18 @@ function initEvents() {
     closeProfileDropdown();
     await fetch('/auth/logout', { method: 'POST' });
     window.location.href = '/login';
+  });
+
+  // Catalog select change — switch between catalog/custom mode
+  document.getElementById('f-catalog-product').addEventListener('change', e => {
+    const val = e.target.value;
+    if (!val) { setModalMode('catalog'); return; }
+    if (val === '__custom__') {
+      setModalMode('custom');
+      document.getElementById('f-name').focus();
+    } else {
+      setModalMode('catalog');
+    }
   });
 
   // Product modal
@@ -592,7 +783,7 @@ async function init() {
     await loadUser();
     const ok = await loadActiveInventory();
     if (!ok) return;
-    await loadData();
+    await Promise.all([loadData(), loadModalData()]);
     updateInventoryHeader();
     render();
   } catch (err) {

@@ -55,7 +55,7 @@
       "all": "Tous",
       "Alimentos": "🍎 Alimentation",
       "Aseo": "🧼 Nettoyage",
-      "Alacena": "🏺 Garde-manger",
+      "Alacena": "🫙 Garde-manger",
       "Bebidas": "🥤 Boissons",
       "Otros": "📦 Autres"
     },
@@ -72,6 +72,9 @@
     "modal": {
       "addTitle": "Ajouter un produit",
       "editTitle": "Modifier le produit",
+      "product": "Produit",
+      "productPlaceholder": "— Choisir dans le catalogue —",
+      "customProduct": "✏ Produit personnalisé",
       "name": "Nom du produit",
       "namePlaceholder": "Ex : Huile d'olive",
       "category": "Catégorie",
@@ -102,7 +105,11 @@
       "confirmRevoke": "Révoquer le code {{code}} ?",
       "confirmRemove": "Retirer ce collaborateur de l'inventaire ?"
     },
-    "confirmDelete": "Supprimer \"{{name}}\" ?\nCette action est irréversible."
+    "confirmDelete": "Supprimer \"{{name}}\" ?\nCette action est irréversible.",
+    "addMenu": {
+      "fromCatalog": "Du catalogue",
+      "custom": "Produit personnalisé"
+    }
   },
   "shopping": {
     "back": "Retour",
@@ -131,6 +138,7 @@
   },
   "profile": {
     "language": "Langue",
+    "settings": "Paramètres",
     "manage": "Gérer l'accès",
     "logout": "Se déconnecter"
   },
@@ -152,6 +160,9 @@
     "g": "g",
     "lt": "lt",
     "ml": "ml",
+    "tsp": "c. à c.",
+    "tbsp": "c. à s.",
+    "cup": "tasse",
     "paquetes": "paquets",
     "cajas": "boîtes",
     "bolsas": "sacs",
@@ -164,11 +175,138 @@
     "g": "g — grammes",
     "lt": "lt — litres",
     "ml": "ml — millilitres",
+    "tsp": "tsp — cuillère à café",
+    "tbsp": "tbsp — cuillère à soupe",
+    "cup": "cup — tasse",
     "paquetes": "paquets",
     "cajas": "boîtes",
     "bolsas": "sacs",
     "latas": "conserves",
     "botellas": "bouteilles"
+  },
+  "catalog": {
+    "title": "Catalogue de produits",
+    "search": "Rechercher dans le catalogue...",
+    "add": "+ Ajouter au catalogue",
+    "back": "Inventaire",
+    "count": "{{count}} produits",
+    "tabs": {
+      "all": "Tous",
+      "Alimentos": "🍎 Alimentation",
+      "Bebidas": "🥤 Boissons",
+      "Aseo Personal": "🧴 Hygiène personnelle",
+      "Aseo del Hogar": "🧹 Nettoyage maison",
+      "Alacena": "🫙 Garde-manger"
+    },
+    "inInventory": "Dans l'inventaire",
+    "addToInventory": "Ajouter",
+    "empty": {
+      "title": "Aucun résultat",
+      "sub": "Aucun produit trouvé selon ce critère."
+    },
+    "noInventory": "Ouvrez un inventaire pour ajouter des produits.",
+    "modalAdd": {
+      "title": "Ajouter à l'inventaire",
+      "currentQty": "Quantité actuelle",
+      "minQty": "Quantité minimale",
+      "unit": "Unité de mesure",
+      "cancel": "Annuler",
+      "save": "Ajouter",
+      "saving": "Ajout…",
+      "added": "Produit ajouté à l'inventaire"
+    },
+    "modalNew": {
+      "title": "Ajouter au catalogue",
+      "name": "Nom du produit",
+      "namePlaceholder": "Ex : Lentilles rouges",
+      "category": "Catégorie",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "added": "Produit ajouté au catalogue",
+      "duplicate": "Un produit avec ce nom existe déjà"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "back": "Retour",
+    "tabs": {
+      "categories": "Catégories",
+      "units": "Unités",
+      "catalog": "Catalogue"
+    },
+    "categories": {
+      "title": "Catégories",
+      "add": "+ Ajouter une catégorie",
+      "colName": "Nom",
+      "colEmoji": "Icône",
+      "colActions": "Actions",
+      "empty": "Aucune catégorie",
+      "modal": {
+        "addTitle": "Ajouter une catégorie",
+        "editTitle": "Modifier la catégorie",
+        "name": "Nom",
+        "namePlaceholder": "Ex : Fruits",
+        "emoji": "Emoji",
+        "emojiPlaceholder": "🍎",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "added": "Catégorie ajoutée",
+        "updated": "Catégorie mise à jour",
+        "deleted": "Catégorie supprimée",
+        "confirmDelete": "Supprimer la catégorie « {{name}} » ?"
+      }
+    },
+    "units": {
+      "title": "Unités de mesure",
+      "add": "+ Ajouter une unité",
+      "colName": "Nom",
+      "colAbbr": "Abréviation",
+      "colType": "Type",
+      "colActions": "Actions",
+      "empty": "Aucune unité",
+      "types": {
+        "peso": "Poids",
+        "volumen": "Volume",
+        "cantidad": "Quantité"
+      },
+      "modal": {
+        "addTitle": "Ajouter une unité",
+        "editTitle": "Modifier l'unité",
+        "name": "Nom",
+        "namePlaceholder": "Ex : kilogrammes",
+        "abbreviation": "Abréviation",
+        "abbreviationPlaceholder": "Ex : kg",
+        "type": "Type",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "added": "Unité ajoutée",
+        "updated": "Unité mise à jour",
+        "deleted": "Unité supprimée",
+        "confirmDelete": "Supprimer l'unité « {{name}} » ?"
+      }
+    },
+    "catalog": {
+      "title": "Produits du catalogue",
+      "viewAll": "Voir le catalogue complet →",
+      "colName": "Nom",
+      "colCategory": "Catégorie",
+      "colActions": "Actions",
+      "empty": "Aucun produit",
+      "modal": {
+        "editTitle": "Modifier le produit",
+        "name": "Nom du produit",
+        "category": "Catégorie",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "updated": "Produit mis à jour",
+        "deleted": "Produit supprimé du catalogue",
+        "confirmDelete": "Supprimer « {{name}} » du catalogue ?"
+      }
+    }
   },
   "error": {
     "server": "Impossible de se connecter au serveur",

@@ -8,15 +8,21 @@ const db       = require('./database');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-const VALID_CATEGORIES = ['Alimentos','Aseo','Alacena','Bebidas','Otros'];
-const VALID_UNITS = ['unidades','kg','g','lt','ml','paquetes','cajas','bolsas','latas','botellas'];
+const VALID_UNITS = ['unidades','kg','g','lt','ml','tsp','tbsp','cup','paquetes','cajas','bolsas','latas','botellas'];
+
+function getValidCategories() {
+  return db.getCategories().map(c => c.name);
+}
+function getValidUnits() {
+  return db.getUnits().map(u => u.name);
+}
 
 function validateProduct({ name, category, current_qty, min_qty, unit }) {
-  if (!name?.trim())                        return 'El nombre es requerido';
-  if (!VALID_CATEGORIES.includes(category)) return 'Categoría inválida';
+  if (!name?.trim())                              return 'El nombre es requerido';
+  if (!getValidCategories().includes(category))  return 'Categoría inválida';
   if (current_qty == null || isNaN(+current_qty) || +current_qty < 0) return 'Cantidad actual inválida';
   if (min_qty    == null || isNaN(+min_qty)    || +min_qty    < 0) return 'Cantidad mínima inválida';
-  if (!VALID_UNITS.includes(unit))          return 'Unidad inválida';
+  if (!getValidUnits().includes(unit))           return 'Unidad inválida';
   return null;
 }
 
@@ -52,7 +58,6 @@ function requireAuthApi(req, res, next) {
 }
 
 // ── Inventory guards ───────────────────────────────────────────────────────────
-// Used by product/stats routes — reads activeInventoryId from session
 function requireInventory(req, res, next) {
   const id = req.session.activeInventoryId;
   if (!id) return res.status(400).json({ error: 'No hay inventario activo' });
@@ -70,7 +75,6 @@ function requireEditorOrOwner(req, res, next) {
   res.status(403).json({ error: 'Se requiere rol de editor o dueño' });
 }
 
-// Used by /api/inventories/:id/* routes — checks membership in req.params.id
 function requireMember(req, res, next) {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
@@ -105,10 +109,12 @@ app.post('/auth/logout', (req, res, next) => {
   });
 });
 
-// ── Static assets (accessible without auth — needed by login page too) ─────────
+// ── Static assets ──────────────────────────────────────────────────────────────
 app.use('/css',     express.static(path.join(__dirname, 'public/css')));
 app.use('/js',      express.static(path.join(__dirname, 'public/js')));
 app.use('/locales', express.static(path.join(__dirname, 'public/locales')));
+
+const CATALOG_CATEGORIES = ['Alimentos', 'Bebidas', 'Aseo Personal', 'Aseo del Hogar', 'Alacena'];
 
 // ── Protected pages ────────────────────────────────────────────────────────────
 app.get('/', requireAuthPage, (req, res) => res.redirect('/inventories'));
@@ -126,6 +132,14 @@ app.get('/shopping-list', requireAuthPage, (req, res) => {
   if (!req.session.activeInventoryId) return res.redirect('/inventories');
   res.sendFile(path.join(__dirname, 'public', 'shopping-list.html'));
 });
+
+app.get('/catalog', requireAuthPage, (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'catalog.html'))
+);
+
+app.get('/settings', requireAuthPage, (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'settings.html'))
+);
 
 // ── All API routes require auth ────────────────────────────────────────────────
 app.use('/api', requireAuthApi);
@@ -171,7 +185,6 @@ app.post('/api/inventories/join', (req, res) => {
   } catch { res.status(500).json({ error: 'Error al unirse al inventario' }); }
 });
 
-// Enter an inventory — sets active inventory in session
 app.post('/api/inventories/:id/enter', (req, res) => {
   try {
     const id     = parseInt(req.params.id);
@@ -226,7 +239,7 @@ app.delete('/api/inventories/:id/members/:userId', requireMember, requireOwner, 
   } catch { res.status(500).json({ error: 'Error al remover miembro' }); }
 });
 
-// ── Products (all require an active inventory in session) ──────────────────────
+// ── Products ───────────────────────────────────────────────────────────────────
 app.use(['/api/products', '/api/stats', '/api/shopping'], requireInventory);
 
 app.get('/api/products', (req, res) => {
@@ -249,10 +262,11 @@ app.post('/api/products', requireEditorOrOwner, (req, res) => {
   try {
     const error = validateProduct(req.body);
     if (error) return res.status(400).json({ error });
-    const { name, category, current_qty, min_qty, unit } = req.body;
+    const { name, category, current_qty, min_qty, unit, catalog_product_id } = req.body;
     res.status(201).json(db.create({
       name: name.trim(), category, current_qty: +current_qty,
       min_qty: +min_qty, unit, inventoryId: req.inventoryId,
+      catalogProductId: catalog_product_id || null,
     }));
   } catch { res.status(500).json({ error: 'Error al crear el producto' }); }
 });
@@ -282,6 +296,155 @@ app.delete('/api/products/:id', requireEditorOrOwner, (req, res) => {
 app.get('/api/stats', (req, res) => {
   try { res.json(db.getStats(req.inventoryId)); }
   catch { res.status(500).json({ error: 'Error al obtener estadísticas' }); }
+});
+
+// ── Catalog ────────────────────────────────────────────────────────────────────
+app.get('/api/catalog', (req, res) => {
+  try {
+    const inventoryId = req.session.activeInventoryId || null;
+    res.json(db.getCatalogProducts(inventoryId));
+  } catch { res.status(500).json({ error: 'Error al obtener el catálogo' }); }
+});
+
+app.post('/api/catalog', (req, res) => {
+  try {
+    const { name, category } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (!CATALOG_CATEGORIES.includes(category)) return res.status(400).json({ error: 'Categoría inválida' });
+    const result = db.addCatalogProduct({ name, category, userId: req.user.id });
+    if (result.error) return res.status(409).json({ error: result.error });
+    res.status(201).json(result.product);
+  } catch { res.status(500).json({ error: 'Error al agregar el producto al catálogo' }); }
+});
+
+app.post('/api/catalog/:id/add', (req, res) => {
+  try {
+    const catalogProductId = parseInt(req.params.id);
+    if (isNaN(catalogProductId)) return res.status(400).json({ error: 'ID inválido' });
+
+    const inventoryId = req.session.activeInventoryId;
+    if (!inventoryId) return res.status(400).json({ error: 'No hay inventario activo' });
+
+    const member = db.getMember(inventoryId, req.user.id);
+    if (!member) return res.status(403).json({ error: 'Sin acceso al inventario' });
+    if (member.role === 'reader') return res.status(403).json({ error: 'Se requiere rol de editor o dueño' });
+
+    const { current_qty, min_qty, unit } = req.body;
+    if (current_qty == null || isNaN(+current_qty) || +current_qty < 0) return res.status(400).json({ error: 'Cantidad actual inválida' });
+    if (min_qty    == null || isNaN(+min_qty)    || +min_qty    < 0) return res.status(400).json({ error: 'Cantidad mínima inválida' });
+
+    const result = db.addCatalogProductToInventory({
+      catalogProductId,
+      inventoryId,
+      currentQty: +current_qty,
+      minQty:     +min_qty,
+      unit:       unit || 'unidades',
+    });
+    if (result.error) return res.status(409).json({ error: result.error });
+    res.status(201).json(result.product);
+  } catch { res.status(500).json({ error: 'Error al agregar al inventario' }); }
+});
+
+// ── Settings: categories ───────────────────────────────────────────────────────
+app.get('/api/settings/categories', (req, res) => {
+  try { res.json(db.getCategories()); }
+  catch { res.status(500).json({ error: 'Error al obtener categorías' }); }
+});
+
+app.post('/api/settings/categories', (req, res) => {
+  try {
+    const { name, emoji } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    const result = db.createCategory({ name, emoji });
+    if (result.error) return res.status(409).json({ error: result.error });
+    res.status(201).json(result.category);
+  } catch { res.status(500).json({ error: 'Error al crear la categoría' }); }
+});
+
+app.put('/api/settings/categories/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const { name, emoji } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    const result = db.updateCategory(id, { name, emoji });
+    if (result.error) return res.status(409).json({ error: result.error });
+    res.json(result.category);
+  } catch { res.status(500).json({ error: 'Error al actualizar la categoría' }); }
+});
+
+app.delete('/api/settings/categories/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const ok = db.deleteCategory(id);
+    if (!ok) return res.status(404).json({ error: 'Categoría no encontrada' });
+    res.json({ message: 'Categoría eliminada' });
+  } catch { res.status(500).json({ error: 'Error al eliminar la categoría' }); }
+});
+
+// ── Settings: units ────────────────────────────────────────────────────────────
+app.get('/api/settings/units', (req, res) => {
+  try { res.json(db.getUnits()); }
+  catch { res.status(500).json({ error: 'Error al obtener unidades' }); }
+});
+
+app.post('/api/settings/units', (req, res) => {
+  try {
+    const { name, abbreviation, type } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (!['peso','volumen','cantidad'].includes(type)) return res.status(400).json({ error: 'Tipo inválido' });
+    const result = db.createUnit({ name, abbreviation, type });
+    if (result.error) return res.status(409).json({ error: result.error });
+    res.status(201).json(result.unit);
+  } catch { res.status(500).json({ error: 'Error al crear la unidad' }); }
+});
+
+app.put('/api/settings/units/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const { name, abbreviation, type } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (!['peso','volumen','cantidad'].includes(type)) return res.status(400).json({ error: 'Tipo inválido' });
+    const result = db.updateUnit(id, { name, abbreviation, type });
+    if (result.error) return res.status(409).json({ error: result.error });
+    res.json(result.unit);
+  } catch { res.status(500).json({ error: 'Error al actualizar la unidad' }); }
+});
+
+app.delete('/api/settings/units/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const ok = db.deleteUnit(id);
+    if (!ok) return res.status(404).json({ error: 'Unidad no encontrada' });
+    res.json({ message: 'Unidad eliminada' });
+  } catch { res.status(500).json({ error: 'Error al eliminar la unidad' }); }
+});
+
+// ── Settings: catalog products ─────────────────────────────────────────────────
+app.put('/api/settings/catalog/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const { name, category } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (!CATALOG_CATEGORIES.includes(category)) return res.status(400).json({ error: 'Categoría inválida' });
+    const result = db.updateCatalogProduct(id, { name, category });
+    if (result.error) return res.status(409).json({ error: result.error });
+    res.json(result.product);
+  } catch { res.status(500).json({ error: 'Error al actualizar el producto' }); }
+});
+
+app.delete('/api/settings/catalog/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const ok = db.deleteCatalogProduct(id);
+    if (!ok) return res.status(404).json({ error: 'Producto no encontrado' });
+    res.json({ message: 'Producto eliminado' });
+  } catch { res.status(500).json({ error: 'Error al eliminar el producto del catálogo' }); }
 });
 
 // ── Shopping list ──────────────────────────────────────────────────────────────
