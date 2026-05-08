@@ -191,9 +191,17 @@ function renderProducts() {
   }
 }
 
+function updateCartBadge() {
+  const badge = document.getElementById('cart-badge');
+  const count = state.stats?.critical || 0;
+  badge.textContent = count;
+  badge.hidden = count === 0;
+}
+
 function render() {
   renderStats();
   renderProducts();
+  updateCartBadge();
 }
 
 // ── Category filter ───────────────────────────────────────────

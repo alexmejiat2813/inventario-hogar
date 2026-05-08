@@ -53,6 +53,15 @@ db.exec(`
     created_at   TEXT    DEFAULT (datetime('now','localtime')),
     updated_at   TEXT    DEFAULT (datetime('now','localtime'))
   );
+
+  CREATE TABLE IF NOT EXISTS shopping_list_items (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id INTEGER NOT NULL REFERENCES inventories(id) ON DELETE CASCADE,
+    product_id   INTEGER NOT NULL REFERENCES products(id)    ON DELETE CASCADE,
+    checked      INTEGER NOT NULL DEFAULT 0,
+    checked_at   TEXT,
+    UNIQUE(inventory_id, product_id)
+  );
 `);
 
 // ── Migration: add inventory_id column if upgrading from v1 ───────────────────
@@ -228,6 +237,43 @@ module.exports = {
 
   remove(id) {
     return db.prepare('DELETE FROM products WHERE id = ?').run(id).changes > 0;
+  },
+
+  // ── Shopping list ──────────────────────────────────────────────────────────
+  getShoppingList(inventoryId) {
+    return db.prepare(`
+      SELECT p.*,
+             COALESCE(s.checked, 0) AS checked,
+             s.checked_at,
+             (p.min_qty - p.current_qty) AS needed
+      FROM products p
+      LEFT JOIN shopping_list_items s
+        ON s.product_id = p.id AND s.inventory_id = ?
+      WHERE p.inventory_id = ? AND p.current_qty < p.min_qty
+      ORDER BY
+        CASE p.category
+          WHEN 'Alimentos' THEN 1 WHEN 'Aseo'    THEN 2
+          WHEN 'Alacena'   THEN 3 WHEN 'Bebidas'  THEN 4
+          ELSE 5
+        END,
+        p.name
+    `).all(inventoryId, inventoryId);
+  },
+
+  setShoppingItem(inventoryId, productId, checked) {
+    db.prepare(`
+      INSERT INTO shopping_list_items (inventory_id, product_id, checked, checked_at)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(inventory_id, product_id) DO UPDATE SET
+        checked    = excluded.checked,
+        checked_at = excluded.checked_at
+    `).run(inventoryId, productId, checked ? 1 : 0, checked ? new Date().toISOString() : null);
+  },
+
+  clearShoppingList(inventoryId) {
+    db.prepare(
+      'UPDATE shopping_list_items SET checked = 0, checked_at = NULL WHERE inventory_id = ?'
+    ).run(inventoryId);
   },
 
   getStats(inventoryId) {
