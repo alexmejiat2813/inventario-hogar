@@ -48,10 +48,24 @@ async function loadUser() {
   const user = await apiFetch('GET', '/api/me');
   if (!user) return;
   state.user = user;
-  document.getElementById('user-name').textContent = user.name;
+
+  // Profile button
   if (user.photo) {
     const av = document.getElementById('user-avatar');
     av.src = user.photo; av.alt = user.name; av.hidden = false;
+  } else {
+    document.getElementById('avatar-placeholder').textContent = user.name?.[0] ?? '?';
+  }
+
+  // Dropdown header
+  document.getElementById('dropdown-name').textContent  = user.name  ?? '';
+  document.getElementById('dropdown-email').textContent = user.email ?? '';
+  if (user.photo) {
+    const da = document.getElementById('dropdown-avatar');
+    da.src = user.photo; da.alt = user.name; da.hidden = false;
+    document.getElementById('dropdown-avatar-ph').hidden = true;
+  } else {
+    document.getElementById('dropdown-avatar-ph').textContent = user.name?.[0] ?? '?';
   }
 }
 
@@ -74,8 +88,8 @@ function updateInventoryHeader() {
   badge.textContent = ROLE_LABEL[inv.role] || inv.role;
   badge.className = `role-badge-header ${ROLE_CLASS[inv.role] || ''}`;
 
-  document.getElementById('btn-manage').hidden = (inv.role === 'reader');
-  document.getElementById('btn-add').hidden    = (inv.role === 'reader');
+  document.getElementById('manage-section').hidden = (inv.role === 'reader');
+  document.getElementById('btn-add').hidden         = (inv.role === 'reader');
 }
 
 // ── Render helpers ────────────────────────────────────────────
@@ -461,13 +475,45 @@ function showToast(message, type = 'success') {
   }, 3200);
 }
 
+// ── Profile dropdown ──────────────────────────────────────────
+
+function openProfileDropdown() {
+  document.getElementById('profile-dropdown').hidden = false;
+  document.getElementById('profile-btn').setAttribute('aria-expanded', 'true');
+}
+
+function closeProfileDropdown() {
+  document.getElementById('profile-dropdown').hidden = true;
+  document.getElementById('profile-btn').setAttribute('aria-expanded', 'false');
+}
+
+function toggleProfileDropdown() {
+  document.getElementById('profile-dropdown').hidden
+    ? openProfileDropdown()
+    : closeProfileDropdown();
+}
+
 // ── Events ────────────────────────────────────────────────────
 
 function initEvents() {
   document.getElementById('btn-add').addEventListener('click', () => openModal());
-  document.getElementById('btn-manage').addEventListener('click', openAccessModal);
 
+  // Profile dropdown
+  document.getElementById('profile-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleProfileDropdown();
+  });
+  document.addEventListener('click', e => {
+    if (!document.getElementById('profile-menu-wrap').contains(e.target)) {
+      closeProfileDropdown();
+    }
+  });
+  document.getElementById('btn-manage').addEventListener('click', () => {
+    closeProfileDropdown();
+    openAccessModal();
+  });
   document.getElementById('btn-logout').addEventListener('click', async () => {
+    closeProfileDropdown();
     await fetch('/auth/logout', { method: 'POST' });
     window.location.href = '/login';
   });
@@ -497,8 +543,10 @@ function initEvents() {
     if (revokeBtn) revokeCode(revokeBtn.dataset.code);
   });
 
+  // Escape: cierra cualquier modal o dropdown abierto
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    closeProfileDropdown();
     if (!document.getElementById('modal-overlay').hidden)  closeModal();
     if (!document.getElementById('access-overlay').hidden) closeAccessModal();
   });
