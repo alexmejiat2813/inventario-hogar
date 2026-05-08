@@ -263,16 +263,16 @@
     <div class="header-inner">
       <a href="/inventory" class="btn-back">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Volver
+        <span data-i18n="shopping.back">Volver</span>
       </a>
       <div class="header-title-wrap">
         <div class="header-inv-name" id="inv-name">Inventario</div>
         <div class="header-title">
-          🛒 Lista de compras
+          🛒 <span data-i18n="shopping.title">Lista de compras</span>
           <span class="list-count" id="list-count"></span>
         </div>
       </div>
-      <button class="btn-clear" id="btn-clear" hidden>Limpiar</button>
+      <button class="btn-clear" id="btn-clear" hidden data-i18n="shopping.clear">Limpiar</button>
     </div>
   </header>
 
@@ -281,8 +281,8 @@
     <!-- Empty state: no hay críticos -->
     <div class="empty-state" id="empty-state" hidden>
       <div class="empty-icon">✅</div>
-      <h2 class="empty-title">¡Todo está bien abastecido!</h2>
-      <p class="empty-sub">
+      <h2 class="empty-title" data-i18n="shopping.empty.title">¡Todo está bien abastecido!</h2>
+      <p class="empty-sub" data-i18n="shopping.empty.sub">
         Ningún producto está por debajo del mínimo.<br>
         El inventario está completo.
       </p>
@@ -298,13 +298,13 @@
     <div class="modal">
       <div class="modal-header">
         <div>
-          <h2 class="modal-title">Actualizar cantidad</h2>
+          <h2 class="modal-title" data-i18n="shopping.modal.title">Actualizar cantidad</h2>
           <p class="modal-product" id="update-product-name"></p>
         </div>
       </div>
       <form id="update-form" novalidate>
         <div class="form-group">
-          <label class="form-label" for="update-qty">Nueva cantidad actual</label>
+          <label class="form-label" for="update-qty" data-i18n="shopping.modal.label">Nueva cantidad actual</label>
           <div class="input-with-unit">
             <input class="qty-input" type="number" id="update-qty"
                    min="0" step="0.01" autocomplete="off" inputmode="decimal">
@@ -313,8 +313,8 @@
           <span class="form-hint" id="update-min-label"></span>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-cancel" id="btn-update-cancel">Cancelar</button>
-          <button type="submit" class="btn-save"   id="btn-update-save">Guardar</button>
+          <button type="button" class="btn-cancel" id="btn-update-cancel" data-i18n="shopping.modal.cancel">Cancelar</button>
+          <button type="submit" class="btn-save"   id="btn-update-save"   data-i18n="shopping.modal.save">Guardar</button>
         </div>
       </form>
     </div>
@@ -322,6 +322,7 @@
 
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
+  <script src="/js/i18n.js"></script>
   <script src="/js/shopping-list.js"></script>
 </body>
 </html>

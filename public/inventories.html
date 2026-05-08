@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mis inventarios — Inventario Hogar</title>
+  <title>Inventario Hogar</title>
   <style>
     [hidden] { display: none !important; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -103,6 +103,26 @@
     .dropdown-item-danger { color: #dc2626; }
     .dropdown-item-danger:hover { background: #fff1f2; }
     .dropdown-item-danger svg { color: #dc2626; }
+
+    /* ── Language selector ── */
+    .dropdown-lang { padding: .5rem 1rem .75rem; }
+    .dropdown-lang-label {
+      display: block; font-size: .72rem; font-weight: 600;
+      color: #94a3b8; text-transform: uppercase;
+      letter-spacing: .05em; margin-bottom: .375rem;
+    }
+    .lang-btns { display: flex; gap: .375rem; }
+    .lang-btn {
+      display: inline-flex; align-items: center; gap: .25rem;
+      padding: .3rem .6rem; border: 1.5px solid #e2e8f0;
+      border-radius: 6px; background: white;
+      font-size: .78rem; font-weight: 500; color: #475569;
+      cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .lang-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .lang-btn.lang-active { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+    .lang-check { display: none; font-size: .7rem; }
+    .lang-btn.lang-active .lang-check { display: inline; }
 
     /* ── Page layout ── */
     .page { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
@@ -265,7 +285,7 @@
     <div class="header-inner">
       <div class="header-brand">
         <span class="header-icon">🏠</span>
-        <h1 class="header-title">Inventario Hogar</h1>
+        <h1 class="header-title" data-i18n="appName">Inventario Hogar</h1>
       </div>
       <div class="profile-menu-wrap" id="profile-menu-wrap">
         <button class="profile-btn" id="profile-btn" aria-label="Menú de usuario" aria-expanded="false">
@@ -282,9 +302,18 @@
             </div>
           </div>
           <div class="dropdown-divider"></div>
+          <div class="dropdown-lang">
+            <span class="dropdown-lang-label" data-i18n="profile.language">Idioma</span>
+            <div class="lang-btns">
+              <button class="lang-btn" data-lang="es">🇪🇸 ES <span class="lang-check">✓</span></button>
+              <button class="lang-btn" data-lang="en">🇬🇧 EN <span class="lang-check">✓</span></button>
+              <button class="lang-btn" data-lang="fr">🇫🇷 FR <span class="lang-check">✓</span></button>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
           <button class="dropdown-item dropdown-item-danger" id="btn-logout">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Cerrar sesión
+            <span data-i18n="profile.logout">Cerrar sesión</span>
           </button>
         </div>
       </div>
@@ -293,15 +322,15 @@
 
   <div class="page">
     <div class="page-header">
-      <h2 class="page-title">Mis inventarios</h2>
+      <h2 class="page-title" data-i18n="inventories.title">Mis inventarios</h2>
       <div class="page-actions">
         <button class="btn btn-secondary" id="btn-join">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-          Unirme con código
+          <span data-i18n="inventories.join">Unirme con código</span>
         </button>
         <button class="btn btn-primary" id="btn-create">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Crear inventario
+          <span data-i18n="inventories.create">Crear inventario</span>
         </button>
       </div>
     </div>
@@ -309,8 +338,8 @@
     <div class="inv-grid" id="inv-grid"></div>
     <div class="empty-state" id="empty-state" hidden>
       <div class="empty-icon">📦</div>
-      <h3>No tenés inventarios aún</h3>
-      <p>Creá tu primer inventario o unite a uno con un código de invitación.</p>
+      <h3 data-i18n="inventories.empty.title">No tenés inventarios aún</h3>
+      <p data-i18n="inventories.empty.sub">Creá tu primer inventario o unite a uno con un código de invitación.</p>
     </div>
   </div>
 
@@ -318,17 +347,19 @@
   <div class="modal-overlay" id="create-overlay" hidden>
     <div class="modal">
       <div class="modal-header">
-        <h2 class="modal-title">Crear inventario</h2>
+        <h2 class="modal-title" data-i18n="inventories.modalCreate.title">Crear inventario</h2>
         <button class="modal-close" data-close="create-overlay">×</button>
       </div>
       <form class="modal-form" id="create-form" novalidate>
         <div class="form-group">
-          <label class="form-label" for="inv-name">Nombre del inventario</label>
-          <input class="form-input" type="text" id="inv-name" placeholder="Ej: Mi hogar, Oficina…" maxlength="60" required autocomplete="off">
+          <label class="form-label" for="inv-name" data-i18n="inventories.modalCreate.label">Nombre del inventario</label>
+          <input class="form-input" type="text" id="inv-name"
+                 data-i18n-ph="inventories.modalCreate.placeholder"
+                 placeholder="Ej: Mi hogar, Oficina…" maxlength="60" required autocomplete="off">
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-close="create-overlay">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Crear</button>
+          <button type="button" class="btn btn-secondary" data-close="create-overlay" data-i18n="inventories.modalCreate.cancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary" data-i18n="inventories.modalCreate.submit">Crear</button>
         </div>
       </form>
     </div>
@@ -338,19 +369,19 @@
   <div class="modal-overlay" id="join-overlay" hidden>
     <div class="modal">
       <div class="modal-header">
-        <h2 class="modal-title">Unirme con código</h2>
+        <h2 class="modal-title" data-i18n="inventories.modalJoin.title">Unirme con código</h2>
         <button class="modal-close" data-close="join-overlay">×</button>
       </div>
       <form class="modal-form" id="join-form" novalidate>
         <div class="form-group">
-          <label class="form-label" for="join-code">Código de invitación</label>
+          <label class="form-label" for="join-code" data-i18n="inventories.modalJoin.label">Código de invitación</label>
           <input class="form-input code-input" type="text" id="join-code"
                  placeholder="XXXXXX" maxlength="6" required autocomplete="off">
-          <small style="color:#64748b;font-size:.78rem">6 caracteres en mayúsculas</small>
+          <small style="color:#64748b;font-size:.78rem" data-i18n="inventories.modalJoin.hint">6 caracteres en mayúsculas</small>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-close="join-overlay">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Unirme</button>
+          <button type="button" class="btn btn-secondary" data-close="join-overlay" data-i18n="inventories.modalJoin.cancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary" data-i18n="inventories.modalJoin.submit">Unirme</button>
         </div>
       </form>
     </div>
@@ -358,6 +389,7 @@
 
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
+  <script src="/js/i18n.js"></script>
   <script src="/js/inventories.js"></script>
 </body>
 </html>

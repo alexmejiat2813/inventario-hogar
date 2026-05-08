@@ -106,8 +106,9 @@ app.post('/auth/logout', (req, res, next) => {
 });
 
 // ── Static assets (accessible without auth — needed by login page too) ─────────
-app.use('/css', express.static(path.join(__dirname, 'public/css')));
-app.use('/js',  express.static(path.join(__dirname, 'public/js')));
+app.use('/css',     express.static(path.join(__dirname, 'public/css')));
+app.use('/js',      express.static(path.join(__dirname, 'public/js')));
+app.use('/locales', express.static(path.join(__dirname, 'public/locales')));
 
 // ── Protected pages ────────────────────────────────────────────────────────────
 app.get('/', requireAuthPage, (req, res) => res.redirect('/inventories'));

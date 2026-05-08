@@ -1,0 +1,177 @@
+{
+  "appName": "Inventario Hogar",
+  "login": {
+    "desc": "Controlá el stock de tu hogar, recibí alertas cuando algo falta y mantené todo organizado.",
+    "pills": {
+      "stock": "📦 Stock en tiempo real",
+      "alerts": "⚠ Alertas de mínimos",
+      "dashboard": "📊 Dashboard"
+    },
+    "error": "No se pudo iniciar sesión con Google. Intentá de nuevo.",
+    "google": "Continuar con Google",
+    "footer": "Al iniciar sesión aceptás el uso de tus datos de perfil de Google para identificarte en la aplicación."
+  },
+  "inventories": {
+    "title": "Mis inventarios",
+    "join": "Unirme con código",
+    "create": "Crear inventario",
+    "empty": {
+      "title": "No tenés inventarios aún",
+      "sub": "Creá tu primer inventario o unite a uno con un código de invitación."
+    },
+    "card": {
+      "member": "miembro",
+      "members": "miembros",
+      "ownedBy": "de",
+      "enter": "Entrar →"
+    },
+    "joined": "Te uniste a \"{{name}}\" como {{role}}",
+    "created": "Inventario creado",
+    "modalCreate": {
+      "title": "Crear inventario",
+      "label": "Nombre del inventario",
+      "placeholder": "Ej: Mi hogar, Oficina…",
+      "cancel": "Cancelar",
+      "submit": "Crear"
+    },
+    "modalJoin": {
+      "title": "Unirme con código",
+      "label": "Código de invitación",
+      "hint": "6 caracteres en mayúsculas",
+      "codeError": "El código debe tener 6 caracteres",
+      "cancel": "Cancelar",
+      "submit": "Unirme"
+    }
+  },
+  "inventory": {
+    "back": "Inventarios",
+    "add": "Agregar",
+    "stats": {
+      "total": "Total productos",
+      "critical": "Stock crítico",
+      "byCategory": "Por categoría"
+    },
+    "tabs": {
+      "all": "Todos",
+      "Alimentos": "🍎 Alimentos",
+      "Aseo": "🧼 Aseo",
+      "Alacena": "🏺 Alacena",
+      "Bebidas": "🥤 Bebidas",
+      "Otros": "📦 Otros"
+    },
+    "search": "Buscar producto...",
+    "empty": {
+      "title": "Sin productos",
+      "sub": "No hay productos en esta categoría.\nAgregá uno con el botón de arriba."
+    },
+    "card": {
+      "min": "mín",
+      "critical": "Crítico",
+      "edit": "Editar"
+    },
+    "modal": {
+      "addTitle": "Agregar producto",
+      "editTitle": "Editar producto",
+      "name": "Nombre del producto",
+      "namePlaceholder": "Ej: Aceite de oliva",
+      "category": "Categoría",
+      "categoryPlaceholder": "Seleccionar categoría…",
+      "currentQty": "Cantidad actual",
+      "minQty": "Cantidad mínima",
+      "unit": "Unidad de medida",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "added": "Producto agregado",
+      "updated": "Producto actualizado",
+      "deleted": "Producto eliminado"
+    },
+    "access": {
+      "title": "Gestionar acceso",
+      "members": "Colaboradores",
+      "codes": "Códigos de invitación activos",
+      "noCodes": "No hay códigos activos.",
+      "genCode": "+ Generar código",
+      "codeGenerated": "Código generado",
+      "codeCopied": "Código copiado al portapapeles",
+      "copyError": "No se pudo copiar",
+      "codeRevoked": "Código revocado",
+      "memberRemoved": "Colaborador removido",
+      "copy": "Copiar",
+      "revoke": "Revocar",
+      "confirmRevoke": "¿Revocar el código {{code}}?",
+      "confirmRemove": "¿Remover a este colaborador del inventario?"
+    },
+    "confirmDelete": "¿Eliminar \"{{name}}\"?\nEsta acción no se puede deshacer."
+  },
+  "shopping": {
+    "back": "Volver",
+    "title": "Lista de compras",
+    "clear": "Limpiar",
+    "empty": {
+      "title": "¡Todo está bien abastecido!",
+      "sub": "Ningún producto está por debajo del mínimo.\nEl inventario está completo."
+    },
+    "allChecked": "¡Marcaste todo! Tocá \"Limpiar\" para empezar de nuevo.",
+    "have": "Tenés",
+    "min": "mín",
+    "missing": "Faltan",
+    "update": "Actualizar",
+    "modal": {
+      "title": "Actualizar cantidad",
+      "label": "Nueva cantidad actual",
+      "min": "mínimo",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "updated": "Cantidad actualizada"
+    },
+    "reset": "Lista reiniciada",
+    "loadError": "No se pudo cargar la lista"
+  },
+  "profile": {
+    "language": "Idioma",
+    "manage": "Gestionar acceso",
+    "logout": "Cerrar sesión"
+  },
+  "roles": {
+    "owner": "Dueño",
+    "editor": "Editor",
+    "reader": "Lector"
+  },
+  "cat": {
+    "Alimentos": "Alimentos",
+    "Aseo": "Aseo",
+    "Alacena": "Alacena",
+    "Bebidas": "Bebidas",
+    "Otros": "Otros"
+  },
+  "units": {
+    "unidades": "unidades",
+    "kg": "kg",
+    "g": "g",
+    "lt": "lt",
+    "ml": "ml",
+    "paquetes": "paquetes",
+    "cajas": "cajas",
+    "bolsas": "bolsas",
+    "latas": "latas",
+    "botellas": "botellas"
+  },
+  "unitLabel": {
+    "unidades": "unidades",
+    "kg": "kg — kilogramos",
+    "g": "g — gramos",
+    "lt": "lt — litros",
+    "ml": "ml — mililitros",
+    "paquetes": "paquetes",
+    "cajas": "cajas",
+    "bolsas": "bolsas",
+    "latas": "latas",
+    "botellas": "botellas"
+  },
+  "error": {
+    "server": "No se pudo conectar con el servidor",
+    "load": "Error al cargar datos"
+  }
+}

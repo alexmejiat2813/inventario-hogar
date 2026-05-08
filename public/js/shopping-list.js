@@ -60,11 +60,9 @@ function render() {
   const visible = state.items.filter(i => !i.checked);
   const total   = state.items.length;
 
-  // Header title count
   document.getElementById('list-count').textContent =
     visible.length > 0 ? `(${visible.length})` : '';
 
-  // Clear button only shown when there are checked items
   btnClear.hidden = !state.items.some(i => i.checked);
 
   if (total === 0) {
@@ -79,13 +77,12 @@ function render() {
     container.innerHTML = `
       <div class="all-checked">
         <div class="all-checked-icon">🎉</div>
-        <p class="all-checked-text">¡Marcaste todo! Tocá "Limpiar" para empezar de nuevo.</p>
+        <p class="all-checked-text">${t('shopping.allChecked')}</p>
       </div>
     `;
     return;
   }
 
-  // Group by category (only unchecked)
   const byCategory = {};
   visible.forEach(item => {
     (byCategory[item.category] = byCategory[item.category] || []).push(item);
@@ -97,7 +94,7 @@ function render() {
       <section class="cat-group">
         <div class="cat-group-header">
           <span class="cat-group-icon">${CAT_ICONS[cat] || '📦'}</span>
-          <span class="cat-group-name">${esc(cat)}</span>
+          <span class="cat-group-name">${t('cat.' + cat) || esc(cat)}</span>
           <span class="cat-group-count">${byCategory[cat].length}</span>
         </div>
         <div class="cat-group-items">
@@ -108,8 +105,9 @@ function render() {
 }
 
 function renderItem(item) {
-  const needed    = fmtQty(item.needed);
-  const canEdit   = state.inventory?.role !== 'reader';
+  const needed  = fmtQty(item.needed);
+  const canEdit = state.inventory?.role !== 'reader';
+  const unit    = t('units.' + item.unit) || esc(item.unit);
   return `
     <div class="list-item" data-id="${item.id}">
       <button class="item-check-btn" data-action="check" data-id="${item.id}" aria-label="Marcar como comprado">
@@ -118,18 +116,18 @@ function renderItem(item) {
       <div class="item-body">
         <span class="item-name">${esc(item.name)}</span>
         <span class="item-meta">
-          Tenés <strong>${fmtQty(item.current_qty)} ${esc(item.unit)}</strong>
-          · mín <strong>${fmtQty(item.min_qty)} ${esc(item.unit)}</strong>
+          ${t('shopping.have')} <strong>${fmtQty(item.current_qty)} ${unit}</strong>
+          · ${t('shopping.min')} <strong>${fmtQty(item.min_qty)} ${unit}</strong>
         </span>
         <span class="item-needed">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
-          Faltan ${needed} ${esc(item.unit)}
+          ${t('shopping.missing')} ${needed} ${unit}
         </span>
       </div>
       ${canEdit ? `
       <button class="item-update-btn" data-action="update" data-id="${item.id}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Actualizar
+        ${t('shopping.update')}
       </button>
       ` : ''}
     </div>
@@ -142,7 +140,6 @@ async function checkItem(productId) {
   const item = state.items.find(i => i.id === productId);
   if (!item) return;
 
-  // Optimistic update
   item.checked = true;
   render();
 
@@ -160,7 +157,7 @@ async function clearList() {
     await apiFetch('DELETE', '/api/shopping');
     state.items.forEach(i => { i.checked = false; });
     render();
-    showToast('Lista reiniciada');
+    showToast(t('shopping.reset'));
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -174,9 +171,9 @@ function openUpdateModal(productId) {
   state.editingItem = item;
 
   document.getElementById('update-product-name').textContent = item.name;
-  document.getElementById('update-unit').textContent = item.unit;
+  document.getElementById('update-unit').textContent = t('units.' + item.unit) || item.unit;
   document.getElementById('update-min-label').textContent =
-    `mínimo: ${fmtQty(item.min_qty)} ${item.unit}`;
+    `${t('shopping.modal.min')}: ${fmtQty(item.min_qty)} ${t('units.' + item.unit) || item.unit}`;
   document.getElementById('update-qty').value = fmtQty(item.current_qty);
 
   document.getElementById('update-overlay').hidden = false;
@@ -204,7 +201,7 @@ async function handleUpdateSubmit(e) {
 
   const btn = document.getElementById('btn-update-save');
   btn.disabled = true;
-  btn.textContent = 'Guardando…';
+  btn.textContent = t('shopping.modal.saving');
 
   try {
     await apiFetch('PUT', `/api/products/${item.id}`, {
@@ -214,14 +211,14 @@ async function handleUpdateSubmit(e) {
       min_qty:     item.min_qty,
       unit:        item.unit,
     });
-    showToast('Cantidad actualizada');
+    showToast(t('shopping.modal.updated'));
     closeUpdateModal();
     await loadList();
   } catch (err) {
     showToast(err.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Guardar';
+    btn.textContent = t('shopping.modal.save');
   }
 }
 
@@ -245,7 +242,6 @@ function showToast(message, type = 'success') {
 function initEvents() {
   document.getElementById('btn-clear').addEventListener('click', clearList);
 
-  // Delegated: check + update buttons on list items
   document.getElementById('shopping-list').addEventListener('click', e => {
     const checkBtn  = e.target.closest('[data-action="check"]');
     const updateBtn = e.target.closest('[data-action="update"]');
@@ -253,7 +249,6 @@ function initEvents() {
     if (updateBtn) openUpdateModal(parseInt(updateBtn.dataset.id));
   });
 
-  // Update modal
   document.getElementById('update-form').addEventListener('submit', handleUpdateSubmit);
   document.getElementById('btn-update-cancel').addEventListener('click', closeUpdateModal);
   document.getElementById('update-overlay').addEventListener('click', e => {
@@ -264,11 +259,15 @@ function initEvents() {
     if (e.key === 'Escape' && !document.getElementById('update-overlay').hidden)
       closeUpdateModal();
   });
+
+  // Language changes: re-render the list
+  document.addEventListener('langchange', () => render());
 }
 
 // ── Init ──────────────────────────────────────────────────────
 
 async function init() {
+  await I18N.init();
   initEvents();
   try {
     const ok = await loadInventory();
@@ -276,7 +275,7 @@ async function init() {
     await loadList();
   } catch (err) {
     console.error(err);
-    showToast('No se pudo cargar la lista', 'error');
+    showToast(t('shopping.loadError'), 'error');
   }
 }
 

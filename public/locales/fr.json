@@ -1,0 +1,177 @@
+{
+  "appName": "Inventaire Maison",
+  "login": {
+    "desc": "Gérez le stock de votre maison, recevez des alertes quand quelque chose manque et restez organisé.",
+    "pills": {
+      "stock": "📦 Stock en temps réel",
+      "alerts": "⚠ Alertes de minimum",
+      "dashboard": "📊 Tableau de bord"
+    },
+    "error": "Impossible de se connecter avec Google. Veuillez réessayer.",
+    "google": "Continuer avec Google",
+    "footer": "En vous connectant, vous acceptez l'utilisation de vos données de profil Google pour vous identifier dans l'application."
+  },
+  "inventories": {
+    "title": "Mes inventaires",
+    "join": "Rejoindre avec un code",
+    "create": "Créer un inventaire",
+    "empty": {
+      "title": "Vous n'avez pas encore d'inventaires",
+      "sub": "Créez votre premier inventaire ou rejoignez-en un avec un code d'invitation."
+    },
+    "card": {
+      "member": "membre",
+      "members": "membres",
+      "ownedBy": "de",
+      "enter": "Entrer →"
+    },
+    "joined": "Vous avez rejoint \"{{name}}\" en tant que {{role}}",
+    "created": "Inventaire créé",
+    "modalCreate": {
+      "title": "Créer un inventaire",
+      "label": "Nom de l'inventaire",
+      "placeholder": "Ex : Ma maison, Bureau…",
+      "cancel": "Annuler",
+      "submit": "Créer"
+    },
+    "modalJoin": {
+      "title": "Rejoindre avec un code",
+      "label": "Code d'invitation",
+      "hint": "6 caractères en majuscules",
+      "codeError": "Le code doit avoir 6 caractères",
+      "cancel": "Annuler",
+      "submit": "Rejoindre"
+    }
+  },
+  "inventory": {
+    "back": "Inventaires",
+    "add": "Ajouter",
+    "stats": {
+      "total": "Total produits",
+      "critical": "Stock critique",
+      "byCategory": "Par catégorie"
+    },
+    "tabs": {
+      "all": "Tous",
+      "Alimentos": "🍎 Alimentation",
+      "Aseo": "🧼 Nettoyage",
+      "Alacena": "🏺 Garde-manger",
+      "Bebidas": "🥤 Boissons",
+      "Otros": "📦 Autres"
+    },
+    "search": "Rechercher un produit...",
+    "empty": {
+      "title": "Aucun produit",
+      "sub": "Il n'y a aucun produit dans cette catégorie.\nAjoutez-en un avec le bouton ci-dessus."
+    },
+    "card": {
+      "min": "min",
+      "critical": "Critique",
+      "edit": "Modifier"
+    },
+    "modal": {
+      "addTitle": "Ajouter un produit",
+      "editTitle": "Modifier le produit",
+      "name": "Nom du produit",
+      "namePlaceholder": "Ex : Huile d'olive",
+      "category": "Catégorie",
+      "categoryPlaceholder": "Sélectionner une catégorie…",
+      "currentQty": "Quantité actuelle",
+      "minQty": "Quantité minimale",
+      "unit": "Unité de mesure",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "added": "Produit ajouté",
+      "updated": "Produit mis à jour",
+      "deleted": "Produit supprimé"
+    },
+    "access": {
+      "title": "Gérer l'accès",
+      "members": "Collaborateurs",
+      "codes": "Codes d'invitation actifs",
+      "noCodes": "Aucun code actif.",
+      "genCode": "+ Générer un code",
+      "codeGenerated": "Code généré",
+      "codeCopied": "Code copié dans le presse-papiers",
+      "copyError": "Impossible de copier",
+      "codeRevoked": "Code révoqué",
+      "memberRemoved": "Collaborateur retiré",
+      "copy": "Copier",
+      "revoke": "Révoquer",
+      "confirmRevoke": "Révoquer le code {{code}} ?",
+      "confirmRemove": "Retirer ce collaborateur de l'inventaire ?"
+    },
+    "confirmDelete": "Supprimer \"{{name}}\" ?\nCette action est irréversible."
+  },
+  "shopping": {
+    "back": "Retour",
+    "title": "Liste de courses",
+    "clear": "Effacer",
+    "empty": {
+      "title": "Tout est bien approvisionné !",
+      "sub": "Aucun produit n'est en dessous du minimum.\nL'inventaire est complet."
+    },
+    "allChecked": "Tout coché ! Appuyez sur « Effacer » pour recommencer.",
+    "have": "Avez",
+    "min": "min",
+    "missing": "Manque",
+    "update": "Mettre à jour",
+    "modal": {
+      "title": "Mettre à jour la quantité",
+      "label": "Nouvelle quantité actuelle",
+      "min": "minimum",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "updated": "Quantité mise à jour"
+    },
+    "reset": "Liste réinitialisée",
+    "loadError": "Impossible de charger la liste"
+  },
+  "profile": {
+    "language": "Langue",
+    "manage": "Gérer l'accès",
+    "logout": "Se déconnecter"
+  },
+  "roles": {
+    "owner": "Propriétaire",
+    "editor": "Éditeur",
+    "reader": "Lecteur"
+  },
+  "cat": {
+    "Alimentos": "Alimentation",
+    "Aseo": "Nettoyage",
+    "Alacena": "Garde-manger",
+    "Bebidas": "Boissons",
+    "Otros": "Autres"
+  },
+  "units": {
+    "unidades": "unités",
+    "kg": "kg",
+    "g": "g",
+    "lt": "lt",
+    "ml": "ml",
+    "paquetes": "paquets",
+    "cajas": "boîtes",
+    "bolsas": "sacs",
+    "latas": "conserves",
+    "botellas": "bouteilles"
+  },
+  "unitLabel": {
+    "unidades": "unités",
+    "kg": "kg — kilogrammes",
+    "g": "g — grammes",
+    "lt": "lt — litres",
+    "ml": "ml — millilitres",
+    "paquetes": "paquets",
+    "cajas": "boîtes",
+    "bolsas": "sacs",
+    "latas": "conserves",
+    "botellas": "bouteilles"
+  },
+  "error": {
+    "server": "Impossible de se connecter au serveur",
+    "load": "Erreur lors du chargement des données"
+  }
+}

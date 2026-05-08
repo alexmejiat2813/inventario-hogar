@@ -2,7 +2,6 @@
    Inventories page
    ============================================================ */
 
-const ROLE_LABEL = { owner: 'Dueño', editor: 'Editor', reader: 'Lector' };
 const ROLE_CLASS = { owner: 'role-owner', editor: 'role-editor', reader: 'role-reader' };
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -25,7 +24,10 @@ function esc(str) {
   return d.innerHTML;
 }
 
+let _lastList = [];
+
 function renderInventories(list) {
+  _lastList = list;
   const grid  = document.getElementById('inv-grid');
   const empty = document.getElementById('empty-state');
 
@@ -38,16 +40,16 @@ function renderInventories(list) {
   grid.innerHTML = list.map(inv => `
     <div class="inv-card" data-id="${inv.id}">
       <div class="inv-card-top">
-        <span class="role-badge ${ROLE_CLASS[inv.role]}">${ROLE_LABEL[inv.role]}</span>
+        <span class="role-badge ${ROLE_CLASS[inv.role]}">${t('roles.' + inv.role)}</span>
       </div>
       <div class="inv-card-name">${esc(inv.name)}</div>
       <div class="inv-card-meta">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        ${inv.member_count} ${inv.member_count === 1 ? 'miembro' : 'miembros'}
-        ${inv.role !== 'owner' ? `· <span style="color:#94a3b8">de ${esc(inv.owner_name)}</span>` : ''}
+        ${inv.member_count} ${inv.member_count === 1 ? t('inventories.card.member') : t('inventories.card.members')}
+        ${inv.role !== 'owner' ? `· <span style="color:#94a3b8">${t('inventories.card.ownedBy')} ${esc(inv.owner_name)}</span>` : ''}
       </div>
       <div class="inv-card-footer">
-        <button class="btn-enter" data-id="${inv.id}">Entrar →</button>
+        <button class="btn-enter" data-id="${inv.id}">${t('inventories.card.enter')}</button>
       </div>
     </div>
   `).join('');
@@ -102,7 +104,7 @@ async function handleCreate(e) {
   try {
     await apiFetch('POST', '/api/inventories', { name });
     closeModal('create-overlay');
-    showToast('Inventario creado');
+    showToast(t('inventories.created'));
     loadInventories();
   } catch (err) {
     showToast(err.message, 'error');
@@ -114,14 +116,14 @@ async function handleCreate(e) {
 async function handleJoin(e) {
   e.preventDefault();
   const code = document.getElementById('join-code').value.trim().toUpperCase();
-  if (code.length !== 6) { showToast('El código debe tener 6 caracteres', 'error'); return; }
+  if (code.length !== 6) { showToast(t('inventories.modalJoin.codeError'), 'error'); return; }
   const btn = e.submitter;
   btn.disabled = true;
   try {
     const result = await apiFetch('POST', '/api/inventories/join', { code });
     if (!result) return;
     closeModal('join-overlay');
-    showToast(`Te uniste a "${result.inventory.name}" como ${ROLE_LABEL[result.role]}`);
+    showToast(t('inventories.joined', { name: result.inventory.name, role: t('roles.' + result.role) }));
     loadInventories();
   } catch (err) {
     showToast(err.message, 'error');
@@ -236,17 +238,21 @@ function initEvents() {
     await fetch('/auth/logout', { method: 'POST' });
     window.location.href = '/login';
   });
+
+  // Language changes: re-render dynamic content
+  document.addEventListener('langchange', () => renderInventories(_lastList));
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 async function init() {
+  await I18N.init();
   initEvents();
   try {
     await Promise.all([loadUser(), loadInventories()]);
   } catch (err) {
     console.error(err);
-    showToast('Error al cargar datos', 'error');
+    showToast(t('error.load'), 'error');
   }
 }
 
