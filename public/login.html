@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión — Inventario Hogar</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 2.75rem 2.25rem;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow:
+        0 20px 60px rgba(0,0,0,.25),
+        0 4px 16px rgba(0,0,0,.1);
+      animation: rise .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)    scale(1);   }
+    }
+
+    .app-icon { font-size: 3.5rem; line-height: 1; margin-bottom: .75rem; }
+
+    .app-name {
+      font-size: 1.625rem;
+      font-weight: 800;
+      color: #1e293b;
+      letter-spacing: -.02em;
+      margin-bottom: .375rem;
+    }
+
+    .app-desc {
+      font-size: .9rem;
+      color: #64748b;
+      line-height: 1.55;
+      margin-bottom: 2rem;
+    }
+
+    /* Google button */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .75rem;
+      width: 100%;
+      padding: .75rem 1.25rem;
+      background: #ffffff;
+      color: #3c4043;
+      border: 1.5px solid #dadce0;
+      border-radius: 10px;
+      font-size: .9375rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background .15s, box-shadow .15s, border-color .15s;
+      cursor: pointer;
+    }
+    .btn-google:hover {
+      background: #f8fafc;
+      border-color: #c0c5cb;
+      box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    }
+    .btn-google:active {
+      background: #f1f3f4;
+    }
+    .btn-google svg { flex-shrink: 0; }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 1.5rem 0;
+      color: #cbd5e1;
+      font-size: .8rem;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    /* Feature pills */
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .5rem;
+      margin-bottom: 1.75rem;
+    }
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .3rem .75rem;
+      background: #f1f5f9;
+      border-radius: 999px;
+      font-size: .78rem;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    .footer-note {
+      margin-top: 1.5rem;
+      font-size: .775rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    /* Error banner */
+    .error-banner {
+      display: none;
+      background: #fee2e2;
+      color: #b91c1c;
+      border-radius: 8px;
+      padding: .625rem .875rem;
+      font-size: .85rem;
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+    }
+    .error-banner.visible { display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="app-icon">🏠</div>
+    <h1 class="app-name">Inventario Hogar</h1>
+    <p class="app-desc">Controlá el stock de tu hogar, recibí alertas cuando algo falta y mantené todo organizado.</p>
+
+    <div class="features">
+      <span class="feature-pill">📦 Stock en tiempo real</span>
+      <span class="feature-pill">⚠ Alertas de mínimos</span>
+      <span class="feature-pill">📊 Dashboard</span>
+    </div>
+
+    <div class="error-banner" id="error-banner">
+      No se pudo iniciar sesión con Google. Intentá de nuevo.
+    </div>
+
+    <a href="/auth/google" class="btn-google">
+      <!-- Google "G" logo -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continuar con Google
+    </a>
+
+    <p class="footer-note">
+      Al iniciar sesión aceptás el uso de tus datos de perfil<br>de Google para identificarte en la aplicación.
+    </p>
+  </div>
+
+  <script>
+    if (new URLSearchParams(location.search).get('error')) {
+      document.getElementById('error-banner').classList.add('visible');
+    }
+  </script>
+</body>
+</html>

@@ -25,6 +25,7 @@ async function apiFetch(method, url, body) {
   const opts = { method, headers: { 'Content-Type': 'application/json' } };
   if (body !== undefined) opts.body = JSON.stringify(body);
   const res = await fetch(url, opts);
+  if (res.status === 401) { window.location.href = '/login'; return null; }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Error en el servidor');
   return data;
@@ -35,8 +36,25 @@ async function loadData() {
     apiFetch('GET', '/api/products'),
     apiFetch('GET', '/api/stats'),
   ]);
+  if (!products || !stats) return; // redirected to /login on 401
   state.products = products;
   state.stats    = stats;
+}
+
+async function loadUser() {
+  const user = await apiFetch('GET', '/api/me');
+  if (!user) return;
+
+  const nameEl   = document.getElementById('user-name');
+  const avatarEl = document.getElementById('user-avatar');
+
+  nameEl.textContent = user.name;
+
+  if (user.photo) {
+    avatarEl.src    = user.photo;
+    avatarEl.alt    = user.name;
+    avatarEl.hidden = false;
+  }
 }
 
 // ============================================================
@@ -316,6 +334,12 @@ function initEvents() {
   // Add product button
   document.getElementById('btn-add').addEventListener('click', () => openModal());
 
+  // Logout
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    await fetch('/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  });
+
   // Modal close
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
@@ -363,7 +387,7 @@ function initEvents() {
 async function init() {
   initEvents();
   try {
-    await loadData();
+    await Promise.all([loadData(), loadUser()]);
     render();
   } catch (err) {
     console.error(err);

@@ -18,10 +18,17 @@
           <p class="header-subtitle">Gestión de productos del hogar</p>
         </div>
       </div>
-      <button class="btn btn-primary" id="btn-add">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Agregar
-      </button>
+      <div class="header-right">
+        <button class="btn btn-primary" id="btn-add">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span class="btn-add-label">Agregar</span>
+        </button>
+        <div class="header-user">
+          <img class="user-avatar" id="user-avatar" src="" alt="" hidden>
+          <span class="user-name" id="user-name"></span>
+          <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+        </div>
+      </div>
     </div>
   </header>
 

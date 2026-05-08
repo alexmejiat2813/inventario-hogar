@@ -86,6 +86,58 @@ img, svg { display: block; }
   .header-title    { font-size: 1.4rem; }
 }
 
+/* Header right: add button + user info */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-shrink: 0;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.35);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: .8rem;
+  font-weight: 500;
+  color: rgba(255,255,255,.9);
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: none;
+}
+@media (min-width: 600px) { .user-name { display: block; } }
+
+.btn-logout {
+  padding: .35rem .7rem;
+  background: rgba(255,255,255,.15);
+  color: rgba(255,255,255,.9);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: var(--r-sm);
+  font-size: .775rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.btn-logout:hover { background: rgba(255,255,255,.25); }
+
+/* Hide "Agregar" label on very small screens */
+.btn-add-label { display: none; }
+@media (min-width: 400px) { .btn-add-label { display: inline; } }
+
 /* ============================================================
    Layout
    ============================================================ */
