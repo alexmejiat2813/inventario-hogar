@@ -121,6 +121,11 @@ app.get('/inventory', requireAuthPage, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.get('/shopping-list', requireAuthPage, (req, res) => {
+  if (!req.session.activeInventoryId) return res.redirect('/inventories');
+  res.sendFile(path.join(__dirname, 'public', 'shopping-list.html'));
+});
+
 // ── All API routes require auth ────────────────────────────────────────────────
 app.use('/api', requireAuthApi);
 
@@ -221,7 +226,7 @@ app.delete('/api/inventories/:id/members/:userId', requireMember, requireOwner, 
 });
 
 // ── Products (all require an active inventory in session) ──────────────────────
-app.use(['/api/products', '/api/stats'], requireInventory);
+app.use(['/api/products', '/api/stats', '/api/shopping'], requireInventory);
 
 app.get('/api/products', (req, res) => {
   try {
@@ -276,6 +281,28 @@ app.delete('/api/products/:id', requireEditorOrOwner, (req, res) => {
 app.get('/api/stats', (req, res) => {
   try { res.json(db.getStats(req.inventoryId)); }
   catch { res.status(500).json({ error: 'Error al obtener estadísticas' }); }
+});
+
+// ── Shopping list ──────────────────────────────────────────────────────────────
+app.get('/api/shopping', (req, res) => {
+  try { res.json(db.getShoppingList(req.inventoryId)); }
+  catch { res.status(500).json({ error: 'Error al obtener la lista de compras' }); }
+});
+
+app.put('/api/shopping/:productId', (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId);
+    if (isNaN(productId)) return res.status(400).json({ error: 'ID inválido' });
+    db.setShoppingItem(req.inventoryId, productId, !!req.body.checked);
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Error al actualizar el item' }); }
+});
+
+app.delete('/api/shopping', (req, res) => {
+  try {
+    db.clearShoppingList(req.inventoryId);
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Error al limpiar la lista' }); }
 });
 
 app.listen(PORT, () => {
