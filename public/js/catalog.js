@@ -6,7 +6,12 @@ const CATEGORY_ICONS = {
   'Aseo Personal':'🧴',
   'Aseo del Hogar':'🧹',
   'Alacena':      '🫙',
+  'Aseo':         '🧼',
+  'Otros':        '📦',
 };
+
+const MAX_PHOTOS     = 5;
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
 const state = {
   catalog: [],
@@ -15,6 +20,7 @@ const state = {
   activeCategory: 'all',
   searchQuery: '',
   addingProductId: null,
+  pendingPhotos: [],
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
@@ -143,16 +149,20 @@ function openAddToInventoryModal(productId) {
   if (!product) return;
 
   state.addingProductId  = productId;
+  state.pendingPhotos    = [];
   addInvName.textContent = product.name;
   addInvCurrent.value    = '';
   addInvMin.value        = '';
   addInvSave.textContent = t('catalog.modalAdd.save');
   addInvSave.disabled    = false;
+  renderPendingPhotoGrid();
   addInvOverlay.hidden   = false;
   addInvCurrent.focus();
 }
 
 function closeAddToInventoryModal() {
+  state.pendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
+  state.pendingPhotos    = [];
   addInvOverlay.hidden   = true;
   state.addingProductId  = null;
   addInvForm.reset();
@@ -166,7 +176,7 @@ async function handleAddToInventory(e) {
   addInvSave.textContent = t('catalog.modalAdd.saving');
 
   try {
-    const res = await fetch(`/api/catalog/${state.addingProductId}/add`, {
+    const res          = await fetch(`/api/catalog/${state.addingProductId}/add`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -175,10 +185,20 @@ async function handleAddToInventory(e) {
         unit:        addInvUnit.value || 'unidades',
       }),
     });
+    const responseData = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || res.status);
+    if (!res.ok) throw new Error(responseData.error || res.status);
+
+    const productId = responseData.id;
+
+    if (state.pendingPhotos.length > 0 && productId) {
+      const fd = new FormData();
+      state.pendingPhotos.forEach(p => fd.append('photos', p.file));
+      try {
+        await fetch(`/api/products/${productId}/images`, { method: 'POST', body: fd });
+      } catch { /* non-fatal: photos failed but product was added */ }
+      state.pendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
+      state.pendingPhotos = [];
     }
 
     closeAddToInventoryModal();
@@ -240,6 +260,61 @@ async function handleAddToCatalog(e) {
   }
 }
 
+// ── Pending photo management ──────────────────────────────────────────────────
+function renderPendingPhotoGrid() {
+  const grid    = document.getElementById('add-inv-photos-grid');
+  const addBtn  = document.getElementById('btn-add-inv-photos');
+  if (!grid || !addBtn) return;
+
+  // Clear existing warn
+  const existingWarn = grid.parentElement.querySelector('.photos-count-warn');
+  if (existingWarn) existingWarn.remove();
+
+  grid.innerHTML = '';
+
+  if (state.pendingPhotos.length >= MAX_PHOTOS) {
+    const warn = document.createElement('p');
+    warn.className = 'photos-count-warn';
+    warn.textContent = t('inventory.photos.maxFiles') || 'Máximo 5 fotos por producto';
+    grid.parentElement.insertBefore(warn, grid);
+  }
+
+  state.pendingPhotos.forEach((p, idx) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `
+      <img src="${p.url}" alt="">
+      <button type="button" class="photo-thumb-del" data-action="remove-pending" data-index="${idx}" aria-label="Eliminar foto">✕</button>
+    `;
+    grid.appendChild(thumb);
+  });
+
+  addBtn.disabled = state.pendingPhotos.length >= MAX_PHOTOS;
+}
+
+function handleFileInputChange(e) {
+  const files = Array.from(e.target.files || []);
+  let skipped = 0;
+
+  files.forEach(file => {
+    if (state.pendingPhotos.length >= MAX_PHOTOS) { skipped++; return; }
+    if (file.size > MAX_PHOTO_SIZE) {
+      toast(t('inventory.photos.maxSize') || `Tamaño máximo 5MB: ${file.name}`, 'error');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    state.pendingPhotos.push({ file, url });
+  });
+
+  if (skipped > 0) {
+    toast(t('inventory.photos.maxFiles') || 'Máximo 5 fotos por producto', 'info');
+  }
+
+  // Reset the file input so the same file can be re-selected if needed
+  e.target.value = '';
+  renderPendingPhotoGrid();
+}
+
 // ── Toast ─────────────────────────────────────────────────────────────────────
 function toast(msg, type = 'info') {
   const el = document.createElement('div');
@@ -287,6 +362,20 @@ function initEvents() {
   addInvClose.addEventListener('click',  closeAddToInventoryModal);
   addInvCancel.addEventListener('click', closeAddToInventoryModal);
   addInvOverlay.addEventListener('click', e => { if (e.target === addInvOverlay) closeAddToInventoryModal(); });
+
+  // Photo add button
+  document.getElementById('btn-add-inv-photos').addEventListener('click', () => {
+    document.getElementById('add-inv-file-input').click();
+  });
+  document.getElementById('add-inv-file-input').addEventListener('change', handleFileInputChange);
+  document.getElementById('add-inv-photos-grid').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="remove-pending"]');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.index);
+    URL.revokeObjectURL(state.pendingPhotos[idx].url);
+    state.pendingPhotos.splice(idx, 1);
+    renderPendingPhotoGrid();
+  });
 
   // Add-to-catalog modal
   btnAddCatalog.addEventListener('click', openAddToCatalogModal);

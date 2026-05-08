@@ -109,6 +109,15 @@
     "addMenu": {
       "fromCatalog": "From catalog",
       "custom": "Custom product"
+    },
+    "photos": {
+      "title": "📷 Reference photos",
+      "hint": "E.g.: photo of the product at the supermarket",
+      "btn": "📷 Add photos",
+      "maxFiles": "Maximum 5 photos per product",
+      "maxSize": "Maximum file size 5MB per photo",
+      "deleted": "Photo deleted",
+      "uploaded": "Photo(s) saved"
     }
   },
   "shopping": {
@@ -237,7 +246,10 @@
       "cancel": "Cancel",
       "save": "Add",
       "saving": "Adding…",
-      "added": "Product added to inventory"
+      "added": "Product added to inventory",
+      "photosTitle": "📷 Reference photos (optional)",
+      "photosHint": "E.g.: photo of the product at the supermarket for easy identification",
+      "photosBtn": "📷 Add photos"
     },
     "modalNew": {
       "title": "Add to catalog",

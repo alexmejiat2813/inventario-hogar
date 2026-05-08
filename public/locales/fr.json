@@ -109,6 +109,15 @@
     "addMenu": {
       "fromCatalog": "Du catalogue",
       "custom": "Produit personnalisé"
+    },
+    "photos": {
+      "title": "📷 Photos de référence",
+      "hint": "Ex : photo du produit au supermarché",
+      "btn": "📷 Ajouter des photos",
+      "maxFiles": "Maximum 5 photos par produit",
+      "maxSize": "Taille maximale 5 Mo par photo",
+      "deleted": "Photo supprimée",
+      "uploaded": "Photo(s) enregistrée(s)"
     }
   },
   "shopping": {
@@ -237,7 +246,10 @@
       "cancel": "Annuler",
       "save": "Ajouter",
       "saving": "Ajout…",
-      "added": "Produit ajouté à l'inventaire"
+      "added": "Produit ajouté à l'inventaire",
+      "photosTitle": "📷 Photos de référence (optionnel)",
+      "photosHint": "Ex : photo du produit au supermarché pour l'identifier facilement",
+      "photosBtn": "📷 Ajouter des photos"
     },
     "modalNew": {
       "title": "Ajouter au catalogue",

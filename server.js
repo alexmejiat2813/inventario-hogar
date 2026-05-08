@@ -26,6 +26,25 @@ const uploadReceipt = multer({
   },
 });
 
+const PRODUCT_IMAGES_DIR = path.join(__dirname, 'public', 'uploads', 'products');
+if (!fs.existsSync(PRODUCT_IMAGES_DIR)) fs.mkdirSync(PRODUCT_IMAGES_DIR, { recursive: true });
+
+const productImageStorage = multer.diskStorage({
+  destination: PRODUCT_IMAGES_DIR,
+  filename(req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `prod-${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+const uploadProductImage = multer({
+  storage: productImageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter(req, file, cb) {
+    if (/^image\//i.test(file.mimetype) || /\.heic$/i.test(file.originalname)) cb(null, true);
+    else cb(new Error('Formato de imagen no válido'));
+  },
+}).array('photos', 5);
+
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
@@ -318,6 +337,65 @@ app.delete('/api/products/:id', requireEditorOrOwner, (req, res) => {
     db.remove(parseInt(req.params.id));
     res.json({ message: 'Producto eliminado' });
   } catch { res.status(500).json({ error: 'Error al eliminar el producto' }); }
+});
+
+// ── Product images ─────────────────────────────────────────────────────────────
+app.get('/api/products/:id/images', (req, res) => {
+  try {
+    const productId = parseInt(req.params.id);
+    if (isNaN(productId)) return res.status(400).json({ error: 'ID inválido' });
+    const p = db.getById(productId);
+    if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
+    res.json(db.getProductImages(productId));
+  } catch { res.status(500).json({ error: 'Error al obtener imágenes' }); }
+});
+
+app.post('/api/products/:id/images', requireEditorOrOwner, (req, res) => {
+  const productId = parseInt(req.params.id);
+  if (isNaN(productId)) return res.status(400).json({ error: 'ID inválido' });
+  uploadProductImage(req, res, async err => {
+    if (err) return res.status(400).json({ error: err.message });
+    try {
+      const p = db.getById(productId);
+      if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
+      if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
+
+      const existing = db.getProductImageCount(productId);
+      const incoming = (req.files || []).length;
+      if (existing + incoming > 5) {
+        // Clean up uploaded files since we won't use them
+        (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
+        return res.status(400).json({ error: 'Máximo 5 fotos por producto' });
+      }
+
+      const saved = (req.files || []).map(f => {
+        const imagePath = '/uploads/products/' + f.filename;
+        return db.addProductImage(productId, imagePath);
+      });
+      res.status(201).json(saved);
+    } catch { res.status(500).json({ error: 'Error al guardar imágenes' }); }
+  });
+});
+
+app.delete('/api/products/:id/images/:imageId', requireEditorOrOwner, (req, res) => {
+  try {
+    const productId = parseInt(req.params.id);
+    const imageId   = parseInt(req.params.imageId);
+    if (isNaN(productId) || isNaN(imageId)) return res.status(400).json({ error: 'ID inválido' });
+    const p = db.getById(productId);
+    if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
+
+    const { deleted, image_path } = db.deleteProductImage(imageId, productId);
+    if (!deleted) return res.status(404).json({ error: 'Imagen no encontrada' });
+
+    if (image_path) {
+      const filePath = path.join(__dirname, 'public', image_path);
+      fs.unlink(filePath, () => {}); // ignore errors if file missing
+    }
+    res.json({ message: 'Imagen eliminada' });
+  } catch { res.status(500).json({ error: 'Error al eliminar imagen' }); }
 });
 
 app.get('/api/stats', (req, res) => {

@@ -236,6 +236,45 @@
     .btn-save:hover { background: #1d4ed8; }
     .btn-save:disabled { opacity: .6; }
 
+    /* ── Photos section ── */
+    .photos-section-title {
+      font-size: .85rem; font-weight: 700; color: #1e293b; margin-bottom: .2rem;
+    }
+    .photos-section-hint {
+      font-size: .75rem; color: #64748b; margin-bottom: .5rem;
+    }
+    .photos-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-bottom: .5rem;
+    }
+    .photo-thumb {
+      position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 8px;
+      background: #f1f5f9;
+    }
+    .photo-thumb img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .photo-thumb-del {
+      position: absolute; top: 4px; right: 4px;
+      background: rgba(0,0,0,.5); color: white;
+      border: none; border-radius: 4px;
+      width: 22px; height: 22px; font-size: .75rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; line-height: 1;
+    }
+    .photo-thumb-del:hover { background: rgba(0,0,0,.75); }
+    .btn-photos-add {
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .4rem .75rem;
+      color: #2563eb; border: 1.5px solid #2563eb; background: white;
+      border-radius: 8px; font-size: .8rem; font-weight: 600;
+      transition: background .15s;
+    }
+    .btn-photos-add:hover { background: #eff6ff; }
+    .btn-photos-add:disabled { opacity: .5; cursor: default; }
+    .photos-count-warn {
+      font-size: .75rem; color: #f59e0b; font-weight: 600; margin-bottom: .35rem;
+    }
+
     /* ── Toast ── */
     .toast-container {
       position: fixed; bottom: 1.5rem; right: 1rem; left: 1rem; z-index: 300;
@@ -331,6 +370,13 @@
           <select class="form-select" id="add-inv-unit">
             <!-- populated dynamically -->
           </select>
+        </div>
+        <div class="form-group photos-section" id="add-inv-photos-section">
+          <div class="photos-section-title" data-i18n="catalog.modalAdd.photosTitle">📷 Fotos de referencia (opcional)</div>
+          <div class="photos-section-hint" data-i18n="catalog.modalAdd.photosHint">Ej: foto del producto en el supermercado para identificarlo fácilmente</div>
+          <div class="photos-grid" id="add-inv-photos-grid"></div>
+          <button type="button" class="btn-photos-add" id="btn-add-inv-photos" data-i18n="catalog.modalAdd.photosBtn">📷 Agregar fotos</button>
+          <input type="file" id="add-inv-file-input" accept="image/*,.heic" multiple hidden>
         </div>
         <div class="modal-footer" style="margin-top:.5rem">
           <button type="button" class="btn-cancel" id="add-inv-cancel" data-i18n="catalog.modalAdd.cancel">Cancelar</button>

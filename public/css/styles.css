@@ -989,3 +989,98 @@ img, svg { display: block; }
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(37,99,235,.12);
 }
+
+/* ============================================================
+   Product photos
+   ============================================================ */
+.btn-card-photos {
+  display: inline-flex; align-items: center; gap: .2rem;
+  padding: .2rem .45rem;
+  background: var(--primary-light); color: var(--primary);
+  border: none; border-radius: 6px;
+  font-size: .75rem; font-weight: 700; cursor: pointer;
+  transition: background .15s;
+}
+.btn-card-photos:hover { background: #bfdbfe; }
+
+.photos-section { margin-top: .5rem; }
+.photos-section-title {
+  font-size: .85rem; font-weight: 700; color: var(--text); margin-bottom: .2rem;
+}
+.photos-section-hint {
+  font-size: .75rem; color: var(--text-muted); margin-bottom: .5rem;
+}
+.photos-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-bottom: .5rem;
+}
+.photo-thumb {
+  position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 8px;
+  background: var(--bg);
+}
+.photo-thumb img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.photo-thumb-del {
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(0,0,0,.5); color: white;
+  border: none; border-radius: 4px;
+  width: 22px; height: 22px; font-size: .75rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; line-height: 1;
+}
+.photo-thumb-del:hover { background: rgba(0,0,0,.75); }
+.btn-photos-add {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .4rem .75rem;
+  color: var(--primary); border: 1.5px solid var(--primary); background: white;
+  border-radius: 8px; font-size: .8rem; font-weight: 600;
+  transition: background .15s;
+}
+.btn-photos-add:hover { background: var(--primary-light); }
+.btn-photos-add:disabled { opacity: .5; cursor: default; }
+.photos-count-warn {
+  font-size: .75rem; color: var(--warning); font-weight: 600; margin-bottom: .35rem;
+}
+
+/* Photo lightbox viewer */
+.photos-viewer {
+  background: white; border-radius: 18px 18px 0 0;
+  width: 100%; max-width: 480px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  animation: slide-up .22s cubic-bezier(.34,1.56,.64,1);
+}
+@media (min-width: 640px) {
+  .photos-viewer { border-radius: 18px; animation: scale-in .18s ease; }
+}
+.photos-viewer-header {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .875rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.photos-viewer-name {
+  flex: 1; font-weight: 700; font-size: .9rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.photos-viewer-count {
+  font-size: .8rem; color: var(--text-muted); flex-shrink: 0;
+}
+.photos-viewer-img-wrap {
+  position: relative; background: #000; aspect-ratio: 4/3;
+  display: flex; align-items: center; justify-content: center;
+}
+.photos-viewer-img {
+  max-width: 100%; max-height: 100%; object-fit: contain; display: block;
+}
+.photos-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 36px;
+  background: rgba(0,0,0,.45); color: white;
+  border: none; border-radius: 50%;
+  font-size: 1.5rem; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .15s;
+}
+.photos-nav:hover { background: rgba(0,0,0,.7); }
+.photos-nav--prev { left: .5rem; }
+.photos-nav--next { right: .5rem; }

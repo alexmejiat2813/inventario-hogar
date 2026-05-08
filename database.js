@@ -119,6 +119,13 @@ db.exec(`
     subtotal        REAL,
     created_at      TEXT    DEFAULT (datetime('now','localtime'))
   );
+
+  CREATE TABLE IF NOT EXISTS product_images (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    image_path TEXT    NOT NULL,
+    created_at TEXT    DEFAULT (datetime('now','localtime'))
+  );
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -425,9 +432,13 @@ module.exports = {
 
   // ── Products ───────────────────────────────────────────────────────────────
   getAll(inventoryId) {
-    return db.prepare(
-      'SELECT * FROM products WHERE inventory_id = ? ORDER BY category, name'
-    ).all(inventoryId);
+    return db.prepare(`
+      SELECT p.*,
+             (SELECT COUNT(*) FROM product_images WHERE product_id = p.id) AS image_count
+      FROM products p
+      WHERE p.inventory_id = ?
+      ORDER BY p.category, p.name
+    `).all(inventoryId);
   },
 
   getByCategory(inventoryId, category) {
@@ -600,6 +611,38 @@ module.exports = {
       catalogProductId,
     });
     return { product };
+  },
+
+  // ── Product images ─────────────────────────────────────────────────────────
+  getProductImages(productId) {
+    return db.prepare(
+      'SELECT * FROM product_images WHERE product_id = ? ORDER BY created_at'
+    ).all(productId);
+  },
+
+  addProductImage(productId, imagePath) {
+    const { lastInsertRowid } = db.prepare(
+      'INSERT INTO product_images (product_id, image_path) VALUES (?, ?)'
+    ).run(productId, imagePath);
+    return db.prepare('SELECT * FROM product_images WHERE id = ?').get(lastInsertRowid);
+  },
+
+  deleteProductImage(imageId, productId) {
+    const row = db.prepare(
+      'SELECT image_path FROM product_images WHERE id = ? AND product_id = ?'
+    ).get(imageId, productId);
+    if (!row) return { deleted: false, image_path: null };
+    const { changes } = db.prepare(
+      'DELETE FROM product_images WHERE id = ? AND product_id = ?'
+    ).run(imageId, productId);
+    return { deleted: changes > 0, image_path: row.image_path };
+  },
+
+  getProductImageCount(productId) {
+    const { count } = db.prepare(
+      'SELECT COUNT(*) AS count FROM product_images WHERE product_id = ?'
+    ).get(productId);
+    return count;
   },
 
   // ── Shopping list ──────────────────────────────────────────────────────────
