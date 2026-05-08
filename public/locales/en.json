@@ -55,7 +55,7 @@
       "all": "All",
       "Alimentos": "🍎 Food",
       "Aseo": "🧼 Cleaning",
-      "Alacena": "🏺 Pantry",
+      "Alacena": "🫙 Pantry",
       "Bebidas": "🥤 Drinks",
       "Otros": "📦 Others"
     },
@@ -72,6 +72,9 @@
     "modal": {
       "addTitle": "Add product",
       "editTitle": "Edit product",
+      "product": "Product",
+      "productPlaceholder": "— Select from catalog —",
+      "customProduct": "✏ Custom product",
       "name": "Product name",
       "namePlaceholder": "E.g.: Olive oil",
       "category": "Category",
@@ -102,7 +105,11 @@
       "confirmRevoke": "Revoke code {{code}}?",
       "confirmRemove": "Remove this collaborator from the inventory?"
     },
-    "confirmDelete": "Delete \"{{name}}\"?\nThis action cannot be undone."
+    "confirmDelete": "Delete \"{{name}}\"?\nThis action cannot be undone.",
+    "addMenu": {
+      "fromCatalog": "From catalog",
+      "custom": "Custom product"
+    }
   },
   "shopping": {
     "back": "Back",
@@ -131,6 +138,7 @@
   },
   "profile": {
     "language": "Language",
+    "settings": "Settings",
     "manage": "Manage access",
     "logout": "Sign out"
   },
@@ -152,6 +160,9 @@
     "g": "g",
     "lt": "lt",
     "ml": "ml",
+    "tsp": "tsp",
+    "tbsp": "tbsp",
+    "cup": "cup",
     "paquetes": "packages",
     "cajas": "boxes",
     "bolsas": "bags",
@@ -164,11 +175,138 @@
     "g": "g — grams",
     "lt": "lt — litres",
     "ml": "ml — millilitres",
+    "tsp": "tsp — teaspoon",
+    "tbsp": "tbsp — tablespoon",
+    "cup": "cup",
     "paquetes": "packages",
     "cajas": "boxes",
     "bolsas": "bags",
     "latas": "cans",
     "botellas": "bottles"
+  },
+  "catalog": {
+    "title": "Product catalog",
+    "search": "Search the catalog...",
+    "add": "+ Add to catalog",
+    "back": "Inventory",
+    "count": "{{count}} products",
+    "tabs": {
+      "all": "All",
+      "Alimentos": "🍎 Food",
+      "Bebidas": "🥤 Drinks",
+      "Aseo Personal": "🧴 Personal Care",
+      "Aseo del Hogar": "🧹 Home Cleaning",
+      "Alacena": "🫙 Pantry"
+    },
+    "inInventory": "In inventory",
+    "addToInventory": "Add",
+    "empty": {
+      "title": "No results",
+      "sub": "No products found matching your criteria."
+    },
+    "noInventory": "Open an inventory to add products.",
+    "modalAdd": {
+      "title": "Add to inventory",
+      "currentQty": "Current quantity",
+      "minQty": "Minimum quantity",
+      "unit": "Unit of measure",
+      "cancel": "Cancel",
+      "save": "Add",
+      "saving": "Adding…",
+      "added": "Product added to inventory"
+    },
+    "modalNew": {
+      "title": "Add to catalog",
+      "name": "Product name",
+      "namePlaceholder": "E.g.: Red lentils",
+      "category": "Category",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "added": "Product added to catalog",
+      "duplicate": "A product with that name already exists"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "back": "Back",
+    "tabs": {
+      "categories": "Categories",
+      "units": "Units",
+      "catalog": "Catalog"
+    },
+    "categories": {
+      "title": "Categories",
+      "add": "+ Add category",
+      "colName": "Name",
+      "colEmoji": "Icon",
+      "colActions": "Actions",
+      "empty": "No categories",
+      "modal": {
+        "addTitle": "Add category",
+        "editTitle": "Edit category",
+        "name": "Name",
+        "namePlaceholder": "E.g.: Fruits",
+        "emoji": "Emoji",
+        "emojiPlaceholder": "🍎",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving…",
+        "added": "Category added",
+        "updated": "Category updated",
+        "deleted": "Category deleted",
+        "confirmDelete": "Delete category \"{{name}}\"?"
+      }
+    },
+    "units": {
+      "title": "Units of measure",
+      "add": "+ Add unit",
+      "colName": "Name",
+      "colAbbr": "Abbreviation",
+      "colType": "Type",
+      "colActions": "Actions",
+      "empty": "No units",
+      "types": {
+        "peso": "Weight",
+        "volumen": "Volume",
+        "cantidad": "Quantity"
+      },
+      "modal": {
+        "addTitle": "Add unit",
+        "editTitle": "Edit unit",
+        "name": "Name",
+        "namePlaceholder": "E.g.: kilograms",
+        "abbreviation": "Abbreviation",
+        "abbreviationPlaceholder": "E.g.: kg",
+        "type": "Type",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving…",
+        "added": "Unit added",
+        "updated": "Unit updated",
+        "deleted": "Unit deleted",
+        "confirmDelete": "Delete unit \"{{name}}\"?"
+      }
+    },
+    "catalog": {
+      "title": "Catalog products",
+      "viewAll": "View full catalog →",
+      "colName": "Name",
+      "colCategory": "Category",
+      "colActions": "Actions",
+      "empty": "No products",
+      "modal": {
+        "editTitle": "Edit product",
+        "name": "Product name",
+        "category": "Category",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving…",
+        "updated": "Product updated",
+        "deleted": "Product removed from catalog",
+        "confirmDelete": "Delete \"{{name}}\" from catalog?"
+      }
+    }
   },
   "error": {
     "server": "Could not connect to the server",

@@ -42,16 +42,41 @@ db.exec(`
     created_at   TEXT    DEFAULT (datetime('now','localtime'))
   );
 
-  CREATE TABLE IF NOT EXISTS products (
+  CREATE TABLE IF NOT EXISTS categories (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT    NOT NULL UNIQUE,
+    emoji      TEXT    NOT NULL DEFAULT '📦',
+    created_at TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS units (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    name         TEXT    NOT NULL,
+    name         TEXT    NOT NULL UNIQUE,
+    abbreviation TEXT    NOT NULL DEFAULT '',
+    type         TEXT    NOT NULL DEFAULT 'cantidad',
+    created_at   TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS catalog_products (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    name         TEXT    NOT NULL UNIQUE,
     category     TEXT    NOT NULL,
-    current_qty  REAL    NOT NULL DEFAULT 0,
-    min_qty      REAL    NOT NULL DEFAULT 0,
-    unit         TEXT    NOT NULL DEFAULT 'unidades',
-    inventory_id INTEGER REFERENCES inventories(id) ON DELETE CASCADE,
-    created_at   TEXT    DEFAULT (datetime('now','localtime')),
-    updated_at   TEXT    DEFAULT (datetime('now','localtime'))
+    default_unit TEXT    NOT NULL DEFAULT 'unidades',
+    created_by   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at   TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS products (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    name               TEXT    NOT NULL,
+    category           TEXT    NOT NULL,
+    current_qty        REAL    NOT NULL DEFAULT 0,
+    min_qty            REAL    NOT NULL DEFAULT 0,
+    unit               TEXT    NOT NULL DEFAULT 'unidades',
+    inventory_id       INTEGER REFERENCES inventories(id)       ON DELETE CASCADE,
+    catalog_product_id INTEGER REFERENCES catalog_products(id)  ON DELETE SET NULL,
+    created_at         TEXT    DEFAULT (datetime('now','localtime')),
+    updated_at         TEXT    DEFAULT (datetime('now','localtime'))
   );
 
   CREATE TABLE IF NOT EXISTS shopping_list_items (
@@ -64,11 +89,171 @@ db.exec(`
   );
 `);
 
-// ── Migration: add inventory_id column if upgrading from v1 ───────────────────
-const productCols = db.prepare('PRAGMA table_info(products)').all();
-if (!productCols.find(c => c.name === 'inventory_id')) {
+// ── Migrations ────────────────────────────────────────────────────────────────
+const productCols = db.prepare('PRAGMA table_info(products)').all().map(c => c.name);
+if (!productCols.includes('inventory_id')) {
   db.exec('ALTER TABLE products ADD COLUMN inventory_id INTEGER REFERENCES inventories(id) ON DELETE CASCADE');
 }
+if (!productCols.includes('catalog_product_id')) {
+  db.exec('ALTER TABLE products ADD COLUMN catalog_product_id INTEGER REFERENCES catalog_products(id) ON DELETE SET NULL');
+}
+
+// ── Seed: categories ──────────────────────────────────────────────────────────
+{
+  const ins = db.prepare('INSERT OR IGNORE INTO categories (name, emoji) VALUES (?, ?)');
+  [
+    ['Alimentos',     '🍎'],
+    ['Bebidas',       '🥤'],
+    ['Aseo Personal', '🧴'],
+    ['Aseo del Hogar','🧹'],
+    ['Alacena',       '🫙'],
+    ['Aseo',          '🧼'],
+    ['Otros',         '📦'],
+  ].forEach(([name, emoji]) => ins.run(name, emoji));
+}
+
+// ── Seed: units ───────────────────────────────────────────────────────────────
+{
+  const ins = db.prepare('INSERT OR IGNORE INTO units (name, abbreviation, type) VALUES (?, ?, ?)');
+  [
+    ['unidades', '',     'cantidad'],
+    ['kg',       'kg',  'peso'],
+    ['g',        'g',   'peso'],
+    ['lt',       'lt',  'volumen'],
+    ['ml',       'ml',  'volumen'],
+    ['tsp',      'tsp', 'volumen'],
+    ['tbsp',     'tbsp','volumen'],
+    ['cup',      'cup', 'volumen'],
+    ['paquetes', '',    'cantidad'],
+    ['cajas',    '',    'cantidad'],
+    ['bolsas',   '',    'cantidad'],
+    ['latas',    '',    'cantidad'],
+    ['botellas', '',    'cantidad'],
+  ].forEach(([name, abbr, type]) => ins.run(name, abbr, type));
+}
+
+// ── Catalog seed (100 products, INSERT OR IGNORE so reruns are safe) ──────────
+const CATALOG_SEED = [
+  // Alimentos (30)
+  ['Arroz',                'Alimentos'],
+  ['Harina de trigo',      'Alimentos'],
+  ['Harina de maíz',       'Alimentos'],
+  ['Pasta',                'Alimentos'],
+  ['Avena',                'Alimentos'],
+  ['Lentejas',             'Alimentos'],
+  ['Frijoles',             'Alimentos'],
+  ['Garbanzos',            'Alimentos'],
+  ['Azúcar',               'Alimentos'],
+  ['Sal',                  'Alimentos'],
+  ['Aceite vegetal',       'Alimentos'],
+  ['Aceite de oliva',      'Alimentos'],
+  ['Vinagre',              'Alimentos'],
+  ['Salsa de tomate',      'Alimentos'],
+  ['Mayonesa',             'Alimentos'],
+  ['Mostaza',              'Alimentos'],
+  ['Atún en lata',         'Alimentos'],
+  ['Sardinas',             'Alimentos'],
+  ['Leche',                'Alimentos'],
+  ['Leche en polvo',       'Alimentos'],
+  ['Huevos',               'Alimentos'],
+  ['Mantequilla',          'Alimentos'],
+  ['Queso',                'Alimentos'],
+  ['Yogur',                'Alimentos'],
+  ['Pan',                  'Alimentos'],
+  ['Galletas',             'Alimentos'],
+  ['Cereal',               'Alimentos'],
+  ['Café',                 'Alimentos'],
+  ['Té',                   'Alimentos'],
+  ['Chocolate en polvo',   'Alimentos'],
+  // Bebidas (10)
+  ['Agua embotellada',     'Bebidas'],
+  ['Jugo de naranja',      'Bebidas'],
+  ['Jugo de manzana',      'Bebidas'],
+  ['Refresco cola',        'Bebidas'],
+  ['Refresco lima',        'Bebidas'],
+  ['Agua saborizada',      'Bebidas'],
+  ['Bebida energética',    'Bebidas'],
+  ['Leche de almendra',    'Bebidas'],
+  ['Leche de soya',        'Bebidas'],
+  ['Agua con gas',         'Bebidas'],
+  // Aseo Personal (20)
+  ['Jabón de baño',        'Aseo Personal'],
+  ['Shampoo',              'Aseo Personal'],
+  ['Acondicionador',       'Aseo Personal'],
+  ['Pasta dental',         'Aseo Personal'],
+  ['Cepillo de dientes',   'Aseo Personal'],
+  ['Hilo dental',          'Aseo Personal'],
+  ['Desodorante',          'Aseo Personal'],
+  ['Papel higiénico',      'Aseo Personal'],
+  ['Toallas húmedas',      'Aseo Personal'],
+  ['Algodón',              'Aseo Personal'],
+  ['Crema corporal',       'Aseo Personal'],
+  ['Crema facial',         'Aseo Personal'],
+  ['Protector solar',      'Aseo Personal'],
+  ['Rastrillos',           'Aseo Personal'],
+  ['Espuma de afeitar',    'Aseo Personal'],
+  ['Perfume',              'Aseo Personal'],
+  ['Maquillaje base',      'Aseo Personal'],
+  ['Labial',               'Aseo Personal'],
+  ['Tampones',             'Aseo Personal'],
+  ['Toallas sanitarias',   'Aseo Personal'],
+  // Aseo del Hogar (20)
+  ['Detergente ropa',      'Aseo del Hogar'],
+  ['Suavizante ropa',      'Aseo del Hogar'],
+  ['Jabón lavar platos',   'Aseo del Hogar'],
+  ['Esponja',              'Aseo del Hogar'],
+  ['Cloro',                'Aseo del Hogar'],
+  ['Desinfectante piso',   'Aseo del Hogar'],
+  ['Limpiavidrios',        'Aseo del Hogar'],
+  ['Limpiador multiusos',  'Aseo del Hogar'],
+  ['Quitamanchas',         'Aseo del Hogar'],
+  ['Bolsas de basura',     'Aseo del Hogar'],
+  ['Papel cocina',         'Aseo del Hogar'],
+  ['Servilletas',          'Aseo del Hogar'],
+  ['Guantes de caucho',    'Aseo del Hogar'],
+  ['Escoba',               'Aseo del Hogar'],
+  ['Trapeador',            'Aseo del Hogar'],
+  ['Recogedor',            'Aseo del Hogar'],
+  ['Ambientador spray',    'Aseo del Hogar'],
+  ['Velas',                'Aseo del Hogar'],
+  ['Fósforos',             'Aseo del Hogar'],
+  ['Insecticida',          'Aseo del Hogar'],
+  // Alacena (20)
+  ['Pimienta negra',       'Alacena'],
+  ['Comino',               'Alacena'],
+  ['Orégano',              'Alacena'],
+  ['Ajo en polvo',         'Alacena'],
+  ['Cebolla en polvo',     'Alacena'],
+  ['Curry',                'Alacena'],
+  ['Canela',               'Alacena'],
+  ['Vainilla',             'Alacena'],
+  ['Polvo de hornear',     'Alacena'],
+  ['Bicarbonato',          'Alacena'],
+  ['Maicena',              'Alacena'],
+  ['Gelatina',             'Alacena'],
+  ['Miel',                 'Alacena'],
+  ['Mermelada',            'Alacena'],
+  ['Mantequilla de maní',  'Alacena'],
+  ['Chocolate negro',      'Alacena'],
+  ['Caldo de pollo',       'Alacena'],
+  ['Sazonador',            'Alacena'],
+  ['Laurel',               'Alacena'],
+  ['Tomillo',              'Alacena'],
+];
+
+{
+  const ins = db.prepare('INSERT OR IGNORE INTO catalog_products (name, category) VALUES (?, ?)');
+  CATALOG_SEED.forEach(([name, category]) => ins.run(name, category));
+}
+
+// ── Category mapping: catalog → inventory (for legacy products) ───────────────
+const CATALOG_TO_INV_CATEGORY = {
+  'Alimentos':    'Alimentos',
+  'Bebidas':      'Bebidas',
+  'Aseo Personal':'Aseo',
+  'Aseo del Hogar':'Aseo',
+  'Alacena':      'Alacena',
+};
 
 // ── Default seed products (applied when a new user registers) ─────────────────
 const SEED = [
@@ -218,10 +403,10 @@ module.exports = {
     return db.prepare('SELECT * FROM products WHERE id = ?').get(id);
   },
 
-  create({ name, category, current_qty, min_qty, unit, inventoryId }) {
+  create({ name, category, current_qty, min_qty, unit, inventoryId, catalogProductId = null }) {
     const { lastInsertRowid } = db.prepare(
-      'INSERT INTO products (name, category, current_qty, min_qty, unit, inventory_id) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(name, category, current_qty, min_qty, unit, inventoryId);
+      'INSERT INTO products (name, category, current_qty, min_qty, unit, inventory_id, catalog_product_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(name, category, current_qty, min_qty, unit, inventoryId, catalogProductId);
     return this.getById(lastInsertRowid);
   },
 
@@ -237,6 +422,147 @@ module.exports = {
 
   remove(id) {
     return db.prepare('DELETE FROM products WHERE id = ?').run(id).changes > 0;
+  },
+
+  // ── Categories ─────────────────────────────────────────────────────────────
+  getCategories() {
+    return db.prepare('SELECT * FROM categories ORDER BY name').all();
+  },
+
+  getCategory(id) {
+    return db.prepare('SELECT * FROM categories WHERE id = ?').get(id);
+  },
+
+  getCategoryByName(name) {
+    return db.prepare('SELECT * FROM categories WHERE LOWER(name) = LOWER(?)').get(name);
+  },
+
+  createCategory({ name, emoji }) {
+    const existing = this.getCategoryByName(name);
+    if (existing) return { error: 'Ya existe una categoría con ese nombre' };
+    const { lastInsertRowid } = db.prepare(
+      'INSERT INTO categories (name, emoji) VALUES (?, ?)'
+    ).run(name.trim(), emoji || '📦');
+    return { category: this.getCategory(lastInsertRowid) };
+  },
+
+  updateCategory(id, { name, emoji }) {
+    const existing = db.prepare(
+      'SELECT id FROM categories WHERE LOWER(name) = LOWER(?) AND id != ?'
+    ).get(name, id);
+    if (existing) return { error: 'Ya existe una categoría con ese nombre' };
+    db.prepare('UPDATE categories SET name=?, emoji=? WHERE id=?').run(name.trim(), emoji || '📦', id);
+    return { category: this.getCategory(id) };
+  },
+
+  deleteCategory(id) {
+    return db.prepare('DELETE FROM categories WHERE id = ?').run(id).changes > 0;
+  },
+
+  // ── Units ──────────────────────────────────────────────────────────────────
+  getUnits() {
+    return db.prepare('SELECT * FROM units ORDER BY type, name').all();
+  },
+
+  getUnit(id) {
+    return db.prepare('SELECT * FROM units WHERE id = ?').get(id);
+  },
+
+  getUnitByName(name) {
+    return db.prepare('SELECT * FROM units WHERE LOWER(name) = LOWER(?)').get(name);
+  },
+
+  createUnit({ name, abbreviation, type }) {
+    const existing = this.getUnitByName(name);
+    if (existing) return { error: 'Ya existe una unidad con ese nombre' };
+    const { lastInsertRowid } = db.prepare(
+      'INSERT INTO units (name, abbreviation, type) VALUES (?, ?, ?)'
+    ).run(name.trim(), abbreviation || '', type || 'cantidad');
+    return { unit: this.getUnit(lastInsertRowid) };
+  },
+
+  updateUnit(id, { name, abbreviation, type }) {
+    const existing = db.prepare(
+      'SELECT id FROM units WHERE LOWER(name) = LOWER(?) AND id != ?'
+    ).get(name, id);
+    if (existing) return { error: 'Ya existe una unidad con ese nombre' };
+    db.prepare('UPDATE units SET name=?, abbreviation=?, type=? WHERE id=?')
+      .run(name.trim(), abbreviation || '', type || 'cantidad', id);
+    return { unit: this.getUnit(id) };
+  },
+
+  deleteUnit(id) {
+    return db.prepare('DELETE FROM units WHERE id = ?').run(id).changes > 0;
+  },
+
+  // ── Catalog ────────────────────────────────────────────────────────────────
+  getCatalogProducts(inventoryId = null) {
+    if (inventoryId) {
+      return db.prepare(`
+        SELECT cp.id, cp.name, cp.category, cp.created_at,
+          CASE WHEN p.id IS NOT NULL THEN 1 ELSE 0 END AS in_inventory
+        FROM catalog_products cp
+        LEFT JOIN products p
+          ON p.catalog_product_id = cp.id AND p.inventory_id = ?
+        ORDER BY cp.category, cp.name
+      `).all(inventoryId);
+    }
+    return db.prepare(`
+      SELECT id, name, category, created_at, 0 AS in_inventory
+      FROM catalog_products
+      ORDER BY category, name
+    `).all();
+  },
+
+  getCatalogProduct(id) {
+    return db.prepare('SELECT * FROM catalog_products WHERE id = ?').get(id);
+  },
+
+  addCatalogProduct({ name, category, userId }) {
+    const existing = db.prepare(
+      'SELECT id FROM catalog_products WHERE LOWER(name) = LOWER(?)'
+    ).get(name);
+    if (existing) return { error: 'Ya existe un producto con ese nombre' };
+    const { lastInsertRowid } = db.prepare(
+      'INSERT INTO catalog_products (name, category, created_by) VALUES (?, ?, ?)'
+    ).run(name.trim(), category, userId || null);
+    return { product: this.getCatalogProduct(lastInsertRowid) };
+  },
+
+  updateCatalogProduct(id, { name, category }) {
+    const existing = db.prepare(
+      'SELECT id FROM catalog_products WHERE LOWER(name) = LOWER(?) AND id != ?'
+    ).get(name, id);
+    if (existing) return { error: 'Ya existe un producto con ese nombre' };
+    db.prepare('UPDATE catalog_products SET name=?, category=? WHERE id=?')
+      .run(name.trim(), category, id);
+    return { product: this.getCatalogProduct(id) };
+  },
+
+  deleteCatalogProduct(id) {
+    return db.prepare('DELETE FROM catalog_products WHERE id = ?').run(id).changes > 0;
+  },
+
+  addCatalogProductToInventory({ catalogProductId, inventoryId, currentQty, minQty, unit }) {
+    const catalogProduct = this.getCatalogProduct(catalogProductId);
+    if (!catalogProduct) return { error: 'Producto no encontrado en el catálogo' };
+
+    const existing = db.prepare(
+      'SELECT id FROM products WHERE inventory_id = ? AND catalog_product_id = ?'
+    ).get(inventoryId, catalogProductId);
+    if (existing) return { error: 'Este producto ya está en el inventario' };
+
+    const invCategory = CATALOG_TO_INV_CATEGORY[catalogProduct.category] || catalogProduct.category;
+    const product = this.create({
+      name:             catalogProduct.name,
+      category:         invCategory,
+      current_qty:      currentQty,
+      min_qty:          minQty,
+      unit:             unit || 'unidades',
+      inventoryId,
+      catalogProductId,
+    });
+    return { product };
   },
 
   // ── Shopping list ──────────────────────────────────────────────────────────
@@ -277,11 +603,11 @@ module.exports = {
   },
 
   getStats(inventoryId) {
-    const CATEGORIES = ['Alimentos', 'Aseo', 'Alacena', 'Bebidas', 'Otros'];
     const { total }    = db.prepare('SELECT COUNT(*) as total    FROM products WHERE inventory_id = ?').get(inventoryId);
     const { critical } = db.prepare('SELECT COUNT(*) as critical FROM products WHERE inventory_id = ? AND current_qty < min_qty').get(inventoryId);
     const raw = db.prepare('SELECT category, COUNT(*) as count FROM products WHERE inventory_id = ? GROUP BY category').all(inventoryId);
     const catMap = Object.fromEntries(raw.map(r => [r.category, r.count]));
-    return { total, critical, byCategory: CATEGORIES.map(cat => ({ category: cat, count: catMap[cat] || 0 })) };
+    const cats = db.prepare('SELECT name FROM categories ORDER BY name').all().map(c => c.name);
+    return { total, critical, byCategory: cats.map(cat => ({ category: cat, count: catMap[cat] || 0 })) };
   },
 };
