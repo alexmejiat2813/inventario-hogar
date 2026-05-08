@@ -152,7 +152,9 @@
     "Aseo": "Nettoyage",
     "Alacena": "Garde-manger",
     "Bebidas": "Boissons",
-    "Otros": "Autres"
+    "Otros": "Autres",
+    "Aseo Personal": "Hygiène personnelle",
+    "Aseo del Hogar": "Nettoyage maison"
   },
   "units": {
     "unidades": "unités",

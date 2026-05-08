@@ -152,7 +152,9 @@
     "Aseo": "Cleaning",
     "Alacena": "Pantry",
     "Bebidas": "Drinks",
-    "Otros": "Others"
+    "Otros": "Others",
+    "Aseo Personal": "Personal Care",
+    "Aseo del Hogar": "Home Cleaning"
   },
   "units": {
     "unidades": "units",

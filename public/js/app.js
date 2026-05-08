@@ -201,6 +201,12 @@ function catClass(category) {
   return 'cat-' + (category || '').toLowerCase().replace(/\s+/g, '-');
 }
 
+function tCat(cat) {
+  const key = 'cat.' + cat;
+  const val = t(key);
+  return (val && val !== key) ? val : cat;
+}
+
 // ── Stats ─────────────────────────────────────────────────────
 
 function renderStats() {
@@ -213,7 +219,7 @@ function renderStats() {
   document.getElementById('stat-categories').innerHTML = byCategory.map(({ category, count }) => `
     <span class="cat-stat" data-cat="${esc(category)}" data-category="${esc(category)}" role="button" tabindex="0">
       <span class="cat-icon">${CAT_ICONS[category] || '📦'}</span>
-      <span class="cat-name">${t('cat.' + category) || esc(category)}</span>
+      <span class="cat-name">${tCat(category)}</span>
       <span class="cat-count">${count}</span>
     </span>
   `).join('');
@@ -244,7 +250,7 @@ function renderProductCard(p) {
   return `
     <div class="product-card ${isCritical ? 'product-card--critical' : ''}">
       <div class="card-top">
-        <span class="category-badge ${catClass(p.category)}">${CAT_ICONS[p.category] || ''} ${t('cat.' + p.category) || esc(p.category)}</span>
+        <span class="category-badge ${catClass(p.category)}">${CAT_ICONS[p.category] || ''} ${tCat(p.category)}</span>
         ${isCritical ? `<span class="critical-tag">⚠ ${t('inventory.card.critical')}</span>` : ''}
       </div>
 

@@ -351,6 +351,12 @@ function handleTableClick(e) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   await I18N.init();
+
+  const backBtn = document.getElementById('settings-back-btn');
+  if (backBtn) {
+    backBtn.href = sessionStorage.getItem('settings_referrer') || '/inventories';
+  }
+
   initEvents();
   try {
     await loadAll();

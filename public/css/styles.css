@@ -32,11 +32,14 @@
   --r-lg:   18px;
 
   /* category palette */
-  --c-alimentos-bg:  #fff7ed;  --c-alimentos-fg: #c2410c;
-  --c-aseo-bg:       #ecfeff;  --c-aseo-fg:      #0e7490;
-  --c-alacena-bg:    #f7fee7;  --c-alacena-fg:   #4d7c0f;
-  --c-bebidas-bg:    #f5f3ff;  --c-bebidas-fg:   #6d28d9;
-  --c-otros-bg:      #f8fafc;  --c-otros-fg:     #475569;
+  --c-alimentos-bg:      #fff7ed;  --c-alimentos-fg:      #c2410c;
+  --c-aseo-bg:           #ecfeff;  --c-aseo-fg:           #0e7490;
+  --c-alacena-bg:        #f7fee7;  --c-alacena-fg:        #4d7c0f;
+  --c-bebidas-bg:        #f5f3ff;  --c-bebidas-fg:        #6d28d9;
+  --c-otros-bg:          #f8fafc;  --c-otros-fg:          #475569;
+  --c-aseo-personal-bg:  #fdf2f8;  --c-aseo-personal-fg:  #9d174d;
+  --c-aseo-hogar-bg:     #f0fdfa;  --c-aseo-hogar-fg:     #0f766e;
+  --c-cat-default-bg:    #f1f5f9;  --c-cat-default-fg:    #475569;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -241,6 +244,7 @@ img, svg { display: block; }
   border-radius: 999px;
   font-size: .8rem; font-weight: 600;
   transition: opacity .15s;
+  background: var(--c-cat-default-bg);
 }
 .cat-stat:hover { opacity: .8; cursor: pointer; }
 .cat-stat .cat-icon  { font-size: .9rem; }
@@ -248,11 +252,13 @@ img, svg { display: block; }
 .cat-stat .cat-count { color: var(--text); margin-left: .1rem; }
 
 /* cat-stat themed per category */
-.cat-stat[data-cat="Alimentos"] { background: var(--c-alimentos-bg); }
-.cat-stat[data-cat="Aseo"]      { background: var(--c-aseo-bg);      }
-.cat-stat[data-cat="Alacena"]   { background: var(--c-alacena-bg);   }
-.cat-stat[data-cat="Bebidas"]   { background: var(--c-bebidas-bg);   }
-.cat-stat[data-cat="Otros"]     { background: var(--c-otros-bg);     }
+.cat-stat[data-cat="Alimentos"]    { background: var(--c-alimentos-bg);      }
+.cat-stat[data-cat="Aseo"]         { background: var(--c-aseo-bg);           }
+.cat-stat[data-cat="Alacena"]      { background: var(--c-alacena-bg);        }
+.cat-stat[data-cat="Bebidas"]      { background: var(--c-bebidas-bg);        }
+.cat-stat[data-cat="Otros"]        { background: var(--c-otros-bg);          }
+.cat-stat[data-cat="Aseo Personal"]{ background: var(--c-aseo-personal-bg);  }
+.cat-stat[data-cat="Aseo del Hogar"]{ background: var(--c-aseo-hogar-bg);    }
 
 /* ============================================================
    Filters
@@ -370,12 +376,15 @@ img, svg { display: block; }
   border-radius: 999px;
   font-size: .7rem; font-weight: 700; letter-spacing: .03em;
   white-space: nowrap;
+  background: var(--c-cat-default-bg); color: var(--c-cat-default-fg);
 }
-.cat-alimentos { background: var(--c-alimentos-bg); color: var(--c-alimentos-fg); }
-.cat-aseo      { background: var(--c-aseo-bg);      color: var(--c-aseo-fg);      }
-.cat-alacena   { background: var(--c-alacena-bg);   color: var(--c-alacena-fg);   }
-.cat-bebidas   { background: var(--c-bebidas-bg);   color: var(--c-bebidas-fg);   }
-.cat-otros     { background: var(--c-otros-bg);     color: var(--c-otros-fg);     }
+.cat-alimentos      { background: var(--c-alimentos-bg);     color: var(--c-alimentos-fg);     }
+.cat-aseo           { background: var(--c-aseo-bg);          color: var(--c-aseo-fg);          }
+.cat-alacena        { background: var(--c-alacena-bg);       color: var(--c-alacena-fg);       }
+.cat-bebidas        { background: var(--c-bebidas-bg);       color: var(--c-bebidas-fg);       }
+.cat-otros          { background: var(--c-otros-bg);         color: var(--c-otros-fg);         }
+.cat-aseo-personal  { background: var(--c-aseo-personal-bg); color: var(--c-aseo-personal-fg); }
+.cat-aseo-del-hogar { background: var(--c-aseo-hogar-bg);    color: var(--c-aseo-hogar-fg);    }
 
 /* Critical tag */
 .critical-tag {
@@ -770,6 +779,37 @@ img, svg { display: block; }
 .lang-check { display: none; font-size: .7rem; }
 .lang-btn.lang-active .lang-check { display: inline; }
 
+/* ── Add-menu (split button) ─────────────────────────────── */
+.add-menu-wrap { position: relative; display: flex; }
+.add-menu-btn-group { display: flex; }
+.add-menu-main {
+  border-radius: var(--r-sm) 0 0 var(--r-sm) !important;
+  border-right: 1px solid rgba(255,255,255,.25) !important;
+}
+.add-menu-chevron {
+  padding: .5rem .45rem !important;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0 !important;
+  min-width: 0;
+}
+.add-menu {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: white; border: 1.5px solid var(--border);
+  border-radius: var(--r); box-shadow: var(--sh-lg);
+  min-width: 190px; z-index: 50;
+  overflow: hidden;
+  animation: fade-in .12s ease;
+}
+@keyframes fade-in { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+.add-menu-item {
+  display: flex; align-items: center; gap: .6rem;
+  width: 100%; padding: .7rem 1rem;
+  background: none; border: none;
+  font-size: .875rem; font-weight: 600; color: var(--text);
+  text-align: left; cursor: pointer;
+  transition: background .12s;
+}
+.add-menu-item:hover { background: #f8fafc; }
+.add-menu-item + .add-menu-item { border-top: 1px solid var(--border); }
 
 /* ============================================================
    Buttons — small + danger variants

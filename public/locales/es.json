@@ -152,7 +152,9 @@
     "Aseo": "Aseo",
     "Alacena": "Alacena",
     "Bebidas": "Bebidas",
-    "Otros": "Otros"
+    "Otros": "Otros",
+    "Aseo Personal": "Aseo Personal",
+    "Aseo del Hogar": "Aseo del Hogar"
   },
   "units": {
     "unidades": "unidades",
