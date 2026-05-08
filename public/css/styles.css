@@ -750,6 +750,26 @@ img, svg { display: block; }
 .dropdown-item-danger:hover { background: #fff1f2; }
 .dropdown-item-danger svg   { color: var(--danger); }
 
+/* ── Language selector (inside dropdown) ── */
+.dropdown-lang { padding: .5rem 1rem .75rem; }
+.dropdown-lang-label {
+  display: block; font-size: .72rem; font-weight: 600;
+  color: var(--text-light); text-transform: uppercase;
+  letter-spacing: .05em; margin-bottom: .375rem;
+}
+.lang-btns { display: flex; gap: .375rem; }
+.lang-btn {
+  display: inline-flex; align-items: center; gap: .25rem;
+  padding: .3rem .6rem; border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); background: white;
+  font-size: .78rem; font-weight: 500; color: var(--text-muted);
+  cursor: pointer; transition: border-color .15s, background .15s;
+}
+.lang-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+.lang-btn.lang-active { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+.lang-check { display: none; font-size: .7rem; }
+.lang-btn.lang-active .lang-check { display: inline; }
+
 
 /* ============================================================
    Buttons — small + danger variants

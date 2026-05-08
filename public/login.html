@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iniciar sesión — Inventario Hogar</title>
+  <title>Inventario Hogar</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -82,22 +82,6 @@
     }
     .btn-google svg { flex-shrink: 0; }
 
-    /* Divider */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      margin: 1.5rem 0;
-      color: #cbd5e1;
-      font-size: .8rem;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #e2e8f0;
-    }
-
     /* Feature pills */
     .features {
       display: flex;
@@ -137,21 +121,49 @@
       margin-bottom: 1.25rem;
     }
     .error-banner.visible { display: block; }
+
+    /* Language selector */
+    .lang-selector {
+      display: flex;
+      justify-content: center;
+      gap: .375rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #e2e8f0;
+    }
+    .lang-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      padding: .3rem .6rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 6px;
+      background: white;
+      font-size: .78rem;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .lang-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .lang-btn.lang-active { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+    .lang-check { display: none; font-size: .7rem; }
+    .lang-btn.lang-active .lang-check { display: inline; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="app-icon">🏠</div>
-    <h1 class="app-name">Inventario Hogar</h1>
-    <p class="app-desc">Controlá el stock de tu hogar, recibí alertas cuando algo falta y mantené todo organizado.</p>
+    <h1 class="app-name" data-i18n="appName">Inventario Hogar</h1>
+    <p class="app-desc" data-i18n="login.desc">Controlá el stock de tu hogar, recibí alertas cuando algo falta y mantené todo organizado.</p>
 
     <div class="features">
-      <span class="feature-pill">📦 Stock en tiempo real</span>
-      <span class="feature-pill">⚠ Alertas de mínimos</span>
-      <span class="feature-pill">📊 Dashboard</span>
+      <span class="feature-pill" data-i18n="login.pills.stock">📦 Stock en tiempo real</span>
+      <span class="feature-pill" data-i18n="login.pills.alerts">⚠ Alertas de mínimos</span>
+      <span class="feature-pill" data-i18n="login.pills.dashboard">📊 Dashboard</span>
     </div>
 
-    <div class="error-banner" id="error-banner">
+    <div class="error-banner" id="error-banner" data-i18n="login.error">
       No se pudo iniciar sesión con Google. Intentá de nuevo.
     </div>
 
@@ -163,18 +175,28 @@
         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
       </svg>
-      Continuar con Google
+      <span data-i18n="login.google">Continuar con Google</span>
     </a>
 
-    <p class="footer-note">
-      Al iniciar sesión aceptás el uso de tus datos de perfil<br>de Google para identificarte en la aplicación.
+    <p class="footer-note" data-i18n="login.footer">
+      Al iniciar sesión aceptás el uso de tus datos de perfil de Google para identificarte en la aplicación.
     </p>
+
+    <div class="lang-selector">
+      <button class="lang-btn" data-lang="es">🇪🇸 Español <span class="lang-check">✓</span></button>
+      <button class="lang-btn" data-lang="en">🇬🇧 English <span class="lang-check">✓</span></button>
+      <button class="lang-btn" data-lang="fr">🇫🇷 Français <span class="lang-check">✓</span></button>
+    </div>
   </div>
 
+  <script src="/js/i18n.js"></script>
   <script>
-    if (new URLSearchParams(location.search).get('error')) {
-      document.getElementById('error-banner').classList.add('visible');
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+      I18N.init();
+      if (new URLSearchParams(location.search).get('error')) {
+        document.getElementById('error-banner').classList.add('visible');
+      }
+    });
   </script>
 </body>
 </html>

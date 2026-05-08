@@ -10,7 +10,6 @@ const CAT_ICONS = {
   Otros:     '📦',
 };
 
-const ROLE_LABEL = { owner: 'Dueño', editor: 'Editor', reader: 'Lector' };
 const ROLE_CLASS = { owner: 'role-owner', editor: 'role-editor', reader: 'role-reader' };
 
 const state = {
@@ -85,7 +84,7 @@ function updateInventoryHeader() {
   document.getElementById('inventory-name').textContent = inv.name;
 
   const badge = document.getElementById('role-badge');
-  badge.textContent = ROLE_LABEL[inv.role] || inv.role;
+  badge.textContent = t('roles.' + inv.role) || inv.role;
   badge.className = `role-badge-header ${ROLE_CLASS[inv.role] || ''}`;
 
   document.getElementById('manage-section').hidden = (inv.role === 'reader');
@@ -127,7 +126,7 @@ function renderStats() {
   document.getElementById('stat-categories').innerHTML = byCategory.map(({ category, count }) => `
     <span class="cat-stat" data-cat="${esc(category)}" data-category="${esc(category)}" role="button" tabindex="0">
       <span class="cat-icon">${CAT_ICONS[category] || '📦'}</span>
-      <span class="cat-name">${esc(category)}</span>
+      <span class="cat-name">${t('cat.' + category) || esc(category)}</span>
       <span class="cat-count">${count}</span>
     </span>
   `).join('');
@@ -153,20 +152,21 @@ function renderProductCard(p) {
   const pct        = getProgress(p.current_qty, p.min_qty);
   const color      = progressColor(pct, isCritical);
   const isReader   = state.inventory?.role === 'reader';
+  const unit       = t('units.' + p.unit) || esc(p.unit);
 
   return `
     <div class="product-card ${isCritical ? 'product-card--critical' : ''}">
       <div class="card-top">
-        <span class="category-badge ${catClass(p.category)}">${CAT_ICONS[p.category] || ''} ${esc(p.category)}</span>
-        ${isCritical ? '<span class="critical-tag">⚠ Crítico</span>' : ''}
+        <span class="category-badge ${catClass(p.category)}">${CAT_ICONS[p.category] || ''} ${t('cat.' + p.category) || esc(p.category)}</span>
+        ${isCritical ? `<span class="critical-tag">⚠ ${t('inventory.card.critical')}</span>` : ''}
       </div>
 
       <h3 class="product-name">${esc(p.name)}</h3>
 
       <div class="product-qty-info">
-        <span class="qty-current">${p.current_qty} ${esc(p.unit)}</span>
+        <span class="qty-current">${p.current_qty} ${unit}</span>
         <span class="qty-sep">·</span>
-        <span class="qty-min">mín: ${p.min_qty} ${esc(p.unit)}</span>
+        <span class="qty-min">${t('inventory.card.min')}: ${p.min_qty} ${unit}</span>
       </div>
 
       <div class="progress-bar-wrap">
@@ -180,7 +180,7 @@ function renderProductCard(p) {
       <div class="card-actions">
         <button class="btn btn-card btn-card-edit" data-action="edit" data-id="${p.id}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Editar
+          ${t('inventory.card.edit')}
         </button>
         <button class="btn btn-card btn-card-del" data-action="delete" data-id="${p.id}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
@@ -236,7 +236,7 @@ function openModal(product = null) {
   clearValidation();
 
   if (product) {
-    title.textContent = 'Editar producto';
+    title.textContent = t('inventory.modal.editTitle');
     document.getElementById('product-id').value = product.id;
     document.getElementById('f-name').value     = product.name;
     document.getElementById('f-category').value = product.category;
@@ -244,7 +244,7 @@ function openModal(product = null) {
     document.getElementById('f-min').value      = product.min_qty;
     document.getElementById('f-unit').value     = product.unit;
   } else {
-    title.textContent = 'Agregar producto';
+    title.textContent = t('inventory.modal.addTitle');
     document.getElementById('product-id').value = '';
     document.getElementById('product-form').reset();
   }
@@ -291,15 +291,15 @@ async function handleFormSubmit(e) {
 
   const saveBtn = document.getElementById('btn-save');
   saveBtn.disabled = true;
-  saveBtn.textContent = 'Guardando…';
+  saveBtn.textContent = t('inventory.modal.saving');
 
   try {
     if (id) {
       await apiFetch('PUT', `/api/products/${id}`, body);
-      showToast('Producto actualizado');
+      showToast(t('inventory.modal.updated'));
     } else {
       await apiFetch('POST', '/api/products', body);
-      showToast('Producto agregado');
+      showToast(t('inventory.modal.added'));
     }
     closeModal();
     await loadData();
@@ -308,7 +308,7 @@ async function handleFormSubmit(e) {
     showToast(err.message, 'error');
   } finally {
     saveBtn.disabled = false;
-    saveBtn.textContent = 'Guardar';
+    saveBtn.textContent = t('inventory.modal.save');
   }
 }
 
@@ -320,11 +320,11 @@ function editProduct(id) {
 async function deleteProduct(id) {
   const product = state.products.find(p => p.id === id);
   if (!product) return;
-  if (!confirm(`¿Eliminar "${product.name}"?\nEsta acción no se puede deshacer.`)) return;
+  if (!confirm(t('inventory.confirmDelete', { name: product.name }))) return;
 
   try {
     await apiFetch('DELETE', `/api/products/${id}`);
-    showToast('Producto eliminado', 'info');
+    showToast(t('inventory.modal.deleted'), 'info');
     await loadData();
     render();
   } catch (err) {
@@ -357,11 +357,11 @@ async function loadAccessData() {
 
     const inviteRole = document.getElementById('invite-role');
     if (data.role === 'editor') {
-      inviteRole.innerHTML = '<option value="reader">Lector</option>';
+      inviteRole.innerHTML = `<option value="reader">${t('roles.reader')}</option>`;
     } else {
       inviteRole.innerHTML = `
-        <option value="editor">Editor</option>
-        <option value="reader">Lector</option>
+        <option value="editor">${t('roles.editor')}</option>
+        <option value="reader">${t('roles.reader')}</option>
       `;
     }
   } catch (err) {
@@ -376,7 +376,7 @@ function renderMembers(members, viewerRole) {
       ${m.photo ? `<img class="member-avatar" src="${esc(m.photo)}" alt="${esc(m.name)}">` : `<div class="member-avatar member-avatar-placeholder">${esc(m.name[0])}</div>`}
       <div class="member-info">
         <span class="member-name">${esc(m.name)}</span>
-        <span class="role-badge-small ${ROLE_CLASS[m.role]}">${ROLE_LABEL[m.role]}</span>
+        <span class="role-badge-small ${ROLE_CLASS[m.role]}">${t('roles.' + m.role)}</span>
       </div>
       ${viewerRole === 'owner' && m.role !== 'owner' ? `
         <button class="btn btn-danger btn-sm btn-remove-member" data-user-id="${m.user_id}" title="Remover colaborador">
@@ -390,23 +390,23 @@ function renderMembers(members, viewerRole) {
 function renderCodes(codes, viewerRole) {
   const list = document.getElementById('codes-list');
   if (!codes.length) {
-    list.innerHTML = '<p class="no-codes">No hay códigos activos.</p>';
+    list.innerHTML = `<p class="no-codes">${t('inventory.access.noCodes')}</p>`;
     return;
   }
   list.innerHTML = codes.map(c => `
     <div class="code-item">
       <div class="code-info">
         <span class="code-display">${esc(c.code)}</span>
-        <span class="role-badge-small ${ROLE_CLASS[c.role]}">${ROLE_LABEL[c.role]}</span>
+        <span class="role-badge-small ${ROLE_CLASS[c.role]}">${t('roles.' + c.role)}</span>
       </div>
       <div class="code-actions">
-        <button class="btn btn-secondary btn-sm btn-copy-code" data-code="${esc(c.code)}" title="Copiar código">
+        <button class="btn btn-secondary btn-sm btn-copy-code" data-code="${esc(c.code)}" title="${t('inventory.access.copy')}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copiar
+          ${t('inventory.access.copy')}
         </button>
         ${viewerRole === 'owner' ? `
-          <button class="btn btn-danger btn-sm btn-revoke-code" data-code="${esc(c.code)}" title="Revocar">
-            Revocar
+          <button class="btn btn-danger btn-sm btn-revoke-code" data-code="${esc(c.code)}" title="${t('inventory.access.revoke')}">
+            ${t('inventory.access.revoke')}
           </button>
         ` : ''}
       </div>
@@ -421,7 +421,7 @@ async function generateCode() {
   btn.disabled = true;
   try {
     await apiFetch('POST', `/api/inventories/${invId}/invite`, { role });
-    showToast('Código generado');
+    showToast(t('inventory.access.codeGenerated'));
     await loadAccessData();
   } catch (err) {
     showToast(err.message, 'error');
@@ -432,10 +432,10 @@ async function generateCode() {
 
 async function revokeCode(code) {
   const invId = state.inventory?.id;
-  if (!confirm(`¿Revocar el código ${code}?`)) return;
+  if (!confirm(t('inventory.access.confirmRevoke', { code }))) return;
   try {
     await apiFetch('DELETE', `/api/inventories/${invId}/invite/${code}`);
-    showToast('Código revocado', 'info');
+    showToast(t('inventory.access.codeRevoked'), 'info');
     await loadAccessData();
   } catch (err) {
     showToast(err.message, 'error');
@@ -444,10 +444,10 @@ async function revokeCode(code) {
 
 async function removeMember(userId) {
   const invId = state.inventory?.id;
-  if (!confirm('¿Remover a este colaborador del inventario?')) return;
+  if (!confirm(t('inventory.access.confirmRemove'))) return;
   try {
     await apiFetch('DELETE', `/api/inventories/${invId}/members/${userId}`);
-    showToast('Colaborador removido', 'info');
+    showToast(t('inventory.access.memberRemoved'), 'info');
     await loadAccessData();
   } catch (err) {
     showToast(err.message, 'error');
@@ -456,8 +456,8 @@ async function removeMember(userId) {
 
 function copyCode(code) {
   navigator.clipboard.writeText(code)
-    .then(() => showToast('Código copiado al portapapeles'))
-    .catch(() => showToast('No se pudo copiar', 'error'));
+    .then(() => showToast(t('inventory.access.codeCopied')))
+    .catch(() => showToast(t('inventory.access.copyError'), 'error'));
 }
 
 // ── Toast ─────────────────────────────────────────────────────
@@ -574,11 +574,19 @@ function initEvents() {
   document.querySelectorAll('.form-input, .form-select').forEach(el => {
     el.addEventListener('input', () => el.classList.remove('invalid'));
   });
+
+  // Language changes: re-render dynamic content
+  document.addEventListener('langchange', () => {
+    updateInventoryHeader();
+    render();
+    if (!document.getElementById('access-overlay').hidden) loadAccessData();
+  });
 }
 
 // ── Init ──────────────────────────────────────────────────────
 
 async function init() {
+  await I18N.init();
   initEvents();
   try {
     await loadUser();
@@ -589,7 +597,7 @@ async function init() {
     render();
   } catch (err) {
     console.error(err);
-    showToast('No se pudo conectar con el servidor', 'error');
+    showToast(t('error.server'), 'error');
   }
 }
 
