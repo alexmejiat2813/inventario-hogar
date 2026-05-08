@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis inventarios — Inventario Hogar</title>
+  <style>
+    [hidden] { display: none !important; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #f1f5f9; color: #1e293b; min-height: 100vh;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
+      color: white; height: 68px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(37,99,235,.35);
+    }
+    .header-inner {
+      max-width: 1100px; margin: 0 auto; height: 100%;
+      padding: 0 1.25rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .header-brand { display: flex; align-items: center; gap: .75rem; }
+    .header-icon  { font-size: 1.75rem; }
+    .header-title { font-size: 1.2rem; font-weight: 700; }
+    .header-user  { display: flex; align-items: center; gap: .5rem; }
+    .user-avatar  {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.35); object-fit: cover;
+    }
+    .user-name {
+      font-size: .8rem; font-weight: 500; color: rgba(255,255,255,.9);
+      display: none; max-width: 130px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    @media (min-width: 600px) { .user-name { display: block; } }
+    .btn-logout {
+      padding: .35rem .7rem; background: rgba(255,255,255,.15);
+      color: rgba(255,255,255,.9); border: 1px solid rgba(255,255,255,.25);
+      border-radius: 6px; font-size: .775rem; font-weight: 600;
+      transition: background .15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,.25); }
+
+    /* ── Page layout ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap; margin-bottom: 1.75rem;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 800; }
+    .page-actions { display: flex; gap: .625rem; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: .375rem;
+      padding: .5rem 1rem; border: none; border-radius: 8px;
+      font-size: .875rem; font-weight: 600;
+      transition: background .15s, transform .15s, box-shadow .15s;
+      white-space: nowrap;
+    }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(37,99,235,.25); }
+    .btn-secondary { background: white; color: #1e293b; border: 1.5px solid #e2e8f0; }
+    .btn-secondary:hover { background: #f8fafc; }
+    .btn-ghost { background: transparent; color: #64748b; border: 1.5px solid #e2e8f0; }
+    .btn-ghost:hover { background: #f1f5f9; color: #1e293b; }
+    .btn-danger { background: #fee2e2; color: #dc2626; border: none; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-sm { padding: .35rem .75rem; font-size: .8rem; }
+
+    /* ── Inventory grid ── */
+    .inv-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 560px) { .inv-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 860px) { .inv-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    .inv-card {
+      background: white; border-radius: 14px; padding: 1.375rem;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      display: flex; flex-direction: column; gap: .75rem;
+      cursor: pointer;
+      transition: box-shadow .2s, transform .2s, border-color .2s;
+      animation: card-in .22s ease both;
+    }
+    .inv-card:hover { box-shadow: 0 6px 16px rgba(0,0,0,.1); transform: translateY(-2px); border-color: #bfdbfe; }
+    @keyframes card-in { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+    .inv-card-top { display: flex; align-items: center; justify-content: space-between; }
+
+    .role-badge {
+      display: inline-flex; align-items: center; gap: .25rem;
+      padding: .2rem .625rem; border-radius: 999px;
+      font-size: .72rem; font-weight: 700; letter-spacing: .03em;
+    }
+    .role-owner  { background: #dbeafe; color: #1d4ed8; }
+    .role-editor { background: #dcfce7; color: #15803d; }
+    .role-reader { background: #f1f5f9; color: #475569; }
+
+    .inv-card-name { font-size: 1.125rem; font-weight: 700; color: #1e293b; }
+
+    .inv-card-meta {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .8rem; color: #64748b;
+    }
+    .inv-card-meta svg { flex-shrink: 0; }
+
+    .inv-card-footer { margin-top: auto; }
+    .btn-enter {
+      width: 100%; justify-content: center;
+      background: #2563eb; color: white; border: none; border-radius: 8px;
+      padding: .5rem; font-size: .875rem; font-weight: 600;
+      transition: background .15s;
+    }
+    .btn-enter:hover { background: #1d4ed8; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center; padding: 4rem 1rem; color: #64748b;
+    }
+    .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    .empty-state h3 { font-size: 1.125rem; font-weight: 700; color: #1e293b; margin-bottom: .5rem; }
+    .empty-state p  { font-size: .875rem; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,.5); backdrop-filter: blur(3px);
+      z-index: 200;
+      display: flex; align-items: flex-end; justify-content: center;
+      animation: fade-in .15s ease;
+    }
+    @media (min-width: 640px) { .modal-overlay { align-items: center; padding: 1rem; } }
+    @keyframes fade-in { from { opacity:0; } to { opacity:1; } }
+
+    .modal {
+      background: white; border-radius: 18px 18px 0 0;
+      width: 100%; max-width: 440px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      animation: slide-up .22s cubic-bezier(.34,1.56,.64,1);
+    }
+    @media (min-width: 640px) { .modal { border-radius: 18px; animation: scale-in .18s ease; } }
+    @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes scale-in { from { opacity:0; transform: scale(.94); } to { opacity:1; transform: scale(1); } }
+
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.375rem 1.5rem 0;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 800; }
+    .modal-close {
+      width: 32px; height: 32px; border: none; border-radius: 50%;
+      background: #f1f5f9; color: #64748b; font-size: 1.25rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .modal-close:hover { background: #e2e8f0; }
+
+    .modal-form {
+      padding: 1.375rem 1.5rem 1.75rem;
+      display: flex; flex-direction: column; gap: 1.125rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: .35rem; }
+    .form-label { font-size: .85rem; font-weight: 600; }
+    .form-input {
+      padding: .55rem .8rem;
+      border: 1.5px solid #e2e8f0; border-radius: 8px;
+      font-size: .9375rem; color: #1e293b;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    .form-input::placeholder { color: #94a3b8; }
+    .form-input.code-input { text-transform: uppercase; letter-spacing: .15em; font-weight: 700; font-size: 1.1rem; text-align: center; }
+
+    .modal-footer { display: flex; gap: .75rem; justify-content: flex-end; padding-top: .25rem; }
+    .modal-footer .btn { padding: .55rem 1.375rem; }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 300;
+      display: flex; flex-direction: column; gap: .5rem; pointer-events: none;
+    }
+    .toast {
+      padding: .75rem 1.125rem; border-radius: 8px;
+      font-size: .875rem; font-weight: 600; color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      opacity: 0; transform: translateX(calc(100% + 1.5rem));
+      transition: opacity .28s, transform .28s cubic-bezier(.34,1.56,.64,1);
+      max-width: 300px; pointer-events: auto;
+    }
+    .toast--show  { opacity:1; transform: translateX(0); }
+    .toast-success { background: #16a34a; }
+    .toast-error   { background: #dc2626; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <span class="header-icon">🏠</span>
+        <h1 class="header-title">Inventario Hogar</h1>
+      </div>
+      <div class="header-user">
+        <img class="user-avatar" id="user-avatar" src="" alt="" hidden>
+        <span class="user-name" id="user-name"></span>
+        <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="page-header">
+      <h2 class="page-title">Mis inventarios</h2>
+      <div class="page-actions">
+        <button class="btn btn-secondary" id="btn-join">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Unirme con código
+        </button>
+        <button class="btn btn-primary" id="btn-create">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Crear inventario
+        </button>
+      </div>
+    </div>
+
+    <div class="inv-grid" id="inv-grid"></div>
+    <div class="empty-state" id="empty-state" hidden>
+      <div class="empty-icon">📦</div>
+      <h3>No tenés inventarios aún</h3>
+      <p>Creá tu primer inventario o unite a uno con un código de invitación.</p>
+    </div>
+  </div>
+
+  <!-- Modal: Crear inventario -->
+  <div class="modal-overlay" id="create-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Crear inventario</h2>
+        <button class="modal-close" data-close="create-overlay">×</button>
+      </div>
+      <form class="modal-form" id="create-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="inv-name">Nombre del inventario</label>
+          <input class="form-input" type="text" id="inv-name" placeholder="Ej: Mi hogar, Oficina…" maxlength="60" required autocomplete="off">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="create-overlay">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Crear</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Unirme con código -->
+  <div class="modal-overlay" id="join-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Unirme con código</h2>
+        <button class="modal-close" data-close="join-overlay">×</button>
+      </div>
+      <form class="modal-form" id="join-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="join-code">Código de invitación</label>
+          <input class="form-input code-input" type="text" id="join-code"
+                 placeholder="XXXXXX" maxlength="6" required autocomplete="off">
+          <small style="color:#64748b;font-size:.78rem">6 caracteres en mayúsculas</small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="join-overlay">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Unirme</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <script src="/js/inventories.js"></script>
+</body>
+</html>

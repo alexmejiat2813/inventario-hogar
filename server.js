@@ -8,14 +8,14 @@ const db       = require('./database');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-const VALID_CATEGORIES = ['Alimentos', 'Aseo', 'Alacena', 'Bebidas', 'Otros'];
+const VALID_CATEGORIES = ['Alimentos','Aseo','Alacena','Bebidas','Otros'];
 const VALID_UNITS = ['unidades','kg','g','lt','ml','paquetes','cajas','bolsas','latas','botellas'];
 
-function validate({ name, category, current_qty, min_qty, unit }) {
+function validateProduct({ name, category, current_qty, min_qty, unit }) {
   if (!name?.trim())                        return 'El nombre es requerido';
   if (!VALID_CATEGORIES.includes(category)) return 'Categoría inválida';
   if (current_qty == null || isNaN(+current_qty) || +current_qty < 0) return 'Cantidad actual inválida';
-  if (min_qty == null || isNaN(+min_qty) || +min_qty < 0)            return 'Cantidad mínima inválida';
+  if (min_qty    == null || isNaN(+min_qty)    || +min_qty    < 0) return 'Cantidad mínima inválida';
   if (!VALID_UNITS.includes(unit))          return 'Unidad inválida';
   return null;
 }
@@ -33,21 +33,71 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Invalidate sessions from the pre-multi-inventory version (id was a Google string)
+app.use((req, res, next) => {
+  if (req.user && typeof req.user.id !== 'number') {
+    return req.logout(() => next());
+  }
+  next();
+});
+
+// ── Auth guards ────────────────────────────────────────────────────────────────
+function requireAuthPage(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  res.redirect('/login');
+}
+function requireAuthApi(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  res.status(401).json({ error: 'No autenticado' });
+}
+
+// ── Inventory guards ───────────────────────────────────────────────────────────
+// Used by product/stats routes — reads activeInventoryId from session
+function requireInventory(req, res, next) {
+  const id = req.session.activeInventoryId;
+  if (!id) return res.status(400).json({ error: 'No hay inventario activo' });
+  const member = db.getMember(id, req.user.id);
+  if (!member) {
+    req.session.activeInventoryId = null;
+    return res.status(403).json({ error: 'Sin acceso al inventario' });
+  }
+  req.inventoryId = id;
+  req.userRole    = member.role;
+  next();
+}
+function requireEditorOrOwner(req, res, next) {
+  if (req.userRole === 'owner' || req.userRole === 'editor') return next();
+  res.status(403).json({ error: 'Se requiere rol de editor o dueño' });
+}
+
+// Used by /api/inventories/:id/* routes — checks membership in req.params.id
+function requireMember(req, res, next) {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+  const member = db.getMember(id, req.user.id);
+  if (!member) return res.status(403).json({ error: 'Sin acceso al inventario' });
+  req.inventoryId = id;
+  req.userRole    = member.role;
+  next();
+}
+function requireOwner(req, res, next) {
+  if (req.userRole === 'owner') return next();
+  res.status(403).json({ error: 'Solo el dueño puede realizar esta acción' });
+}
+
 // ── Public routes ──────────────────────────────────────────────────────────────
 app.get('/login', (req, res) => {
-  if (req.isAuthenticated()) return res.redirect('/');
+  if (req.isAuthenticated()) return res.redirect('/inventories');
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
-
 app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login?error=1' }),
-  (req, res) => res.redirect('/')
+  (req, res) => res.redirect('/inventories')
 );
-
 app.post('/auth/logout', (req, res, next) => {
   req.logout(err => {
     if (err) return next(err);
@@ -55,96 +105,177 @@ app.post('/auth/logout', (req, res, next) => {
   });
 });
 
-// ── Public static assets (CSS + JS needed by the login page too) ───────────────
+// ── Static assets (accessible without auth — needed by login page too) ─────────
 app.use('/css', express.static(path.join(__dirname, 'public/css')));
 app.use('/js',  express.static(path.join(__dirname, 'public/js')));
 
-// ── Auth guards ────────────────────────────────────────────────────────────────
-function requireAuthPage(req, res, next) {
-  if (req.isAuthenticated()) return next();
-  res.redirect('/login');
-}
+// ── Protected pages ────────────────────────────────────────────────────────────
+app.get('/', requireAuthPage, (req, res) => res.redirect('/inventories'));
 
-function requireAuthApi(req, res, next) {
-  if (req.isAuthenticated()) return next();
-  res.status(401).json({ error: 'No autenticado' });
-}
+app.get('/inventories', requireAuthPage, (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'inventories.html'))
+);
 
-// ── Main app (protected) ───────────────────────────────────────────────────────
-app.get('/', requireAuthPage, (req, res) => {
+app.get('/inventory', requireAuthPage, (req, res) => {
+  if (!req.session.activeInventoryId) return res.redirect('/inventories');
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ── API (all routes protected by single guard) ─────────────────────────────────
+// ── All API routes require auth ────────────────────────────────────────────────
 app.use('/api', requireAuthApi);
 
 // Current user
 app.get('/api/me', (req, res) => res.json(req.user));
 
-// Products
+// Active inventory (from session)
+app.get('/api/active-inventory', (req, res) => {
+  const id = req.session.activeInventoryId;
+  if (!id) return res.json(null);
+  const inv    = db.getInventory(id);
+  const member = db.getMember(id, req.user.id);
+  if (!inv || !member) {
+    req.session.activeInventoryId = null;
+    return res.json(null);
+  }
+  res.json({ ...inv, role: member.role });
+});
+
+// ── Inventories ────────────────────────────────────────────────────────────────
+app.get('/api/inventories', (req, res) => {
+  try { res.json(db.getUserInventories(req.user.id)); }
+  catch { res.status(500).json({ error: 'Error al obtener inventarios' }); }
+});
+
+app.post('/api/inventories', (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    const inv = db.createInventory(name.trim(), req.user.id);
+    res.status(201).json({ ...inv, role: 'owner' });
+  } catch { res.status(500).json({ error: 'Error al crear el inventario' }); }
+});
+
+app.post('/api/inventories/join', (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code?.trim()) return res.status(400).json({ error: 'El código es requerido' });
+    const result = db.joinByCode(code.trim(), req.user.id);
+    if (result.error) return res.status(400).json({ error: result.error });
+    res.json(result);
+  } catch { res.status(500).json({ error: 'Error al unirse al inventario' }); }
+});
+
+// Enter an inventory — sets active inventory in session
+app.post('/api/inventories/:id/enter', (req, res) => {
+  try {
+    const id     = parseInt(req.params.id);
+    const member = db.getMember(id, req.user.id);
+    if (!member) return res.status(403).json({ error: 'Sin acceso al inventario' });
+    const inv = db.getInventory(id);
+    if (!inv) return res.status(404).json({ error: 'Inventario no encontrado' });
+    req.session.activeInventoryId = id;
+    res.json({ ...inv, role: member.role });
+  } catch { res.status(500).json({ error: 'Error al acceder al inventario' }); }
+});
+
+// Members & invite codes
+app.get('/api/inventories/:id/members', requireMember, (req, res) => {
+  try {
+    const canManage = req.userRole === 'owner' || req.userRole === 'editor';
+    res.json({
+      members: db.getMembers(req.inventoryId),
+      codes:   canManage ? db.getActiveInviteCodes(req.inventoryId) : [],
+      role:    req.userRole,
+    });
+  } catch { res.status(500).json({ error: 'Error al obtener colaboradores' }); }
+});
+
+app.post('/api/inventories/:id/invite', requireMember, (req, res) => {
+  try {
+    if (req.userRole === 'reader') return res.status(403).json({ error: 'Sin permiso' });
+    const { role } = req.body;
+    if (!['editor', 'reader'].includes(role)) return res.status(400).json({ error: 'Rol inválido' });
+    if (req.userRole === 'editor' && role === 'editor') {
+      return res.status(403).json({ error: 'Los editores solo pueden invitar lectores' });
+    }
+    res.status(201).json(db.generateInviteCode(req.inventoryId, role, req.user.id));
+  } catch { res.status(500).json({ error: 'Error al generar código' }); }
+});
+
+app.delete('/api/inventories/:id/invite/:code', requireMember, requireOwner, (req, res) => {
+  try {
+    const ok = db.revokeCode(req.inventoryId, req.params.code);
+    if (!ok) return res.status(404).json({ error: 'Código no encontrado' });
+    res.json({ message: 'Código revocado' });
+  } catch { res.status(500).json({ error: 'Error al revocar código' }); }
+});
+
+app.delete('/api/inventories/:id/members/:userId', requireMember, requireOwner, (req, res) => {
+  try {
+    const targetId = parseInt(req.params.userId);
+    if (targetId === req.user.id) return res.status(400).json({ error: 'No podés removerte a vos mismo' });
+    const ok = db.removeMember(req.inventoryId, targetId);
+    if (!ok) return res.status(404).json({ error: 'Miembro no encontrado' });
+    res.json({ message: 'Miembro removido' });
+  } catch { res.status(500).json({ error: 'Error al remover miembro' }); }
+});
+
+// ── Products (all require an active inventory in session) ──────────────────────
+app.use(['/api/products', '/api/stats'], requireInventory);
+
 app.get('/api/products', (req, res) => {
   try {
     const { category } = req.query;
-    const products = category ? db.getByCategory(category) : db.getAll();
-    res.json(products);
-  } catch {
-    res.status(500).json({ error: 'Error al obtener productos' });
-  }
+    res.json(category ? db.getByCategory(req.inventoryId, category) : db.getAll(req.inventoryId));
+  } catch { res.status(500).json({ error: 'Error al obtener productos' }); }
 });
 
 app.get('/api/products/:id', (req, res) => {
   try {
-    const product = db.getById(parseInt(req.params.id));
-    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
-    res.json(product);
-  } catch {
-    res.status(500).json({ error: 'Error al obtener el producto' });
-  }
+    const p = db.getById(parseInt(req.params.id));
+    if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
+    res.json(p);
+  } catch { res.status(500).json({ error: 'Error al obtener el producto' }); }
 });
 
-app.post('/api/products', (req, res) => {
+app.post('/api/products', requireEditorOrOwner, (req, res) => {
   try {
-    const error = validate(req.body);
+    const error = validateProduct(req.body);
     if (error) return res.status(400).json({ error });
     const { name, category, current_qty, min_qty, unit } = req.body;
-    const product = db.create({ name: name.trim(), category, current_qty: +current_qty, min_qty: +min_qty, unit });
-    res.status(201).json(product);
-  } catch {
-    res.status(500).json({ error: 'Error al crear el producto' });
-  }
+    res.status(201).json(db.create({
+      name: name.trim(), category, current_qty: +current_qty,
+      min_qty: +min_qty, unit, inventoryId: req.inventoryId,
+    }));
+  } catch { res.status(500).json({ error: 'Error al crear el producto' }); }
 });
 
-app.put('/api/products/:id', (req, res) => {
+app.put('/api/products/:id', requireEditorOrOwner, (req, res) => {
   try {
-    const error = validate(req.body);
+    const error = validateProduct(req.body);
     if (error) return res.status(400).json({ error });
+    const p = db.getById(parseInt(req.params.id));
+    if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     const { name, category, current_qty, min_qty, unit } = req.body;
-    const product = db.update(parseInt(req.params.id), {
-      name: name.trim(), category, current_qty: +current_qty, min_qty: +min_qty, unit,
-    });
-    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
-    res.json(product);
-  } catch {
-    res.status(500).json({ error: 'Error al actualizar el producto' });
-  }
+    res.json(db.update(parseInt(req.params.id), { name: name.trim(), category, current_qty: +current_qty, min_qty: +min_qty, unit }));
+  } catch { res.status(500).json({ error: 'Error al actualizar el producto' }); }
 });
 
-app.delete('/api/products/:id', (req, res) => {
+app.delete('/api/products/:id', requireEditorOrOwner, (req, res) => {
   try {
-    const ok = db.remove(parseInt(req.params.id));
-    if (!ok) return res.status(404).json({ error: 'Producto no encontrado' });
+    const p = db.getById(parseInt(req.params.id));
+    if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
+    db.remove(parseInt(req.params.id));
     res.json({ message: 'Producto eliminado' });
-  } catch {
-    res.status(500).json({ error: 'Error al eliminar el producto' });
-  }
+  } catch { res.status(500).json({ error: 'Error al eliminar el producto' }); }
 });
 
 app.get('/api/stats', (req, res) => {
-  try {
-    res.json(db.getStats());
-  } catch {
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
-  }
+  try { res.json(db.getStats(req.inventoryId)); }
+  catch { res.status(500).json({ error: 'Error al obtener estadísticas' }); }
 });
 
 app.listen(PORT, () => {

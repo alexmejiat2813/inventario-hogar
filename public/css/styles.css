@@ -566,3 +566,239 @@ img, svg { display: block; }
 .toast-success { background: var(--success); }
 .toast-error   { background: var(--danger);  }
 .toast-info    { background: var(--primary); }
+
+/* ============================================================
+   Header — inventory page layout (left/right split)
+   ============================================================ */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  min-width: 0;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .35rem .6rem;
+  background: rgba(255,255,255,.15);
+  color: rgba(255,255,255,.9);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: var(--r-sm);
+  font-size: .775rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.btn-back:hover { background: rgba(255,255,255,.25); }
+.btn-back-label { display: none; }
+@media (min-width: 480px) { .btn-back-label { display: inline; } }
+
+.header-meta { margin-top: .1rem; }
+
+.role-badge-header {
+  display: inline-flex;
+  align-items: center;
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+
+/* Role badge colors (shared by header badge, member list, code list) */
+.role-owner  { background: #dbeafe; color: #1d4ed8; }
+.role-editor { background: #dcfce7; color: #15803d; }
+.role-reader { background: #f1f5f9; color: #475569; }
+
+.btn-manage {
+  background: rgba(255,255,255,.15);
+  color: rgba(255,255,255,.9);
+  border: 1px solid rgba(255,255,255,.25);
+  gap: .375rem;
+}
+.btn-manage:hover { background: rgba(255,255,255,.25); transform: none; box-shadow: none; }
+.manage-label { display: none; }
+@media (min-width: 520px) { .manage-label { display: inline; } }
+
+/* ============================================================
+   Buttons — small + danger variants
+   ============================================================ */
+.btn-sm {
+  padding: .3rem .65rem;
+  font-size: .78rem;
+}
+
+.btn-danger {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+.btn-danger:hover { background: #fecaca; transform: none; box-shadow: none; }
+
+/* ============================================================
+   Access modal
+   ============================================================ */
+.modal-access {
+  max-width: 480px;
+}
+
+.access-body {
+  padding: 1.25rem 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.access-section-title {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+  margin-bottom: .75rem;
+}
+
+/* Members list */
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .625rem .75rem;
+  background: var(--bg);
+  border-radius: var(--r-sm);
+}
+
+.member-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.member-avatar-placeholder {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.member-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.member-name {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-badge-small {
+  display: inline-flex;
+  align-items: center;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+/* Invite codes list */
+.codes-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-bottom: .875rem;
+}
+
+.no-codes {
+  font-size: .8rem;
+  color: var(--text-muted);
+  padding: .5rem 0;
+}
+
+.code-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .625rem .75rem;
+  background: var(--bg);
+  border-radius: var(--r-sm);
+  flex-wrap: wrap;
+}
+
+.code-info {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+}
+
+.code-display {
+  font-family: 'Courier New', monospace;
+  font-size: .9rem;
+  font-weight: 700;
+  letter-spacing: .15em;
+  color: var(--text);
+  background: var(--surface);
+  padding: .2rem .5rem;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--border);
+}
+
+.code-actions {
+  display: flex;
+  gap: .375rem;
+}
+
+.generate-row {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  flex-wrap: wrap;
+}
+
+.select-sm {
+  padding: .32rem .6rem;
+  font-size: .8rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .5rem center;
+  padding-right: 1.75rem;
+  cursor: pointer;
+}
+.select-sm:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
