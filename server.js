@@ -99,16 +99,18 @@ function requireAuthApi(req, res, next) {
 
 // ── Inventory guards ───────────────────────────────────────────────────────────
 function requireInventory(req, res, next) {
-  const id = req.session.activeInventoryId;
-  if (!id) return res.status(400).json({ error: 'No hay inventario activo' });
-  const member = db.getMember(id, req.user.id);
-  if (!member) {
-    req.session.activeInventoryId = null;
-    return res.status(403).json({ error: 'Sin acceso al inventario' });
-  }
-  req.inventoryId = id;
-  req.userRole    = member.role;
-  next();
+  try {
+    const id = req.session.activeInventoryId;
+    if (!id) return res.status(400).json({ error: 'No hay inventario activo' });
+    const member = db.getMember(id, req.user.id);
+    if (!member) {
+      req.session.activeInventoryId = null;
+      return res.status(403).json({ error: 'Sin acceso al inventario' });
+    }
+    req.inventoryId = id;
+    req.userRole    = member.role;
+    next();
+  } catch (err) { res.status(500).json({ error: 'Error de autenticación' }); }
 }
 function requireEditorOrOwner(req, res, next) {
   if (req.userRole === 'owner' || req.userRole === 'editor') return next();
@@ -116,13 +118,15 @@ function requireEditorOrOwner(req, res, next) {
 }
 
 function requireMember(req, res, next) {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
-  const member = db.getMember(id, req.user.id);
-  if (!member) return res.status(403).json({ error: 'Sin acceso al inventario' });
-  req.inventoryId = id;
-  req.userRole    = member.role;
-  next();
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const member = db.getMember(id, req.user.id);
+    if (!member) return res.status(403).json({ error: 'Sin acceso al inventario' });
+    req.inventoryId = id;
+    req.userRole    = member.role;
+    next();
+  } catch (err) { res.status(500).json({ error: 'Error de autenticación' }); }
 }
 function requireOwner(req, res, next) {
   if (req.userRole === 'owner') return next();
@@ -878,7 +882,14 @@ app.get('/api/inventories/:id/dashboard', requireMember, (req, res) => {
 
 // ── API 404 — prevent Express finalhandler from sending HTML ──────────────────
 app.use('/api', (req, res) => {
-  res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.path}` });
+  res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.originalUrl}` });
+});
+
+// ── Global error handler — ensures errors always return JSON ──────────────────
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(err.status || 500).json({ error: err.message || 'Error interno del servidor' });
 });
 
 app.listen(PORT, () => {
