@@ -21,9 +21,11 @@
       background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
       color: white; position: sticky; top: 0; z-index: 100;
       box-shadow: 0 2px 12px rgba(37,99,235,.35);
+      height: 68px;
     }
     .header-inner {
-      max-width: 720px; margin: 0 auto; padding: .875rem 1rem;
+      max-width: 860px; margin: 0 auto;
+      height: 100%; padding: 0 1.25rem;
       display: flex; align-items: center; gap: .75rem;
     }
     .btn-back {
@@ -40,7 +42,7 @@
     .header-inv-sub { font-size: .7rem; opacity: .75; font-weight: 500; }
 
     /* ── Main ── */
-    .main { max-width: 720px; margin: 0 auto; padding: 1rem; }
+    .main { max-width: 860px; margin: 0 auto; padding: 1rem; }
 
     /* ── Summary card ── */
     .summary-card {
@@ -213,15 +215,32 @@
       max-width: 300px; pointer-events: auto;
     }
     .toast--show  { opacity: 1; transform: translateY(0); }
-    .toast-error  { background: #dc2626; }
+    .toast-error   { background: #dc2626; }
+    .toast-success { background: #16a34a; }
+
+    /* ── Financial summary (detail) ── */
+    .fin-summary {
+      background: #f8fafc; border-radius: 10px;
+      padding: .625rem .875rem; margin-bottom: .75rem;
+      border: 1px solid #e2e8f0;
+    }
+    .fin-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .82rem; padding: .2rem 0; color: #64748b;
+    }
+    .fin-row--total {
+      font-weight: 800; font-size: .9rem; color: #1e293b;
+      padding-top: .375rem; border-top: 1px solid #e2e8f0; margin-top: .2rem;
+    }
 
     /* ── Inv tabs ── */
     .inv-tabs-bar {
       background: white; border-bottom: 1.5px solid #e2e8f0;
       box-shadow: 0 1px 6px rgba(0,0,0,.04);
+      position: sticky; top: 68px; z-index: 90;
     }
     .inv-tabs-inner {
-      max-width: 720px; margin: 0 auto; padding: 0 1rem;
+      max-width: 860px; margin: 0 auto; padding: 0 1rem;
       display: flex; overflow-x: auto; scrollbar-width: none;
     }
     .inv-tabs-inner::-webkit-scrollbar { display: none; }
@@ -311,8 +330,8 @@
   </main>
 
   <!-- Delete session modal -->
-  <div class="lightbox-overlay" id="delete-session-overlay" hidden style="align-items:flex-end;justify-content:center;padding:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);">
-    <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:440px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:lb-fade .15s ease;">
+  <div class="lightbox-overlay" id="delete-session-overlay" hidden style="background:rgba(15,23,42,.55);backdrop-filter:blur(3px);">
+    <div style="position:relative;background:white;border-radius:16px;width:90%;max-width:480px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:lb-fade .15s ease;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem .875rem;border-bottom:1px solid #f1f5f9;flex-shrink:0;">
         <h2 style="font-size:1.05rem;font-weight:800;" data-i18n="history.deleteSession.title">Eliminar compra</h2>
         <button id="btn-delete-session-close" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border:none;border-radius:8px;color:#475569;font-size:1rem;">✕</button>

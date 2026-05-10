@@ -7,14 +7,14 @@ const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 const state = {
-  inventory:        null,
-  sessions:         [],
-  stores:           [],
-  summary:          [],
-  filterMonth:      '',
-  filterStore:      '',
-  expanded:         new Set(),
-  deleteSessionId:  null,
+  inventory:       null,
+  sessions:        [],
+  stores:          [],
+  summary:         [],
+  filterMonth:     '',
+  filterStore:     '',
+  expanded:        new Set(),
+  deleteSessionId: null,
 };
 
 // ── API ───────────────────────────────────────────────────────
@@ -55,13 +55,11 @@ function fmtDate(iso) {
 }
 
 function fmtMonth(ym) {
-  // ym = "2026-05"
   const [y, m] = ym.split('-');
   return MONTH_NAMES[parseInt(m) - 1] + ' ' + y;
 }
 
 function fmtMonthFromDate(iso) {
-  // iso = "2026-05-08"
   return iso.slice(0, 7);
 }
 
@@ -98,16 +96,12 @@ async function loadSessions() {
   renderSessions();
 }
 
-// ── Populate filters ──────────────────────────────────────────
+// ── Filters ───────────────────────────────────────────────────
 
 function populateMonthFilter() {
   const sel = document.getElementById('filter-month');
   const cur = sel.value;
-
-  // Collect unique months from sessions
   const months = [...new Set(state.sessions.map(s => fmtMonthFromDate(s.purchase_date)))].sort().reverse();
-
-  // Rebuild options (keep "all" option)
   sel.innerHTML = `<option value="">${tSafe('history.filter.allMonths','Todos los meses')}</option>`;
   months.forEach(ym => {
     const opt = document.createElement('option');
@@ -129,7 +123,7 @@ function populateStoreFilter() {
   });
 }
 
-// ── Render summary ────────────────────────────────────────────
+// ── Summary card ──────────────────────────────────────────────
 
 function renderSummary() {
   const card = document.getElementById('summary-card');
@@ -143,7 +137,6 @@ function renderSummary() {
     thisMonth ? fmtCurrency(thisMonth.total, currency) : tSafe('history.summary.noData','—');
   document.getElementById('summary-this-count').textContent =
     thisMonth ? `${thisMonth.sessions} ${tSafe('history.summary.purchases','compras')}` : '';
-
   document.getElementById('summary-last-month').textContent =
     lastMonth ? fmtCurrency(lastMonth.total, currency) : tSafe('history.summary.noData','—');
 
@@ -158,11 +151,11 @@ function renderSummary() {
   }
 }
 
-// ── Render sessions ───────────────────────────────────────────
+// ── Sessions list ─────────────────────────────────────────────
 
 function renderSessions() {
-  const listEl  = document.getElementById('sessions-list');
-  const emptyEl = document.getElementById('empty-state');
+  const listEl     = document.getElementById('sessions-list');
+  const emptyEl    = document.getElementById('empty-state');
   const filtersRow = document.getElementById('filters-row');
 
   filtersRow.hidden = state.sessions.length === 0 && !state.filterMonth && !state.filterStore;
@@ -174,7 +167,6 @@ function renderSessions() {
   }
   emptyEl.hidden = true;
 
-  // Group by month
   const byMonth = {};
   state.sessions.forEach(s => {
     const ym = fmtMonthFromDate(s.purchase_date);
@@ -196,15 +188,15 @@ function renderSessions() {
       </div>`;
 
     sessions.forEach(session => {
-      const isExpanded = state.expanded.has(session.id);
-      const itemCount  = session.item_count || 0;
+      const isExpanded   = state.expanded.has(session.id);
+      const itemCount    = session.item_count || 0;
       const productLabel = itemCount === 1
         ? tSafe('history.session.product','producto')
         : tSafe('history.session.products','productos');
-      const hasTotal = +session.total_amount > 0;
+      const hasTotal   = +session.total_amount > 0;
       const hasReceipt = !!session.receipt_image;
+      const canEdit    = state.inventory?.role === 'owner' || state.inventory?.role === 'editor';
 
-      const canDelete = state.inventory?.role === 'owner' || state.inventory?.role === 'editor';
       html += `
         <div class="session-card" data-session="${session.id}">
           <div class="session-header" data-action="toggle" data-id="${session.id}">
@@ -217,7 +209,8 @@ function renderSessions() {
                 ${hasTotal ? fmtCurrency(session.total_amount, session.currency || currency) : '—'}
               </span>
               ${hasReceipt ? `<a class="session-receipt-icon" data-action="receipt" data-src="${esc(session.receipt_image)}" title="${tSafe('history.session.viewReceipt','Ver recibo')}">🧾</a>` : ''}
-              ${canDelete ? `<button class="session-receipt-icon" data-action="delete-session" data-id="${session.id}" title="${tSafe('history.deleteSession.btn','Eliminar')}" style="background:none;border:none;font-size:1rem;color:#94a3b8;padding:0;" aria-label="Eliminar compra">🗑️</button>` : ''}
+              ${canEdit ? `<a class="session-receipt-icon" href="/purchase/${session.id}/edit" title="${tSafe('purchaseEdit.title','Editar compra')}" style="font-size:1rem;color:#94a3b8;">✏️</a>` : ''}
+              ${canEdit ? `<button class="session-receipt-icon" data-action="delete-session" data-id="${session.id}" title="${tSafe('history.deleteSession.btn','Eliminar')}" style="background:none;border:none;font-size:1rem;color:#94a3b8;padding:0;" aria-label="Eliminar compra">🗑️</button>` : ''}
               <svg class="session-chevron ${isExpanded ? 'session-chevron--open' : ''}"
                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="6 9 12 15 18 9"/>
@@ -225,17 +218,17 @@ function renderSessions() {
             </div>
           </div>
           ${isExpanded ? `<div class="session-detail" id="detail-${session.id}">
-            <div class="detail-loading" style="color:#94a3b8;font-size:.85rem;padding:.5rem 0">…</div>
+            <div style="color:#94a3b8;font-size:.85rem;padding:.5rem 0">…</div>
           </div>` : ''}
         </div>`;
     });
   });
 
   listEl.innerHTML = html;
-
-  // Load detail for already-expanded sessions
   state.expanded.forEach(id => { if (document.getElementById(`detail-${id}`)) loadDetail(id); });
 }
+
+// ── Session detail ────────────────────────────────────────────
 
 async function loadDetail(sessionId) {
   const detailEl = document.getElementById(`detail-${sessionId}`);
@@ -248,14 +241,41 @@ async function loadDetail(sessionId) {
     const currency = session.currency || state.inventory?.currency || 'USD';
     const s = sym(currency);
 
-    // Group items by store
+    let html = '';
+
+    // Financial summary at top (only when taxes exist)
+    let breakdown = [];
+    if (session.tax_breakdown) {
+      try { breakdown = JSON.parse(session.tax_breakdown); } catch {}
+    }
+
+    if (breakdown.length > 0 && session.subtotal_before_tax != null) {
+      html += `<div class="fin-summary">
+        <div class="fin-row">
+          <span>${tSafe('history.session.subtotalBeforeTax','Subtotal')}</span>
+          <span>${s} ${(+session.subtotal_before_tax).toFixed(2)}</span>
+        </div>`;
+      breakdown.forEach(tx => {
+        html += `<div class="fin-row">
+          <span>${esc(tx.taxName)} (${tx.taxRate}%)</span>
+          <span>+ ${s} ${(+tx.taxAmount).toFixed(2)}</span>
+        </div>`;
+      });
+      html += `<div class="fin-row fin-row--total">
+          <span>Total</span>
+          <span>${fmtCurrency(session.total_amount, currency)}</span>
+        </div>
+      </div>`;
+    }
+
+    // Items grouped by store
     const groups = {};
     (session.items || []).forEach(item => {
       const key = item.store_id ? String(item.store_id) : '__none__';
       if (!groups[key]) {
         groups[key] = {
-          name:    item.store_name  ? (item.store_emoji || '') + ' ' + item.store_name : tSafe('history.session.noStore','Sin establecimiento'),
-          items:   [],
+          name:     item.store_name ? (item.store_emoji || '') + ' ' + item.store_name : tSafe('history.session.noStore','Sin establecimiento'),
+          items:    [],
           subtotal: 0,
         };
       }
@@ -263,7 +283,6 @@ async function loadDetail(sessionId) {
       groups[key].subtotal += +(item.subtotal || 0);
     });
 
-    let html = '';
     Object.values(groups).forEach(g => {
       html += `<div class="detail-store-group">
         <div class="detail-store-header">
@@ -272,43 +291,15 @@ async function loadDetail(sessionId) {
         </div>`;
       g.items.forEach(item => {
         const unitLabel = item.unit || '';
-        const taxLabel  = item.tax_rate ? `<span style="font-size:.72rem;color:#94a3b8;margin-left:.25rem;">+${item.tax_rate}%</span>` : '';
         html += `<div class="detail-item">
           <span class="detail-item-bullet">•</span>
-          <span class="detail-item-name">${esc(item.product_name)}${taxLabel}</span>
+          <span class="detail-item-name">${esc(item.product_name)}</span>
           <span class="detail-item-qty">${item.quantity_bought > 0 ? `×${item.quantity_bought} ${unitLabel}` : ''}</span>
           <span class="detail-item-price">${item.subtotal != null ? s + (+item.subtotal).toFixed(2) : ''}</span>
         </div>`;
       });
       html += `</div>`;
     });
-
-    // Tax breakdown at bottom
-    if (session.tax_breakdown) {
-      try {
-        const breakdown = JSON.parse(session.tax_breakdown);
-        if (breakdown.length) {
-          html += `<div style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid #f1f5f9;">`;
-          if (session.subtotal_before_tax != null) {
-            html += `<div class="detail-item" style="color:#94a3b8;">
-              <span class="detail-item-bullet" style="visibility:hidden">•</span>
-              <span class="detail-item-name">${tSafe('history.session.subtotalBeforeTax','Subtotal')}</span>
-              <span></span>
-              <span class="detail-item-price">${s} ${(+session.subtotal_before_tax).toFixed(2)}</span>
-            </div>`;
-          }
-          breakdown.forEach(t => {
-            html += `<div class="detail-item" style="color:#94a3b8;">
-              <span class="detail-item-bullet" style="visibility:hidden">•</span>
-              <span class="detail-item-name">${esc(t.taxName)} (${t.taxRate}%)</span>
-              <span></span>
-              <span class="detail-item-price">+ ${s} ${(+t.taxAmount).toFixed(2)}</span>
-            </div>`;
-          });
-          html += `</div>`;
-        }
-      } catch {}
-    }
 
     detailEl.innerHTML = html || '<p style="color:#94a3b8;font-size:.85rem">—</p>';
   } catch (err) {
@@ -390,11 +381,10 @@ function showToast(message, type = 'success') {
 // ── Events ────────────────────────────────────────────────────
 
 function initEvents() {
-  // Session toggle + receipt + delete
   document.getElementById('sessions-list').addEventListener('click', async e => {
-    const toggleBtn = e.target.closest('[data-action="toggle"]');
     const receiptBtn = e.target.closest('[data-action="receipt"]');
     const deleteBtn  = e.target.closest('[data-action="delete-session"]');
+    const toggleBtn  = e.target.closest('[data-action="toggle"]');
 
     if (receiptBtn) {
       e.stopPropagation();
@@ -417,7 +407,7 @@ function initEvents() {
     }
   });
 
-  // Delete session modal
+  // Delete modal
   document.getElementById('btn-delete-session-close').addEventListener('click', closeDeleteModal);
   document.getElementById('btn-delete-session-cancel').addEventListener('click', closeDeleteModal);
   document.getElementById('btn-delete-session-confirm').addEventListener('click', executeDeleteSession);
@@ -439,7 +429,7 @@ function initEvents() {
     loadSessions();
   });
 
-  // Lightbox close
+  // Lightbox
   document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
   document.getElementById('lightbox').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeLightbox();
@@ -460,7 +450,7 @@ async function init() {
     await loadAll();
   } catch (err) {
     console.error(err);
-    showToast(err.message || 'Error al cargar');
+    showToast(err.message || 'Error al cargar', 'error');
   }
 }
 

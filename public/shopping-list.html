@@ -21,11 +21,12 @@
       background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
       color: white; position: sticky; top: 0; z-index: 100;
       box-shadow: 0 2px 12px rgba(37,99,235,.35);
+      height: 68px;
     }
     .header-inner {
-      max-width: 720px; margin: 0 auto;
-      padding: .75rem 1rem;
-      display: flex; align-items: center; gap: .5rem;
+      max-width: 860px; margin: 0 auto;
+      height: 100%; padding: 0 1.25rem;
+      display: flex; align-items: center; gap: .75rem;
     }
     .btn-back {
       display: inline-flex; align-items: center; gap: .25rem;
@@ -73,9 +74,10 @@
     .inv-tabs-bar {
       background: white; border-bottom: 1.5px solid #e2e8f0;
       box-shadow: 0 1px 6px rgba(0,0,0,.04);
+      position: sticky; top: 68px; z-index: 90;
     }
     .inv-tabs-inner {
-      max-width: 720px; margin: 0 auto; padding: 0 1rem;
+      max-width: 860px; margin: 0 auto; padding: 0 1rem;
       display: flex; overflow-x: auto; scrollbar-width: none;
     }
     .inv-tabs-inner::-webkit-scrollbar { display: none; }
@@ -94,7 +96,7 @@
     }
 
     /* ── Main ── */
-    .main { max-width: 720px; margin: 0 auto; padding: 1rem; }
+    .main { max-width: 860px; margin: 0 auto; padding: 1rem; }
 
     /* ── Empty / All-checked states ── */
     .empty-state, .all-checked {
@@ -360,6 +362,46 @@
     .btn-confirm:hover { background: #1d4ed8; }
     .btn-confirm:disabled { opacity: .6; cursor: not-allowed; }
 
+    /* ── Budget bar ── */
+    .budget-bar {
+      background: white; border-bottom: 1.5px solid #e2e8f0;
+      padding: .5rem 1rem; font-size: .8rem; font-weight: 600;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .budget-bar-item { display: flex; align-items: center; gap: .35rem; color: #475569; }
+    .budget-bar-label { color: #94a3b8; font-weight: 500; }
+    .budget-bar-val   { font-weight: 800; color: #1e293b; }
+    .budget-bar-val--over { color: #dc2626; }
+    .budget-bar-exceeds {
+      display: flex; align-items: center; gap: .35rem;
+      color: #dc2626; font-weight: 700;
+      padding: .15rem .5rem; background: #fee2e2;
+      border-radius: 999px;
+    }
+
+    /* ── Budget warning modal ── */
+    .warning-modal {
+      background: white; border-radius: 16px;
+      width: 90%; max-width: 420px; padding: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      animation: sl-scale .18s ease;
+    }
+    .warning-modal-icon { font-size: 2rem; margin-bottom: .75rem; }
+    .warning-modal-title { font-size: 1.05rem; font-weight: 800; margin-bottom: .5rem; }
+    .warning-modal-msg { font-size: .875rem; color: #475569; line-height: 1.55; margin-bottom: 1.25rem; }
+    .warning-modal-actions { display: flex; flex-direction: column; gap: .5rem; }
+    .btn-warning-continue {
+      padding: .65rem; background: #dc2626; color: white;
+      border: none; border-radius: 10px; font-size: .875rem; font-weight: 700;
+      transition: background .15s;
+    }
+    .btn-warning-continue:hover { background: #b91c1c; }
+    .btn-warning-cancel {
+      padding: .65rem; background: #f1f5f9; color: #475569;
+      border: none; border-radius: 10px; font-size: .875rem; font-weight: 600;
+    }
+    .btn-warning-cancel:hover { background: #e2e8f0; }
+
     /* ── Toast ── */
     .toast-container {
       position: fixed; bottom: 1.5rem; right: 1rem; left: 1rem; z-index: 300;
@@ -418,6 +460,21 @@
     </div>
   </nav>
 
+  <div id="budget-bar" class="budget-bar" hidden>
+    <div class="budget-bar-item">
+      <span class="budget-bar-label" data-i18n="settings.budget.shoppingBar.available">Disponible</span>
+      <span class="budget-bar-val" id="budget-bar-available">—</span>
+    </div>
+    <div class="budget-bar-item">
+      <span class="budget-bar-label" data-i18n="settings.budget.shoppingBar.cartTotal">Esta compra</span>
+      <span class="budget-bar-val" id="budget-bar-cart">—</span>
+    </div>
+    <div id="budget-bar-exceeds-wrap" class="budget-bar-exceeds" hidden>
+      <span data-i18n="settings.budget.shoppingBar.exceeds">Excede en</span>
+      <span id="budget-bar-exceeds"></span>
+    </div>
+  </div>
+
   <main class="main">
     <div class="empty-state" id="empty-state" hidden>
       <div class="empty-icon">✅</div>
@@ -426,6 +483,22 @@
     </div>
     <div id="shopping-list"></div>
   </main>
+
+  <!-- Modal: advertencia de presupuesto -->
+  <div class="modal-overlay" id="budget-warning-overlay" hidden
+       style="align-items:center;padding:1rem;">
+    <div class="warning-modal">
+      <div class="warning-modal-icon">⚠️</div>
+      <div class="warning-modal-title" data-i18n="settings.budget.warning.title">Presupuesto insuficiente</div>
+      <p class="warning-modal-msg" id="budget-warning-msg"></p>
+      <div class="warning-modal-actions">
+        <button class="btn-warning-continue" id="btn-budget-warning-continue"
+                data-i18n="settings.budget.warning.continue">Continuar de todas formas</button>
+        <button class="btn-warning-cancel" id="btn-budget-warning-cancel"
+                data-i18n="settings.budget.warning.cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal: confirmar compra -->
   <div class="modal-overlay" id="confirm-overlay" hidden>

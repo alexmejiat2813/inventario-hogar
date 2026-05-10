@@ -793,6 +793,47 @@ function copyCode(code) {
     .catch(() => showToast(t('inventory.access.copyError'), 'error'));
 }
 
+// ── Budget banner ─────────────────────────────────────────────
+
+async function loadBudgetBanner() {
+  if (!state.inventory) return;
+  try {
+    const res = await fetch('/api/budget');
+    if (!res.ok) return;
+    renderBudgetBanner(await res.json());
+  } catch { /* fail silently */ }
+}
+
+function renderBudgetBanner(summary) {
+  const bannerEl = document.getElementById('budget-banner');
+  if (!bannerEl) return;
+
+  const { percentage, activeThreshold } = summary;
+  let dismissKey = '';
+  let msg        = '';
+  let colorClass = '';
+
+  if (percentage >= 100) {
+    dismissKey = 'budget_banner_exceeded';
+    colorClass = 'budget-banner--red';
+    msg        = t('settings.budget.banner.exceeded');
+  } else if (activeThreshold) {
+    dismissKey = `budget_banner_${activeThreshold.pct}`;
+    colorClass = activeThreshold.pct >= 80 ? 'budget-banner--orange' : 'budget-banner--amber';
+    msg        = t('settings.budget.banner.reached', { pct: activeThreshold.pct });
+  }
+
+  if (!msg || sessionStorage.getItem(dismissKey)) {
+    bannerEl.hidden = true;
+    return;
+  }
+
+  bannerEl.className    = `budget-banner ${colorClass}`;
+  bannerEl.hidden       = false;
+  document.getElementById('budget-banner-text').textContent    = msg;
+  document.getElementById('budget-banner-dismiss').dataset.key = dismissKey;
+}
+
 // ── Toast ─────────────────────────────────────────────────────
 
 function showToast(message, type = 'success') {
@@ -979,6 +1020,16 @@ function initEvents() {
     });
   }
 
+  // Budget banner dismiss
+  const bannerDismiss = document.getElementById('budget-banner-dismiss');
+  if (bannerDismiss) {
+    bannerDismiss.addEventListener('click', () => {
+      const key = bannerDismiss.dataset.key;
+      if (key) sessionStorage.setItem(key, '1');
+      document.getElementById('budget-banner').hidden = true;
+    });
+  }
+
   // Language changes: re-render dynamic content
   document.addEventListener('langchange', () => {
     updateInventoryHeader();
@@ -999,6 +1050,7 @@ async function init() {
     await Promise.all([loadData(), loadModalData()]);
     updateInventoryHeader();
     render();
+    loadBudgetBanner();
     // Determine starting tab from URL query param
     const urlTab = new URLSearchParams(window.location.search).get('tab');
     switchTab(urlTab === 'stock' ? 'stock' : 'dashboard');

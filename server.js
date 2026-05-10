@@ -187,6 +187,11 @@ app.get('/history', requireAuthPage, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'history.html'));
 });
 
+app.get('/purchase/:purchaseId/edit', requireAuthPage, (req, res) => {
+  if (!req.session.activeInventoryId) return res.redirect('/inventories');
+  res.sendFile(path.join(__dirname, 'public', 'purchase-edit.html'));
+});
+
 // ── All API routes require auth ────────────────────────────────────────────────
 app.use('/api', requireAuthApi);
 
@@ -286,7 +291,7 @@ app.delete('/api/inventories/:id/members/:userId', requireMember, requireOwner, 
 });
 
 // ── Products ───────────────────────────────────────────────────────────────────
-app.use(['/api/products', '/api/stats', '/api/shopping', '/api/stores', '/api/purchases', '/api/settings/taxes'], requireInventory);
+app.use(['/api/products', '/api/stats', '/api/shopping', '/api/stores', '/api/purchases', '/api/settings/taxes', '/api/budget'], requireInventory);
 
 app.get('/api/products', (req, res) => {
   try {
@@ -722,6 +727,39 @@ app.get('/api/purchases/:sessionId', (req, res) => {
   } catch { res.status(500).json({ error: 'Error al obtener la sesión' }); }
 });
 
+app.put('/api/purchases/:sessionId', requireEditorOrOwner, (req, res) => {
+  try {
+    const sessionId = parseInt(req.params.sessionId);
+    if (isNaN(sessionId)) return res.status(400).json({ error: 'ID inválido' });
+    const { purchase_date, items, tax_ids } = req.body;
+    if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
+    const session = db.updatePurchaseSession(sessionId, req.inventoryId, {
+      purchaseDate: purchase_date,
+      items,
+      taxIds: tax_ids || [],
+    });
+    if (!session) return res.status(404).json({ error: 'Sesión no encontrada' });
+    res.json(session);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Error al actualizar la compra' });
+  }
+});
+
+app.delete('/api/purchases/:sessionId/receipt', requireEditorOrOwner, (req, res) => {
+  try {
+    const sessionId = parseInt(req.params.sessionId);
+    if (isNaN(sessionId)) return res.status(400).json({ error: 'ID inválido' });
+    const session = db.getPurchaseSession(sessionId);
+    if (!session || session.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Sesión no encontrada' });
+    if (session.receipt_image) {
+      const filePath = path.join(__dirname, 'public', session.receipt_image);
+      fs.unlink(filePath, () => {});
+    }
+    db.updateReceiptImage(sessionId, null);
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Error al eliminar el recibo' }); }
+});
+
 app.post('/api/purchases/:sessionId/receipt', requireEditorOrOwner,
   uploadReceipt.single('receipt'),
   (req, res) => {
@@ -740,6 +778,88 @@ app.post('/api/purchases/:sessionId/receipt', requireEditorOrOwner,
   }
 );
 
+// ── Budget ─────────────────────────────────────────────────────────────────────
+app.get('/api/budget', (req, res) => {
+  try { res.json(db.getBudgetSummary(req.inventoryId)); }
+  catch (err) { res.status(500).json({ error: 'Error al obtener el presupuesto' }); }
+});
+
+app.put('/api/budget', requireEditorOrOwner, (req, res) => {
+  try {
+    const monthlyAmount    = req.body.monthlyAmount    ?? req.body.monthly_amount    ?? 0;
+    const alertPercentages = req.body.alertPercentages ?? req.body.alert_percentages ?? [];
+    const config = db.saveBudgetConfig(req.inventoryId, {
+      monthlyAmount:    +monthlyAmount,
+      alertPercentages: Array.isArray(alertPercentages) ? alertPercentages : [],
+    });
+    res.json(config);
+  } catch (err) { res.status(500).json({ error: err.message || 'Error al guardar presupuesto' }); }
+});
+
+app.get('/api/budget/resets', (req, res) => {
+  try { res.json(db.getBudgetResets(req.inventoryId)); }
+  catch { res.status(500).json({ error: 'Error al obtener historial de resets' }); }
+});
+
+app.post('/api/budget/reset', requireEditorOrOwner, (req, res) => {
+  try {
+    const reset = db.addBudgetReset(req.inventoryId, req.user.id);
+    res.status(201).json(reset);
+  } catch (err) { res.status(500).json({ error: err.message || 'Error al resetear presupuesto' }); }
+});
+
+// ── Budget by inventory ID ─────────────────────────────────────────────────────
+app.get('/api/inventories/:id/budget', requireMember, (req, res) => {
+  try { res.json(db.getBudgetSummary(req.inventoryId)); }
+  catch (err) { res.status(500).json({ error: 'Error al obtener el presupuesto' }); }
+});
+
+app.post('/api/inventories/:id/budget', requireMember, requireEditorOrOwner, (req, res) => {
+  try {
+    const monthlyAmount    = req.body.monthlyAmount    ?? req.body.monthly_amount    ?? 0;
+    const alertPercentages = req.body.alertPercentages ?? req.body.alert_percentages ?? [];
+    const config = db.saveBudgetConfig(req.inventoryId, {
+      monthlyAmount:    +monthlyAmount,
+      alertPercentages: Array.isArray(alertPercentages) ? alertPercentages : [],
+    });
+    res.json(config);
+  } catch (err) { res.status(500).json({ error: err.message || 'Error al guardar presupuesto' }); }
+});
+
+app.post('/api/inventories/:id/budget/reset', requireMember, requireEditorOrOwner, (req, res) => {
+  try {
+    const reset = db.addBudgetReset(req.inventoryId, req.user.id);
+    res.status(201).json(reset);
+  } catch (err) { res.status(500).json({ error: err.message || 'Error al resetear presupuesto' }); }
+});
+
+// ── Purchases by inventory ID ──────────────────────────────────────────────────
+app.get('/api/inventories/:id/purchases/:purchaseId', requireMember, (req, res) => {
+  try {
+    const purchaseId = parseInt(req.params.purchaseId);
+    if (isNaN(purchaseId)) return res.status(400).json({ error: 'ID inválido' });
+    const session = db.getPurchaseSession(purchaseId);
+    if (!session || session.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Sesión no encontrada' });
+    res.json(session);
+  } catch (err) { res.status(500).json({ error: 'Error al obtener la sesión' }); }
+});
+
+app.put('/api/inventories/:id/purchases/:purchaseId', requireMember, requireEditorOrOwner, (req, res) => {
+  try {
+    const purchaseId = parseInt(req.params.purchaseId);
+    if (isNaN(purchaseId)) return res.status(400).json({ error: 'ID inválido' });
+    const { purchase_date, items, tax_ids } = req.body;
+    if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
+    const session = db.updatePurchaseSession(purchaseId, req.inventoryId, {
+      purchaseDate: purchase_date,
+      items,
+      taxIds: tax_ids || [],
+    });
+    if (!session) return res.status(404).json({ error: 'Sesión no encontrada' });
+    res.json(session);
+  } catch (err) { res.status(500).json({ error: err.message || 'Error al actualizar la compra' }); }
+});
+
 // ── Dashboard ──────────────────────────────────────────────────────────────────
 app.get('/api/inventories/:id/dashboard', requireMember, (req, res) => {
   try {
@@ -749,6 +869,11 @@ app.get('/api/inventories/:id/dashboard', requireMember, (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Error al obtener el dashboard' });
   }
+});
+
+// ── API 404 — prevent Express finalhandler from sending HTML ──────────────────
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.path}` });
 });
 
 app.listen(PORT, () => {

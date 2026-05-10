@@ -69,7 +69,7 @@ img, svg { display: block; }
 }
 
 .header-inner {
-  max-width: 1280px;
+  max-width: 860px;
   margin: 0 auto;
   height: 100%;
   padding: 0 1.25rem;
@@ -153,7 +153,7 @@ img, svg { display: block; }
   box-shadow: 0 1px 6px rgba(0,0,0,.04);
 }
 .inv-tabs-bar > * {
-  max-width: 1280px;
+  max-width: 860px;
   margin: 0 auto;
   padding: 0 1rem;
   display: flex;
@@ -191,7 +191,7 @@ img, svg { display: block; }
    Layout
    ============================================================ */
 .main {
-  max-width: 1280px;
+  max-width: 860px;
   margin: 0 auto;
   padding: 1.25rem 1rem 4rem;
   display: flex;
@@ -336,6 +336,48 @@ img, svg { display: block; }
 .dash-progress-wrap { height: 4px; background: #f1f5f9; border-radius: 2px; margin-top: .3rem; }
 .dash-progress-bar  { height: 100%; background: var(--primary); border-radius: 2px; transition: width .4s ease; }
 .dash-top-count    { font-size: .8rem; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+
+/* ── Dashboard budget card ─────────────────────────────────── */
+.dash-budget-card {
+  background: white; border: 1.5px solid var(--border);
+  border-radius: var(--r); padding: 1.125rem 1.25rem;
+  box-shadow: var(--sh-sm); margin-bottom: 1.25rem;
+}
+.dash-budget-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: .75rem;
+}
+.dash-budget-label  { font-size: .875rem; font-weight: 700; color: var(--text); }
+.dash-budget-pct    { font-size: .8rem; font-weight: 700; color: var(--text-muted); }
+.dash-budget-bar-track {
+  height: 10px; background: #f1f5f9; border-radius: 999px;
+  overflow: hidden; margin-bottom: .875rem;
+}
+.dash-budget-bar-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
+.dash-budget-stats { display: flex; gap: 1rem; }
+.dash-budget-stat  { flex: 1; }
+.dash-budget-stat-label {
+  font-size: .68rem; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .03em; display: block;
+}
+.dash-budget-stat-val { font-size: 1rem; font-weight: 800; color: var(--text); }
+.dash-budget-no-config { font-size: .875rem; color: var(--text-muted); margin-bottom: .5rem; }
+.dash-budget-configure { font-size: .875rem; font-weight: 600; color: var(--primary); }
+
+/* ── Budget alert banner ───────────────────────────────────── */
+.budget-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  padding: .75rem 1rem; border-radius: 10px; margin-bottom: 1rem;
+  font-size: .875rem; font-weight: 600;
+}
+.budget-banner--amber  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.budget-banner--orange { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+.budget-banner--red    { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.budget-banner-dismiss {
+  background: none; border: none; padding: .25rem;
+  font-size: 1.1rem; cursor: pointer; color: inherit; opacity: .65; flex-shrink: 0;
+}
+.budget-banner-dismiss:hover { opacity: 1; }
 
 /* ============================================================
    Buttons

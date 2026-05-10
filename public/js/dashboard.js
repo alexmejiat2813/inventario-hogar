@@ -1,10 +1,11 @@
 'use strict';
 
 const dashState = {
-  data:    null,
-  period:  'month',
-  loading: false,
-  loaded:  false,
+  data:       null,
+  budgetData: null,
+  period:     'month',
+  loading:    false,
+  loaded:     false,
 };
 
 let _chartMonthly  = null;
@@ -31,6 +32,10 @@ async function loadDashboard() {
     if (!res.ok) throw new Error(res.status);
     dashState.data   = await res.json();
     dashState.loaded = true;
+    try {
+      const br = await fetch('/api/budget');
+      dashState.budgetData = br.ok ? await br.json() : null;
+    } catch { dashState.budgetData = null; }
     renderDashboard(dashState.data);
   } catch {
     /* fail silently — skeletons will just stay hidden */
@@ -49,10 +54,76 @@ function showDashSkeletons(show) {
 // ── Render ─────────────────────────────────────────────────────
 function renderDashboard(data) {
   renderDashSummary(data.summary);
+  renderBudgetCard(dashState.budgetData);
   renderMonthlyChart(data.monthlySpend);
   renderCategoryChart(data.byCategory);
   renderStoreChart(data.byStore);
   renderTopProducts(data.topProducts);
+}
+
+function renderBudgetCard(summary) {
+  const wrap = document.getElementById('dash-budget-wrap');
+  if (!wrap) return;
+
+  if (!summary?.config?.monthly_amount) {
+    wrap.innerHTML = `
+      <div class="dash-budget-card">
+        <div class="dash-budget-header">
+          <span class="dash-budget-label">${t('settings.budget.card.title')}</span>
+        </div>
+        <p class="dash-budget-no-config">${t('settings.budget.card.noConfig')}</p>
+        <a href="/settings" class="dash-budget-configure"
+           onclick="sessionStorage.setItem('settings_referrer', window.location.href)">
+          ${t('settings.budget.card.configure')}
+        </a>
+      </div>`;
+    return;
+  }
+
+  const { config, spent, available, percentage } = summary;
+  const currency = state.inventory?.currency || 'USD';
+  const fmt = n => {
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0,
+      }).format(Math.abs(n));
+    } catch { return String(Math.abs(n)); }
+  };
+
+  const pct      = Math.round(percentage || 0);
+  const barWidth = Math.min(pct, 100);
+  let barColor = '#16a34a';
+  if (pct >= 100)     barColor = '#dc2626';
+  else if (pct >= 80) barColor = '#ea580c';
+  else if (pct >= 60) barColor = '#d97706';
+
+  const availColor = available >= 0 ? '#16a34a' : '#dc2626';
+  const availFmt   = available >= 0 ? fmt(available) : '−' + fmt(-available);
+
+  wrap.innerHTML = `
+    <div class="dash-budget-card">
+      <div class="dash-budget-header">
+        <span class="dash-budget-label">${t('settings.budget.card.title')}</span>
+        <span class="dash-budget-pct" style="color:${barColor};">${pct}% ${t('settings.budget.card.used')}</span>
+      </div>
+      <div class="dash-budget-bar-track">
+        <div class="dash-budget-bar-fill" style="width:${barWidth}%;background:${barColor};"></div>
+      </div>
+      <div class="dash-budget-stats">
+        <div class="dash-budget-stat">
+          <span class="dash-budget-stat-label">${t('settings.budget.card.budgeted')}</span>
+          <span class="dash-budget-stat-val">${fmt(config.monthly_amount)}</span>
+        </div>
+        <div class="dash-budget-stat">
+          <span class="dash-budget-stat-label">${t('settings.budget.card.spent')}</span>
+          <span class="dash-budget-stat-val" style="color:${barColor};">${fmt(spent)}</span>
+        </div>
+        <div class="dash-budget-stat">
+          <span class="dash-budget-stat-label">${t('settings.budget.card.available')}</span>
+          <span class="dash-budget-stat-val" style="color:${availColor};">${availFmt}</span>
+        </div>
+      </div>
+    </div>`;
 }
 
 function renderDashSummary(summary) {

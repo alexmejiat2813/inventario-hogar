@@ -305,6 +305,47 @@
       "cancel": "Annuler"
     }
   },
+  "purchaseEdit": {
+    "title": "Modifier l'achat",
+    "back": "Historique",
+    "saveBtn": "Enregistrer",
+    "saving": "Enregistrement…",
+    "success": "Achat enregistré",
+    "section": {
+      "general": "Informations générales",
+      "products": "Produits",
+      "taxes": "Taxes",
+      "receipt": "Ticket de caisse"
+    },
+    "date": "Date d'achat",
+    "col": {
+      "product": "Produit",
+      "qty": "Qté",
+      "unit": "Unité",
+      "price": "Prix unit.",
+      "store": "Magasin",
+      "subtotal": "Sous-total"
+    },
+    "productPlaceholder": "Nom du produit",
+    "noStore": "Sans magasin",
+    "addProduct": "+ Ajouter un produit",
+    "removeProduct": "Supprimer",
+    "noTaxes": "Aucune taxe configurée.",
+    "receipt": {
+      "change": "Changer la photo",
+      "remove": "Supprimer la photo",
+      "add": "📷 Ajouter une photo",
+      "removed": "Photo supprimée",
+      "undo": "Annuler",
+      "cancelChange": "Annuler le changement"
+    },
+    "bar": {
+      "subtotal": "Sous-total",
+      "taxes": "Taxes",
+      "total": "Total"
+    },
+    "cancel": "Annuler"
+  },
   "settings": {
     "title": "Paramètres",
     "back": "Retour",
@@ -314,7 +355,8 @@
       "catalog": "Catalogue",
       "stores": "Établissements",
       "currency": "Devise",
-      "taxes": "Taxes"
+      "taxes": "Taxes",
+      "budget": "Budget"
     },
     "categories": {
       "title": "Catégories",
@@ -452,6 +494,53 @@
         "updated": "Taxe mise à jour",
         "deleted": "Taxe supprimée",
         "confirmDelete": "Supprimer la taxe « {{name}} » ?"
+      }
+    },
+    "budget": {
+      "title": "Budget mensuel",
+      "noInventory": "Ouvrez un inventaire pour configurer le budget.",
+      "amount": "Montant du budget mensuel",
+      "amountPlaceholder": "Ex. : 500",
+      "alerts": "Alertes de seuil",
+      "alertsHint": "Vous serez alerté quand les dépenses atteignent ces pourcentages du budget",
+      "addAlert": "+ Ajouter un pourcentage",
+      "alertPctPlaceholder": "Ex. : 75",
+      "removeAlert": "Supprimer",
+      "save": "Enregistrer le budget",
+      "saving": "Enregistrement…",
+      "saved": "Budget enregistré",
+      "resetBtn": "Réinitialiser le budget du mois",
+      "resetConfirm": "Réinitialiser le compteur de dépenses du mois en cours ? Cela ne supprime pas l'historique des achats.",
+      "resetSuccess": "Budget réinitialisé",
+      "resetHistory": "Historique des réinitialisations",
+      "resetHistoryEmpty": "Aucune réinitialisation enregistrée.",
+      "resetColDate": "Date",
+      "resetColSpent": "Dépenses au moment de la réinitialisation",
+      "resetColBy": "Par",
+      "card": {
+        "title": "Budget du mois",
+        "budgeted": "Budgété",
+        "spent": "Dépensé",
+        "available": "Disponible",
+        "noConfig": "Non configuré",
+        "configure": "Configurer →",
+        "used": "utilisé"
+      },
+      "banner": {
+        "reached": "Vous avez utilisé {{pct}} % de votre budget mensuel",
+        "exceeded": "Vous avez dépassé votre budget mensuel !"
+      },
+      "warning": {
+        "title": "Budget dépassé",
+        "message": "Cet achat dépassera votre budget mensuel de {{amount}}. Voulez-vous continuer quand même ?",
+        "continue": "Continuer quand même",
+        "cancel": "Annuler"
+      },
+      "shoppingBar": {
+        "available": "Disponible",
+        "cartTotal": "Cet achat",
+        "exceeds": "Dépasse de",
+        "noBudget": "Aucun budget configuré"
       }
     }
   },

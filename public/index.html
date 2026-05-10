@@ -140,6 +140,12 @@
 
   <main class="main">
 
+    <!-- Budget alert banner -->
+    <div id="budget-banner" class="budget-banner" hidden>
+      <span id="budget-banner-text"></span>
+      <button class="budget-banner-dismiss" id="budget-banner-dismiss" aria-label="Cerrar">✕</button>
+    </div>
+
     <!-- ===== DASHBOARD PANEL ===== -->
     <div id="panel-dashboard" class="inv-panel">
 
@@ -158,6 +164,9 @@
         <div class="dash-stat-card skeleton"></div>
         <div class="dash-stat-card skeleton"></div>
       </div>
+
+      <!-- Budget card -->
+      <div id="dash-budget-wrap"></div>
 
       <!-- Monthly spend line chart -->
       <div class="dash-card">

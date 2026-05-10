@@ -305,6 +305,47 @@
       "cancel": "Cancelar"
     }
   },
+  "purchaseEdit": {
+    "title": "Editar compra",
+    "back": "Historial",
+    "saveBtn": "Guardar cambios",
+    "saving": "Guardando…",
+    "success": "Compra guardada",
+    "section": {
+      "general": "Información general",
+      "products": "Productos",
+      "taxes": "Impuestos",
+      "receipt": "Recibo"
+    },
+    "date": "Fecha de compra",
+    "col": {
+      "product": "Producto",
+      "qty": "Cant.",
+      "unit": "Unidad",
+      "price": "Precio unit.",
+      "store": "Tienda",
+      "subtotal": "Subtotal"
+    },
+    "productPlaceholder": "Nombre del producto",
+    "noStore": "Sin tienda",
+    "addProduct": "+ Agregar producto",
+    "removeProduct": "Eliminar",
+    "noTaxes": "No hay impuestos configurados.",
+    "receipt": {
+      "change": "Cambiar foto",
+      "remove": "Eliminar foto",
+      "add": "📷 Agregar foto",
+      "removed": "Foto eliminada",
+      "undo": "Deshacer",
+      "cancelChange": "Cancelar cambio"
+    },
+    "bar": {
+      "subtotal": "Subtotal",
+      "taxes": "Impuestos",
+      "total": "Total"
+    },
+    "cancel": "Cancelar"
+  },
   "settings": {
     "title": "Configuración",
     "back": "Atrás",
@@ -314,7 +355,8 @@
       "catalog": "Catálogo",
       "stores": "Establecimientos",
       "currency": "Moneda",
-      "taxes": "Impuestos"
+      "taxes": "Impuestos",
+      "budget": "Presupuesto"
     },
     "categories": {
       "title": "Categorías",
@@ -452,6 +494,53 @@
         "updated": "Impuesto actualizado",
         "deleted": "Impuesto eliminado",
         "confirmDelete": "¿Eliminar el impuesto «{{name}}»?"
+      }
+    },
+    "budget": {
+      "title": "Presupuesto mensual",
+      "noInventory": "Abrí un inventario para configurar el presupuesto.",
+      "amount": "Monto del presupuesto mensual",
+      "amountPlaceholder": "Ej: 500",
+      "alerts": "Alertas de umbral",
+      "alertsHint": "Serás alertado cuando el gasto alcance estos porcentajes del presupuesto",
+      "addAlert": "+ Agregar porcentaje",
+      "alertPctPlaceholder": "Ej: 75",
+      "removeAlert": "Eliminar",
+      "save": "Guardar presupuesto",
+      "saving": "Guardando…",
+      "saved": "Presupuesto guardado",
+      "resetBtn": "Resetear presupuesto del mes",
+      "resetConfirm": "¿Reiniciar el contador de gasto del mes actual? Esto no elimina el historial de compras.",
+      "resetSuccess": "Presupuesto reseteado",
+      "resetHistory": "Historial de resets",
+      "resetHistoryEmpty": "Sin resets registrados.",
+      "resetColDate": "Fecha",
+      "resetColSpent": "Gasto al resetear",
+      "resetColBy": "Por",
+      "card": {
+        "title": "Presupuesto del mes",
+        "budgeted": "Presupuestado",
+        "spent": "Gastado",
+        "available": "Disponible",
+        "noConfig": "Sin configurar",
+        "configure": "Configurar →",
+        "used": "usado"
+      },
+      "banner": {
+        "reached": "Usaste el {{pct}}% de tu presupuesto mensual",
+        "exceeded": "¡Superaste tu presupuesto mensual!"
+      },
+      "warning": {
+        "title": "Presupuesto insuficiente",
+        "message": "Esta compra superará tu presupuesto mensual en {{amount}}. ¿Deseas continuar de todas formas?",
+        "continue": "Continuar de todas formas",
+        "cancel": "Cancelar"
+      },
+      "shoppingBar": {
+        "available": "Disponible",
+        "cartTotal": "Esta compra",
+        "exceeds": "Excede en",
+        "noBudget": "Sin presupuesto configurado"
       }
     }
   },

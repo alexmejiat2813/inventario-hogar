@@ -192,6 +192,59 @@
     .toast-success { background: #16a34a; }
     .toast-error   { background: #dc2626; }
     .toast-info    { background: #2563eb; }
+
+    /* Budget tab */
+    .budget-form-card {
+      background: white; border-radius: 14px; border: 1.5px solid #e2e8f0;
+      padding: 1.5rem; margin-bottom: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .budget-card-title {
+      font-size: .75rem; font-weight: 800; color: #475569;
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1.125rem;
+    }
+    .amount-input-wrap {
+      display: flex; align-items: center;
+      border: 1.5px solid #e2e8f0; border-radius: 9px; overflow: hidden;
+      max-width: 260px; transition: border-color .12s;
+    }
+    .amount-input-wrap:focus-within { border-color: #2563eb; }
+    .amount-currency-badge {
+      padding: .55rem .75rem; background: #f8fafc;
+      font-size: .8rem; font-weight: 700; color: #64748b;
+      border-right: 1.5px solid #e2e8f0; white-space: nowrap;
+    }
+    .amount-input {
+      flex: 1; padding: .55rem .8rem; border: none; outline: none;
+      font-size: 1rem; font-weight: 700; color: #1e293b; background: white;
+    }
+    .alert-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: .875rem; }
+    .alert-row {
+      display: flex; align-items: center; gap: .625rem;
+      background: #f8fafc; border: 1.5px solid #e2e8f0;
+      border-radius: 9px; padding: .5rem .75rem;
+    }
+    .alert-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #2563eb; }
+    .alert-pct-badge {
+      font-size: .9rem; font-weight: 800; color: #1e293b; flex: 1;
+    }
+    .alert-row .btn-delete { padding: .25rem .6rem; font-size: .75rem; }
+    .budget-hint { font-size: .8rem; color: #64748b; margin-bottom: .875rem; line-height: 1.5; }
+    .reset-history-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    .reset-history-table th {
+      text-align: left; padding: .5rem .75rem; font-size: .7rem; font-weight: 700;
+      color: #64748b; text-transform: uppercase; letter-spacing: .05em;
+      border-bottom: 1.5px solid #e2e8f0; background: #f8fafc;
+    }
+    .reset-history-table td { padding: .65rem .75rem; border-bottom: 1px solid #f1f5f9; }
+    .reset-history-table tr:last-child td { border-bottom: none; }
+    .btn-danger-outline {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .5rem 1rem; border: 1.5px solid #fca5a5;
+      border-radius: 8px; font-size: .875rem; font-weight: 600;
+      color: #dc2626; background: white; transition: background .15s;
+    }
+    .btn-danger-outline:hover { background: #fff5f5; }
   </style>
 </head>
 <body>
@@ -214,6 +267,7 @@
       <button class="tab-btn"        data-tab="stores"     data-i18n="settings.tabs.stores">Establecimientos</button>
       <button class="tab-btn"        data-tab="currency"   data-i18n="settings.tabs.currency">Moneda</button>
       <button class="tab-btn"        data-tab="taxes"      data-i18n="settings.tabs.taxes">Impuestos</button>
+      <button class="tab-btn"        data-tab="budget"     data-i18n="settings.tabs.budget">Presupuesto</button>
     </div>
   </div>
 
@@ -543,6 +597,75 @@
           <button type="submit" class="btn-save"   id="cp-modal-save"   data-i18n="settings.catalog.modal.save">Guardar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ══ Tab: Presupuesto ══ -->
+  <div class="content" id="tab-budget" hidden>
+    <div class="section-head">
+      <h2 class="section-title" data-i18n="settings.budget.title">Presupuesto mensual</h2>
+    </div>
+    <div id="budget-no-inventory" class="section-note" hidden data-i18n="settings.budget.noInventory">
+      Abrí un inventario para configurar el presupuesto.
+    </div>
+    <div id="budget-content" hidden>
+      <!-- Monto -->
+      <div class="budget-form-card">
+        <div class="budget-card-title" data-i18n="settings.budget.amount">Monto del presupuesto mensual</div>
+        <div class="amount-input-wrap">
+          <span class="amount-currency-badge" id="budget-currency-badge">$</span>
+          <input type="number" class="amount-input" id="budget-amount-input" min="0" step="0.01"
+                 placeholder="500" data-i18n-ph="settings.budget.amountPlaceholder">
+        </div>
+      </div>
+
+      <!-- Alertas -->
+      <div class="budget-form-card">
+        <div class="budget-card-title" data-i18n="settings.budget.alerts">Alertas de umbral</div>
+        <p class="budget-hint" data-i18n="settings.budget.alertsHint">
+          Serás alertado cuando el gasto alcance estos porcentajes del presupuesto
+        </p>
+        <div id="alert-list" class="alert-list"></div>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <input type="number" id="new-alert-pct" min="1" max="200" step="1" class="form-input"
+                 style="max-width:100px;"
+                 placeholder="75" data-i18n-ph="settings.budget.alertPctPlaceholder">
+          <button class="btn btn-primary btn-sm" id="btn-add-alert" data-i18n="settings.budget.addAlert">
+            + Agregar porcentaje
+          </button>
+        </div>
+      </div>
+
+      <!-- Guardar -->
+      <button class="btn btn-primary" id="btn-save-budget" data-i18n="settings.budget.save">
+        Guardar presupuesto
+      </button>
+
+      <!-- Reset -->
+      <div class="budget-form-card" style="margin-top:1.5rem;">
+        <div class="budget-card-title" style="margin-bottom:.75rem;">Reset</div>
+        <button class="btn-danger-outline" id="btn-reset-budget" data-i18n="settings.budget.resetBtn">
+          🔄 Resetear presupuesto del mes
+        </button>
+
+        <div style="margin-top:1.5rem;">
+          <div class="budget-card-title" style="margin-bottom:.75rem;" data-i18n="settings.budget.resetHistory">
+            Historial de resets
+          </div>
+          <div class="table-wrap">
+            <table class="reset-history-table">
+              <thead>
+                <tr>
+                  <th data-i18n="settings.budget.resetColDate">Fecha</th>
+                  <th data-i18n="settings.budget.resetColSpent">Gasto al resetear</th>
+                  <th data-i18n="settings.budget.resetColBy">Por</th>
+                </tr>
+              </thead>
+              <tbody id="reset-history-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

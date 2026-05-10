@@ -11,6 +11,7 @@ const state = {
   inventory:    null,
   stores:       [],
   taxes:        [],
+  budget:       null,
   purchaseData: {},        // { [productId]: { storeId, quantityBought, unitPrice, taxId, taxRate, taxAmount } }
   expandedItems: new Set(),
   receiptFile:  null,
@@ -95,6 +96,57 @@ async function loadTaxes() {
   } catch { state.taxes = []; }
 }
 
+async function loadBudget() {
+  try {
+    const res = await fetch('/api/budget');
+    state.budget = res.ok ? await res.json() : null;
+  } catch { state.budget = null; }
+}
+
+// ── Budget bar ────────────────────────────────────────────────
+
+function calcCartTotal() {
+  return state.items
+    .filter(i => i.checked)
+    .reduce((sum, item) => {
+      const sub = calcSubtotal(state.purchaseData[item.id] || {});
+      return sum + (sub || 0);
+    }, 0);
+}
+
+function updateBudgetBar() {
+  const barEl = document.getElementById('budget-bar');
+  if (!barEl) return;
+
+  if (!state.budget?.config?.monthly_amount) {
+    barEl.hidden = true;
+    return;
+  }
+
+  const available = state.budget.available ?? 0;
+  const cartTotal = calcCartTotal();
+  const sym       = getCurrencySym();
+
+  const availEl = document.getElementById('budget-bar-available');
+  availEl.textContent = available >= 0
+    ? sym + available.toFixed(2)
+    : '−' + sym + Math.abs(available).toFixed(2);
+  availEl.classList.toggle('budget-bar-val--over', available < 0);
+
+  document.getElementById('budget-bar-cart').textContent = sym + cartTotal.toFixed(2);
+
+  const exceedsWrap = document.getElementById('budget-bar-exceeds-wrap');
+  const over        = cartTotal - Math.max(available, 0);
+  if (over > 0) {
+    exceedsWrap.hidden = false;
+    document.getElementById('budget-bar-exceeds').textContent = sym + over.toFixed(2);
+  } else {
+    exceedsWrap.hidden = true;
+  }
+
+  barEl.hidden = false;
+}
+
 // ── Render ────────────────────────────────────────────────────
 
 function render() {
@@ -151,6 +203,8 @@ function render() {
         </div>
       </section>
     `).join('');
+
+  updateBudgetBar();
 }
 
 function renderItem(item) {
@@ -342,24 +396,42 @@ function openConfirmModal() {
   const checkedItems = state.items.filter(i => i.checked);
   if (!checkedItems.length) return;
 
-  // Date
+  if (state.budget?.config?.monthly_amount) {
+    const cartTotal  = calcCartTotal();
+    const available  = Math.max(state.budget.available ?? 0, 0);
+    if (cartTotal > available && cartTotal > 0) {
+      const sym  = getCurrencySym();
+      const over = cartTotal - available;
+      const msgEl = document.getElementById('budget-warning-msg');
+      if (msgEl) msgEl.textContent = t('settings.budget.warning.message', { amount: sym + over.toFixed(2) });
+      document.getElementById('budget-warning-overlay').hidden = false;
+      return;
+    }
+  }
+
+  showConfirmModal();
+}
+
+function showConfirmModal() {
+  const checkedItems = state.items.filter(i => i.checked);
+  if (!checkedItems.length) return;
+
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('confirm-date').textContent = formatDate(today);
-
-  // Build summary
   document.getElementById('confirm-summary').innerHTML = buildConfirmSummary(checkedItems);
-
-  // Reset receipt
   state.receiptFile = null;
   document.getElementById('receipt-input').value = '';
   document.getElementById('receipt-preview-wrap').hidden = true;
   document.getElementById('receipt-pick-wrap').hidden = false;
-
   document.getElementById('confirm-overlay').hidden = false;
 }
 
 function closeConfirmModal() {
   document.getElementById('confirm-overlay').hidden = true;
+}
+
+function closeBudgetWarning() {
+  document.getElementById('budget-warning-overlay').hidden = true;
 }
 
 function buildConfirmSummary(checkedItems) {
@@ -580,6 +652,13 @@ function initEvents() {
     handleFieldChange(el.dataset.field, parseInt(el.dataset.id), el.value);
   });
 
+  // Budget warning modal
+  document.getElementById('btn-budget-warning-continue').addEventListener('click', () => {
+    closeBudgetWarning();
+    showConfirmModal();
+  });
+  document.getElementById('btn-budget-warning-cancel').addEventListener('click', closeBudgetWarning);
+
   // Confirmation modal
   document.getElementById('btn-confirm-close').addEventListener('click', closeConfirmModal);
   document.getElementById('btn-confirm-cancel').addEventListener('click', closeConfirmModal);
@@ -599,9 +678,9 @@ function initEvents() {
 
   // Keyboard
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !document.getElementById('confirm-overlay').hidden) {
-      closeConfirmModal();
-    }
+    if (e.key !== 'Escape') return;
+    if (!document.getElementById('budget-warning-overlay').hidden) closeBudgetWarning();
+    else if (!document.getElementById('confirm-overlay').hidden) closeConfirmModal();
   });
 
   // Language changes
@@ -616,7 +695,7 @@ async function init() {
   try {
     const ok = await loadInventory();
     if (!ok) return;
-    await Promise.all([loadList(), loadStores(), loadTaxes()]);
+    await Promise.all([loadList(), loadStores(), loadTaxes(), loadBudget()]);
   } catch (err) {
     console.error(err);
     showToast(tSafe('shopping.loadError', 'Error al cargar'), 'error');

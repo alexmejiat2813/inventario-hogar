@@ -136,6 +136,24 @@ db.exec(`
     active       INTEGER NOT NULL DEFAULT 1,
     created_at   TEXT    DEFAULT (datetime('now','localtime'))
   );
+
+  CREATE TABLE IF NOT EXISTS budget_config (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id      INTEGER NOT NULL UNIQUE REFERENCES inventories(id) ON DELETE CASCADE,
+    monthly_amount    REAL    NOT NULL DEFAULT 0,
+    alert_percentages TEXT    NOT NULL DEFAULT '[]',
+    created_at        TEXT    DEFAULT (datetime('now','localtime')),
+    updated_at        TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS budget_resets (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id   INTEGER NOT NULL REFERENCES inventories(id) ON DELETE CASCADE,
+    reset_date     TEXT    NOT NULL,
+    spent_at_reset REAL    NOT NULL DEFAULT 0,
+    created_by     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at     TEXT    DEFAULT (datetime('now','localtime'))
+  );
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -871,10 +889,78 @@ module.exports = {
     db.prepare('UPDATE purchase_sessions SET receipt_image = ? WHERE id = ?').run(imagePath, sessionId);
   },
 
+  updatePurchaseSession(sessionId, inventoryId, { purchaseDate, items, taxIds = [] }) {
+    const session = db.prepare(
+      'SELECT * FROM purchase_sessions WHERE id = ? AND inventory_id = ?'
+    ).get(sessionId, inventoryId);
+    if (!session) return null;
+
+    let subtotalBeforeTax = 0;
+    items.forEach(item => {
+      if (item.quantityBought != null && item.unitPrice != null) {
+        subtotalBeforeTax += +(item.quantityBought) * +(item.unitPrice);
+      }
+    });
+
+    let totalTax = 0;
+    const taxBreakdownArr = [];
+    taxIds.forEach(taxId => {
+      const tax = db.prepare('SELECT * FROM tax_types WHERE id = ? AND inventory_id = ?').get(taxId, inventoryId);
+      if (tax && tax.active) {
+        const taxAmount = +(subtotalBeforeTax * (tax.rate / 100)).toFixed(4);
+        totalTax += taxAmount;
+        taxBreakdownArr.push({ taxId: tax.id, taxName: tax.name, taxRate: tax.rate, taxAmount });
+      }
+    });
+
+    const totalAmount = subtotalBeforeTax + totalTax;
+    const taxBreakdown = taxBreakdownArr.length ? JSON.stringify(taxBreakdownArr) : null;
+
+    db.exec('BEGIN');
+    try {
+      db.prepare(`
+        UPDATE purchase_sessions
+        SET total_amount = ?, purchase_date = ?,
+            subtotal_before_tax = ?, total_tax = ?, tax_breakdown = ?
+        WHERE id = ?
+      `).run(totalAmount, purchaseDate, subtotalBeforeTax || null, totalTax || null, taxBreakdown, sessionId);
+
+      db.prepare('DELETE FROM purchase_items WHERE session_id = ?').run(sessionId);
+
+      const insItem = db.prepare(`
+        INSERT INTO purchase_items
+          (session_id, product_id, product_name, store_id, quantity_bought, unit, unit_price, subtotal,
+           tax_id, tax_rate, tax_amount)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL)
+      `);
+      items.forEach(item => {
+        const base = (item.quantityBought != null && item.unitPrice != null)
+          ? +(item.quantityBought) * +(item.unitPrice) : null;
+        insItem.run(
+          sessionId,
+          item.productId    || null,
+          item.productName,
+          item.storeId      || null,
+          +(item.quantityBought) || 0,
+          item.unit         || 'unidades',
+          item.unitPrice    != null ? +item.unitPrice : null,
+          base
+        );
+      });
+
+      db.exec('COMMIT');
+      return db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+  },
+
   getPurchaseSessions(inventoryId, { month, storeId } = {}) {
     let sql = `
       SELECT ps.id, ps.purchase_date, ps.total_amount, ps.currency,
-             ps.receipt_image, ps.created_at, u.name AS user_name,
+             ps.receipt_image, ps.subtotal_before_tax, ps.total_tax, ps.tax_breakdown,
+             ps.created_at, u.name AS user_name,
              (SELECT COUNT(*) FROM purchase_items WHERE session_id = ps.id) AS item_count
       FROM purchase_sessions ps
       JOIN users u ON u.id = ps.user_id
@@ -988,5 +1074,92 @@ module.exports = {
       byStore,
       topProducts,
     };
+  },
+
+  // ── Budget ────────────────────────────────────────────────────────────────────
+
+  getBudgetConfig(inventoryId) {
+    const row = db.prepare('SELECT * FROM budget_config WHERE inventory_id = ?').get(inventoryId);
+    if (!row) return null;
+    try { row.alert_percentages = JSON.parse(row.alert_percentages); } catch { row.alert_percentages = []; }
+    return row;
+  },
+
+  saveBudgetConfig(inventoryId, { monthlyAmount, alertPercentages }) {
+    const existing = db.prepare('SELECT id FROM budget_config WHERE inventory_id = ?').get(inventoryId);
+    const json = JSON.stringify(alertPercentages || []);
+    if (existing) {
+      db.prepare(`UPDATE budget_config SET monthly_amount = ?, alert_percentages = ?,
+        updated_at = datetime('now','localtime') WHERE inventory_id = ?`
+      ).run(monthlyAmount, json, inventoryId);
+    } else {
+      db.prepare(`INSERT INTO budget_config (inventory_id, monthly_amount, alert_percentages)
+        VALUES (?, ?, ?)`).run(inventoryId, monthlyAmount, json);
+    }
+    return this.getBudgetConfig(inventoryId);
+  },
+
+  getBudgetResets(inventoryId) {
+    return db.prepare(`
+      SELECT br.*, u.name AS user_name
+      FROM budget_resets br
+      LEFT JOIN users u ON br.created_by = u.id
+      WHERE br.inventory_id = ?
+      ORDER BY br.created_at DESC LIMIT 20
+    `).all(inventoryId);
+  },
+
+  addBudgetReset(inventoryId, userId) {
+    const today = new Date().toISOString().slice(0, 10);
+    const monthStart = today.slice(0, 7) + '-01';
+    const lastReset = db.prepare(`
+      SELECT reset_date FROM budget_resets
+      WHERE inventory_id = ? AND reset_date >= ?
+      ORDER BY reset_date DESC LIMIT 1
+    `).get(inventoryId, monthStart);
+    const fromDate = lastReset ? lastReset.reset_date : monthStart;
+    const { spent } = db.prepare(`
+      SELECT COALESCE(SUM(total_amount), 0) AS spent FROM purchase_sessions
+      WHERE inventory_id = ? AND purchase_date >= ? AND purchase_date <= ?
+    `).get(inventoryId, fromDate, today);
+    const { lastInsertRowid } = db.prepare(`
+      INSERT INTO budget_resets (inventory_id, reset_date, spent_at_reset, created_by)
+      VALUES (?, ?, ?, ?)
+    `).run(inventoryId, today, spent, userId);
+    return db.prepare('SELECT * FROM budget_resets WHERE id = ?').get(lastInsertRowid);
+  },
+
+  getBudgetSummary(inventoryId) {
+    const config = this.getBudgetConfig(inventoryId);
+    const today  = new Date().toISOString().slice(0, 10);
+    const monthStart = today.slice(0, 7) + '-01';
+    const now = new Date();
+    const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
+
+    if (!config || !config.monthly_amount) {
+      return { config, spent: 0, available: 0, percentage: 0, activeThreshold: null, daysLeft };
+    }
+
+    const lastReset = db.prepare(`
+      SELECT reset_date FROM budget_resets
+      WHERE inventory_id = ? AND reset_date >= ?
+      ORDER BY reset_date DESC LIMIT 1
+    `).get(inventoryId, monthStart);
+    const fromDate = lastReset ? lastReset.reset_date : monthStart;
+
+    const { spent } = db.prepare(`
+      SELECT COALESCE(SUM(total_amount), 0) AS spent FROM purchase_sessions
+      WHERE inventory_id = ? AND purchase_date >= ? AND purchase_date <= ?
+    `).get(inventoryId, fromDate, today);
+
+    const budget    = config.monthly_amount;
+    const available = budget - spent;
+    const percentage = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+
+    const activeThreshold = (config.alert_percentages || [])
+      .filter(p => p.active && percentage >= p.pct)
+      .sort((a, b) => b.pct - a.pct)[0] || null;
+
+    return { config, spent, available, percentage, activeThreshold, daysLeft };
   },
 };

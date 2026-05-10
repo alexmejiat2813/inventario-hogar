@@ -34,13 +34,15 @@ const TAX_PRESETS = {
 };
 
 const state = {
-  categories: [],
-  units:      [],
-  catalog:    [],
-  stores:     [],
-  taxes:      [],
-  inventory:  null,
-  activeTab:  'categories',
+  categories:      [],
+  units:           [],
+  catalog:         [],
+  stores:          [],
+  taxes:           [],
+  budget:          null,
+  alertPercentages: [],
+  inventory:       null,
+  activeTab:       'categories',
 };
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -49,6 +51,8 @@ async function api(method, url, body) {
   if (body !== undefined) opts.body = JSON.stringify(body);
   const res  = await fetch(url, opts);
   if (res.status === 401) { window.location.href = '/login'; return null; }
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('application/json')) throw new Error(`Error ${res.status} en ${url}`);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Error');
   return data;
@@ -333,15 +337,149 @@ async function suggestTaxes() {
   } catch (err) { toast(err.message, 'error'); }
 }
 
+// ── Budget ────────────────────────────────────────────────────────────────────
+const CURRENCY_SYMBOLS = {
+  USD: '$', CAD: 'C$', EUR: '€', GBP: '£', MXN: '$', COP: '$', BRL: 'R$',
+};
+
+async function loadBudget() {
+  const noInvEl  = document.getElementById('budget-no-inventory');
+  const contentEl = document.getElementById('budget-content');
+
+  if (!state.inventory) {
+    if (noInvEl)   noInvEl.hidden   = false;
+    if (contentEl) contentEl.hidden = true;
+    return;
+  }
+  if (noInvEl)   noInvEl.hidden   = true;
+  if (contentEl) contentEl.hidden = false;
+
+  try {
+    const [summary, resets] = await Promise.all([
+      api('GET', '/api/budget'),
+      api('GET', '/api/budget/resets'),
+    ]);
+    state.budget           = summary;
+    state.alertPercentages = summary?.config?.alert_percentages || [];
+    renderBudget();
+    renderAlertList();
+    renderResetHistory(resets || []);
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+function renderBudget() {
+  const currency = state.inventory?.currency || 'USD';
+  const badge    = document.getElementById('budget-currency-badge');
+  if (badge) badge.textContent = CURRENCY_SYMBOLS[currency] || currency;
+  const amountInput = document.getElementById('budget-amount-input');
+  if (amountInput) amountInput.value = state.budget?.config?.monthly_amount || '';
+}
+
+function renderAlertList() {
+  const list = document.getElementById('alert-list');
+  if (!list) return;
+  if (!state.alertPercentages.length) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = state.alertPercentages.map((a, i) => `
+    <div class="alert-row" data-idx="${i}">
+      <input type="checkbox" ${a.active ? 'checked' : ''}
+             data-action="toggle-alert" data-idx="${i}">
+      <span class="alert-pct-badge">${a.pct}%</span>
+      <button class="btn btn-sm btn-delete" data-action="del-alert" data-idx="${i}">✕</button>
+    </div>`).join('');
+}
+
+function addAlert() {
+  const input = document.getElementById('new-alert-pct');
+  const val   = parseInt(input?.value, 10);
+  if (!input || isNaN(val) || val < 1 || val > 200) {
+    if (input) input.classList.add('invalid');
+    return;
+  }
+  if (state.alertPercentages.some(a => a.pct === val)) {
+    toast(val + '% ya existe', 'info'); return;
+  }
+  state.alertPercentages.push({ pct: val, active: true });
+  state.alertPercentages.sort((a, b) => a.pct - b.pct);
+  input.value = '';
+  input.classList.remove('invalid');
+  renderAlertList();
+}
+
+function handleAlertClick(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const idx = parseInt(el.dataset.idx, 10);
+  if (el.dataset.action === 'toggle-alert') {
+    state.alertPercentages[idx].active = el.checked;
+  }
+  if (el.dataset.action === 'del-alert') {
+    state.alertPercentages.splice(idx, 1);
+    renderAlertList();
+  }
+}
+
+async function saveBudget() {
+  const amountVal     = document.getElementById('budget-amount-input')?.value;
+  const monthlyAmount = amountVal ? parseFloat(amountVal) : 0;
+  if (isNaN(monthlyAmount) || monthlyAmount < 0) {
+    document.getElementById('budget-amount-input')?.classList.add('invalid');
+    return;
+  }
+  const saveBtn = document.getElementById('btn-save-budget');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('settings.budget.saving'); }
+  try {
+    await api('PUT', '/api/budget', { monthlyAmount, alertPercentages: state.alertPercentages });
+    toast(t('settings.budget.saved'));
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = t('settings.budget.save'); }
+  }
+}
+
+async function resetBudget() {
+  if (!confirm(t('settings.budget.resetConfirm'))) return;
+  try {
+    await api('POST', '/api/budget/reset');
+    toast(t('settings.budget.resetSuccess'));
+    const resets = await api('GET', '/api/budget/resets');
+    renderResetHistory(resets || []);
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+function renderResetHistory(resets) {
+  const tbody = document.getElementById('reset-history-tbody');
+  if (!tbody) return;
+  if (!resets.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="3">${t('settings.budget.resetHistoryEmpty')}</td></tr>`;
+    return;
+  }
+  const sym = CURRENCY_SYMBOLS[state.inventory?.currency || 'USD'] || '$';
+  tbody.innerHTML = resets.map(r => `
+    <tr>
+      <td>${esc(r.reset_date?.slice(0, 10) || '—')}</td>
+      <td>${sym}${Number(r.spent_at_reset || 0).toFixed(2)}</td>
+      <td>${esc(r.user_name || '—')}</td>
+    </tr>`).join('');
+}
+
 // ── Tab switching ─────────────────────────────────────────────────────────────
 function switchTab(tab) {
   state.activeTab = tab;
-  ['categories','units','catalog','stores','currency','taxes'].forEach(id => {
+  ['categories','units','catalog','stores','currency','taxes','budget'].forEach(id => {
     document.getElementById('tab-' + id).hidden = (id !== tab);
   });
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
+  if (tab === 'budget') loadBudget();
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
@@ -625,6 +763,15 @@ function initEvents() {
 
   // Currency save
   document.getElementById('btn-save-currency').addEventListener('click', saveCurrency);
+
+  // Budget
+  document.getElementById('btn-save-budget').addEventListener('click', saveBudget);
+  document.getElementById('btn-add-alert').addEventListener('click', addAlert);
+  document.getElementById('btn-reset-budget').addEventListener('click', resetBudget);
+  document.getElementById('alert-list').addEventListener('click', handleAlertClick);
+  document.getElementById('new-alert-pct').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addAlert(); }
+  });
 
   // Table action buttons (event delegation)
   document.getElementById('categories-tbody').addEventListener('click', handleTableClick);

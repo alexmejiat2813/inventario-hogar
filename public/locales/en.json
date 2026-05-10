@@ -305,6 +305,47 @@
       "cancel": "Cancel"
     }
   },
+  "purchaseEdit": {
+    "title": "Edit purchase",
+    "back": "History",
+    "saveBtn": "Save changes",
+    "saving": "Saving…",
+    "success": "Purchase saved",
+    "section": {
+      "general": "General info",
+      "products": "Products",
+      "taxes": "Taxes",
+      "receipt": "Receipt"
+    },
+    "date": "Purchase date",
+    "col": {
+      "product": "Product",
+      "qty": "Qty",
+      "unit": "Unit",
+      "price": "Unit price",
+      "store": "Store",
+      "subtotal": "Subtotal"
+    },
+    "productPlaceholder": "Product name",
+    "noStore": "No store",
+    "addProduct": "+ Add product",
+    "removeProduct": "Remove",
+    "noTaxes": "No taxes configured.",
+    "receipt": {
+      "change": "Change photo",
+      "remove": "Remove photo",
+      "add": "📷 Add photo",
+      "removed": "Photo removed",
+      "undo": "Undo",
+      "cancelChange": "Cancel change"
+    },
+    "bar": {
+      "subtotal": "Subtotal",
+      "taxes": "Taxes",
+      "total": "Total"
+    },
+    "cancel": "Cancel"
+  },
   "settings": {
     "title": "Settings",
     "back": "Back",
@@ -314,7 +355,8 @@
       "catalog": "Catalog",
       "stores": "Stores",
       "currency": "Currency",
-      "taxes": "Taxes"
+      "taxes": "Taxes",
+      "budget": "Budget"
     },
     "categories": {
       "title": "Categories",
@@ -452,6 +494,53 @@
         "updated": "Tax updated",
         "deleted": "Tax deleted",
         "confirmDelete": "Delete tax \"{{name}}\"?"
+      }
+    },
+    "budget": {
+      "title": "Monthly budget",
+      "noInventory": "Open an inventory to configure the budget.",
+      "amount": "Monthly budget amount",
+      "amountPlaceholder": "E.g.: 500",
+      "alerts": "Threshold alerts",
+      "alertsHint": "You will be alerted when spending reaches these percentages of the budget",
+      "addAlert": "+ Add percentage",
+      "alertPctPlaceholder": "E.g.: 75",
+      "removeAlert": "Remove",
+      "save": "Save budget",
+      "saving": "Saving…",
+      "saved": "Budget saved",
+      "resetBtn": "Reset monthly budget",
+      "resetConfirm": "Reset the spending counter for the current month? This does not delete purchase history.",
+      "resetSuccess": "Budget reset",
+      "resetHistory": "Reset history",
+      "resetHistoryEmpty": "No resets recorded.",
+      "resetColDate": "Date",
+      "resetColSpent": "Spent at reset",
+      "resetColBy": "By",
+      "card": {
+        "title": "Monthly budget",
+        "budgeted": "Budgeted",
+        "spent": "Spent",
+        "available": "Available",
+        "noConfig": "Not configured",
+        "configure": "Configure →",
+        "used": "used"
+      },
+      "banner": {
+        "reached": "You have used {{pct}}% of your monthly budget",
+        "exceeded": "You have exceeded your monthly budget!"
+      },
+      "warning": {
+        "title": "Budget exceeded",
+        "message": "This purchase will exceed your monthly budget by {{amount}}. Do you want to continue anyway?",
+        "continue": "Continue anyway",
+        "cancel": "Cancel"
+      },
+      "shoppingBar": {
+        "available": "Available",
+        "cartTotal": "This purchase",
+        "exceeds": "Exceeds by",
+        "noBudget": "No budget configured"
       }
     }
   },
