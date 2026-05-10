@@ -402,6 +402,38 @@
     }
     .btn-warning-cancel:hover { background: #e2e8f0; }
 
+    /* ── Confirm tax section ── */
+    .confirm-tax-wrap {
+      margin: .625rem 0 .25rem;
+      padding: .625rem .75rem;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+    }
+    .confirm-tax-title {
+      font-size: .68rem; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: .04em;
+      margin-bottom: .375rem;
+    }
+    .confirm-tax-list { display: flex; flex-direction: column; gap: .3rem; }
+    .confirm-tax-item {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .825rem; cursor: pointer;
+    }
+    .confirm-tax-check { width: 16px; height: 16px; cursor: pointer; accent-color: #2563eb; flex-shrink: 0; }
+    .confirm-tax-name  { flex: 1; color: #1e293b; font-weight: 600; }
+    .confirm-tax-rate  { color: #64748b; font-size: .78rem; }
+    .confirm-totals-wrap {
+      margin-top: .625rem;
+      padding-top: .5rem;
+      border-top: 1.5px solid #e2e8f0;
+    }
+    .confirm-subtotal-row {
+      display: flex; justify-content: space-between;
+      padding: .2rem .5rem;
+      font-size: .8rem; color: #64748b;
+    }
+
     /* ── Toast ── */
     .toast-container {
       position: fixed; bottom: 1.5rem; right: 1rem; left: 1rem; z-index: 300;
@@ -513,7 +545,8 @@
         </button>
       </div>
       <div class="modal-body">
-        <div id="confirm-summary"></div>
+        <div id="confirm-items"></div>
+        <div id="confirm-tax-section"></div>
         <div class="receipt-section">
           <p class="receipt-title" data-i18n="shopping.register.receipt">Foto del recibo (opcional)</p>
           <input type="file" id="receipt-input" accept="image/*" capture="environment" style="display:none">

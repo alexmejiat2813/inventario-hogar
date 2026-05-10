@@ -153,6 +153,7 @@
       "receiptChange": "Cambiar foto",
       "receiptRemove": "Quitar",
       "cancel": "Cancelar",
+      "taxes": "Impuestos",
       "confirm": "Registrar compra",
       "confirming": "Registrando…",
       "success": "Compra registrada",
@@ -223,7 +224,7 @@
   "catalog": {
     "title": "Catálogo de productos",
     "search": "Buscar en el catálogo...",
-    "add": "+ Agregar al catálogo",
+    "add": "Agregar al catálogo",
     "back": "Inventario",
     "count": "{{count}} productos",
     "tabs": {
@@ -241,6 +242,23 @@
       "sub": "No se encontraron productos con ese criterio."
     },
     "noInventory": "Iniciá sesión en un inventario para agregar productos.",
+    "editBtn": "Editar",
+    "deleteBtn": "Eliminar",
+    "deleteTitle": "Eliminar producto",
+    "deleteConfirm": "¿Eliminar \"{{name}}\" del catálogo?",
+    "deleteWarning": "Este producto también está en tu inventario. Solo se eliminará del catálogo.",
+    "deleted": "Producto eliminado del catálogo",
+    "deleting": "Eliminando…",
+    "modalEdit": {
+      "title": "Editar producto",
+      "name": "Nombre del producto",
+      "namePlaceholder": "Ej: Lentejas rojas",
+      "category": "Categoría",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "saved": "Producto actualizado"
+    },
     "modalAdd": {
       "title": "Agregar al inventario",
       "currentQty": "Cantidad actual",

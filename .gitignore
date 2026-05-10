@@ -5,6 +5,9 @@ node_modules/
 inventario.db
 inventario.db-shm
 inventario.db-wal
+inventory.db
+inventory.db-shm
+inventory.db-wal
 
 # Environment variables
 .env
@@ -22,6 +25,7 @@ Thumbs.db
 
 # Editor
 .vscode/
+.vs/
 .idea/
 *.swp
 

@@ -692,12 +692,13 @@ app.get('/api/purchases', (req, res) => {
 
 app.post('/api/purchases', requireEditorOrOwner, (req, res) => {
   try {
-    const { items, currency, purchase_date } = req.body;
+    const { items, currency, purchase_date, tax_ids } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
     const session = db.createPurchaseSession({
       inventoryId:  req.inventoryId,
       userId:       req.user.id,
       items,
+      taxIds:       Array.isArray(tax_ids) ? tax_ids : [],
       currency:     currency     || 'USD',
       purchaseDate: purchase_date || new Date().toISOString().slice(0,10),
       receiptImage: null,

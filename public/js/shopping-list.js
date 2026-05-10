@@ -12,7 +12,8 @@ const state = {
   stores:       [],
   taxes:        [],
   budget:       null,
-  purchaseData: {},        // { [productId]: { storeId, quantityBought, unitPrice, taxId, taxRate, taxAmount } }
+  purchaseData: {},        // { [productId]: { storeId, quantityBought, unitPrice } }
+  selectedTaxIds: [],
   expandedItems: new Set(),
   receiptFile:  null,
 };
@@ -50,8 +51,7 @@ function tSafe(key, fallback) {
 
 function calcSubtotal(pd) {
   if (!pd || pd.quantityBought == null || pd.unitPrice == null) return null;
-  const base = +pd.quantityBought * +pd.unitPrice;
-  return pd.taxRate ? base * (1 + pd.taxRate / 100) : base;
+  return +pd.quantityBought * +pd.unitPrice;
 }
 
 function getSubtotalStr(pd) {
@@ -221,20 +221,6 @@ function renderItem(item) {
     ),
   ].join('');
 
-  // Filter taxes applicable to this item's category
-  const applicableTaxes = state.taxes.filter(tax => {
-    const cats = JSON.parse(tax.categories || '[]');
-    return cats.length === 0 || cats.includes(item.category);
-  });
-  const hasTaxes = applicableTaxes.length > 0;
-
-  const taxOptions = [
-    `<option value="">${tSafe('shopping.fields.noTax','Sin impuesto')}</option>`,
-    ...applicableTaxes.map(tax =>
-      `<option value="${tax.id}" ${+pd.taxId === tax.id ? 'selected' : ''}>${esc(tax.name)} (${tax.rate}%)</option>`
-    ),
-  ].join('');
-
   const sub = calcSubtotal(pd);
 
   return `
@@ -289,11 +275,6 @@ function renderItem(item) {
             <span class="field-subtotal ${sub != null ? 'field-subtotal--pos' : ''}" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
           </div>
         </div>
-        ${hasTaxes ? `
-        <div class="field-tax-row">
-          <label class="field-label">${tSafe('shopping.fields.tax','Impuesto')}</label>
-          <select class="field-select" data-field="tax" data-id="${item.id}" style="max-width:220px;">${taxOptions}</select>
-        </div>` : ''}
       </div>
     </div>`;
 }
@@ -342,22 +323,6 @@ function handleFieldChange(field, productId, value) {
     pd.quantityBought = value !== '' ? +value : null;
   } else if (field === 'price') {
     pd.unitPrice = value !== '' ? +value : null;
-  } else if (field === 'tax') {
-    if (value) {
-      const tax = state.taxes.find(t => t.id === +value);
-      pd.taxId   = +value;
-      pd.taxRate = tax ? +tax.rate : null;
-      pd.taxName = tax ? tax.name : null;
-    } else {
-      pd.taxId = null; pd.taxRate = null; pd.taxName = null;
-    }
-  }
-
-  // Recalculate tax amount
-  if (pd.quantityBought != null && pd.unitPrice != null && pd.taxRate) {
-    pd.taxAmount = +pd.quantityBought * +pd.unitPrice * (pd.taxRate / 100);
-  } else {
-    pd.taxAmount = null;
   }
 
   // Update subtotal display in-place (no full re-render)
@@ -416,9 +381,12 @@ function showConfirmModal() {
   const checkedItems = state.items.filter(i => i.checked);
   if (!checkedItems.length) return;
 
+  state.selectedTaxIds = state.taxes.map(tx => tx.id);
+
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('confirm-date').textContent = formatDate(today);
-  document.getElementById('confirm-summary').innerHTML = buildConfirmSummary(checkedItems);
+  document.getElementById('confirm-items').innerHTML = buildConfirmItems(checkedItems);
+  renderTaxSection();
   state.receiptFile = null;
   document.getElementById('receipt-input').value = '';
   document.getElementById('receipt-preview-wrap').hidden = true;
@@ -434,84 +402,107 @@ function closeBudgetWarning() {
   document.getElementById('budget-warning-overlay').hidden = true;
 }
 
-function buildConfirmSummary(checkedItems) {
+function buildConfirmItems(checkedItems) {
   const sym = getCurrencySym();
-
-  // Group by store
   const groups = {};
-  let subtotalBeforeTax = 0;
-  const taxAccum = {};
 
   checkedItems.forEach(item => {
     const pd  = state.purchaseData[item.id] || {};
     const key = pd.storeId ? String(pd.storeId) : '__none__';
     if (!groups[key]) {
       groups[key] = {
-        storeName:  pd.storeId ? (state.stores.find(s => s.id === +pd.storeId)?.name || '?') : tSafe('shopping.register.noStore','Sin establecimiento'),
-        storeEmoji: pd.storeId ? (state.stores.find(s => s.id === +pd.storeId)?.emoji || '🏪') : '',
-        items: [],
+        storeName:  pd.storeId
+          ? (state.stores.find(s => s.id === +pd.storeId)?.name || '?')
+          : tSafe('shopping.register.noStore','Sin establecimiento'),
+        storeEmoji: pd.storeId
+          ? (state.stores.find(s => s.id === +pd.storeId)?.emoji || '🏪')
+          : '',
+        items:    [],
         subtotal: 0,
       };
     }
-    const base = (pd.quantityBought != null && pd.unitPrice != null)
-      ? +pd.quantityBought * +pd.unitPrice : null;
-    const sub = calcSubtotal(pd);
-    groups[key].items.push({ item, pd, base, sub });
-    if (base != null) subtotalBeforeTax += base;
-    if (sub != null)  groups[key].subtotal += sub;
-    if (pd.taxId && pd.taxAmount != null) {
-      const k = String(pd.taxId);
-      if (!taxAccum[k]) taxAccum[k] = { name: pd.taxName || '', rate: pd.taxRate || 0, amount: 0 };
-      taxAccum[k].amount += pd.taxAmount;
-    }
+    const base = calcSubtotal(pd);
+    groups[key].items.push({ item, pd, base });
+    if (base != null) groups[key].subtotal += base;
   });
 
-  const totalTax   = Object.values(taxAccum).reduce((s, t) => s + t.amount, 0);
-  const grand      = subtotalBeforeTax + totalTax;
-  const hasTaxes   = totalTax > 0;
-
   let html = '';
-
   Object.values(groups).forEach(g => {
     html += `<div class="confirm-store-group">
       <div class="confirm-store-header">
         <span>${g.storeEmoji ? g.storeEmoji + ' ' : ''}${esc(g.storeName)}</span>
         ${g.subtotal > 0 ? `<span class="confirm-store-subtotal">${sym} ${g.subtotal.toFixed(2)}</span>` : ''}
       </div>`;
-    g.items.forEach(({ item, pd, base, sub }) => {
+    g.items.forEach(({ item, pd, base }) => {
       const unit = tSafe('units.' + item.unit, item.unit);
-      const taxLabel = pd.taxName ? ` <span style="font-size:.72rem;color:#64748b;">(+${pd.taxRate}%)</span>` : '';
       html += `<div class="confirm-item">
-        <span class="confirm-item-name">${esc(item.name)}${taxLabel}</span>
+        <span class="confirm-item-name">${esc(item.name)}</span>
         <span class="confirm-item-detail">${pd.quantityBought != null ? `×${pd.quantityBought} ${unit}` : '—'}</span>
-        <span class="confirm-item-price">${sub != null ? sym + sub.toFixed(2) : ''}</span>
+        <span class="confirm-item-price">${base != null ? sym + base.toFixed(2) : ''}</span>
       </div>`;
     });
     html += `</div>`;
   });
 
-  if (grand > 0) {
-    if (hasTaxes) {
-      html += `<div style="padding:.5rem .5rem 0;border-top:1px solid #f1f5f9;margin-top:.5rem;">`;
-      html += `<div class="confirm-item" style="color:#64748b;">
-        <span class="confirm-item-name">${tSafe('shopping.register.subtotalBeforeTax','Subtotal (sin imp.)')}</span>
-        <span class="confirm-item-price">${sym} ${subtotalBeforeTax.toFixed(2)}</span>
+  return html;
+}
+
+function renderTaxSection() {
+  const section = document.getElementById('confirm-tax-section');
+  if (!section) return;
+
+  const checkedItems = state.items.filter(i => i.checked);
+  const subtotal = checkedItems.reduce((sum, item) => {
+    return sum + (calcSubtotal(state.purchaseData[item.id] || {}) || 0);
+  }, 0);
+
+  const sym = getCurrencySym();
+  let html = '';
+
+  if (state.taxes.length > 0) {
+    html += `<div class="confirm-tax-wrap">
+      <div class="confirm-tax-title">${tSafe('shopping.register.taxes','Impuestos')}</div>
+      <div class="confirm-tax-list">`;
+    state.taxes.forEach(tx => {
+      const checked = state.selectedTaxIds.includes(tx.id);
+      html += `<label class="confirm-tax-item">
+        <input type="checkbox" class="confirm-tax-check" value="${tx.id}"${checked ? ' checked' : ''}>
+        <span class="confirm-tax-name">${esc(tx.name)}</span>
+        <span class="confirm-tax-rate">${tx.rate}%</span>
+      </label>`;
+    });
+    html += `</div></div>`;
+  }
+
+  if (subtotal > 0) {
+    const totalTax = state.taxes
+      .filter(tx => state.selectedTaxIds.includes(tx.id))
+      .reduce((s, tx) => s + subtotal * tx.rate / 100, 0);
+    const grand = subtotal + totalTax;
+
+    html += `<div class="confirm-totals-wrap">`;
+    if (totalTax > 0) {
+      html += `<div class="confirm-subtotal-row">
+        <span>${tSafe('shopping.register.subtotalBeforeTax','Subtotal')}</span>
+        <span>${sym} ${subtotal.toFixed(2)}</span>
       </div>`;
-      Object.values(taxAccum).forEach(tax => {
-        html += `<div class="confirm-item" style="color:#64748b;">
-          <span class="confirm-item-name">${esc(tax.name)} (${tax.rate}%)</span>
-          <span class="confirm-item-price">+ ${sym} ${tax.amount.toFixed(2)}</span>
-        </div>`;
-      });
-      html += `</div>`;
+      state.taxes
+        .filter(tx => state.selectedTaxIds.includes(tx.id))
+        .forEach(tx => {
+          const amt = subtotal * tx.rate / 100;
+          html += `<div class="confirm-subtotal-row">
+            <span>${esc(tx.name)} (${tx.rate}%)</span>
+            <span>+ ${sym} ${amt.toFixed(2)}</span>
+          </div>`;
+        });
     }
     html += `<div class="confirm-total-row">
       <span>${tSafe('shopping.register.total','Total')}</span>
       <span class="confirm-total-amount">${sym} ${grand.toFixed(2)}</span>
-    </div>`;
+    </div></div>`;
   }
 
-  return html;
+  section.innerHTML = html;
 }
 
 async function handleConfirm() {
@@ -526,9 +517,8 @@ async function handleConfirm() {
     const today = new Date().toISOString().slice(0, 10);
     const items = checkedItems.map(item => {
       const pd   = state.purchaseData[item.id] || {};
-      const base = (pd.quantityBought != null && pd.unitPrice != null)
+      const base = pd.quantityBought != null && pd.unitPrice != null
         ? +pd.quantityBought * +pd.unitPrice : null;
-      const taxAmt = base != null && pd.taxRate ? base * (pd.taxRate / 100) : null;
       return {
         productId:      item.id,
         productName:    item.name,
@@ -536,11 +526,7 @@ async function handleConfirm() {
         quantityBought: pd.quantityBought != null ? +pd.quantityBought : 0,
         unit:           item.unit,
         unitPrice:      pd.unitPrice  != null ? +pd.unitPrice : null,
-        subtotal:       base != null ? base + (taxAmt || 0) : null,
-        taxId:          pd.taxId   || null,
-        taxRate:        pd.taxRate != null ? +pd.taxRate : null,
-        taxAmount:      taxAmt,
-        taxName:        pd.taxName || null,
+        subtotal:       base,
       };
     });
 
@@ -548,6 +534,7 @@ async function handleConfirm() {
       items,
       currency:      state.inventory?.currency || 'USD',
       purchase_date: today,
+      tax_ids:       state.selectedTaxIds,
     });
 
     // Upload receipt if selected
@@ -675,6 +662,19 @@ function initEvents() {
     handleReceiptPick(e.target.files[0]);
   });
   document.getElementById('btn-receipt-remove').addEventListener('click', removeReceipt);
+
+  // Invoice-level tax toggles in confirm modal
+  document.getElementById('confirm-overlay').addEventListener('change', e => {
+    const cb = e.target.closest('.confirm-tax-check');
+    if (!cb) return;
+    const id = parseInt(cb.value);
+    if (cb.checked) {
+      if (!state.selectedTaxIds.includes(id)) state.selectedTaxIds.push(id);
+    } else {
+      state.selectedTaxIds = state.selectedTaxIds.filter(x => x !== id);
+    }
+    renderTaxSection();
+  });
 
   // Keyboard
   document.addEventListener('keydown', e => {

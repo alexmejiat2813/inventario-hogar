@@ -20,6 +20,7 @@ const state = {
   activeCategory: 'all',
   searchQuery: '',
   addingProductId: null,
+  editingProductId: null,
   pendingPhotos: [],
 };
 
@@ -80,7 +81,7 @@ function renderCatalog() {
 
 function renderCard(p) {
   const icon   = CATEGORY_ICONS[p.category] || '📦';
-  const footer  = p.in_inventory
+  const footer = p.in_inventory
     ? `<div class="badge-in-inventory">✓ <span data-i18n="catalog.inInventory">${t('catalog.inInventory')}</span></div>`
     : (state.inventoryId
         ? `<button class="btn-add-inv" data-id="${p.id}" aria-label="${p.name}">${t('catalog.addToInventory')}</button>`
@@ -89,6 +90,16 @@ function renderCard(p) {
 
   return `
     <div class="cat-card">
+      <div class="card-actions">
+        <button class="card-action-btn card-action-edit" data-action="edit-product" data-id="${p.id}"
+                aria-label="${t('catalog.editBtn')}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="card-action-btn card-action-delete" data-action="delete-product" data-id="${p.id}"
+                aria-label="${t('catalog.deleteBtn')}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>
       <div class="card-icon">${icon}</div>
       <div class="card-name">${esc(p.name)}</div>
       <div class="card-footer">${footer}</div>
@@ -315,6 +326,98 @@ function handleFileInputChange(e) {
   renderPendingPhotoGrid();
 }
 
+// ── Edit catalog product ──────────────────────────────────────────────────────
+function openEditCatalogModal(productId) {
+  const product = state.catalog.find(p => p.id === productId);
+  if (!product) return;
+  state.editingProductId = productId;
+  document.getElementById('edit-cat-name').value     = product.name;
+  document.getElementById('edit-cat-category').value = product.category;
+  const saveBtn = document.getElementById('edit-cat-save');
+  saveBtn.textContent = t('catalog.modalEdit.save');
+  saveBtn.disabled    = false;
+  document.getElementById('edit-cat-overlay').hidden = false;
+  document.getElementById('edit-cat-name').focus();
+}
+
+function closeEditCatalogModal() {
+  document.getElementById('edit-cat-overlay').hidden = true;
+  state.editingProductId = null;
+}
+
+async function handleEditCatalog(e) {
+  e.preventDefault();
+  if (!state.editingProductId) return;
+  const name     = document.getElementById('edit-cat-name').value.trim();
+  const category = document.getElementById('edit-cat-category').value;
+  if (!name) return;
+
+  const saveBtn = document.getElementById('edit-cat-save');
+  saveBtn.disabled    = true;
+  saveBtn.textContent = t('catalog.modalEdit.saving');
+
+  try {
+    const res  = await fetch(`/api/settings/catalog/${state.editingProductId}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ name, category }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || res.status);
+    closeEditCatalogModal();
+    await loadCatalog();
+    renderCatalog();
+    toast(t('catalog.modalEdit.saved'), 'success');
+  } catch (err) {
+    toast(err.message || t('error.server'), 'error');
+    saveBtn.disabled    = false;
+    saveBtn.textContent = t('catalog.modalEdit.save');
+  }
+}
+
+// ── Delete catalog product ────────────────────────────────────────────────────
+function openDeleteConfirmModal(productId) {
+  const product = state.catalog.find(p => p.id === productId);
+  if (!product) return;
+  state.editingProductId = productId;
+  const msgEl  = document.getElementById('delete-product-msg');
+  const warnEl = document.getElementById('delete-product-warn');
+  if (msgEl)  msgEl.textContent = t('catalog.deleteConfirm', { name: product.name });
+  if (warnEl) warnEl.hidden = !product.in_inventory;
+  const delBtn = document.getElementById('btn-delete-product-confirm');
+  delBtn.textContent = t('catalog.deleteBtn');
+  delBtn.disabled    = false;
+  document.getElementById('delete-product-overlay').hidden = false;
+}
+
+function closeDeleteConfirmModal() {
+  document.getElementById('delete-product-overlay').hidden = true;
+  state.editingProductId = null;
+}
+
+async function executeDeleteProduct() {
+  if (!state.editingProductId) return;
+  const btn = document.getElementById('btn-delete-product-confirm');
+  btn.disabled    = true;
+  btn.textContent = t('catalog.deleting');
+
+  try {
+    const res = await fetch(`/api/settings/catalog/${state.editingProductId}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || res.status);
+    }
+    closeDeleteConfirmModal();
+    await loadCatalog();
+    renderCatalog();
+    toast(t('catalog.deleted'), 'success');
+  } catch (err) {
+    toast(err.message || t('error.server'), 'error');
+    btn.disabled    = false;
+    btn.textContent = t('catalog.deleteBtn');
+  }
+}
+
 // ── Toast ─────────────────────────────────────────────────────────────────────
 function toast(msg, type = 'info') {
   const el = document.createElement('div');
@@ -346,15 +449,16 @@ function initEvents() {
     renderCatalog();
   });
 
-  // Grid clicks → add-to-inventory modal
+  // Grid clicks → edit / delete / add-to-inventory
   grid.addEventListener('click', e => {
-    const btn = e.target.closest('.btn-add-inv');
-    if (!btn) return;
-    if (!state.inventoryId) {
-      toast(t('catalog.noInventory'), 'info');
-      return;
-    }
-    openAddToInventoryModal(Number(btn.dataset.id));
+    const editBtn   = e.target.closest('[data-action="edit-product"]');
+    const deleteBtn = e.target.closest('[data-action="delete-product"]');
+    const addBtn    = e.target.closest('.btn-add-inv');
+    if (editBtn)   { openEditCatalogModal(Number(editBtn.dataset.id));   return; }
+    if (deleteBtn) { openDeleteConfirmModal(Number(deleteBtn.dataset.id)); return; }
+    if (!addBtn) return;
+    if (!state.inventoryId) { toast(t('catalog.noInventory'), 'info'); return; }
+    openAddToInventoryModal(Number(addBtn.dataset.id));
   });
 
   // Add-to-inventory modal
@@ -384,11 +488,29 @@ function initEvents() {
   addCatCancel.addEventListener('click', closeAddToCatalogModal);
   addCatOverlay.addEventListener('click', e => { if (e.target === addCatOverlay) closeAddToCatalogModal(); });
 
+  // Edit catalog modal
+  document.getElementById('edit-cat-form').addEventListener('submit', handleEditCatalog);
+  document.getElementById('edit-cat-close').addEventListener('click', closeEditCatalogModal);
+  document.getElementById('edit-cat-cancel').addEventListener('click', closeEditCatalogModal);
+  document.getElementById('edit-cat-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('edit-cat-overlay')) closeEditCatalogModal();
+  });
+
+  // Delete product modal
+  document.getElementById('delete-product-close').addEventListener('click', closeDeleteConfirmModal);
+  document.getElementById('btn-delete-product-cancel').addEventListener('click', closeDeleteConfirmModal);
+  document.getElementById('btn-delete-product-confirm').addEventListener('click', executeDeleteProduct);
+  document.getElementById('delete-product-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('delete-product-overlay')) closeDeleteConfirmModal();
+  });
+
   // Keyboard: close modals on Escape
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (!addInvOverlay.hidden)  closeAddToInventoryModal();
     if (!addCatOverlay.hidden)  closeAddToCatalogModal();
+    if (!document.getElementById('edit-cat-overlay').hidden) closeEditCatalogModal();
+    if (!document.getElementById('delete-product-overlay').hidden) closeDeleteConfirmModal();
   });
 
   // Language change: re-render cards

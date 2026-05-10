@@ -153,6 +153,7 @@
       "receiptChange": "Changer la photo",
       "receiptRemove": "Supprimer",
       "cancel": "Annuler",
+      "taxes": "Taxes",
       "confirm": "Enregistrer l'achat",
       "confirming": "Enregistrement…",
       "success": "Achat enregistré",
@@ -223,7 +224,7 @@
   "catalog": {
     "title": "Catalogue de produits",
     "search": "Rechercher dans le catalogue...",
-    "add": "+ Ajouter au catalogue",
+    "add": "Ajouter au catalogue",
     "back": "Inventaire",
     "count": "{{count}} produits",
     "tabs": {
@@ -241,6 +242,23 @@
       "sub": "Aucun produit trouvé selon ce critère."
     },
     "noInventory": "Ouvrez un inventaire pour ajouter des produits.",
+    "editBtn": "Modifier",
+    "deleteBtn": "Supprimer",
+    "deleteTitle": "Supprimer le produit",
+    "deleteConfirm": "Supprimer « {{name}} » du catalogue ?",
+    "deleteWarning": "Ce produit est également dans votre inventaire. Il sera uniquement supprimé du catalogue.",
+    "deleted": "Produit supprimé du catalogue",
+    "deleting": "Suppression…",
+    "modalEdit": {
+      "title": "Modifier le produit",
+      "name": "Nom du produit",
+      "namePlaceholder": "Ex : Lentilles rouges",
+      "category": "Catégorie",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Produit mis à jour"
+    },
     "modalAdd": {
       "title": "Ajouter à l'inventaire",
       "currentQty": "Quantité actuelle",

@@ -779,26 +779,45 @@ module.exports = {
   },
 
   // ── Purchases ──────────────────────────────────────────────────────────────
-  createPurchaseSession({ inventoryId, userId, items, currency, purchaseDate, receiptImage }) {
+  createPurchaseSession({ inventoryId, userId, items, taxIds, currency, purchaseDate, receiptImage }) {
     let subtotalBeforeTax = 0;
     let totalTax = 0;
-    const taxGroups = {};
+    let taxBreakdown = null;
 
     items.forEach(item => {
       const base = (item.quantityBought != null && item.unitPrice != null)
         ? +(item.quantityBought) * +(item.unitPrice) : 0;
       subtotalBeforeTax += base;
-      const taxAmt = item.taxAmount != null ? +item.taxAmount : 0;
-      totalTax += taxAmt;
-      if (item.taxId && taxAmt > 0) {
-        const k = String(item.taxId);
-        if (!taxGroups[k]) taxGroups[k] = { taxId: +item.taxId, taxName: item.taxName || '', taxRate: +item.taxRate || 0, taxAmount: 0 };
-        taxGroups[k].taxAmount += taxAmt;
-      }
     });
 
+    if (taxIds?.length) {
+      // Invoice-level taxes: look up each tax and apply to the total subtotal
+      const groups = {};
+      taxIds.forEach(taxId => {
+        const tax = db.prepare('SELECT * FROM taxes WHERE id = ? AND inventory_id = ?').get(+taxId, inventoryId);
+        if (tax) {
+          const amt = subtotalBeforeTax * (+tax.rate / 100);
+          totalTax += amt;
+          groups[taxId] = { taxId: tax.id, taxName: tax.name, taxRate: +tax.rate, taxAmount: amt };
+        }
+      });
+      if (Object.keys(groups).length) taxBreakdown = JSON.stringify(Object.values(groups));
+    } else {
+      // Legacy: per-item tax data
+      const groups = {};
+      items.forEach(item => {
+        const taxAmt = item.taxAmount != null ? +item.taxAmount : 0;
+        totalTax += taxAmt;
+        if (item.taxId && taxAmt > 0) {
+          const k = String(item.taxId);
+          if (!groups[k]) groups[k] = { taxId: +item.taxId, taxName: item.taxName || '', taxRate: +item.taxRate || 0, taxAmount: 0 };
+          groups[k].taxAmount += taxAmt;
+        }
+      });
+      if (Object.keys(groups).length) taxBreakdown = JSON.stringify(Object.values(groups));
+    }
+
     const totalAmount = subtotalBeforeTax + totalTax;
-    const taxBreakdown = Object.keys(taxGroups).length ? JSON.stringify(Object.values(taxGroups)) : null;
 
     db.exec('BEGIN');
     try {

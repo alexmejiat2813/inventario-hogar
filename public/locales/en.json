@@ -153,6 +153,7 @@
       "receiptChange": "Change photo",
       "receiptRemove": "Remove",
       "cancel": "Cancel",
+      "taxes": "Taxes",
       "confirm": "Register purchase",
       "confirming": "Registering…",
       "success": "Purchase registered",
@@ -223,7 +224,7 @@
   "catalog": {
     "title": "Product catalog",
     "search": "Search the catalog...",
-    "add": "+ Add to catalog",
+    "add": "Add to catalog",
     "back": "Inventory",
     "count": "{{count}} products",
     "tabs": {
@@ -241,6 +242,23 @@
       "sub": "No products found matching your criteria."
     },
     "noInventory": "Open an inventory to add products.",
+    "editBtn": "Edit",
+    "deleteBtn": "Delete",
+    "deleteTitle": "Delete product",
+    "deleteConfirm": "Delete \"{{name}}\" from catalog?",
+    "deleteWarning": "This product is also in your inventory. It will only be removed from the catalog.",
+    "deleted": "Product removed from catalog",
+    "deleting": "Deleting…",
+    "modalEdit": {
+      "title": "Edit product",
+      "name": "Product name",
+      "namePlaceholder": "E.g.: Red lentils",
+      "category": "Category",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Product updated"
+    },
     "modalAdd": {
       "title": "Add to inventory",
       "currentQty": "Current quantity",

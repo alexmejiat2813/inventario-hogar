@@ -119,9 +119,29 @@
       display: flex; flex-direction: column; gap: .5rem;
       animation: card-in .2s ease both;
       transition: box-shadow .18s, transform .18s, border-color .18s;
+      position: relative;
     }
     .cat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-2px); border-color: #bfdbfe; }
     @keyframes card-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Card action buttons (edit / delete) */
+    .card-actions {
+      position: absolute; top: .5rem; right: .5rem;
+      display: flex; gap: .25rem;
+      opacity: 0; transition: opacity .15s;
+      z-index: 2;
+    }
+    .cat-card:hover .card-actions { opacity: 1; }
+    @media (max-width: 639px) { .card-actions { opacity: 1; } }
+    .card-action-btn {
+      width: 28px; height: 28px; border: none; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .15s; padding: 0;
+    }
+    .card-action-edit   { background: #eff6ff; color: #2563eb; }
+    .card-action-edit:hover   { background: #dbeafe; }
+    .card-action-delete { background: #fef2f2; color: #dc2626; }
+    .card-action-delete:hover { background: #fee2e2; }
 
     .card-icon {
       font-size: 1.75rem; line-height: 1;
@@ -420,6 +440,64 @@
           <button type="submit" class="btn-save"   id="add-cat-save"   data-i18n="catalog.modalNew.save">Guardar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Editar producto del catálogo -->
+  <div class="modal-overlay" id="edit-cat-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <h2 class="modal-title" data-i18n="catalog.modalEdit.title">Editar producto</h2>
+        </div>
+        <button class="modal-close" id="edit-cat-close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="edit-cat-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="edit-cat-name" data-i18n="catalog.modalEdit.name">Nombre del producto</label>
+          <input class="form-input" type="text" id="edit-cat-name"
+                 data-i18n-ph="catalog.modalEdit.namePlaceholder"
+                 placeholder="Ej: Lentejas rojas" maxlength="100" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-cat-category" data-i18n="catalog.modalEdit.category">Categoría</label>
+          <select class="form-select" id="edit-cat-category" required>
+            <option value="Alimentos"      data-i18n="catalog.tabs.Alimentos">🍎 Alimentos</option>
+            <option value="Bebidas"        data-i18n="catalog.tabs.Bebidas">🥤 Bebidas</option>
+            <option value="Aseo Personal"  data-i18n="catalog.tabs.Aseo Personal">🧴 Aseo Personal</option>
+            <option value="Aseo del Hogar" data-i18n="catalog.tabs.Aseo del Hogar">🧹 Aseo del Hogar</option>
+            <option value="Alacena"        data-i18n="catalog.tabs.Alacena">🏺 Alacena</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" id="edit-cat-cancel" data-i18n="catalog.modalEdit.cancel">Cancelar</button>
+          <button type="submit" class="btn-save"   id="edit-cat-save"   data-i18n="catalog.modalEdit.save">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar eliminación de producto -->
+  <div class="modal-overlay" id="delete-product-overlay" hidden>
+    <div class="modal" style="max-width:380px;">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <h2 class="modal-title" style="color:#dc2626;" data-i18n="catalog.deleteTitle">Eliminar producto</h2>
+        </div>
+        <button class="modal-close" id="delete-product-close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <p id="delete-product-msg" style="font-size:.9rem;color:#475569;margin-bottom:.875rem;line-height:1.5;"></p>
+      <p id="delete-product-warn" data-i18n="catalog.deleteWarning"
+         style="font-size:.8rem;color:#92400e;background:#fffbeb;border:1px solid #fde68a;padding:.5rem .75rem;border-radius:8px;margin-bottom:.875rem;" hidden></p>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" id="btn-delete-product-cancel" data-i18n="catalog.modalEdit.cancel">Cancelar</button>
+        <button type="button" class="btn-save"   id="btn-delete-product-confirm"
+                style="background:#dc2626;" data-i18n="catalog.deleteBtn">Eliminar</button>
+      </div>
     </div>
   </div>
 
