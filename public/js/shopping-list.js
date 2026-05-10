@@ -98,7 +98,7 @@ async function loadTaxes() {
 
 async function loadBudget() {
   try {
-    const res = await fetch('/api/budget');
+    const res = await fetch(`/api/inventories/${state.inventory.id}/budget`);
     state.budget = res.ok ? await res.json() : null;
   } catch { state.budget = null; }
 }

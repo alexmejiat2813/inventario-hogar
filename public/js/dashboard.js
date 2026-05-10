@@ -33,7 +33,7 @@ async function loadDashboard() {
     dashState.data   = await res.json();
     dashState.loaded = true;
     try {
-      const br = await fetch('/api/budget');
+      const br = await fetch(`/api/inventories/${state.inventory.id}/budget`);
       dashState.budgetData = br.ok ? await br.json() : null;
     } catch { dashState.budgetData = null; }
     renderDashboard(dashState.data);

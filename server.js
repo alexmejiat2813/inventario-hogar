@@ -826,6 +826,11 @@ app.post('/api/inventories/:id/budget', requireMember, requireEditorOrOwner, (re
   } catch (err) { res.status(500).json({ error: err.message || 'Error al guardar presupuesto' }); }
 });
 
+app.get('/api/inventories/:id/budget/resets', requireMember, (req, res) => {
+  try { res.json(db.getBudgetResets(req.inventoryId)); }
+  catch { res.status(500).json({ error: 'Error al obtener historial de resets' }); }
+});
+
 app.post('/api/inventories/:id/budget/reset', requireMember, requireEditorOrOwner, (req, res) => {
   try {
     const reset = db.addBudgetReset(req.inventoryId, req.user.id);

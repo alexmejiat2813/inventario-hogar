@@ -798,7 +798,7 @@ function copyCode(code) {
 async function loadBudgetBanner() {
   if (!state.inventory) return;
   try {
-    const res = await fetch('/api/budget');
+    const res = await fetch(`/api/inventories/${state.inventory.id}/budget`);
     if (!res.ok) return;
     renderBudgetBanner(await res.json());
   } catch { /* fail silently */ }

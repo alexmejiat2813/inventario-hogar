@@ -354,10 +354,11 @@ async function loadBudget() {
   if (noInvEl)   noInvEl.hidden   = true;
   if (contentEl) contentEl.hidden = false;
 
+  const invId = state.inventory.id;
   try {
     const [summary, resets] = await Promise.all([
-      api('GET', '/api/budget'),
-      api('GET', '/api/budget/resets'),
+      api('GET', `/api/inventories/${invId}/budget`),
+      api('GET', `/api/inventories/${invId}/budget/resets`),
     ]);
     state.budget           = summary;
     state.alertPercentages = summary?.config?.alert_percentages || [];
@@ -433,7 +434,7 @@ async function saveBudget() {
   const saveBtn = document.getElementById('btn-save-budget');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('settings.budget.saving'); }
   try {
-    await api('PUT', '/api/budget', { monthlyAmount, alertPercentages: state.alertPercentages });
+    await api('POST', `/api/inventories/${state.inventory.id}/budget`, { monthlyAmount, alertPercentages: state.alertPercentages });
     toast(t('settings.budget.saved'));
   } catch (err) {
     toast(err.message, 'error');
@@ -445,9 +446,9 @@ async function saveBudget() {
 async function resetBudget() {
   if (!confirm(t('settings.budget.resetConfirm'))) return;
   try {
-    await api('POST', '/api/budget/reset');
+    await api('POST', `/api/inventories/${state.inventory.id}/budget/reset`);
     toast(t('settings.budget.resetSuccess'));
-    const resets = await api('GET', '/api/budget/resets');
+    const resets = await api('GET', `/api/inventories/${state.inventory.id}/budget/resets`);
     renderResetHistory(resets || []);
   } catch (err) {
     toast(err.message, 'error');

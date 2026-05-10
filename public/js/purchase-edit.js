@@ -74,18 +74,19 @@ async function loadData() {
   const purchaseId = getPurchaseIdFromURL();
   if (!purchaseId) { history.back(); return; }
 
-  const [inv, session, stores, taxes, units, products] = await Promise.all([
-    apiFetch('/api/active-inventory'),
-    apiFetch(`/api/purchases/${purchaseId}`),
+  const inv = await apiFetch('/api/active-inventory');
+  if (!inv) { history.back(); return; }
+  state.inventory = inv;
+
+  const [session, stores, taxes, units, products] = await Promise.all([
+    apiFetch(`/api/inventories/${inv.id}/purchases/${purchaseId}`),
     apiFetch('/api/stores'),
     apiFetch('/api/settings/taxes'),
     apiFetch('/api/settings/units'),
     apiFetch('/api/products'),
   ]);
 
-  if (!inv || !session) { history.back(); return; }
-
-  state.inventory = inv;
+  if (!session) { history.back(); return; }
   state.session   = session;
   state.stores    = stores   || [];
   state.taxes     = taxes    || [];
@@ -452,7 +453,7 @@ async function save() {
 
     if (!items.length) throw new Error('Agrega al menos un producto');
 
-    await apiFetch(`/api/purchases/${sessionId}`, {
+    await apiFetch(`/api/inventories/${state.inventory.id}/purchases/${sessionId}`, {
       method:  'PUT',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ purchase_date: purchaseDate, items, tax_ids: taxIds }),
