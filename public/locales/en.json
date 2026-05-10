@@ -109,12 +109,22 @@
     "addMenu": {
       "fromCatalog": "From catalog",
       "custom": "Custom product"
+    },
+    "photos": {
+      "title": "📷 Reference photos",
+      "hint": "E.g.: photo of the product at the supermarket",
+      "btn": "📷 Add photos",
+      "maxFiles": "Maximum 5 photos per product",
+      "maxSize": "Maximum file size 5MB per photo",
+      "deleted": "Photo deleted",
+      "uploaded": "Photo(s) saved"
     }
   },
   "shopping": {
     "back": "Back",
     "title": "Shopping list",
     "clear": "Clear",
+    "registerBtn": "Register purchase",
     "empty": {
       "title": "Everything is well stocked!",
       "sub": "No product is below the minimum.\nThe inventory is complete."
@@ -132,6 +142,30 @@
       "save": "Save",
       "saving": "Saving…",
       "updated": "Quantity updated"
+    },
+    "register": {
+      "title": "Confirm purchase",
+      "total": "Total",
+      "subtotalBeforeTax": "Subtotal (before tax)",
+      "noStore": "No store",
+      "receipt": "Receipt photo (optional)",
+      "receiptBtn": "Upload photo",
+      "receiptChange": "Change photo",
+      "receiptRemove": "Remove",
+      "cancel": "Cancel",
+      "confirm": "Register purchase",
+      "confirming": "Registering…",
+      "success": "Purchase registered",
+      "error": "Error registering purchase"
+    },
+    "fields": {
+      "store": "Store",
+      "noStore": "No store",
+      "qty": "Quantity",
+      "price": "Unit price",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "noTax": "No tax"
     },
     "reset": "List reset",
     "loadError": "Could not load the list"
@@ -215,7 +249,10 @@
       "cancel": "Cancel",
       "save": "Add",
       "saving": "Adding…",
-      "added": "Product added to inventory"
+      "added": "Product added to inventory",
+      "photosTitle": "📷 Reference photos (optional)",
+      "photosHint": "E.g.: photo of the product at the supermarket for easy identification",
+      "photosBtn": "📷 Add photos"
     },
     "modalNew": {
       "title": "Add to catalog",
@@ -229,13 +266,97 @@
       "duplicate": "A product with that name already exists"
     }
   },
+  "history": {
+    "title": "Purchase History",
+    "back": "Inventory",
+    "empty": {
+      "title": "No history",
+      "sub": "No purchases registered yet."
+    },
+    "filter": {
+      "allMonths": "All months",
+      "allStores": "All stores"
+    },
+    "summary": {
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "purchases": "purchases",
+      "noData": "—"
+    },
+    "session": {
+      "product": "product",
+      "products": "products",
+      "viewReceipt": "View receipt",
+      "noStore": "No store",
+      "subtotalBeforeTax": "Subtotal (before tax)"
+    },
+    "deleteSession": {
+      "title": "Delete purchase",
+      "optionRecord": "Delete record only",
+      "optionRecordSub": "Inventory quantities remain unchanged",
+      "optionRevert": "Delete and revert inventory",
+      "optionRevertSub": "Purchased quantities are subtracted from inventory",
+      "confirmLabel": "Type DELETE to confirm",
+      "confirmWord": "DELETE",
+      "confirmPlaceholder": "DELETE",
+      "btn": "Delete",
+      "deleting": "Deleting…",
+      "success": "Purchase deleted",
+      "cancel": "Cancel"
+    }
+  },
+  "purchaseEdit": {
+    "title": "Edit purchase",
+    "back": "History",
+    "saveBtn": "Save changes",
+    "saving": "Saving…",
+    "success": "Purchase saved",
+    "section": {
+      "general": "General info",
+      "products": "Products",
+      "taxes": "Taxes",
+      "receipt": "Receipt"
+    },
+    "date": "Purchase date",
+    "col": {
+      "product": "Product",
+      "qty": "Qty",
+      "unit": "Unit",
+      "price": "Unit price",
+      "store": "Store",
+      "subtotal": "Subtotal"
+    },
+    "productPlaceholder": "Product name",
+    "noStore": "No store",
+    "addProduct": "+ Add product",
+    "removeProduct": "Remove",
+    "noTaxes": "No taxes configured.",
+    "receipt": {
+      "change": "Change photo",
+      "remove": "Remove photo",
+      "add": "📷 Add photo",
+      "removed": "Photo removed",
+      "undo": "Undo",
+      "cancelChange": "Cancel change"
+    },
+    "bar": {
+      "subtotal": "Subtotal",
+      "taxes": "Taxes",
+      "total": "Total"
+    },
+    "cancel": "Cancel"
+  },
   "settings": {
     "title": "Settings",
     "back": "Back",
     "tabs": {
       "categories": "Categories",
       "units": "Units",
-      "catalog": "Catalog"
+      "catalog": "Catalog",
+      "stores": "Stores",
+      "currency": "Currency",
+      "taxes": "Taxes",
+      "budget": "Budget"
     },
     "categories": {
       "title": "Categories",
@@ -308,7 +429,141 @@
         "deleted": "Product removed from catalog",
         "confirmDelete": "Delete \"{{name}}\" from catalog?"
       }
+    },
+    "stores": {
+      "title": "Stores",
+      "add": "+ Add store",
+      "noInventory": "Open an inventory to manage stores.",
+      "colEmoji": "Icon",
+      "colName": "Name",
+      "colActions": "Actions",
+      "empty": "No stores",
+      "modal": {
+        "addTitle": "Add store",
+        "editTitle": "Edit store",
+        "name": "Name",
+        "namePlaceholder": "E.g.: Walmart",
+        "emoji": "Icon",
+        "emojiPlaceholder": "🏪",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving…",
+        "added": "Store added",
+        "updated": "Store updated",
+        "deleted": "Store deleted",
+        "confirmDelete": "Delete \"{{name}}\"?"
+      }
+    },
+    "currency": {
+      "title": "Currency",
+      "label": "Active inventory currency",
+      "noInventory": "Open an inventory to configure the currency.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Currency updated"
+    },
+    "taxes": {
+      "title": "Taxes",
+      "add": "+ Add tax",
+      "noInventory": "Open an inventory to manage taxes.",
+      "colName": "Name",
+      "colRate": "%",
+      "colCategories": "Applies to",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "empty": "No taxes defined",
+      "allCategories": "All categories",
+      "active": "Active",
+      "inactive": "Inactive",
+      "suggest": "Suggest for currency",
+      "suggested": "Suggested taxes added",
+      "modal": {
+        "addTitle": "Add tax",
+        "editTitle": "Edit tax",
+        "name": "Name",
+        "namePlaceholder": "E.g.: GST, HST...",
+        "rate": "Percentage (%)",
+        "ratePlaceholder": "E.g.: 5",
+        "categories": "Applies to categories",
+        "categoriesHint": "Leave empty to apply to all products",
+        "active": "Active",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving…",
+        "added": "Tax added",
+        "updated": "Tax updated",
+        "deleted": "Tax deleted",
+        "confirmDelete": "Delete tax \"{{name}}\"?"
+      }
+    },
+    "budget": {
+      "title": "Monthly budget",
+      "noInventory": "Open an inventory to configure the budget.",
+      "amount": "Monthly budget amount",
+      "amountPlaceholder": "E.g.: 500",
+      "alerts": "Threshold alerts",
+      "alertsHint": "You will be alerted when spending reaches these percentages of the budget",
+      "addAlert": "+ Add percentage",
+      "alertPctPlaceholder": "E.g.: 75",
+      "removeAlert": "Remove",
+      "save": "Save budget",
+      "saving": "Saving…",
+      "saved": "Budget saved",
+      "resetBtn": "Reset monthly budget",
+      "resetConfirm": "Reset the spending counter for the current month? This does not delete purchase history.",
+      "resetSuccess": "Budget reset",
+      "resetHistory": "Reset history",
+      "resetHistoryEmpty": "No resets recorded.",
+      "resetColDate": "Date",
+      "resetColSpent": "Spent at reset",
+      "resetColBy": "By",
+      "card": {
+        "title": "Monthly budget",
+        "budgeted": "Budgeted",
+        "spent": "Spent",
+        "available": "Available",
+        "noConfig": "Not configured",
+        "configure": "Configure →",
+        "used": "used"
+      },
+      "banner": {
+        "reached": "You have used {{pct}}% of your monthly budget",
+        "exceeded": "You have exceeded your monthly budget!"
+      },
+      "warning": {
+        "title": "Budget exceeded",
+        "message": "This purchase will exceed your monthly budget by {{amount}}. Do you want to continue anyway?",
+        "continue": "Continue anyway",
+        "cancel": "Cancel"
+      },
+      "shoppingBar": {
+        "available": "Available",
+        "cartTotal": "This purchase",
+        "exceeds": "Exceeds by",
+        "noBudget": "No budget configured"
+      }
     }
+  },
+  "invTabs": {
+    "dashboard": "Dashboard",
+    "stock": "Stock",
+    "shopping": "Shopping",
+    "history": "History"
+  },
+  "dashboard": {
+    "period": {
+      "month": "This month",
+      "3m": "3 months",
+      "6m": "6 months",
+      "year": "This year"
+    },
+    "monthlyTitle": "Monthly spend (last 6 months)",
+    "byCategoryTitle": "By category",
+    "byStoreTitle": "By store",
+    "topTitle": "Top 5 most purchased",
+    "noData": "No data for this period",
+    "thisMonthSpend": "Spent this month",
+    "vsLastMonth": "vs last month"
   },
   "error": {
     "server": "Could not connect to the server",

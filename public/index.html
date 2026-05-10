@@ -28,6 +28,9 @@
       </div>
 
       <div class="header-right">
+        <a href="/history" class="btn-cart" title="Historial de compras">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </a>
         <a href="/shopping-list" class="btn-cart" id="btn-cart">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           <span class="cart-badge" id="cart-badge" hidden>0</span>
@@ -113,7 +116,96 @@
     </div>
   </header>
 
+  <!-- ===== INVENTORY TAB BAR ===== -->
+  <nav class="inv-tabs-bar" id="inv-tabs-bar">
+    <div>
+      <button class="inv-tab active" data-tab="dashboard">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label" data-i18n="invTabs.dashboard">Dashboard</span>
+      </button>
+      <button class="inv-tab" data-tab="stock">
+        <span class="tab-icon">📦</span>
+        <span class="tab-label" data-i18n="invTabs.stock">Stock</span>
+      </button>
+      <a href="/shopping-list" class="inv-tab">
+        <span class="tab-icon">🛒</span>
+        <span class="tab-label" data-i18n="invTabs.shopping">Compras</span>
+      </a>
+      <a href="/history" class="inv-tab">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label" data-i18n="invTabs.history">Historial</span>
+      </a>
+    </div>
+  </nav>
+
   <main class="main">
+
+    <!-- Budget alert banner -->
+    <div id="budget-banner" class="budget-banner" hidden>
+      <span id="budget-banner-text"></span>
+      <button class="budget-banner-dismiss" id="budget-banner-dismiss" aria-label="Cerrar">✕</button>
+    </div>
+
+    <!-- ===== DASHBOARD PANEL ===== -->
+    <div id="panel-dashboard" class="inv-panel">
+
+      <!-- Period filter -->
+      <div class="dash-period-bar">
+        <button class="dash-period-btn active" data-period="month" data-i18n="dashboard.period.month">Este mes</button>
+        <button class="dash-period-btn" data-period="3m" data-i18n="dashboard.period.3m">3 meses</button>
+        <button class="dash-period-btn" data-period="6m" data-i18n="dashboard.period.6m">6 meses</button>
+        <button class="dash-period-btn" data-period="year" data-i18n="dashboard.period.year">Este año</button>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="dash-summary-grid" id="dash-summary">
+        <div class="dash-stat-card skeleton"></div>
+        <div class="dash-stat-card skeleton"></div>
+        <div class="dash-stat-card skeleton"></div>
+        <div class="dash-stat-card skeleton"></div>
+      </div>
+
+      <!-- Budget card -->
+      <div id="dash-budget-wrap"></div>
+
+      <!-- Monthly spend line chart -->
+      <div class="dash-card">
+        <h3 class="dash-card-title" data-i18n="dashboard.monthlyTitle">Gasto mensual (últimos 6 meses)</h3>
+        <div class="dash-chart-wrap" id="dash-monthly-wrap">
+          <div class="dash-chart-skeleton skeleton"></div>
+        </div>
+      </div>
+
+      <!-- Category + Store charts row -->
+      <div class="dash-charts-row">
+        <div class="dash-card">
+          <h3 class="dash-card-title" data-i18n="dashboard.byCategoryTitle">Por categoría</h3>
+          <div class="dash-chart-wrap dash-chart-wrap--sm" id="dash-cat-wrap">
+            <div class="dash-chart-skeleton skeleton"></div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <h3 class="dash-card-title" data-i18n="dashboard.byStoreTitle">Por establecimiento</h3>
+          <div class="dash-chart-wrap dash-chart-wrap--sm" id="dash-store-wrap">
+            <div class="dash-chart-skeleton skeleton"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top 5 products -->
+      <div class="dash-card">
+        <h3 class="dash-card-title" data-i18n="dashboard.topTitle">Top 5 más comprados</h3>
+        <div id="dash-top-list">
+          <div class="dash-row-skeleton skeleton"></div>
+          <div class="dash-row-skeleton skeleton"></div>
+          <div class="dash-row-skeleton skeleton"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== STOCK PANEL ===== -->
+    <div id="panel-stock" class="inv-panel" hidden>
 
     <!-- ===== STATS ===== -->
     <section class="stats-section">
@@ -173,6 +265,8 @@
       </div>
     </section>
 
+    </div><!-- /panel-stock -->
+
   </main>
 
   <!-- ===== MODAL: Agregar/Editar producto ===== -->
@@ -228,6 +322,17 @@
             <!-- populated dynamically -->
           </select>
         </div>
+
+        <!-- Photos section — edit mode only -->
+        <div id="fg-photos" hidden>
+          <div class="form-group photos-section">
+            <div class="photos-section-title" data-i18n="inventory.photos.title">📷 Fotos de referencia</div>
+            <div class="photos-grid" id="modal-photos-grid"></div>
+            <button type="button" class="btn-photos-add" id="btn-modal-photos" data-i18n="inventory.photos.btn">📷 Agregar fotos</button>
+            <input type="file" id="modal-file-input" accept="image/*,.heic" multiple hidden>
+          </div>
+        </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="btn-cancel" data-i18n="inventory.modal.cancel">Cancelar</button>
           <button type="submit" class="btn btn-primary" id="btn-save" data-i18n="inventory.modal.save">Guardar</button>
@@ -268,10 +373,28 @@
     </div>
   </div>
 
+  <!-- ===== MODAL: Photo viewer ===== -->
+  <div class="modal-overlay" id="photos-overlay" hidden>
+    <div class="photos-viewer">
+      <div class="photos-viewer-header">
+        <span class="photos-viewer-name" id="photos-viewer-name"></span>
+        <span class="photos-viewer-count" id="photos-viewer-count"></span>
+        <button class="modal-close" id="photos-viewer-close">✕</button>
+      </div>
+      <div class="photos-viewer-img-wrap">
+        <img class="photos-viewer-img" id="photos-viewer-img" src="" alt="">
+        <button class="photos-nav photos-nav--prev" id="photos-nav-prev" hidden>&#8249;</button>
+        <button class="photos-nav photos-nav--next" id="photos-nav-next" hidden>&#8250;</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== TOASTS ===== -->
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <script src="/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/dashboard.js"></script>
 </body>
 </html>

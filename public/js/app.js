@@ -14,6 +14,9 @@ const CAT_ICONS = {
 
 const ROLE_CLASS = { owner: 'role-owner', editor: 'role-editor', reader: 'role-reader' };
 
+const MAX_PHOTOS     = 5;
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+
 const state = {
   products:         [],
   stats:            null,
@@ -24,6 +27,10 @@ const state = {
   catalogProducts:  [],
   categories:       [],
   units:            [],
+  existingPhotos:   [],
+  pendingPhotos:    [],
+  editingProductId: null,
+  activeTab:        'dashboard',
 };
 
 // ── API ───────────────────────────────────────────────────────
@@ -252,6 +259,7 @@ function renderProductCard(p) {
       <div class="card-top">
         <span class="category-badge ${catClass(p.category)}">${CAT_ICONS[p.category] || ''} ${tCat(p.category)}</span>
         ${isCritical ? `<span class="critical-tag">⚠ ${t('inventory.card.critical')}</span>` : ''}
+        ${p.image_count > 0 ? `<button class="btn-card-photos" data-action="photos" data-id="${p.id}" title="Ver fotos">📷 ${p.image_count}</button>` : ''}
       </div>
 
       <h3 class="product-name">${esc(p.name)}</h3>
@@ -311,6 +319,22 @@ function render() {
   updateCartBadge();
 }
 
+// ── Tab navigation ────────────────────────────────────────────
+
+function switchTab(tabName) {
+  state.activeTab = tabName;
+  document.querySelectorAll('#inv-tabs-bar .inv-tab[data-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  const dashPanel  = document.getElementById('panel-dashboard');
+  const stockPanel = document.getElementById('panel-stock');
+  if (dashPanel)  dashPanel.hidden  = (tabName !== 'dashboard');
+  if (stockPanel) stockPanel.hidden = (tabName !== 'stock');
+  if (tabName === 'dashboard' && typeof loadDashboard === 'function') {
+    loadDashboard();
+  }
+}
+
 // ── Category filter ───────────────────────────────────────────
 
 function setCategory(category) {
@@ -332,7 +356,7 @@ function setModalMode(mode) {
   document.getElementById('fg-category').hidden       = isCatalog;
 }
 
-function openModal(product = null) {
+async function openModal(product = null) {
   const overlay = document.getElementById('modal-overlay');
   const title   = document.getElementById('modal-title');
   clearValidation();
@@ -348,6 +372,13 @@ function openModal(product = null) {
     document.getElementById('f-current').value  = product.current_qty;
     document.getElementById('f-min').value      = product.min_qty;
     setModalMode('edit');
+
+    // Prepare photos section
+    state.editingProductId = product.id;
+    state.pendingPhotos    = [];
+    state.existingPhotos   = [];
+    document.getElementById('fg-photos').hidden = false;
+    renderModalPhotos();
   } else {
     title.textContent = t('inventory.modal.addTitle');
     document.getElementById('product-id').value = '';
@@ -357,6 +388,10 @@ function openModal(product = null) {
     populateCategorySelect();
     populateUnitSelect();
     setModalMode('catalog');
+    document.getElementById('fg-photos').hidden = true;
+    state.editingProductId = null;
+    state.existingPhotos   = [];
+    state.pendingPhotos    = [];
   }
 
   overlay.hidden = false;
@@ -364,9 +399,21 @@ function openModal(product = null) {
     ? document.getElementById('f-name')
     : document.getElementById('f-catalog-product');
   requestAnimationFrame(() => focusEl?.focus());
+
+  // Load existing photos asynchronously after modal is visible
+  if (product) {
+    try {
+      state.existingPhotos = await apiFetch('GET', `/api/products/${product.id}/images`) || [];
+      renderModalPhotos();
+    } catch { /* no photos to show */ }
+  }
 }
 
 function closeModal() {
+  state.pendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
+  state.pendingPhotos    = [];
+  state.existingPhotos   = [];
+  state.editingProductId = null;
   document.getElementById('modal-overlay').hidden = true;
 }
 
@@ -458,13 +505,28 @@ async function handleFormSubmit(e) {
   saveBtn.textContent = t('inventory.modal.saving');
 
   try {
+    let savedProduct;
     if (id) {
-      await apiFetch('PUT', `/api/products/${id}`, body);
+      savedProduct = await apiFetch('PUT', `/api/products/${id}`, body);
       showToast(t('inventory.modal.updated'));
     } else {
-      await apiFetch('POST', '/api/products', body);
+      savedProduct = await apiFetch('POST', '/api/products', body);
       showToast(t('inventory.modal.added'));
     }
+
+    // Upload pending photos
+    const uploadId = savedProduct?.id || (id ? parseInt(id) : null);
+    if (state.pendingPhotos.length > 0 && uploadId) {
+      const fd = new FormData();
+      state.pendingPhotos.forEach(p => fd.append('photos', p.file));
+      try {
+        await fetch(`/api/products/${uploadId}/images`, { method: 'POST', body: fd });
+        showToast(t('inventory.photos.uploaded') || 'Foto(s) guardada(s)');
+      } catch { /* non-fatal */ }
+      state.pendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
+      state.pendingPhotos = [];
+    }
+
     closeModal();
     await loadData();
     render();
@@ -491,6 +553,113 @@ async function deleteProduct(id) {
     showToast(t('inventory.modal.deleted'), 'info');
     await loadData();
     render();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// ── Product photo management ──────────────────────────────────
+
+function renderModalPhotos() {
+  const grid   = document.getElementById('modal-photos-grid');
+  const addBtn = document.getElementById('btn-modal-photos');
+  if (!grid || !addBtn) return;
+
+  grid.innerHTML = '';
+  const total = state.existingPhotos.length + state.pendingPhotos.length;
+
+  // Existing photos
+  state.existingPhotos.forEach(img => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `
+      <img src="${esc(img.image_path)}" alt="">
+      <button type="button" class="photo-thumb-del" data-action="del-existing" data-image-id="${img.id}" aria-label="Eliminar foto">✕</button>
+    `;
+    grid.appendChild(thumb);
+  });
+
+  // Pending photos
+  state.pendingPhotos.forEach((p, idx) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `
+      <img src="${p.url}" alt="">
+      <button type="button" class="photo-thumb-del" data-action="remove-pending-modal" data-index="${idx}" aria-label="Eliminar foto">✕</button>
+    `;
+    grid.appendChild(thumb);
+  });
+
+  addBtn.disabled = total >= MAX_PHOTOS;
+}
+
+async function deleteProductPhoto(imageId, productId) {
+  try {
+    await apiFetch('DELETE', `/api/products/${productId}/images/${imageId}`);
+    state.existingPhotos = state.existingPhotos.filter(i => i.id !== imageId);
+    renderModalPhotos();
+    showToast(t('inventory.photos.deleted') || 'Foto eliminada', 'info');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function handleModalFileInputChange(e) {
+  const files = Array.from(e.target.files || []);
+  let skipped = 0;
+
+  files.forEach(file => {
+    const total = state.existingPhotos.length + state.pendingPhotos.length;
+    if (total >= MAX_PHOTOS) { skipped++; return; }
+    if (file.size > MAX_PHOTO_SIZE) {
+      showToast(t('inventory.photos.maxSize') || `Tamaño máximo 5MB: ${file.name}`, 'error');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    state.pendingPhotos.push({ file, url });
+  });
+
+  if (skipped > 0) showToast(t('inventory.photos.maxFiles') || 'Máximo 5 fotos', 'info');
+  e.target.value = '';
+  renderModalPhotos();
+}
+
+// ── Photo viewer ──────────────────────────────────────────────
+
+let viewerPhotos = [], viewerIdx = 0;
+
+function openPhotoViewer(photos, productName) {
+  viewerPhotos = photos;
+  viewerIdx    = 0;
+  document.getElementById('photos-viewer-name').textContent = productName;
+  document.getElementById('photos-overlay').hidden = false;
+  showViewerPhoto(0);
+}
+
+function closePhotoViewer() {
+  document.getElementById('photos-overlay').hidden = true;
+  viewerPhotos = [];
+  viewerIdx    = 0;
+}
+
+function showViewerPhoto(idx) {
+  if (!viewerPhotos.length) return;
+  viewerIdx = Math.max(0, Math.min(idx, viewerPhotos.length - 1));
+  const img = document.getElementById('photos-viewer-img');
+  img.src = viewerPhotos[viewerIdx].image_path;
+  document.getElementById('photos-viewer-count').textContent =
+    `${viewerIdx + 1} / ${viewerPhotos.length}`;
+  document.getElementById('photos-nav-prev').hidden = viewerPhotos.length <= 1;
+  document.getElementById('photos-nav-next').hidden = viewerPhotos.length <= 1;
+}
+
+async function openProductPhotoViewer(productId) {
+  const product = state.products.find(p => p.id === productId);
+  if (!product) return;
+  try {
+    const photos = await apiFetch('GET', `/api/products/${productId}/images`);
+    if (!photos || !photos.length) return;
+    openPhotoViewer(photos, product.name);
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -624,6 +793,47 @@ function copyCode(code) {
     .catch(() => showToast(t('inventory.access.copyError'), 'error'));
 }
 
+// ── Budget banner ─────────────────────────────────────────────
+
+async function loadBudgetBanner() {
+  if (!state.inventory) return;
+  try {
+    const res = await fetch('/api/budget');
+    if (!res.ok) return;
+    renderBudgetBanner(await res.json());
+  } catch { /* fail silently */ }
+}
+
+function renderBudgetBanner(summary) {
+  const bannerEl = document.getElementById('budget-banner');
+  if (!bannerEl) return;
+
+  const { percentage, activeThreshold } = summary;
+  let dismissKey = '';
+  let msg        = '';
+  let colorClass = '';
+
+  if (percentage >= 100) {
+    dismissKey = 'budget_banner_exceeded';
+    colorClass = 'budget-banner--red';
+    msg        = t('settings.budget.banner.exceeded');
+  } else if (activeThreshold) {
+    dismissKey = `budget_banner_${activeThreshold.pct}`;
+    colorClass = activeThreshold.pct >= 80 ? 'budget-banner--orange' : 'budget-banner--amber';
+    msg        = t('settings.budget.banner.reached', { pct: activeThreshold.pct });
+  }
+
+  if (!msg || sessionStorage.getItem(dismissKey)) {
+    bannerEl.hidden = true;
+    return;
+  }
+
+  bannerEl.className    = `budget-banner ${colorClass}`;
+  bannerEl.hidden       = false;
+  document.getElementById('budget-banner-text').textContent    = msg;
+  document.getElementById('budget-banner-dismiss').dataset.key = dismissKey;
+}
+
 // ── Toast ─────────────────────────────────────────────────────
 
 function showToast(message, type = 'success') {
@@ -740,10 +950,37 @@ function initEvents() {
     if (revokeBtn) revokeCode(revokeBtn.dataset.code);
   });
 
+  // Photo modal controls
+  document.getElementById('btn-modal-photos').addEventListener('click', () => {
+    document.getElementById('modal-file-input').click();
+  });
+  document.getElementById('modal-file-input').addEventListener('change', handleModalFileInputChange);
+  document.getElementById('modal-photos-grid').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    if (btn.dataset.action === 'del-existing') {
+      deleteProductPhoto(parseInt(btn.dataset.imageId), state.editingProductId);
+    } else if (btn.dataset.action === 'remove-pending-modal') {
+      const idx = parseInt(btn.dataset.index);
+      URL.revokeObjectURL(state.pendingPhotos[idx].url);
+      state.pendingPhotos.splice(idx, 1);
+      renderModalPhotos();
+    }
+  });
+
+  // Photo viewer
+  document.getElementById('photos-viewer-close').addEventListener('click', closePhotoViewer);
+  document.getElementById('photos-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closePhotoViewer();
+  });
+  document.getElementById('photos-nav-prev').addEventListener('click', () => showViewerPhoto(viewerIdx - 1));
+  document.getElementById('photos-nav-next').addEventListener('click', () => showViewerPhoto(viewerIdx + 1));
+
   // Escape: cierra cualquier modal o dropdown abierto
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     closeProfileDropdown();
+    if (!document.getElementById('photos-overlay').hidden) closePhotoViewer();
     if (!document.getElementById('modal-overlay').hidden)  closeModal();
     if (!document.getElementById('access-overlay').hidden) closeAccessModal();
   });
@@ -766,11 +1003,32 @@ function initEvents() {
     const id = parseInt(btn.dataset.id, 10);
     if (btn.dataset.action === 'edit')   editProduct(id);
     if (btn.dataset.action === 'delete') deleteProduct(id);
+    if (btn.dataset.action === 'photos') openProductPhotoViewer(id);
   });
 
   document.querySelectorAll('.form-input, .form-select').forEach(el => {
     el.addEventListener('input', () => el.classList.remove('invalid'));
   });
+
+  // Inventory tab bar
+  const tabBar = document.getElementById('inv-tabs-bar');
+  if (tabBar) {
+    tabBar.addEventListener('click', e => {
+      const tab = e.target.closest('.inv-tab[data-tab]');
+      if (!tab) return;
+      switchTab(tab.dataset.tab);
+    });
+  }
+
+  // Budget banner dismiss
+  const bannerDismiss = document.getElementById('budget-banner-dismiss');
+  if (bannerDismiss) {
+    bannerDismiss.addEventListener('click', () => {
+      const key = bannerDismiss.dataset.key;
+      if (key) sessionStorage.setItem(key, '1');
+      document.getElementById('budget-banner').hidden = true;
+    });
+  }
 
   // Language changes: re-render dynamic content
   document.addEventListener('langchange', () => {
@@ -792,6 +1050,11 @@ async function init() {
     await Promise.all([loadData(), loadModalData()]);
     updateInventoryHeader();
     render();
+    loadBudgetBanner();
+    // Determine starting tab from URL query param
+    const urlTab = new URLSearchParams(window.location.search).get('tab');
+    switchTab(urlTab === 'stock' ? 'stock' : 'dashboard');
+    if (typeof initDashboard === 'function') initDashboard();
   } catch (err) {
     console.error(err);
     showToast(t('error.server'), 'error');

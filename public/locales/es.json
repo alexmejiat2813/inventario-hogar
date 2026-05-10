@@ -109,12 +109,22 @@
     "addMenu": {
       "fromCatalog": "Del catálogo",
       "custom": "Personalizado"
+    },
+    "photos": {
+      "title": "📷 Fotos de referencia",
+      "hint": "Ej: foto del producto en el supermercado",
+      "btn": "📷 Agregar fotos",
+      "maxFiles": "Máximo 5 fotos por producto",
+      "maxSize": "Tamaño máximo 5MB por foto",
+      "deleted": "Foto eliminada",
+      "uploaded": "Foto(s) guardada(s)"
     }
   },
   "shopping": {
     "back": "Volver",
     "title": "Lista de compras",
     "clear": "Limpiar",
+    "registerBtn": "Registrar compra",
     "empty": {
       "title": "¡Todo está bien abastecido!",
       "sub": "Ningún producto está por debajo del mínimo.\nEl inventario está completo."
@@ -132,6 +142,30 @@
       "save": "Guardar",
       "saving": "Guardando…",
       "updated": "Cantidad actualizada"
+    },
+    "register": {
+      "title": "Confirmar compra",
+      "total": "Total",
+      "subtotalBeforeTax": "Subtotal (sin imp.)",
+      "noStore": "Sin establecimiento",
+      "receipt": "Foto del recibo (opcional)",
+      "receiptBtn": "Subir foto",
+      "receiptChange": "Cambiar foto",
+      "receiptRemove": "Quitar",
+      "cancel": "Cancelar",
+      "confirm": "Registrar compra",
+      "confirming": "Registrando…",
+      "success": "Compra registrada",
+      "error": "Error al registrar la compra"
+    },
+    "fields": {
+      "store": "Establecimiento",
+      "noStore": "Sin establecimiento",
+      "qty": "Cantidad",
+      "price": "Precio unit.",
+      "subtotal": "Subtotal",
+      "tax": "Impuesto",
+      "noTax": "Sin impuesto"
     },
     "reset": "Lista reiniciada",
     "loadError": "No se pudo cargar la lista"
@@ -215,7 +249,10 @@
       "cancel": "Cancelar",
       "save": "Agregar",
       "saving": "Agregando…",
-      "added": "Producto agregado al inventario"
+      "added": "Producto agregado al inventario",
+      "photosTitle": "📷 Fotos de referencia (opcional)",
+      "photosHint": "Ej: foto del producto en el supermercado para identificarlo fácilmente",
+      "photosBtn": "📷 Agregar fotos"
     },
     "modalNew": {
       "title": "Agregar al catálogo",
@@ -229,13 +266,97 @@
       "duplicate": "Ya existe un producto con ese nombre"
     }
   },
+  "history": {
+    "title": "Historial de compras",
+    "back": "Inventario",
+    "empty": {
+      "title": "Sin historial",
+      "sub": "Aún no hay compras registradas."
+    },
+    "filter": {
+      "allMonths": "Todos los meses",
+      "allStores": "Todos los establecimientos"
+    },
+    "summary": {
+      "thisMonth": "Este mes",
+      "lastMonth": "Mes anterior",
+      "purchases": "compras",
+      "noData": "—"
+    },
+    "session": {
+      "product": "producto",
+      "products": "productos",
+      "viewReceipt": "Ver recibo",
+      "noStore": "Sin establecimiento",
+      "subtotalBeforeTax": "Subtotal (sin imp.)"
+    },
+    "deleteSession": {
+      "title": "Eliminar compra",
+      "optionRecord": "Solo eliminar el registro",
+      "optionRecordSub": "Las cantidades en el inventario no se modifican",
+      "optionRevert": "Eliminar y revertir inventario",
+      "optionRevertSub": "Se descuentan del inventario las cantidades compradas",
+      "confirmLabel": "Escribí ELIMINAR para confirmar",
+      "confirmWord": "ELIMINAR",
+      "confirmPlaceholder": "ELIMINAR",
+      "btn": "Eliminar",
+      "deleting": "Eliminando…",
+      "success": "Compra eliminada",
+      "cancel": "Cancelar"
+    }
+  },
+  "purchaseEdit": {
+    "title": "Editar compra",
+    "back": "Historial",
+    "saveBtn": "Guardar cambios",
+    "saving": "Guardando…",
+    "success": "Compra guardada",
+    "section": {
+      "general": "Información general",
+      "products": "Productos",
+      "taxes": "Impuestos",
+      "receipt": "Recibo"
+    },
+    "date": "Fecha de compra",
+    "col": {
+      "product": "Producto",
+      "qty": "Cant.",
+      "unit": "Unidad",
+      "price": "Precio unit.",
+      "store": "Tienda",
+      "subtotal": "Subtotal"
+    },
+    "productPlaceholder": "Nombre del producto",
+    "noStore": "Sin tienda",
+    "addProduct": "+ Agregar producto",
+    "removeProduct": "Eliminar",
+    "noTaxes": "No hay impuestos configurados.",
+    "receipt": {
+      "change": "Cambiar foto",
+      "remove": "Eliminar foto",
+      "add": "📷 Agregar foto",
+      "removed": "Foto eliminada",
+      "undo": "Deshacer",
+      "cancelChange": "Cancelar cambio"
+    },
+    "bar": {
+      "subtotal": "Subtotal",
+      "taxes": "Impuestos",
+      "total": "Total"
+    },
+    "cancel": "Cancelar"
+  },
   "settings": {
     "title": "Configuración",
     "back": "Atrás",
     "tabs": {
       "categories": "Categorías",
       "units": "Unidades",
-      "catalog": "Catálogo"
+      "catalog": "Catálogo",
+      "stores": "Establecimientos",
+      "currency": "Moneda",
+      "taxes": "Impuestos",
+      "budget": "Presupuesto"
     },
     "categories": {
       "title": "Categorías",
@@ -308,7 +429,141 @@
         "deleted": "Producto eliminado del catálogo",
         "confirmDelete": "¿Eliminar \"{{name}}\" del catálogo?"
       }
+    },
+    "stores": {
+      "title": "Establecimientos",
+      "add": "+ Agregar establecimiento",
+      "noInventory": "Abrí un inventario para gestionar los establecimientos.",
+      "colEmoji": "Icono",
+      "colName": "Nombre",
+      "colActions": "Acciones",
+      "empty": "No hay establecimientos",
+      "modal": {
+        "addTitle": "Agregar establecimiento",
+        "editTitle": "Editar establecimiento",
+        "name": "Nombre",
+        "namePlaceholder": "Ej: Walmart",
+        "emoji": "Icono",
+        "emojiPlaceholder": "🏪",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "saving": "Guardando…",
+        "added": "Establecimiento agregado",
+        "updated": "Establecimiento actualizado",
+        "deleted": "Establecimiento eliminado",
+        "confirmDelete": "¿Eliminar \"{{name}}\"?"
+      }
+    },
+    "currency": {
+      "title": "Moneda",
+      "label": "Moneda del inventario activo",
+      "noInventory": "Abrí un inventario para configurar la moneda.",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "saved": "Moneda actualizada"
+    },
+    "taxes": {
+      "title": "Impuestos",
+      "add": "+ Agregar impuesto",
+      "noInventory": "Abrí un inventario para gestionar los impuestos.",
+      "colName": "Nombre",
+      "colRate": "%",
+      "colCategories": "Aplica a",
+      "colStatus": "Estado",
+      "colActions": "Acciones",
+      "empty": "Sin impuestos definidos",
+      "allCategories": "Todas las categorías",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "suggest": "Sugerir según moneda",
+      "suggested": "Impuestos sugeridos agregados",
+      "modal": {
+        "addTitle": "Agregar impuesto",
+        "editTitle": "Editar impuesto",
+        "name": "Nombre",
+        "namePlaceholder": "Ej: IVA, GST...",
+        "rate": "Porcentaje (%)",
+        "ratePlaceholder": "Ej: 19",
+        "categories": "Aplica a categorías",
+        "categoriesHint": "Dejá vacío para aplicar a todos los productos",
+        "active": "Activo",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "saving": "Guardando…",
+        "added": "Impuesto agregado",
+        "updated": "Impuesto actualizado",
+        "deleted": "Impuesto eliminado",
+        "confirmDelete": "¿Eliminar el impuesto «{{name}}»?"
+      }
+    },
+    "budget": {
+      "title": "Presupuesto mensual",
+      "noInventory": "Abrí un inventario para configurar el presupuesto.",
+      "amount": "Monto del presupuesto mensual",
+      "amountPlaceholder": "Ej: 500",
+      "alerts": "Alertas de umbral",
+      "alertsHint": "Serás alertado cuando el gasto alcance estos porcentajes del presupuesto",
+      "addAlert": "+ Agregar porcentaje",
+      "alertPctPlaceholder": "Ej: 75",
+      "removeAlert": "Eliminar",
+      "save": "Guardar presupuesto",
+      "saving": "Guardando…",
+      "saved": "Presupuesto guardado",
+      "resetBtn": "Resetear presupuesto del mes",
+      "resetConfirm": "¿Reiniciar el contador de gasto del mes actual? Esto no elimina el historial de compras.",
+      "resetSuccess": "Presupuesto reseteado",
+      "resetHistory": "Historial de resets",
+      "resetHistoryEmpty": "Sin resets registrados.",
+      "resetColDate": "Fecha",
+      "resetColSpent": "Gasto al resetear",
+      "resetColBy": "Por",
+      "card": {
+        "title": "Presupuesto del mes",
+        "budgeted": "Presupuestado",
+        "spent": "Gastado",
+        "available": "Disponible",
+        "noConfig": "Sin configurar",
+        "configure": "Configurar →",
+        "used": "usado"
+      },
+      "banner": {
+        "reached": "Usaste el {{pct}}% de tu presupuesto mensual",
+        "exceeded": "¡Superaste tu presupuesto mensual!"
+      },
+      "warning": {
+        "title": "Presupuesto insuficiente",
+        "message": "Esta compra superará tu presupuesto mensual en {{amount}}. ¿Deseas continuar de todas formas?",
+        "continue": "Continuar de todas formas",
+        "cancel": "Cancelar"
+      },
+      "shoppingBar": {
+        "available": "Disponible",
+        "cartTotal": "Esta compra",
+        "exceeds": "Excede en",
+        "noBudget": "Sin presupuesto configurado"
+      }
     }
+  },
+  "invTabs": {
+    "dashboard": "Dashboard",
+    "stock": "Stock",
+    "shopping": "Compras",
+    "history": "Historial"
+  },
+  "dashboard": {
+    "period": {
+      "month": "Este mes",
+      "3m": "3 meses",
+      "6m": "6 meses",
+      "year": "Este año"
+    },
+    "monthlyTitle": "Gasto mensual (últimos 6 meses)",
+    "byCategoryTitle": "Por categoría",
+    "byStoreTitle": "Por establecimiento",
+    "topTitle": "Top 5 más comprados",
+    "noData": "Sin datos para este período",
+    "thisMonthSpend": "Gasto este mes",
+    "vsLastMonth": "vs mes anterior"
   },
   "error": {
     "server": "No se pudo conectar con el servidor",
