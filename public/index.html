@@ -17,7 +17,7 @@
           <span class="btn-back-label" data-i18n="inventory.back">Inventarios</span>
         </a>
         <div class="header-brand">
-          <span class="header-icon">🏠</span>
+          <div class="header-icon" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#111111;color:white;border-radius:5px;font-size:.65rem;font-weight:800;letter-spacing:.04em;flex-shrink:0;">IH</div>
           <div>
             <h1 class="header-title" id="inventory-name">Inventario</h1>
             <div class="header-meta">
@@ -81,9 +81,9 @@
             <div class="dropdown-lang">
               <span class="dropdown-lang-label" data-i18n="profile.language">Idioma</span>
               <div class="lang-btns">
-                <button class="lang-btn" data-lang="es">🇪🇸 ES <span class="lang-check">✓</span></button>
-                <button class="lang-btn" data-lang="en">🇬🇧 EN <span class="lang-check">✓</span></button>
-                <button class="lang-btn" data-lang="fr">🇫🇷 FR <span class="lang-check">✓</span></button>
+                <button class="lang-btn" data-lang="es">ES <span class="lang-check">✓</span></button>
+                <button class="lang-btn" data-lang="en">EN <span class="lang-check">✓</span></button>
+                <button class="lang-btn" data-lang="fr">FR <span class="lang-check">✓</span></button>
               </div>
             </div>
             <div class="dropdown-divider"></div>
@@ -120,19 +120,19 @@
   <nav class="inv-tabs-bar" id="inv-tabs-bar">
     <div>
       <button class="inv-tab active" data-tab="dashboard">
-        <span class="tab-icon">📊</span>
+        <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="5" height="9"/><rect x="10" y="7" width="5" height="14"/><rect x="17" y="3" width="5" height="18"/></svg>
         <span class="tab-label" data-i18n="invTabs.dashboard">Dashboard</span>
       </button>
       <button class="inv-tab" data-tab="stock">
-        <span class="tab-icon">📦</span>
+        <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
         <span class="tab-label" data-i18n="invTabs.stock">Stock</span>
       </button>
       <a href="/shopping-list" class="inv-tab">
-        <span class="tab-icon">🛒</span>
+        <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
         <span class="tab-label" data-i18n="invTabs.shopping">Compras</span>
       </a>
       <a href="/history" class="inv-tab">
-        <span class="tab-icon">📋</span>
+        <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span class="tab-label" data-i18n="invTabs.history">Historial</span>
       </a>
     </div>
@@ -240,11 +240,11 @@
       <div class="tabs-scroll">
         <div class="tabs-wrap" id="category-tabs">
           <button class="tab-btn active" data-category="all" data-i18n="inventory.tabs.all">Todos</button>
-          <button class="tab-btn" data-category="Alimentos" data-i18n="inventory.tabs.Alimentos">🍎 Alimentos</button>
-          <button class="tab-btn" data-category="Aseo"      data-i18n="inventory.tabs.Aseo">🧼 Aseo</button>
-          <button class="tab-btn" data-category="Alacena"   data-i18n="inventory.tabs.Alacena">🏺 Alacena</button>
-          <button class="tab-btn" data-category="Bebidas"   data-i18n="inventory.tabs.Bebidas">🥤 Bebidas</button>
-          <button class="tab-btn" data-category="Otros"     data-i18n="inventory.tabs.Otros">📦 Otros</button>
+          <button class="tab-btn" data-category="Alimentos" data-i18n="inventory.tabs.Alimentos">Alimentos</button>
+          <button class="tab-btn" data-category="Aseo"      data-i18n="inventory.tabs.Aseo">Aseo</button>
+          <button class="tab-btn" data-category="Alacena"   data-i18n="inventory.tabs.Alacena">Alacena</button>
+          <button class="tab-btn" data-category="Bebidas"   data-i18n="inventory.tabs.Bebidas">Bebidas</button>
+          <button class="tab-btn" data-category="Otros"     data-i18n="inventory.tabs.Otros">Otros</button>
         </div>
       </div>
       <div class="search-wrap">
@@ -259,7 +259,9 @@
     <section class="products-section">
       <div class="products-grid" id="products-grid"></div>
       <div class="empty-state" id="empty-state" hidden>
-        <div class="empty-icon">📦</div>
+        <div class="empty-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
         <h3 data-i18n="inventory.empty.title">Sin productos</h3>
         <p data-i18n="inventory.empty.sub">No hay productos en esta categoría.<br>Agrega uno con el botón de arriba.</p>
       </div>
@@ -326,9 +328,9 @@
         <!-- Photos section — edit mode only -->
         <div id="fg-photos" hidden>
           <div class="form-group photos-section">
-            <div class="photos-section-title" data-i18n="inventory.photos.title">📷 Fotos de referencia</div>
+            <div class="photos-section-title" data-i18n="inventory.photos.title">Fotos de referencia</div>
             <div class="photos-grid" id="modal-photos-grid"></div>
-            <button type="button" class="btn-photos-add" id="btn-modal-photos" data-i18n="inventory.photos.btn">📷 Agregar fotos</button>
+            <button type="button" class="btn-photos-add" id="btn-modal-photos" data-i18n="inventory.photos.btn">Agregar fotos</button>
             <input type="file" id="modal-file-input" accept="image/*,.heic" multiple hidden>
           </div>
         </div>

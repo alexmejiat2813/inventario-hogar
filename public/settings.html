@@ -4,175 +4,178 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Configuración — Inventario Hogar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <style>
     [hidden] { display: none !important; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { -webkit-text-size-adjust: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: #f1f5f9; color: #1e293b; min-height: 100vh; padding-bottom: 4rem;
+      font-family: 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
+      background: #FBFBFA; color: #111111; min-height: 100vh; padding-bottom: 4rem;
     }
     button, input, select, a { font: inherit; cursor: pointer; text-decoration: none; }
 
     /* Header */
     .header {
-      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
-      color: white; position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 2px 12px rgba(37,99,235,.35);
+      background: #FFFFFF; border-bottom: 1px solid #EAEAEA;
+      position: sticky; top: 0; z-index: 100;
     }
     .header-inner {
-      max-width: 960px; margin: 0 auto; padding: .875rem 1rem;
+      max-width: 1600px; margin: 0 auto; padding: .875rem 1rem;
       display: flex; align-items: center; gap: .75rem;
     }
     .btn-back {
       display: inline-flex; align-items: center; gap: .25rem;
-      padding: .4rem .7rem; background: rgba(255,255,255,.15);
-      color: rgba(255,255,255,.9); border: 1px solid rgba(255,255,255,.25);
-      border-radius: 8px; font-size: .8rem; font-weight: 600; white-space: nowrap;
-      transition: background .15s;
+      color: #787774; font-size: .8rem; font-weight: 500;
+      background: none; border: none; padding: 0;
+      white-space: nowrap; transition: color .15s;
     }
-    .btn-back:hover { background: rgba(255,255,255,.25); }
-    .header-title { flex: 1; font-size: 1.05rem; font-weight: 800; }
+    .btn-back:hover { color: #111111; }
+    .header-title { flex: 1; font-size: .9375rem; font-weight: 700; color: #111111; }
 
     /* Tabs */
     .tabs-bar {
-      background: white; border-bottom: 1.5px solid #e2e8f0;
+      background: white; border-bottom: 1px solid #EAEAEA;
       position: sticky; top: 52px; z-index: 90;
     }
     .tabs-inner {
-      max-width: 960px; margin: 0 auto; padding: 0 1rem;
+      max-width: 1600px; margin: 0 auto; padding: 0 1rem;
       display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
+    .tabs-inner::-webkit-scrollbar { display: none; }
     .tab-btn {
-      padding: .75rem 1.25rem; background: none; border: none;
-      font-size: .875rem; font-weight: 600; color: #64748b;
-      border-bottom: 2.5px solid transparent; white-space: nowrap;
+      padding: .65rem 1.1rem; background: none; border: none;
+      font-size: .8rem; font-weight: 500; color: #787774;
+      border-bottom: 1.5px solid transparent; white-space: nowrap;
       transition: color .15s, border-color .15s; flex-shrink: 0;
     }
-    .tab-btn:hover { color: #2563eb; }
-    .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+    .tab-btn:hover { color: #111111; }
+    .tab-btn.active { color: #111111; border-bottom-color: #111111; font-weight: 600; }
 
     /* Content */
-    .content { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem; }
+    .content { max-width: 1600px; margin: 0 auto; padding: 1.5rem 1rem; }
 
     /* Section header */
     .section-head {
       display: flex; align-items: center; justify-content: space-between;
       gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap;
     }
-    .section-title { font-size: 1.1rem; font-weight: 800; }
+    .section-title { font-size: 1rem; font-weight: 700; color: #111111; }
     .section-link {
-      font-size: .875rem; font-weight: 600; color: #2563eb;
+      font-size: .8rem; font-weight: 500; color: #787774;
       display: flex; align-items: center; gap: .3rem;
+      transition: color .15s;
     }
-    .section-link:hover { text-decoration: underline; }
+    .section-link:hover { color: #111111; }
 
-    /* Button group */
+    /* Buttons */
     .btn {
       display: inline-flex; align-items: center; gap: .375rem;
-      padding: .5rem 1rem; border: none; border-radius: 8px;
-      font-size: .875rem; font-weight: 600;
-      transition: background .15s; white-space: nowrap;
+      padding: .45rem .9rem; border: none; border-radius: 4px;
+      font-size: .8rem; font-weight: 600;
+      transition: opacity .15s; white-space: nowrap;
     }
-    .btn-primary { background: #2563eb; color: white; }
-    .btn-primary:hover { background: #1d4ed8; }
-    .btn-sm { padding: .3rem .65rem; font-size: .8rem; }
-    .btn-edit { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-    .btn-edit:hover { background: #e2e8f0; }
-    .btn-delete { background: #fee2e2; color: #dc2626; border: none; }
-    .btn-delete:hover { background: #fecaca; }
+    .btn-primary { background: #111111; color: white; }
+    .btn-primary:hover { opacity: .85; }
+    .btn-sm { padding: .3rem .65rem; font-size: .78rem; }
+    .btn-edit {
+      background: white; color: #787774;
+      border: 1px solid #EAEAEA;
+    }
+    .btn-edit:hover { border-color: #111111; color: #111111; }
+    .btn-delete { background: #FDEBEC; color: #9F2F2D; border: none; }
+    .btn-delete:hover { background: #F5C0C0; }
 
     /* Table */
     .data-table { width: 100%; border-collapse: collapse; }
     .data-table th {
-      text-align: left; padding: .625rem 1rem;
-      font-size: .72rem; font-weight: 700; color: #64748b;
+      text-align: left; padding: .5rem 1rem;
+      font-size: .68rem; font-weight: 700; color: #787774;
       text-transform: uppercase; letter-spacing: .05em;
-      border-bottom: 1.5px solid #e2e8f0; background: #f8fafc;
+      border-bottom: 1px solid #EAEAEA; background: #F8F8F7;
     }
     .data-table td {
-      padding: .75rem 1rem; font-size: .875rem;
-      border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+      padding: .75rem 1rem; font-size: .85rem;
+      border-bottom: 1px solid #F8F8F7; vertical-align: middle; color: #111111;
     }
     .data-table tr:last-child td { border-bottom: none; }
-    .data-table tr:hover td { background: #fafafa; }
+    .data-table tr:hover td { background: #FBFBFA; }
     .table-wrap {
-      background: white; border-radius: 14px;
-      border: 1.5px solid #e2e8f0; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      background: white; border-radius: 8px;
+      border: 1px solid #EAEAEA; overflow: hidden;
     }
-    .col-emoji { font-size: 1.2rem; }
+    .col-emoji { font-size: 1.1rem; }
     .col-actions { display: flex; gap: .5rem; justify-content: flex-end; }
     .type-badge {
       display: inline-block; padding: .2rem .55rem;
-      border-radius: 999px; font-size: .72rem; font-weight: 600;
+      border-radius: 999px; font-size: .7rem; font-weight: 600;
     }
-    .type-peso    { background: #fef3c7; color: #92400e; }
-    .type-volumen { background: #dbeafe; color: #1e40af; }
-    .type-cantidad{ background: #dcfce7; color: #166534; }
+    .type-peso    { background: #FBF3DB; color: #956400; }
+    .type-volumen { background: #E1F3FE; color: #1F6C9F; }
+    .type-cantidad{ background: #EDF3EC; color: #346538; }
 
-    .empty-row td { text-align: center; color: #94a3b8; padding: 2.5rem 1rem; }
+    .empty-row td { text-align: center; color: #B2B0AD; padding: 2.5rem 1rem; font-size: .875rem; }
     .section-note {
-      font-size: .875rem; color: #64748b; margin-bottom: 1rem;
-      padding: .75rem 1rem; background: #f8fafc; border-radius: 8px;
-      border: 1px solid #e2e8f0;
+      font-size: .8rem; color: #787774; margin-bottom: 1rem;
+      padding: .65rem .875rem; background: #F8F8F7; border-radius: 6px;
+      border: 1px solid #EAEAEA;
     }
 
     /* Modal */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(15,23,42,.5);
-      backdrop-filter: blur(3px); z-index: 200;
+      position: fixed; inset: 0; background: rgba(0,0,0,.3);
+      backdrop-filter: blur(2px); z-index: 200;
       display: flex; align-items: flex-end; justify-content: center;
       animation: fade-in .15s ease;
     }
     @media (min-width: 600px) { .modal-overlay { align-items: center; padding: 1rem; } }
     @keyframes fade-in { from{opacity:0} to{opacity:1} }
     .modal {
-      background: white; border-radius: 18px 18px 0 0;
+      background: white; border-radius: 12px 12px 0 0; border: 1px solid #EAEAEA;
       width: 100%; max-width: 400px; padding: 1.5rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,.2);
       animation: slide-up .22s cubic-bezier(.34,1.56,.64,1);
     }
-    @media (min-width: 600px) { .modal { border-radius: 18px; animation: scale-in .18s ease; } }
+    @media (min-width: 600px) { .modal { border-radius: 8px; animation: scale-in .18s ease; } }
     @keyframes slide-up { from{transform:translateY(100%)} to{transform:translateY(0)} }
-    @keyframes scale-in { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
+    @keyframes scale-in { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
     .modal-header {
       display: flex; align-items: flex-start; justify-content: space-between;
       gap: .75rem; margin-bottom: 1.25rem;
     }
-    .modal-title { font-size: 1.05rem; font-weight: 800; }
+    .modal-title { font-size: 1rem; font-weight: 700; color: #111111; }
     .modal-close {
-      width: 32px; height: 32px; flex-shrink: 0; border: none;
-      border-radius: 50%; background: #f1f5f9; color: #64748b;
+      width: 28px; height: 28px; flex-shrink: 0; border: 1px solid #EAEAEA;
+      border-radius: 4px; background: #F8F8F7; color: #787774;
       display: flex; align-items: center; justify-content: center;
     }
-    .modal-close:hover { background: #e2e8f0; }
+    .modal-close:hover { border-color: #111111; color: #111111; }
     .form-group { display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1rem; }
-    .form-label { font-size: .85rem; font-weight: 600; }
+    .form-label { font-size: .8rem; font-weight: 600; color: #111111; }
     .form-input, .form-select {
-      padding: .55rem .8rem; border: 1.5px solid #e2e8f0;
-      border-radius: 8px; font-size: .9375rem; color: #1e293b;
-      background: white; transition: border-color .15s, box-shadow .15s;
+      padding: .5rem .75rem; border: 1px solid #EAEAEA;
+      border-radius: 4px; font-size: .9rem; color: #111111;
+      background: white; transition: border-color .15s;
     }
     .form-input:focus, .form-select:focus {
-      outline: none; border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+      outline: none; border-color: #111111;
     }
-    .form-input::placeholder { color: #94a3b8; }
-    .form-input.invalid, .form-select.invalid { border-color: #dc2626; }
+    .form-input::placeholder { color: #B2B0AD; }
+    .form-input.invalid, .form-select.invalid { border-color: #9F2F2D; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-    .modal-footer { display: flex; gap: .625rem; margin-top: .25rem; }
+    .modal-footer { display: flex; gap: .5rem; margin-top: .25rem; }
     .btn-cancel {
-      flex: 1; padding: .6rem; background: #f1f5f9; color: #475569;
-      border: none; border-radius: 8px; font-size: .9rem; font-weight: 600;
+      flex: 1; padding: .6rem; background: white; color: #787774;
+      border: 1px solid #EAEAEA; border-radius: 4px; font-size: .875rem; font-weight: 500;
     }
-    .btn-cancel:hover { background: #e2e8f0; }
+    .btn-cancel:hover { border-color: #111111; color: #111111; }
     .btn-save {
-      flex: 2; padding: .6rem; background: #2563eb; color: white;
-      border: none; border-radius: 8px; font-size: .9rem; font-weight: 700;
+      flex: 2; padding: .6rem; background: #111111; color: white;
+      border: none; border-radius: 4px; font-size: .875rem; font-weight: 600;
     }
-    .btn-save:hover { background: #1d4ed8; }
-    .btn-save:disabled { opacity: .6; }
+    .btn-save:hover { opacity: .85; }
+    .btn-save:disabled { opacity: .35; }
 
     /* Toast */
     .toast-container {
@@ -181,70 +184,66 @@
       pointer-events: none; align-items: flex-end;
     }
     .toast {
-      padding: .75rem 1.125rem; border-radius: 10px;
-      font-size: .875rem; font-weight: 600; color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,.15); opacity: 0;
-      transform: translateY(8px);
+      padding: .75rem 1.125rem; border-radius: 6px;
+      font-size: .8rem; font-weight: 500; color: white;
+      opacity: 0; transform: translateY(8px);
       transition: opacity .25s, transform .25s cubic-bezier(.34,1.56,.64,1);
       max-width: 300px; pointer-events: auto;
     }
     .toast--show   { opacity: 1; transform: translateY(0); }
-    .toast-success { background: #16a34a; }
-    .toast-error   { background: #dc2626; }
-    .toast-info    { background: #2563eb; }
+    .toast-success { background: #1C3E1F; }
+    .toast-error   { background: #5C1A19; }
+    .toast-info    { background: #0F3557; }
 
     /* Budget tab */
     .budget-form-card {
-      background: white; border-radius: 14px; border: 1.5px solid #e2e8f0;
-      padding: 1.5rem; margin-bottom: 1.25rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      background: white; border-radius: 8px; border: 1px solid #EAEAEA;
+      padding: 1.25rem; margin-bottom: 1rem;
     }
     .budget-card-title {
-      font-size: .75rem; font-weight: 800; color: #475569;
-      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1.125rem;
+      font-size: .72rem; font-weight: 700; color: #787774;
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1rem;
     }
     .amount-input-wrap {
       display: flex; align-items: center;
-      border: 1.5px solid #e2e8f0; border-radius: 9px; overflow: hidden;
+      border: 1px solid #EAEAEA; border-radius: 4px; overflow: hidden;
       max-width: 260px; transition: border-color .12s;
     }
-    .amount-input-wrap:focus-within { border-color: #2563eb; }
+    .amount-input-wrap:focus-within { border-color: #111111; }
     .amount-currency-badge {
-      padding: .55rem .75rem; background: #f8fafc;
-      font-size: .8rem; font-weight: 700; color: #64748b;
-      border-right: 1.5px solid #e2e8f0; white-space: nowrap;
+      padding: .5rem .75rem; background: #F8F8F7;
+      font-size: .8rem; font-weight: 700; color: #787774;
+      border-right: 1px solid #EAEAEA; white-space: nowrap;
     }
     .amount-input {
-      flex: 1; padding: .55rem .8rem; border: none; outline: none;
-      font-size: 1rem; font-weight: 700; color: #1e293b; background: white;
+      flex: 1; padding: .5rem .75rem; border: none; outline: none;
+      font-size: 1rem; font-weight: 700; color: #111111; background: white;
     }
     .alert-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: .875rem; }
     .alert-row {
       display: flex; align-items: center; gap: .625rem;
-      background: #f8fafc; border: 1.5px solid #e2e8f0;
-      border-radius: 9px; padding: .5rem .75rem;
+      background: #F8F8F7; border: 1px solid #EAEAEA;
+      border-radius: 4px; padding: .45rem .75rem;
     }
-    .alert-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #2563eb; }
-    .alert-pct-badge {
-      font-size: .9rem; font-weight: 800; color: #1e293b; flex: 1;
-    }
-    .alert-row .btn-delete { padding: .25rem .6rem; font-size: .75rem; }
-    .budget-hint { font-size: .8rem; color: #64748b; margin-bottom: .875rem; line-height: 1.5; }
+    .alert-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #111111; }
+    .alert-pct-badge { font-size: .875rem; font-weight: 700; color: #111111; flex: 1; }
+    .alert-row .btn-delete { padding: .2rem .55rem; font-size: .72rem; }
+    .budget-hint { font-size: .8rem; color: #787774; margin-bottom: .875rem; line-height: 1.5; }
     .reset-history-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
     .reset-history-table th {
-      text-align: left; padding: .5rem .75rem; font-size: .7rem; font-weight: 700;
-      color: #64748b; text-transform: uppercase; letter-spacing: .05em;
-      border-bottom: 1.5px solid #e2e8f0; background: #f8fafc;
+      text-align: left; padding: .5rem .75rem; font-size: .68rem; font-weight: 700;
+      color: #787774; text-transform: uppercase; letter-spacing: .05em;
+      border-bottom: 1px solid #EAEAEA; background: #F8F8F7;
     }
-    .reset-history-table td { padding: .65rem .75rem; border-bottom: 1px solid #f1f5f9; }
+    .reset-history-table td { padding: .625rem .75rem; border-bottom: 1px solid #F8F8F7; color: #111111; }
     .reset-history-table tr:last-child td { border-bottom: none; }
     .btn-danger-outline {
       display: inline-flex; align-items: center; gap: .4rem;
-      padding: .5rem 1rem; border: 1.5px solid #fca5a5;
-      border-radius: 8px; font-size: .875rem; font-weight: 600;
-      color: #dc2626; background: white; transition: background .15s;
+      padding: .45rem .875rem; border: 1px solid #F5C0C0;
+      border-radius: 4px; font-size: .8rem; font-weight: 600;
+      color: #9F2F2D; background: white; transition: background .15s;
     }
-    .btn-danger-outline:hover { background: #fff5f5; }
+    .btn-danger-outline:hover { background: #FDEBEC; }
   </style>
 </head>
 <body>
@@ -252,7 +251,7 @@
   <header class="header">
     <div class="header-inner">
       <a href="/inventories" class="btn-back" id="settings-back-btn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         <span data-i18n="settings.back">Atrás</span>
       </a>
       <h1 class="header-title" data-i18n="settings.title">Configuración</h1>
@@ -271,13 +270,13 @@
     </div>
   </div>
 
-  <!-- ══ Tab: Categorías ══ -->
+  <!-- Tab: Categorías -->
   <div class="content" id="tab-categories">
     <div class="section-head">
       <h2 class="section-title" data-i18n="settings.categories.title">Categorías</h2>
       <button class="btn btn-primary btn-sm" id="btn-add-category">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span data-i18n="settings.categories.add">+ Agregar categoría</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span data-i18n="settings.categories.add">Agregar categoría</span>
       </button>
     </div>
     <div class="table-wrap">
@@ -294,13 +293,13 @@
     </div>
   </div>
 
-  <!-- ══ Tab: Unidades ══ -->
+  <!-- Tab: Unidades -->
   <div class="content" id="tab-units" hidden>
     <div class="section-head">
       <h2 class="section-title" data-i18n="settings.units.title">Unidades de medida</h2>
       <button class="btn btn-primary btn-sm" id="btn-add-unit">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span data-i18n="settings.units.add">+ Agregar unidad</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span data-i18n="settings.units.add">Agregar unidad</span>
       </button>
     </div>
     <div class="table-wrap">
@@ -318,7 +317,7 @@
     </div>
   </div>
 
-  <!-- ══ Tab: Catálogo ══ -->
+  <!-- Tab: Catálogo -->
   <div class="content" id="tab-catalog" hidden>
     <div class="section-head">
       <h2 class="section-title" data-i18n="settings.catalog.title">Productos del catálogo</h2>
@@ -338,13 +337,13 @@
     </div>
   </div>
 
-  <!-- ══ Tab: Establecimientos ══ -->
+  <!-- Tab: Establecimientos -->
   <div class="content" id="tab-stores" hidden>
     <div class="section-head">
       <h2 class="section-title" data-i18n="settings.stores.title">Establecimientos</h2>
       <button class="btn btn-primary btn-sm" id="btn-add-store">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span data-i18n="settings.stores.add">+ Agregar establecimiento</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span data-i18n="settings.stores.add">Agregar establecimiento</span>
       </button>
     </div>
     <p class="section-note stores-no-inv" hidden data-i18n="settings.stores.noInventory">Abrí un inventario para gestionar los establecimientos.</p>
@@ -362,7 +361,7 @@
     </div>
   </div>
 
-  <!-- ══ Tab: Moneda ══ -->
+  <!-- Tab: Moneda -->
   <div class="content" id="tab-currency" hidden>
     <div class="section-head">
       <h2 class="section-title" data-i18n="settings.currency.title">Moneda</h2>
@@ -385,17 +384,17 @@
     </div>
   </div>
 
-  <!-- ══ Tab: Impuestos ══ -->
+  <!-- Tab: Impuestos -->
   <div class="content" id="tab-taxes" hidden>
     <div class="section-head">
       <h2 class="section-title" data-i18n="settings.taxes.title">Impuestos</h2>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-        <button class="btn btn-sm" id="btn-suggest-taxes" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
+        <button class="btn btn-sm btn-edit" id="btn-suggest-taxes">
           <span data-i18n="settings.taxes.suggest">Sugerir según moneda</span>
         </button>
         <button class="btn btn-primary btn-sm" id="btn-add-tax">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span data-i18n="settings.taxes.add">+ Agregar impuesto</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span data-i18n="settings.taxes.add">Agregar impuesto</span>
         </button>
       </div>
     </div>
@@ -422,7 +421,7 @@
       <div class="modal-header">
         <h2 class="modal-title" id="tax-modal-title" data-i18n="settings.taxes.modal.addTitle">Agregar impuesto</h2>
         <button class="modal-close" id="tax-modal-close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <form id="tax-form" novalidate>
@@ -444,12 +443,12 @@
           </div>
           <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:.5rem;padding-top:1.4rem;">
             <label class="form-label" for="tax-active-toggle" style="margin:0" data-i18n="settings.taxes.modal.active">Activo</label>
-            <input type="checkbox" id="tax-active-toggle" style="width:18px;height:18px;cursor:pointer;" checked>
+            <input type="checkbox" id="tax-active-toggle" style="width:18px;height:18px;cursor:pointer;accent-color:#111111" checked>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label" data-i18n="settings.taxes.modal.categories">Aplica a categorías</label>
-          <p class="section-note" style="margin-bottom:.5rem;font-size:.8rem;" data-i18n="settings.taxes.modal.categoriesHint">Dejá vacío para aplicar a todos los productos</p>
+          <p class="section-note" style="margin-bottom:.5rem;font-size:.78rem;" data-i18n="settings.taxes.modal.categoriesHint">Dejá vacío para aplicar a todos los productos</p>
           <div id="tax-categories-checkboxes" style="display:flex;flex-wrap:wrap;gap:.5rem .75rem;"></div>
         </div>
         <div class="modal-footer">
@@ -466,7 +465,7 @@
       <div class="modal-header">
         <h2 class="modal-title" id="store-modal-title" data-i18n="settings.stores.modal.addTitle">Agregar establecimiento</h2>
         <button class="modal-close" id="store-modal-close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <form id="store-form" novalidate>
@@ -499,7 +498,7 @@
       <div class="modal-header">
         <h2 class="modal-title" id="cat-modal-title" data-i18n="settings.categories.modal.addTitle">Agregar categoría</h2>
         <button class="modal-close" id="cat-modal-close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <form id="cat-form" novalidate>
@@ -532,7 +531,7 @@
       <div class="modal-header">
         <h2 class="modal-title" id="unit-modal-title" data-i18n="settings.units.modal.addTitle">Agregar unidad</h2>
         <button class="modal-close" id="unit-modal-close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <form id="unit-form" novalidate>
@@ -553,8 +552,8 @@
           <div class="form-group">
             <label class="form-label" for="unit-type-select" data-i18n="settings.units.modal.type">Tipo</label>
             <select class="form-select" id="unit-type-select" required>
-              <option value="peso"    data-i18n="settings.units.types.peso">Peso</option>
-              <option value="volumen" data-i18n="settings.units.types.volumen">Volumen</option>
+              <option value="peso"     data-i18n="settings.units.types.peso">Peso</option>
+              <option value="volumen"  data-i18n="settings.units.types.volumen">Volumen</option>
               <option value="cantidad" data-i18n="settings.units.types.cantidad" selected>Cantidad</option>
             </select>
           </div>
@@ -573,7 +572,7 @@
       <div class="modal-header">
         <h2 class="modal-title" data-i18n="settings.catalog.modal.editTitle">Editar producto</h2>
         <button class="modal-close" id="cp-modal-close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <form id="cp-form" novalidate>
@@ -585,11 +584,11 @@
         <div class="form-group">
           <label class="form-label" for="cp-cat-select" data-i18n="settings.catalog.modal.category">Categoría</label>
           <select class="form-select" id="cp-cat-select" required>
-            <option value="Alimentos">🍎 Alimentos</option>
-            <option value="Bebidas">🥤 Bebidas</option>
-            <option value="Aseo Personal">🧴 Aseo Personal</option>
-            <option value="Aseo del Hogar">🧹 Aseo del Hogar</option>
-            <option value="Alacena">🫙 Alacena</option>
+            <option value="Alimentos">Alimentos</option>
+            <option value="Bebidas">Bebidas</option>
+            <option value="Aseo Personal">Aseo Personal</option>
+            <option value="Aseo del Hogar">Aseo del Hogar</option>
+            <option value="Alacena">Alacena</option>
           </select>
         </div>
         <div class="modal-footer">
@@ -600,7 +599,7 @@
     </div>
   </div>
 
-  <!-- ══ Tab: Presupuesto ══ -->
+  <!-- Tab: Presupuesto -->
   <div class="content" id="tab-budget" hidden>
     <div class="section-head">
       <h2 class="section-title" data-i18n="settings.budget.title">Presupuesto mensual</h2>
@@ -645,7 +644,7 @@
       <div class="budget-form-card" style="margin-top:1.5rem;">
         <div class="budget-card-title" style="margin-bottom:.75rem;">Reset</div>
         <button class="btn-danger-outline" id="btn-reset-budget" data-i18n="settings.budget.resetBtn">
-          🔄 Resetear presupuesto del mes
+          Resetear presupuesto del mes
         </button>
 
         <div style="margin-top:1.5rem;">

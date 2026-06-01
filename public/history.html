@@ -4,259 +4,273 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Historial de Compras — Inventario Hogar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <style>
     [hidden] { display: none !important; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { -webkit-text-size-adjust: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: #f1f5f9; color: #1e293b;
+      font-family: 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
+      background: #FBFBFA; color: #111111;
       min-height: 100vh; padding-bottom: 4rem;
     }
     button, input, select, a { font: inherit; cursor: pointer; text-decoration: none; }
     img, svg { display: block; }
 
-    /* ── Header ── */
+    /* Header */
     .header {
-      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
-      color: white; position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 2px 12px rgba(37,99,235,.35);
-      height: 68px;
+      background: #FFFFFF; border-bottom: 1px solid #EAEAEA;
+      position: sticky; top: 0; z-index: 100; height: 56px;
     }
     .header-inner {
-      max-width: 860px; margin: 0 auto;
+      max-width: 1600px; margin: 0 auto;
       height: 100%; padding: 0 1.25rem;
       display: flex; align-items: center; gap: .75rem;
     }
     .btn-back {
       display: inline-flex; align-items: center; gap: .25rem;
-      padding: .4rem .7rem;
-      background: rgba(255,255,255,.15); color: rgba(255,255,255,.9);
-      border: 1px solid rgba(255,255,255,.25); border-radius: 8px;
-      font-size: .8rem; font-weight: 600;
-      white-space: nowrap; flex-shrink: 0;
-      transition: background .15s;
+      color: #787774; font-size: .8rem; font-weight: 500;
+      background: none; border: none; padding: 0;
+      white-space: nowrap; flex-shrink: 0; transition: color .15s;
     }
-    .btn-back:hover { background: rgba(255,255,255,.25); }
-    .header-title { font-size: 1.05rem; font-weight: 800; flex: 1; }
-    .header-inv-sub { font-size: .7rem; opacity: .75; font-weight: 500; }
+    .btn-back:hover { color: #111111; }
+    .header-title { font-size: .9375rem; font-weight: 700; flex: 1; color: #111111; }
+    .header-inv-sub { font-size: .68rem; color: #787774; font-weight: 500; }
 
-    /* ── Main ── */
-    .main { max-width: 860px; margin: 0 auto; padding: 1rem; }
+    /* Tab bar */
+    .inv-tabs-bar {
+      background: white; border-bottom: 1px solid #EAEAEA;
+      position: sticky; top: 56px; z-index: 90;
+    }
+    .inv-tabs-inner {
+      max-width: 1600px; margin: 0 auto; padding: 0 1rem;
+      display: flex; overflow-x: auto; scrollbar-width: none;
+    }
+    .inv-tabs-inner::-webkit-scrollbar { display: none; }
+    .inv-tab {
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .65rem 1rem; font-size: .8rem; font-weight: 500;
+      color: #787774; border-bottom: 1.5px solid transparent;
+      white-space: nowrap; flex-shrink: 0; text-decoration: none;
+      transition: color .15s, border-color .15s;
+    }
+    .inv-tab:hover { color: #111111; }
+    .inv-tab.active { color: #111111; border-bottom-color: #111111; font-weight: 600; }
+    .tab-icon-svg { flex-shrink: 0; }
+    @media (max-width: 480px) {
+      .inv-tab { padding: .6rem .8rem; }
+      .tab-label { display: none; }
+    }
 
-    /* ── Summary card ── */
+    /* Main */
+    .main { max-width: 1600px; margin: 0 auto; padding: 1rem; }
+
+    /* Summary card */
     .summary-card {
-      background: white; border-radius: 14px;
-      border: 1.5px solid #e2e8f0;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1.125rem;
+      background: white; border-radius: 8px; border: 1px solid #EAEAEA;
+      padding: 1rem 1.25rem; margin-bottom: 1rem;
       display: flex; gap: 1.5rem; flex-wrap: wrap;
     }
     .summary-col { flex: 1; min-width: 120px; }
-    .summary-label { font-size: .72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .25rem; }
-    .summary-amount { font-size: 1.35rem; font-weight: 800; color: #1e293b; }
-    .summary-sub { font-size: .75rem; color: #94a3b8; margin-top: .15rem; }
-    .summary-diff { font-size: .78rem; font-weight: 700; }
-    .summary-diff--up   { color: #dc2626; }
-    .summary-diff--down { color: #16a34a; }
-
-    /* ── Filters ── */
-    .filters-row {
-      display: flex; gap: .625rem; margin-bottom: 1.125rem; flex-wrap: wrap;
+    .summary-label {
+      font-size: .72rem; font-weight: 700; color: #787774;
+      text-transform: uppercase; letter-spacing: .04em; margin-bottom: .25rem;
     }
+    .summary-amount { font-size: 1.25rem; font-weight: 700; color: #111111; }
+    .summary-sub { font-size: .75rem; color: #B2B0AD; margin-top: .15rem; }
+    .summary-diff { font-size: .78rem; font-weight: 600; }
+    .summary-diff--up   { color: #9F2F2D; }
+    .summary-diff--down { color: #346538; }
+
+    /* Filters */
+    .filters-row { display: flex; gap: .625rem; margin-bottom: 1rem; flex-wrap: wrap; }
     .filter-select {
       flex: 1; min-width: 160px;
-      padding: .5rem .75rem;
-      background: white; border: 1.5px solid #e2e8f0; border-radius: 8px;
-      font-size: .85rem; font-weight: 600; color: #1e293b;
+      padding: .45rem .75rem;
+      background: white; border: 1px solid #EAEAEA; border-radius: 4px;
+      font-size: .8rem; font-weight: 500; color: #111111;
       outline: none; transition: border-color .12s;
     }
-    .filter-select:focus { border-color: #2563eb; }
+    .filter-select:focus { border-color: #111111; }
 
-    /* ── Empty state ── */
-    .empty-state {
-      text-align: center; padding: 4rem 2rem; color: #64748b;
-    }
-    .empty-icon  { font-size: 3.5rem; margin-bottom: 1rem; }
-    .empty-title { font-size: 1.2rem; font-weight: 800; color: #1e293b; margin-bottom: .5rem; }
+    /* Empty state */
+    .empty-state { text-align: center; padding: 4rem 2rem; color: #787774; }
+    .empty-icon  { margin: 0 auto 1rem; color: #B2B0AD; }
+    .empty-title { font-size: 1.1rem; font-weight: 700; color: #111111; margin-bottom: .5rem; }
     .empty-sub   { font-size: .875rem; line-height: 1.6; }
 
-    /* ── Month heading ── */
+    /* Month heading */
     .month-heading {
       display: flex; align-items: center; gap: .75rem;
       margin: 1.25rem 0 .625rem;
     }
     .month-heading-text {
-      font-size: .8rem; font-weight: 800; color: #475569;
+      font-size: .72rem; font-weight: 700; color: #787774;
       text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
     }
-    .month-heading-line { flex: 1; height: 1px; background: #e2e8f0; }
-    .month-total { font-size: .78rem; font-weight: 700; color: #64748b; white-space: nowrap; }
+    .month-heading-line { flex: 1; height: 1px; background: #EAEAEA; }
+    .month-total { font-size: .78rem; font-weight: 600; color: #787774; white-space: nowrap; }
 
-    /* ── Session card ── */
+    /* Session card */
     .session-card {
-      background: white; border-radius: 12px;
-      border: 1.5px solid #e2e8f0;
-      margin-bottom: .625rem;
-      overflow: hidden;
+      background: white; border-radius: 8px; border: 1px solid #EAEAEA;
+      margin-bottom: .5rem; overflow: hidden;
     }
     .session-header {
       display: flex; align-items: center; gap: .75rem;
-      padding: .875rem 1rem;
-      cursor: pointer;
-      transition: background .12s;
+      padding: .875rem 1rem; cursor: pointer; transition: background .12s;
     }
-    .session-header:hover { background: #f8fafc; }
-    .session-date { font-size: .875rem; font-weight: 700; color: #1e293b; }
-    .session-meta { font-size: .75rem; color: #64748b; margin-top: .1rem; }
+    .session-header:hover { background: #FBFBFA; }
+    .session-date { font-size: .875rem; font-weight: 600; color: #111111; }
+    .session-meta { font-size: .75rem; color: #787774; margin-top: .1rem; }
     .session-right { margin-left: auto; display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
-    .session-total { font-size: 1rem; font-weight: 800; color: #2563eb; }
-    .session-total--zero { color: #94a3b8; font-size: .875rem; }
+    .session-total { font-size: .95rem; font-weight: 700; color: #111111; }
+    .session-total--zero { color: #B2B0AD; font-size: .875rem; }
     .session-receipt-icon {
-      font-size: 1.1rem; cursor: pointer;
-      text-decoration: none;
-      transition: transform .12s;
+      color: #787774; cursor: pointer; text-decoration: none;
+      transition: color .12s;
     }
-    .session-receipt-icon:hover { transform: scale(1.2); }
-    .session-chevron {
-      color: #94a3b8; transition: transform .18s; flex-shrink: 0;
-    }
+    .session-receipt-icon:hover { color: #111111; }
+    .session-chevron { color: #B2B0AD; transition: transform .18s; flex-shrink: 0; }
     .session-chevron--open { transform: rotate(180deg); }
 
     /* Session detail */
-    .session-detail {
-      border-top: 1px solid #f1f5f9;
-      padding: .75rem 1rem 1rem;
-    }
+    .session-detail { border-top: 1px solid #EAEAEA; padding: .75rem 1rem 1rem; }
     .detail-store-group { margin-bottom: .875rem; }
     .detail-store-header {
-      font-size: .78rem; font-weight: 700; color: #475569;
-      padding: .25rem .5rem; background: #f8fafc; border-radius: 6px;
+      font-size: .72rem; font-weight: 700; color: #787774;
+      padding: .2rem .5rem; background: #F8F8F7; border-radius: 4px;
       margin-bottom: .375rem;
       display: flex; align-items: center; justify-content: space-between;
     }
-    .detail-store-sub { color: #64748b; font-weight: 600; }
+    .detail-store-sub { color: #787774; font-weight: 500; }
     .detail-item {
       display: flex; align-items: baseline;
-      gap: .375rem; padding: .25rem .5rem;
-      font-size: .82rem;
+      gap: .375rem; padding: .25rem .5rem; font-size: .82rem;
     }
-    .detail-item-bullet { color: #cbd5e1; font-size: .8rem; flex-shrink: 0; }
-    .detail-item-name   { flex: 1; font-weight: 600; }
-    .detail-item-qty    { color: #64748b; white-space: nowrap; }
-    .detail-item-price  { font-weight: 700; white-space: nowrap; margin-left: auto; }
+    .detail-item-bullet { color: #EAEAEA; font-size: .8rem; flex-shrink: 0; }
+    .detail-item-name   { flex: 1; font-weight: 500; color: #111111; }
+    .detail-item-qty    { color: #787774; white-space: nowrap; }
+    .detail-item-price  { font-weight: 600; white-space: nowrap; margin-left: auto; }
 
-    /* ── Receipt modal (lightbox) ── */
+    /* Financial summary (detail) */
+    .fin-summary {
+      background: #F8F8F7; border-radius: 6px;
+      padding: .625rem .875rem; margin-bottom: .75rem;
+      border: 1px solid #EAEAEA;
+    }
+    .fin-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .82rem; padding: .2rem 0; color: #787774;
+    }
+    .fin-row--total {
+      font-weight: 700; font-size: .9rem; color: #111111;
+      padding-top: .375rem; border-top: 1px solid #EAEAEA; margin-top: .2rem;
+    }
+
+    /* Delete modal options */
+    .delete-options { display: flex; flex-direction: column; gap: .625rem; margin-bottom: 1rem; }
+    .delete-option {
+      display: flex; align-items: flex-start; gap: .625rem;
+      padding: .75rem; border: 1px solid #EAEAEA; border-radius: 6px;
+      cursor: pointer; transition: border-color .12s, background .12s;
+    }
+    .delete-option:hover { background: #FBFBFA; }
+    .delete-option input[type=radio] { margin-top: .2rem; flex-shrink: 0; cursor: pointer; accent-color: #111111; }
+    .delete-option-title { font-size: .875rem; font-weight: 600; color: #111111; }
+    .delete-option-sub   { font-size: .775rem; color: #787774; margin-top: .15rem; }
+    .delete-confirm-section { margin-top: .25rem; }
+    .delete-confirm-label { font-size: .8rem; font-weight: 600; color: #787774; display: block; margin-bottom: .375rem; }
+    .delete-confirm-input {
+      width: 100%; padding: .5rem .75rem;
+      border: 1px solid #EAEAEA; border-radius: 4px;
+      font-size: .9rem; font-weight: 500; outline: none;
+      transition: border-color .15s;
+    }
+    .delete-confirm-input:focus { border-color: #9F2F2D; }
+    .btn-delete-exec {
+      flex: 2; padding: .6rem; background: #9F2F2D; color: white;
+      border: none; border-radius: 4px;
+      font-size: .875rem; font-weight: 600; transition: opacity .15s;
+    }
+    .btn-delete-exec:hover:not(:disabled) { opacity: .85; }
+    .btn-delete-exec:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* Lightbox */
     .lightbox-overlay {
       position: fixed; inset: 0; z-index: 300;
       background: rgba(0,0,0,.85); backdrop-filter: blur(4px);
       display: flex; align-items: center; justify-content: center;
-      padding: 1rem;
-      animation: lb-fade .15s ease;
+      padding: 1rem; animation: lb-fade .15s ease;
     }
     @keyframes lb-fade { from { opacity:0; } to { opacity:1; } }
     .lightbox-img {
       max-width: 100%; max-height: 90vh;
-      border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      border-radius: 8px;
     }
     .lightbox-close {
       position: fixed; top: 1rem; right: 1rem;
-      width: 40px; height: 40px; border-radius: 50%;
+      width: 36px; height: 36px; border-radius: 50%;
       background: rgba(255,255,255,.15); color: white; border: none;
-      font-size: 1.1rem; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
       transition: background .12s;
     }
     .lightbox-close:hover { background: rgba(255,255,255,.25); }
 
-    /* ── Delete session modal ── */
-    .delete-modal { max-width: 440px; }
-    .delete-options { display: flex; flex-direction: column; gap: .625rem; margin-bottom: 1rem; }
-    .delete-option {
-      display: flex; align-items: flex-start; gap: .625rem;
-      padding: .75rem; border: 1.5px solid #e2e8f0; border-radius: 10px;
-      cursor: pointer; transition: border-color .12s, background .12s;
-    }
-    .delete-option:hover { background: #f8fafc; }
-    .delete-option input[type=radio] { margin-top: .2rem; flex-shrink: 0; cursor: pointer; }
-    .delete-option-title { font-size: .875rem; font-weight: 700; color: #1e293b; }
-    .delete-option-sub   { font-size: .775rem; color: #64748b; margin-top: .15rem; }
-    .delete-confirm-section { margin-top: .25rem; }
-    .delete-confirm-label { font-size: .8rem; font-weight: 700; color: #64748b; display: block; margin-bottom: .375rem; }
-    .delete-confirm-input {
-      width: 100%; padding: .55rem .75rem;
-      border: 1.5px solid #e2e8f0; border-radius: 8px;
-      font-size: .9rem; font-weight: 600; outline: none;
-      transition: border-color .15s;
-    }
-    .delete-confirm-input:focus { border-color: #dc2626; }
-    .btn-delete-exec {
-      flex: 2; padding: .65rem;
-      background: #dc2626; color: white;
-      border: none; border-radius: 10px;
-      font-size: .9rem; font-weight: 700;
-      transition: background .15s;
-    }
-    .btn-delete-exec:hover:not(:disabled) { background: #b91c1c; }
-    .btn-delete-exec:disabled { opacity: .4; cursor: not-allowed; }
-
-    /* ── Toast ── */
+    /* Toast */
     .toast-container {
       position: fixed; bottom: 1.5rem; right: 1rem; left: 1rem; z-index: 400;
       display: flex; flex-direction: column; gap: .5rem;
       pointer-events: none; align-items: flex-end;
     }
     .toast {
-      padding: .75rem 1.125rem; border-radius: 10px;
-      font-size: .875rem; font-weight: 600; color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      padding: .75rem 1.125rem; border-radius: 6px;
+      font-size: .8rem; font-weight: 500; color: white;
       opacity: 0; transform: translateY(8px);
       transition: opacity .25s, transform .25s cubic-bezier(.34,1.56,.64,1);
       max-width: 300px; pointer-events: auto;
     }
     .toast--show  { opacity: 1; transform: translateY(0); }
-    .toast-error   { background: #dc2626; }
-    .toast-success { background: #16a34a; }
+    .toast-error   { background: #5C1A19; }
+    .toast-success { background: #1C3E1F; }
 
-    /* ── Financial summary (detail) ── */
-    .fin-summary {
-      background: #f8fafc; border-radius: 10px;
-      padding: .625rem .875rem; margin-bottom: .75rem;
-      border: 1px solid #e2e8f0;
+    /* Modal (delete session) */
+    .modal-overlay-delete {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.3); backdrop-filter: blur(2px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+      animation: lb-fade .15s ease;
     }
-    .fin-row {
+    .modal-inner {
+      position: relative; background: white; border-radius: 8px; border: 1px solid #EAEAEA;
+      width: 90%; max-width: 480px; max-height: 90vh;
+      overflow-y: auto; display: flex; flex-direction: column;
+      animation: sl-scale .15s ease;
+    }
+    @keyframes sl-scale { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:scale(1); } }
+    .modal-inner-head {
       display: flex; align-items: center; justify-content: space-between;
-      font-size: .82rem; padding: .2rem 0; color: #64748b;
+      padding: 1.25rem 1.5rem .875rem; border-bottom: 1px solid #EAEAEA; flex-shrink: 0;
     }
-    .fin-row--total {
-      font-weight: 800; font-size: .9rem; color: #1e293b;
-      padding-top: .375rem; border-top: 1px solid #e2e8f0; margin-top: .2rem;
+    .modal-inner-title { font-size: 1rem; font-weight: 700; color: #111111; }
+    .modal-inner-close {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      background: #F8F8F7; border: 1px solid #EAEAEA; border-radius: 4px;
+      color: #787774; font-size: .9rem;
     }
-
-    /* ── Inv tabs ── */
-    .inv-tabs-bar {
-      background: white; border-bottom: 1.5px solid #e2e8f0;
-      box-shadow: 0 1px 6px rgba(0,0,0,.04);
-      position: sticky; top: 68px; z-index: 90;
+    .modal-inner-close:hover { border-color: #111111; color: #111111; }
+    .modal-inner-body { overflow-y: auto; flex: 1; padding: 1rem 1.5rem; }
+    .modal-inner-foot {
+      display: flex; gap: .5rem; padding: 1rem 1.5rem;
+      border-top: 1px solid #EAEAEA; flex-shrink: 0;
     }
-    .inv-tabs-inner {
-      max-width: 860px; margin: 0 auto; padding: 0 1rem;
-      display: flex; overflow-x: auto; scrollbar-width: none;
+    .btn-modal-cancel {
+      flex: 1; padding: .6rem; background: white; color: #787774;
+      border: 1px solid #EAEAEA; border-radius: 4px;
+      font-size: .875rem; font-weight: 500;
     }
-    .inv-tabs-inner::-webkit-scrollbar { display: none; }
-    .inv-tab {
-      display: inline-flex; align-items: center; gap: .35rem;
-      padding: .65rem 1rem; font-size: .875rem; font-weight: 600;
-      color: #64748b; border-bottom: 2px solid transparent;
-      white-space: nowrap; flex-shrink: 0; text-decoration: none;
-      transition: color .15s, border-color .15s;
-    }
-    .inv-tab:hover  { color: #1e293b; }
-    .inv-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
-    @media (max-width: 480px) {
-      .inv-tab { padding: .6rem .8rem; }
-      .tab-label { display: none; }
-    }
+    .btn-modal-cancel:hover { border-color: #111111; color: #111111; }
   </style>
 </head>
 <body>
@@ -264,14 +278,12 @@
   <header class="header">
     <div class="header-inner">
       <a href="/inventory" class="btn-back">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         <span data-i18n="history.back">Inventario</span>
       </a>
       <div>
         <div class="header-inv-sub" id="inv-name"></div>
-        <div class="header-title">
-          📋 <span data-i18n="history.title">Historial de compras</span>
-        </div>
+        <div class="header-title" data-i18n="history.title">Historial de compras</div>
       </div>
     </div>
   </header>
@@ -279,16 +291,20 @@
   <nav class="inv-tabs-bar">
     <div class="inv-tabs-inner">
       <a href="/inventory" class="inv-tab">
-        <span>📊</span><span class="tab-label" data-i18n="invTabs.dashboard">Dashboard</span>
+        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="5" height="9"/><rect x="10" y="7" width="5" height="14"/><rect x="17" y="3" width="5" height="18"/></svg>
+        <span class="tab-label" data-i18n="invTabs.dashboard">Dashboard</span>
       </a>
       <a href="/inventory?tab=stock" class="inv-tab">
-        <span>📦</span><span class="tab-label" data-i18n="invTabs.stock">Stock</span>
+        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span class="tab-label" data-i18n="invTabs.stock">Stock</span>
       </a>
       <a href="/shopping-list" class="inv-tab">
-        <span>🛒</span><span class="tab-label" data-i18n="invTabs.shopping">Compras</span>
+        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="tab-label" data-i18n="invTabs.shopping">Compras</span>
       </a>
       <span class="inv-tab active">
-        <span>📋</span><span class="tab-label" data-i18n="invTabs.history">Historial</span>
+        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span class="tab-label" data-i18n="invTabs.history">Historial</span>
       </span>
     </div>
   </nav>
@@ -320,7 +336,9 @@
 
     <!-- Empty state -->
     <div class="empty-state" id="empty-state" hidden>
-      <div class="empty-icon">🧾</div>
+      <div class="empty-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
       <h2 class="empty-title" data-i18n="history.empty.title">Sin historial</h2>
       <p class="empty-sub" data-i18n="history.empty.sub">Aún no hay compras registradas.</p>
     </div>
@@ -330,13 +348,15 @@
   </main>
 
   <!-- Delete session modal -->
-  <div class="lightbox-overlay" id="delete-session-overlay" hidden style="background:rgba(15,23,42,.55);backdrop-filter:blur(3px);">
-    <div style="position:relative;background:white;border-radius:16px;width:90%;max-width:480px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:lb-fade .15s ease;">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem .875rem;border-bottom:1px solid #f1f5f9;flex-shrink:0;">
-        <h2 style="font-size:1.05rem;font-weight:800;" data-i18n="history.deleteSession.title">Eliminar compra</h2>
-        <button id="btn-delete-session-close" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border:none;border-radius:8px;color:#475569;font-size:1rem;">✕</button>
+  <div class="lightbox-overlay modal-overlay-delete" id="delete-session-overlay" hidden>
+    <div class="modal-inner">
+      <div class="modal-inner-head">
+        <h2 class="modal-inner-title" data-i18n="history.deleteSession.title">Eliminar compra</h2>
+        <button id="btn-delete-session-close" class="modal-inner-close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-      <div style="overflow-y:auto;flex:1;padding:1rem 1.5rem;">
+      <div class="modal-inner-body">
         <div class="delete-options">
           <label class="delete-option">
             <input type="radio" name="delete-mode" value="record" checked>
@@ -360,8 +380,8 @@
                  placeholder="ELIMINAR" autocomplete="off">
         </div>
       </div>
-      <div style="display:flex;gap:.625rem;padding:1rem 1.5rem;border-top:1px solid #f1f5f9;flex-shrink:0;">
-        <button id="btn-delete-session-cancel" style="flex:1;padding:.65rem;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:.9rem;font-weight:600;" data-i18n="history.deleteSession.cancel">Cancelar</button>
+      <div class="modal-inner-foot">
+        <button id="btn-delete-session-cancel" class="btn-modal-cancel" data-i18n="history.deleteSession.cancel">Cancelar</button>
         <button id="btn-delete-session-confirm" class="btn-delete-exec" disabled data-i18n="history.deleteSession.btn">Eliminar</button>
       </div>
     </div>
@@ -369,7 +389,9 @@
 
   <!-- Lightbox -->
   <div class="lightbox-overlay" id="lightbox" hidden>
-    <button class="lightbox-close" id="lightbox-close">✕</button>
+    <button class="lightbox-close" id="lightbox-close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
     <img class="lightbox-img" id="lightbox-img" src="" alt="Recibo">
   </div>
 
