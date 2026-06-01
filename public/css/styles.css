@@ -1225,6 +1225,19 @@ a { color: inherit; text-decoration: none; }
 .btn-photos-add:disabled { opacity: .4; cursor: default; }
 .photos-count-warn { font-size: .72rem; color: var(--warn); font-weight: 600; margin-bottom: .3rem; }
 
+/* Price history chart */
+.price-chart-section { margin-top: .5rem; }
+.price-chart-title {
+  font-size: .8rem; font-weight: 700; color: var(--text);
+  margin-bottom: .5rem;
+}
+.price-chart-wrap { min-height: 80px; }
+.price-chart-loading,
+.price-chart-no-data {
+  min-height: 80px; display: flex; align-items: center;
+  justify-content: center; font-size: .82rem; color: var(--text-muted);
+}
+
 /* Photo lightbox viewer */
 .photos-viewer {
   background: var(--surface); border-radius: var(--r-lg) var(--r-lg) 0 0;

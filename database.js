@@ -683,6 +683,23 @@ module.exports = {
     return count;
   },
 
+  getProductPriceHistory(productId, inventoryId) {
+    return db.prepare(`
+      SELECT
+        date(ps.purchase_date) AS date,
+        COALESCE(s.name, 'Sin tienda') AS store_name,
+        pi.unit_price
+      FROM purchase_items pi
+      JOIN purchase_sessions ps ON ps.id = pi.session_id
+      LEFT JOIN stores s ON s.id = pi.store_id
+      WHERE pi.product_id = ?
+        AND ps.inventory_id = ?
+        AND pi.unit_price IS NOT NULL
+        AND pi.unit_price > 0
+      ORDER BY ps.purchase_date ASC
+    `).all(productId, inventoryId);
+  },
+
   // ── Shopping list ──────────────────────────────────────────────────────────
   getShoppingList(inventoryId) {
     return db.prepare(`

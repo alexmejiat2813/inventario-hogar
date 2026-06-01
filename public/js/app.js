@@ -17,6 +17,8 @@ const ROLE_CLASS = { owner: 'role-owner', editor: 'role-editor', reader: 'role-r
 const MAX_PHOTOS     = 5;
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
+let _priceChart = null;
+
 const state = {
   products:         [],
   stats:            null,
@@ -379,6 +381,9 @@ async function openModal(product = null) {
     state.existingPhotos   = [];
     document.getElementById('fg-photos').hidden = false;
     renderModalPhotos();
+    // Price history chart
+    document.getElementById('fg-price-chart').hidden = false;
+    renderPriceChart(product.id);
   } else {
     title.textContent = t('inventory.modal.addTitle');
     document.getElementById('product-id').value = '';
@@ -389,6 +394,7 @@ async function openModal(product = null) {
     populateUnitSelect();
     setModalMode('catalog');
     document.getElementById('fg-photos').hidden = true;
+    document.getElementById('fg-price-chart').hidden = true;
     state.editingProductId = null;
     state.existingPhotos   = [];
     state.pendingPhotos    = [];
@@ -414,6 +420,7 @@ function closeModal() {
   state.pendingPhotos    = [];
   state.existingPhotos   = [];
   state.editingProductId = null;
+  if (_priceChart) { _priceChart.destroy(); _priceChart = null; }
   document.getElementById('modal-overlay').hidden = true;
 }
 
@@ -662,6 +669,103 @@ async function openProductPhotoViewer(productId) {
     openPhotoViewer(photos, product.name);
   } catch (err) {
     showToast(err.message, 'error');
+  }
+}
+
+// ── Price history chart ───────────────────────────────────────
+
+const PRICE_CHART_COLORS = [
+  '#2563eb','#16a34a','#dc2626','#f59e0b',
+  '#6d28d9','#0891b2','#be123c','#047857',
+];
+
+async function renderPriceChart(productId) {
+  const wrap = document.getElementById('price-chart-wrap');
+  wrap.innerHTML = '<div class="price-chart-loading">Cargando…</div>';
+
+  try {
+    const rows = await apiFetch('GET', `/api/products/${productId}/price-history`);
+
+    wrap.innerHTML = '';
+
+    if (!rows || !rows.length) {
+      wrap.innerHTML = '<div class="price-chart-no-data">Sin historial de compras registrado</div>';
+      return;
+    }
+
+    // Group by store
+    const storeMap = {};
+    rows.forEach(r => {
+      if (!storeMap[r.store_name]) storeMap[r.store_name] = {};
+      storeMap[r.store_name][r.date] = r.unit_price;
+    });
+
+    const allDates = [...new Set(rows.map(r => r.date))].sort();
+    const lang     = (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
+    const currency = state.inventory?.currency || 'USD';
+
+    const fmt = n => {
+      try {
+        return new Intl.NumberFormat(lang, {
+          style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2,
+        }).format(n);
+      } catch { return String(n); }
+    };
+
+    const labels = allDates.map(d => {
+      const [y, m, day] = d.split('-');
+      return new Date(+y, +m - 1, +day).toLocaleDateString(lang, { day: 'numeric', month: 'short' });
+    });
+
+    const datasets = Object.entries(storeMap).map(([store, byDate], i) => ({
+      label: store,
+      data: allDates.map(d => byDate[d] ?? null),
+      borderColor: PRICE_CHART_COLORS[i % PRICE_CHART_COLORS.length],
+      backgroundColor: PRICE_CHART_COLORS[i % PRICE_CHART_COLORS.length] + '18',
+      tension: 0.3,
+      spanGaps: false,
+      pointRadius: 4,
+      pointBackgroundColor: PRICE_CHART_COLORS[i % PRICE_CHART_COLORS.length],
+    }));
+
+    const canvas = document.createElement('canvas');
+    canvas.id = 'chart-price-history';
+    wrap.appendChild(canvas);
+
+    if (_priceChart) { _priceChart.destroy(); _priceChart = null; }
+
+    _priceChart = new Chart(canvas, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: datasets.length > 1,
+            position: 'top',
+            labels: { font: { size: 11 }, padding: 8, boxWidth: 12 },
+          },
+          tooltip: {
+            callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: { font: { size: 11 }, callback: v => fmt(v) },
+            grid: { color: '#f1f5f9' },
+          },
+          x: {
+            ticks: { font: { size: 11 } },
+            grid: { display: false },
+          },
+        },
+      },
+    });
+  } catch {
+    const wrap2 = document.getElementById('price-chart-wrap');
+    if (wrap2) wrap2.innerHTML = '<div class="price-chart-no-data">Error al cargar historial</div>';
   }
 }
 

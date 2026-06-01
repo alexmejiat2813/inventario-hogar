@@ -407,6 +407,17 @@ app.delete('/api/products/:id/images/:imageId', requireEditorOrOwner, (req, res)
   } catch { res.status(500).json({ error: 'Error al eliminar imagen' }); }
 });
 
+app.get('/api/products/:id/price-history', (req, res) => {
+  try {
+    const productId = parseInt(req.params.id);
+    if (isNaN(productId)) return res.status(400).json({ error: 'ID inválido' });
+    const p = db.getById(productId);
+    if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
+    res.json(db.getProductPriceHistory(productId, req.inventoryId));
+  } catch { res.status(500).json({ error: 'Error al obtener historial de precios' }); }
+});
+
 app.get('/api/stats', (req, res) => {
   try { res.json(db.getStats(req.inventoryId)); }
   catch { res.status(500).json({ error: 'Error al obtener estadísticas' }); }
