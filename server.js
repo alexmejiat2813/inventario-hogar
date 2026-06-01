@@ -295,7 +295,7 @@ app.delete('/api/inventories/:id/members/:userId', requireMember, requireOwner, 
 });
 
 // ── Products ───────────────────────────────────────────────────────────────────
-app.use(['/api/products', '/api/stats', '/api/shopping', '/api/stores', '/api/purchases', '/api/settings/taxes', '/api/budget'], requireInventory);
+app.use(['/api/products', '/api/stats', '/api/shopping', '/api/stores', '/api/purchases', '/api/settings/taxes', '/api/budget', '/api/templates'], requireInventory);
 
 app.get('/api/products', (req, res) => {
   try {
@@ -634,6 +634,40 @@ app.delete('/api/shopping', (req, res) => {
     db.clearShoppingList(req.inventoryId);
     res.json({ ok: true });
   } catch { res.status(500).json({ error: 'Error al limpiar la lista' }); }
+});
+
+// ── Shopping list templates ────────────────────────────────────────────────────
+app.get('/api/templates', (req, res) => {
+  try { res.json(db.getTemplates(req.inventoryId)); }
+  catch { res.status(500).json({ error: 'Error al obtener plantillas' }); }
+});
+
+app.post('/api/templates', requireEditorOrOwner, (req, res) => {
+  try {
+    const { name, items } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'La plantilla debe tener al menos un elemento' });
+    res.status(201).json(db.createTemplate(req.inventoryId, req.user.id, name, items));
+  } catch { res.status(500).json({ error: 'Error al crear plantilla' }); }
+});
+
+app.get('/api/templates/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const template = db.getTemplate(id, req.inventoryId);
+    if (!template) return res.status(404).json({ error: 'Plantilla no encontrada' });
+    res.json(template);
+  } catch { res.status(500).json({ error: 'Error al obtener plantilla' }); }
+});
+
+app.delete('/api/templates/:id', requireEditorOrOwner, (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    if (!db.deleteTemplate(id, req.inventoryId)) return res.status(404).json({ error: 'Plantilla no encontrada' });
+    res.json({ message: 'Plantilla eliminada' });
+  } catch { res.status(500).json({ error: 'Error al eliminar plantilla' }); }
 });
 
 // ── Inventory currency ─────────────────────────────────────────────────────────

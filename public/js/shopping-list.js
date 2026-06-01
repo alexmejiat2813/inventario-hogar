@@ -16,6 +16,7 @@ const state = {
   selectedTaxIds: [],
   expandedItems: new Set(),
   receiptFile:  null,
+  templates:    [],
 };
 
 // ── API ───────────────────────────────────────────────────────
@@ -611,12 +612,148 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
+// ── Templates ─────────────────────────────────────────────────
+
+async function loadTemplates() {
+  try {
+    state.templates = await apiFetch('GET', '/api/templates') || [];
+  } catch { state.templates = []; }
+}
+
+function openTemplatesPanel() {
+  renderTemplatesPanel();
+  document.getElementById('tpl-overlay').hidden = false;
+  document.getElementById('tpl-name-input').focus();
+}
+
+function closeTemplatesPanel() {
+  document.getElementById('tpl-overlay').hidden = true;
+  document.getElementById('tpl-name-input').value = '';
+}
+
+function renderTemplatesPanel() {
+  const checkedItems = state.items.filter(i => i.checked);
+  const saveBtn  = document.getElementById('btn-tpl-save');
+  const hintEl   = document.getElementById('tpl-save-hint');
+
+  saveBtn.disabled = checkedItems.length === 0;
+  hintEl.textContent = checkedItems.length > 0
+    ? `${checkedItems.length} item${checkedItems.length !== 1 ? 's' : ''} marcado${checkedItems.length !== 1 ? 's' : ''} — escribe un nombre y guarda.`
+    : 'Marca items en la lista para guardar como plantilla.';
+
+  const listEl = document.getElementById('tpl-list');
+  if (!state.templates.length) {
+    listEl.innerHTML = '<div class="tpl-empty">No hay plantillas guardadas.</div>';
+    return;
+  }
+  listEl.innerHTML = state.templates.map(tpl => `
+    <div class="tpl-item">
+      <div class="tpl-item-info">
+        <div class="tpl-item-name">${esc(tpl.name)}</div>
+        <div class="tpl-item-count">${tpl.item_count} producto${tpl.item_count !== 1 ? 's' : ''}</div>
+      </div>
+      <button class="btn-tpl-apply" data-tpl-action="apply" data-id="${tpl.id}">Aplicar</button>
+      <button class="btn-tpl-del"   data-tpl-action="delete" data-id="${tpl.id}" title="Eliminar plantilla">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+async function saveAsTemplate() {
+  const name = document.getElementById('tpl-name-input').value.trim();
+  if (!name) { document.getElementById('tpl-name-input').focus(); return; }
+
+  const checkedItems = state.items.filter(i => i.checked);
+  if (!checkedItems.length) return;
+
+  const items = checkedItems.map(item => {
+    const pd  = state.purchaseData[item.id] || {};
+    return {
+      productId:   item.id,
+      productName: item.name,
+      quantity:    pd.quantityBought != null ? +pd.quantityBought : +fmtQty(item.needed),
+      unit:        item.unit,
+    };
+  });
+
+  const saveBtn = document.getElementById('btn-tpl-save');
+  saveBtn.disabled = true;
+  try {
+    const created = await apiFetch('POST', '/api/templates', { name, items });
+    state.templates.unshift({ ...created, item_count: created.items.length });
+    document.getElementById('tpl-name-input').value = '';
+    renderTemplatesPanel();
+    showToast(`Plantilla "${name}" guardada`);
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    saveBtn.disabled = state.items.filter(i => i.checked).length === 0;
+  }
+}
+
+async function applyTemplate(templateId) {
+  try {
+    const tpl = await apiFetch('GET', `/api/templates/${templateId}`);
+    if (!tpl) return;
+
+    let applied = 0;
+    const checks = [];
+
+    tpl.items.forEach(ti => {
+      const item = state.items.find(i => i.id === ti.product_id);
+      if (!item) return;
+      item.checked = true;
+      state.expandedItems.add(item.id);
+      if (!state.purchaseData[item.id]) state.purchaseData[item.id] = {};
+      if (ti.quantity) state.purchaseData[item.id].quantityBought = ti.quantity;
+      checks.push(apiFetch('PUT', `/api/shopping/${item.id}`, { checked: true }));
+      applied++;
+    });
+
+    await Promise.all(checks);
+    render();
+    closeTemplatesPanel();
+    showToast(applied
+      ? `Plantilla aplicada: ${applied} item${applied !== 1 ? 's' : ''} marcado${applied !== 1 ? 's' : ''}`
+      : 'Ningún item de la plantilla está en la lista actual');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteTplById(templateId) {
+  if (!confirm('¿Eliminar esta plantilla?')) return;
+  try {
+    await apiFetch('DELETE', `/api/templates/${templateId}`);
+    state.templates = state.templates.filter(t => t.id !== templateId);
+    renderTemplatesPanel();
+    showToast('Plantilla eliminada', 'info');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
 // ── Events ────────────────────────────────────────────────────
 
 function initEvents() {
   // Header buttons
   document.getElementById('btn-clear').addEventListener('click', clearList);
   document.getElementById('btn-register').addEventListener('click', openConfirmModal);
+  document.getElementById('btn-templates').addEventListener('click', openTemplatesPanel);
+
+  // Templates panel
+  document.getElementById('tpl-panel-close').addEventListener('click', closeTemplatesPanel);
+  document.getElementById('tpl-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeTemplatesPanel();
+  });
+  document.getElementById('btn-tpl-save').addEventListener('click', saveAsTemplate);
+  document.getElementById('tpl-list').addEventListener('click', e => {
+    const btn = e.target.closest('[data-tpl-action]');
+    if (!btn) return;
+    const id = parseInt(btn.dataset.id, 10);
+    if (btn.dataset.tplAction === 'apply')  applyTemplate(id);
+    if (btn.dataset.tplAction === 'delete') deleteTplById(id);
+  });
 
   // List delegation (check, expand, field change)
   const listEl = document.getElementById('shopping-list');
@@ -679,8 +816,9 @@ function initEvents() {
   // Keyboard
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    if (!document.getElementById('budget-warning-overlay').hidden) closeBudgetWarning();
-    else if (!document.getElementById('confirm-overlay').hidden) closeConfirmModal();
+    if (!document.getElementById('tpl-overlay').hidden)            closeTemplatesPanel();
+    else if (!document.getElementById('budget-warning-overlay').hidden) closeBudgetWarning();
+    else if (!document.getElementById('confirm-overlay').hidden)   closeConfirmModal();
   });
 
   // Language changes
@@ -695,7 +833,7 @@ async function init() {
   try {
     const ok = await loadInventory();
     if (!ok) return;
-    await Promise.all([loadList(), loadStores(), loadTaxes(), loadBudget()]);
+    await Promise.all([loadList(), loadStores(), loadTaxes(), loadBudget(), loadTemplates()]);
   } catch (err) {
     console.error(err);
     showToast(tSafe('shopping.loadError', 'Error al cargar'), 'error');

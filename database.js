@@ -154,6 +154,23 @@ db.exec(`
     created_by     INTEGER REFERENCES users(id) ON DELETE SET NULL,
     created_at     TEXT    DEFAULT (datetime('now','localtime'))
   );
+
+  CREATE TABLE IF NOT EXISTS list_templates (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id INTEGER NOT NULL REFERENCES inventories(id) ON DELETE CASCADE,
+    name         TEXT    NOT NULL,
+    created_by   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at   TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS list_template_items (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    template_id  INTEGER NOT NULL REFERENCES list_templates(id) ON DELETE CASCADE,
+    product_id   INTEGER REFERENCES products(id) ON DELETE SET NULL,
+    product_name TEXT    NOT NULL,
+    quantity     REAL    NOT NULL DEFAULT 1,
+    unit         TEXT    NOT NULL DEFAULT 'unidades'
+  );
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -735,6 +752,52 @@ module.exports = {
     db.prepare(
       'UPDATE shopping_list_items SET checked = 0, checked_at = NULL WHERE inventory_id = ?'
     ).run(inventoryId);
+  },
+
+  // ── Shopping list templates ────────────────────────────────────────────────
+  getTemplates(inventoryId) {
+    return db.prepare(`
+      SELECT t.*, COUNT(ti.id) AS item_count
+      FROM list_templates t
+      LEFT JOIN list_template_items ti ON ti.template_id = t.id
+      WHERE t.inventory_id = ?
+      GROUP BY t.id
+      ORDER BY t.created_at DESC
+    `).all(inventoryId);
+  },
+
+  getTemplate(id, inventoryId) {
+    const template = db.prepare(
+      'SELECT * FROM list_templates WHERE id = ? AND inventory_id = ?'
+    ).get(id, inventoryId);
+    if (!template) return null;
+    template.items = db.prepare(
+      'SELECT * FROM list_template_items WHERE template_id = ? ORDER BY id'
+    ).all(id);
+    return template;
+  },
+
+  createTemplate(inventoryId, userId, name, items) {
+    return db.transaction(() => {
+      const { lastInsertRowid } = db.prepare(
+        'INSERT INTO list_templates (inventory_id, created_by, name) VALUES (?, ?, ?)'
+      ).run(inventoryId, userId, name.trim());
+      const ins = db.prepare(
+        'INSERT INTO list_template_items (template_id, product_id, product_name, quantity, unit) VALUES (?, ?, ?, ?, ?)'
+      );
+      items.forEach(item => {
+        ins.run(lastInsertRowid, item.productId || null, item.productName, +item.quantity || 1, item.unit);
+      });
+      const template = db.prepare('SELECT * FROM list_templates WHERE id = ?').get(lastInsertRowid);
+      template.items = db.prepare('SELECT * FROM list_template_items WHERE template_id = ?').all(lastInsertRowid);
+      return template;
+    })();
+  },
+
+  deleteTemplate(id, inventoryId) {
+    return db.prepare(
+      'DELETE FROM list_templates WHERE id = ? AND inventory_id = ?'
+    ).run(id, inventoryId).changes > 0;
   },
 
   getStats(inventoryId) {
