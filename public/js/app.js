@@ -281,6 +281,11 @@ function renderProductCard(p) {
 
       ${isReader ? '' : `
       <div class="card-actions">
+        ${isCritical ? `
+        <button class="btn btn-card btn-card-list" data-action="add-to-list" data-id="${p.id}" title="Activar en lista de compras">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Lista
+        </button>` : ''}
         <button class="btn btn-card btn-card-edit" data-action="edit" data-id="${p.id}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           ${t('inventory.card.edit')}
@@ -315,8 +320,52 @@ function updateCartBadge() {
   badge.hidden = count === 0;
 }
 
+function renderLowStockPanel() {
+  const panel = document.getElementById('low-stock-panel');
+  if (!panel) return;
+
+  if (sessionStorage.getItem('low_stock_dismissed')) {
+    panel.hidden = true;
+    return;
+  }
+
+  const critical = state.products.filter(p => p.current_qty < p.min_qty);
+  if (!critical.length) { panel.hidden = true; return; }
+
+  panel.hidden = false;
+  const n = critical.length;
+  document.getElementById('low-stock-count').textContent =
+    `${n} producto${n !== 1 ? 's' : ''} con stock bajo`;
+
+  const isReader = state.inventory?.role === 'reader';
+  document.getElementById('low-stock-list').innerHTML = critical.map(p => {
+    const unit   = t('units.' + p.unit) || esc(p.unit);
+    const needed = +(p.min_qty - p.current_qty).toFixed(2);
+    return `
+      <div class="low-stock-item">
+        <span class="low-stock-name">${esc(p.name)}</span>
+        <span class="low-stock-deficit">faltan ${needed} ${unit}</span>
+        ${!isReader ? `
+        <button class="btn-low-stock-add" data-action="add-to-list" data-id="${p.id}" title="Activar en lista de compras">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Agregar
+        </button>` : ''}
+      </div>`;
+  }).join('');
+}
+
+async function addToShoppingList(productId) {
+  try {
+    await apiFetch('PUT', `/api/shopping/${productId}`, { checked: false });
+    showToast('Agregado a lista de compras');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
 function render() {
   renderStats();
+  renderLowStockPanel();
   renderProducts();
   updateCartBadge();
 }
@@ -1105,9 +1154,20 @@ function initEvents() {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const id = parseInt(btn.dataset.id, 10);
-    if (btn.dataset.action === 'edit')   editProduct(id);
-    if (btn.dataset.action === 'delete') deleteProduct(id);
-    if (btn.dataset.action === 'photos') openProductPhotoViewer(id);
+    if (btn.dataset.action === 'edit')        editProduct(id);
+    if (btn.dataset.action === 'delete')      deleteProduct(id);
+    if (btn.dataset.action === 'photos')      openProductPhotoViewer(id);
+    if (btn.dataset.action === 'add-to-list') addToShoppingList(id);
+  });
+
+  document.getElementById('low-stock-list').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="add-to-list"]');
+    if (btn) addToShoppingList(parseInt(btn.dataset.id, 10));
+  });
+
+  document.getElementById('low-stock-dismiss').addEventListener('click', () => {
+    sessionStorage.setItem('low_stock_dismissed', '1');
+    document.getElementById('low-stock-panel').hidden = true;
   });
 
   document.querySelectorAll('.form-input, .form-select').forEach(el => {
