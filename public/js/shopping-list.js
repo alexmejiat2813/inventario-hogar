@@ -383,17 +383,9 @@ async function checkItem(productId) {
   const wasChecked = item.checked;
   item.checked = !wasChecked;
 
-  // Al marcar: si no hay cantidad ingresada, prellenar con lo que falta
-  // (min - actual) para que la compra reponga el stock por defecto.
-  if (!wasChecked) {
-    if (!state.purchaseData[productId]) state.purchaseData[productId] = {};
-    const pd = state.purchaseData[productId];
-    if (pd.quantityBought == null || pd.quantityBought === '' || +pd.quantityBought === 0) {
-      const needed = +(item.min_qty - item.current_qty);
-      if (needed > 0) pd.quantityBought = fmtQty(needed);
-    }
-    // Auto-expand on mobile when checking
-    if (window.innerWidth < 600) state.expandedItems.add(productId);
+  // Auto-expand on mobile when checking (para diligenciar tienda/cant/precio)
+  if (!wasChecked && window.innerWidth < 600) {
+    state.expandedItems.add(productId);
   }
 
   render();
@@ -459,12 +451,56 @@ async function clearList() {
   }
 }
 
+// ── Validación de campos obligatorios ─────────────────────────
+
+function clearInvalidMarks() {
+  document.querySelectorAll('.sl-invalid').forEach(el => el.classList.remove('sl-invalid'));
+}
+
+// Devuelve lista de items marcados que NO tienen tienda + cantidad + precio.
+// Resalta los campos faltantes en la tabla.
+function validateCheckedItems() {
+  clearInvalidMarks();
+  const incomplete = [];
+
+  function check(pd, sel) {
+    const miss = [];
+    if (!pd.storeId)                                       miss.push('store');
+    if (pd.quantityBought == null || +pd.quantityBought <= 0) miss.push('qty');
+    if (pd.unitPrice == null || +pd.unitPrice <= 0)          miss.push('price');
+    miss.forEach(field => {
+      const el = document.querySelector(`[data-field="${field}"]${sel}`);
+      if (el) el.classList.add('sl-invalid');
+    });
+    return miss;
+  }
+
+  state.items.filter(i => i.checked).forEach(i => {
+    const miss = check(state.purchaseData[i.id] || {}, `[data-id="${i.id}"]`);
+    if (miss.length) incomplete.push(i.name);
+  });
+  state.customItems.filter(i => i.checked).forEach(i => {
+    const miss = check(state.purchaseData['c' + i.id] || {}, `[data-custom-id="${i.id}"]`);
+    if (miss.length) incomplete.push(i.name);
+  });
+
+  return incomplete;
+}
+
 // ── Confirmation modal ────────────────────────────────────────
 
 function openConfirmModal() {
   const checkedItems  = state.items.filter(i => i.checked);
   const checkedCustom = state.customItems.filter(i => i.checked);
   if (!checkedItems.length && !checkedCustom.length) return;
+
+  // Obligar tienda + cantidad + precio en cada item marcado
+  const incomplete = validateCheckedItems();
+  if (incomplete.length) {
+    const names = incomplete.slice(0, 3).join(', ') + (incomplete.length > 3 ? '…' : '');
+    showToast('Completá establecimiento, cantidad y precio en: ' + names, 'error');
+    return;
+  }
 
   if (state.budget?.config?.monthly_amount) {
     const cartTotal  = calcCartTotal();
@@ -918,6 +954,7 @@ function initEvents() {
   listEl.addEventListener('change', e => {
     const el = e.target.closest('[data-field]');
     if (!el) return;
+    if (el.value !== '' && +el.value !== 0) el.classList.remove('sl-invalid');
     if (el.dataset.customId) {
       handleCustomFieldChange(el.dataset.field, parseInt(el.dataset.customId), el.value);
     } else {
@@ -927,6 +964,7 @@ function initEvents() {
   listEl.addEventListener('input', e => {
     const el = e.target.closest('[data-field]');
     if (!el || el.tagName === 'SELECT') return;
+    if (el.value !== '' && +el.value !== 0) el.classList.remove('sl-invalid');
     if (el.dataset.customId) {
       handleCustomFieldChange(el.dataset.field, parseInt(el.dataset.customId), el.value);
     } else {
