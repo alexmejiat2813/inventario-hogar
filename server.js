@@ -420,6 +420,17 @@ app.get('/api/products/:id/price-history', (req, res) => {
   } catch { res.status(500).json({ error: 'Error al obtener historial de precios' }); }
 });
 
+app.get('/api/products/:id/store-prices', (req, res) => {
+  try {
+    const productId = parseInt(req.params.id);
+    if (isNaN(productId)) return res.status(400).json({ error: 'ID inválido' });
+    const p = db.getById(productId);
+    if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
+    res.json(db.getProductStorePrices(productId, req.inventoryId));
+  } catch { res.status(500).json({ error: 'Error al obtener precios por tienda' }); }
+});
+
 app.get('/api/stats', (req, res) => {
   try { res.json(db.getStats(req.inventoryId)); }
   catch { res.status(500).json({ error: 'Error al obtener estadísticas' }); }

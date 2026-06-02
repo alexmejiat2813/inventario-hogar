@@ -470,9 +470,11 @@ async function openModal(product = null) {
     state.existingPhotos   = [];
     document.getElementById('fg-photos').hidden = false;
     renderModalPhotos();
-    // Price history chart
+    // Price history chart + store comparison
     document.getElementById('fg-price-chart').hidden = false;
+    document.getElementById('fg-store-prices').hidden = false;
     renderPriceChart(product.id);
+    renderStorePrices(product.id);
   } else {
     title.textContent = t('inventory.modal.addTitle');
     document.getElementById('product-id').value = '';
@@ -484,6 +486,7 @@ async function openModal(product = null) {
     setModalMode('catalog');
     document.getElementById('fg-photos').hidden = true;
     document.getElementById('fg-price-chart').hidden = true;
+    document.getElementById('fg-store-prices').hidden = true;
     state.editingProductId = null;
     state.existingPhotos   = [];
     state.pendingPhotos    = [];
@@ -857,6 +860,61 @@ async function renderPriceChart(productId) {
   } catch {
     const wrap2 = document.getElementById('price-chart-wrap');
     if (wrap2) wrap2.innerHTML = '<div class="price-chart-no-data">Error al cargar historial</div>';
+  }
+}
+
+// ── Store price comparison ────────────────────────────────────
+
+async function renderStorePrices(productId) {
+  const wrap = document.getElementById('store-prices-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="store-prices-loading">Cargando…</div>';
+
+  try {
+    const rows = await apiFetch('GET', `/api/products/${productId}/store-prices`);
+
+    if (!rows || !rows.length) {
+      wrap.innerHTML = '<div class="store-prices-empty">Sin historial de precios por tienda</div>';
+      return;
+    }
+
+    const currency = state.inventory?.currency || 'USD';
+    const lang     = (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
+    const fmt = n => {
+      try {
+        return new Intl.NumberFormat(lang, {
+          style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2,
+        }).format(n);
+      } catch { return String(n); }
+    };
+
+    const cheapest = rows[0].last_price;
+
+    wrap.innerHTML = rows.map((r, i) => {
+      const isBest  = i === 0;
+      const delta   = cheapest > 0 ? Math.round(((r.last_price - cheapest) / cheapest) * 100) : 0;
+      const dateStr = r.last_date
+        ? new Date(r.last_date + 'T00:00:00').toLocaleDateString(lang, { day: 'numeric', month: 'short' })
+        : '';
+
+      return `
+        <div class="store-price-row ${isBest ? 'store-price-row--best' : ''}">
+          <span class="store-price-name">
+            ${r.store_emoji ? `<span>${esc(r.store_emoji)}</span>` : ''}
+            ${esc(r.store_name)}
+          </span>
+          <span class="store-price-date">${dateStr}</span>
+          <span class="store-price-val">${fmt(r.last_price)}</span>
+          <span class="store-price-delta">
+            ${isBest
+              ? '<span class="store-best-badge">Mejor</span>'
+              : `<span class="store-delta-pct">+${delta}%</span>`}
+          </span>
+        </div>`;
+    }).join('');
+  } catch {
+    const w = document.getElementById('store-prices-wrap');
+    if (w) w.innerHTML = '<div class="store-prices-empty">Error al cargar precios</div>';
   }
 }
 

@@ -703,6 +703,35 @@ module.exports = {
     return count;
   },
 
+  getProductStorePrices(productId, inventoryId) {
+    return db.prepare(`
+      SELECT
+        COALESCE(s.name, 'Sin tienda')  AS store_name,
+        COALESCE(s.emoji, '')           AS store_emoji,
+        pi.unit_price                   AS last_price,
+        date(ps.purchase_date)          AS last_date
+      FROM purchase_items pi
+      JOIN purchase_sessions ps ON ps.id = pi.session_id
+      LEFT JOIN stores s ON s.id = pi.store_id
+      WHERE pi.product_id = ?
+        AND ps.inventory_id = ?
+        AND pi.unit_price IS NOT NULL
+        AND pi.unit_price > 0
+        AND ps.purchase_date = (
+          SELECT MAX(ps2.purchase_date)
+          FROM purchase_items pi2
+          JOIN purchase_sessions ps2 ON ps2.id = pi2.session_id
+          WHERE pi2.product_id = pi.product_id
+            AND ps2.inventory_id = ?
+            AND pi2.unit_price IS NOT NULL
+            AND pi2.unit_price > 0
+            AND COALESCE(pi2.store_id, -1) = COALESCE(pi.store_id, -1)
+        )
+      GROUP BY COALESCE(pi.store_id, -1)
+      ORDER BY last_price ASC
+    `).all(productId, inventoryId, inventoryId);
+  },
+
   getProductPriceHistory(productId, inventoryId) {
     return db.prepare(`
       SELECT
