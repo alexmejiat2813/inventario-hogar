@@ -17,6 +17,7 @@ const state = {
   expandedItems: new Set(),
   receiptFile:  null,
   templates:    [],
+  viewMode:     localStorage.getItem('sl-view-mode') || 'list', // 'list' | 'table'
 };
 
 // ── API ───────────────────────────────────────────────────────
@@ -178,56 +179,155 @@ function render() {
         <div class="all-checked-icon">🎉</div>
         <p class="all-checked-text">${t('shopping.allChecked')}</p>
       </div>`;
+    updateBudgetBar();
     return;
   }
 
-  const CAT_RANK = Object.fromEntries(CAT_ORDER.map((c, i) => [c, i]));
-  const sorted = unchecked.slice().sort((a, b) =>
-    ((CAT_RANK[a.category] ?? 99) - (CAT_RANK[b.category] ?? 99)) ||
-    a.name.localeCompare(b.name)
-  );
+  if (state.viewMode === 'table') {
+    renderTable(container, unchecked);
+    updateBudgetBar();
+    return;
+  }
 
-  const sym = getCurrencySym();
+  // Group unchecked by category
+  const byCategory = {};
+  unchecked.forEach(item => {
+    (byCategory[item.category] = byCategory[item.category] || []).push(item);
+  });
 
-  container.innerHTML = `
-    <div class="sl-wrap">
-      <table class="sl-table">
-        <thead>
-          <tr>
-            <th class="sl-th"></th>
-            <th class="sl-th">Producto</th>
-            <th class="sl-th sl-col-hide">Categoría</th>
-            <th class="sl-th sl-th--r sl-col-hide">Tiene</th>
-            <th class="sl-th sl-th--r sl-col-hide">Mín</th>
-            <th class="sl-th sl-th--r">Faltan</th>
-            <th class="sl-th">Tienda</th>
-            <th class="sl-th sl-th--r">Cant.</th>
-            <th class="sl-th sl-th--r">${sym}/u</th>
-            <th class="sl-th sl-th--r">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${sorted.map(renderItem).join('')}
-        </tbody>
-      </table>
-    </div>`;
+  // Also show categories not in CAT_ORDER
+  const allCats = [...CAT_ORDER, ...Object.keys(byCategory).filter(c => !CAT_ORDER.includes(c))];
+
+  container.innerHTML = allCats
+    .filter(cat => byCategory[cat])
+    .map(cat => `
+      <section class="cat-group">
+        <div class="cat-group-header">
+          <span class="cat-group-icon">${CAT_ICONS[cat] || '📦'}</span>
+          <span class="cat-group-name">${tSafe('cat.' + cat, cat)}</span>
+          <span class="cat-group-count">${byCategory[cat].length}</span>
+        </div>
+        <div class="cat-group-items">
+          ${byCategory[cat].map(renderItem).join('')}
+        </div>
+      </section>
+    `).join('');
 
   updateBudgetBar();
 }
 
 function renderItem(item) {
+  const needed     = fmtQty(item.needed);
+  const unit       = tSafe('units.' + item.unit, item.unit);
+  const isExpanded = state.expandedItems.has(item.id);
+  const pd         = state.purchaseData[item.id] || {};
+  const sym        = getCurrencySym();
+
+  const storeOptions = [
+    `<option value="">${tSafe('shopping.fields.storePlaceholder','— Opcional —')}</option>`,
+    ...state.stores.map(s =>
+      `<option value="${s.id}" ${+pd.storeId === s.id ? 'selected' : ''}>${esc(s.emoji)} ${esc(s.name)}</option>`
+    ),
+  ].join('');
+
+  const sub = calcSubtotal(pd);
+
+  return `
+    <div class="list-item ${item.checked ? 'list-item--checked' : ''}" data-id="${item.id}">
+      <div class="item-main">
+        <button class="item-check-btn" data-action="check" data-id="${item.id}" aria-label="Marcar como comprado">
+          <span class="check-circle">
+            ${item.checked ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          </span>
+        </button>
+        <div class="item-body">
+          <span class="item-name ${item.checked ? 'item-name--checked' : ''}">${esc(item.name)}</span>
+          <span class="item-meta">
+            ${tSafe('shopping.have','Tenés')} <strong>${fmtQty(item.current_qty)} ${unit}</strong>
+            · ${tSafe('shopping.min','mín')} <strong>${fmtQty(item.min_qty)} ${unit}</strong>
+          </span>
+          <span class="item-needed">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+            ${tSafe('shopping.missing','Faltan')} ${needed} ${unit}
+          </span>
+        </div>
+        <button class="item-expand-btn ${isExpanded ? 'item-expand-btn--open' : ''}" data-action="expand" data-id="${item.id}" aria-label="Ver campos de compra">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+      <div class="item-fields" ${isExpanded ? '' : 'hidden'}>
+        <div class="fields-grid">
+          <div class="field-col">
+            <label class="field-label">${tSafe('shopping.fields.store','Establecimiento')}</label>
+            <select class="field-select" data-field="store" data-id="${item.id}">${storeOptions}</select>
+          </div>
+          <div class="field-col">
+            <label class="field-label">${tSafe('shopping.fields.qtyBought','Cant.')}</label>
+            <div class="field-qty-wrap">
+              <input class="field-qty" type="number" min="0" step="0.01"
+                     data-field="qty" data-id="${item.id}"
+                     value="${pd.quantityBought != null ? pd.quantityBought : ''}">
+              <span class="field-unit">${unit}</span>
+            </div>
+          </div>
+          <div class="field-col">
+            <label class="field-label">${tSafe('shopping.fields.unitPrice','Precio unit.')}</label>
+            <div class="field-price-wrap">
+              <span class="field-sym">${sym}</span>
+              <input class="field-price" type="number" min="0" step="0.01"
+                     data-field="price" data-id="${item.id}"
+                     value="${pd.unitPrice != null ? pd.unitPrice : ''}">
+            </div>
+          </div>
+          <div class="field-col">
+            <label class="field-label">${tSafe('shopping.fields.subtotal','Subtotal')}</label>
+            <span class="field-subtotal ${sub != null ? 'field-subtotal--pos' : ''}" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Table view ────────────────────────────────────────────────
+
+function renderTable(container, items) {
+  const CAT_RANK = Object.fromEntries(CAT_ORDER.map((c, i) => [c, i]));
+  const sorted = items.slice().sort((a, b) =>
+    ((CAT_RANK[a.category] ?? 99) - (CAT_RANK[b.category] ?? 99)) ||
+    a.name.localeCompare(b.name)
+  );
+  const sym = getCurrencySym();
+  container.innerHTML = `
+    <div class="sl-wrap">
+      <table class="sl-table">
+        <thead><tr>
+          <th class="sl-th"></th>
+          <th class="sl-th">Producto</th>
+          <th class="sl-th sl-col-hide">Categoría</th>
+          <th class="sl-th sl-th--r sl-col-hide">Tiene</th>
+          <th class="sl-th sl-th--r sl-col-hide">Mín</th>
+          <th class="sl-th sl-th--r">Faltan</th>
+          <th class="sl-th">Tienda</th>
+          <th class="sl-th sl-th--r">Cant.</th>
+          <th class="sl-th sl-th--r">${sym}/u</th>
+          <th class="sl-th sl-th--r">Subtotal</th>
+        </tr></thead>
+        <tbody>${sorted.map(renderTableRow).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderTableRow(item) {
   const needed = fmtQty(item.needed);
   const unit   = tSafe('units.' + item.unit, item.unit);
   const pd     = state.purchaseData[item.id] || {};
   const sub    = calcSubtotal(pd);
-
   const storeOptions = [
     `<option value="">—</option>`,
     ...state.stores.map(s =>
       `<option value="${s.id}" ${+pd.storeId === s.id ? 'selected' : ''}>${esc(s.emoji)} ${esc(s.name)}</option>`
     ),
   ].join('');
-
   return `
     <tr class="sl-row${item.checked ? ' sl-row--checked' : ''}" data-id="${item.id}">
       <td class="sl-td sl-td--check">
@@ -237,18 +337,12 @@ function renderItem(item) {
           </span>
         </button>
       </td>
-      <td class="sl-td">
-        <span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span>
-      </td>
-      <td class="sl-td sl-col-hide">
-        <span class="sl-cat">${CAT_ICONS[item.category] || '📦'} ${tSafe('cat.' + item.category, item.category)}</span>
-      </td>
+      <td class="sl-td"><span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span></td>
+      <td class="sl-td sl-col-hide"><span class="sl-cat">${CAT_ICONS[item.category] || '📦'} ${tSafe('cat.' + item.category, item.category)}</span></td>
       <td class="sl-td sl-td--r sl-col-hide">${fmtQty(item.current_qty)} <span class="sl-unit">${unit}</span></td>
       <td class="sl-td sl-td--r sl-col-hide">${fmtQty(item.min_qty)} <span class="sl-unit">${unit}</span></td>
       <td class="sl-td sl-td--r"><strong class="sl-missing">${needed}</strong> <span class="sl-unit">${unit}</span></td>
-      <td class="sl-td">
-        <select class="sl-sel" data-field="store" data-id="${item.id}">${storeOptions}</select>
-      </td>
+      <td class="sl-td"><select class="sl-sel" data-field="store" data-id="${item.id}">${storeOptions}</select></td>
       <td class="sl-td sl-td--r">
         <input class="sl-inp sl-inp--qty" type="number" min="0" step="0.01"
                data-field="qty" data-id="${item.id}"
@@ -263,6 +357,22 @@ function renderItem(item) {
         <span class="sl-sub${sub != null ? ' sl-sub--pos' : ''}" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
       </td>
     </tr>`;
+}
+
+function toggleView() {
+  state.viewMode = state.viewMode === 'list' ? 'table' : 'list';
+  localStorage.setItem('sl-view-mode', state.viewMode);
+  updateViewToggleBtn();
+  render();
+}
+
+function updateViewToggleBtn() {
+  const btn   = document.getElementById('btn-view-toggle');
+  const label = document.getElementById('view-toggle-label');
+  if (!btn || !label) return;
+  const isTable = state.viewMode === 'table';
+  btn.classList.toggle('btn-view-toggle--active', isTable);
+  label.textContent = isTable ? 'Lista' : 'Tabla';
 }
 
 // ── Actions ───────────────────────────────────────────────────
@@ -724,6 +834,7 @@ function initEvents() {
   // Header buttons
   document.getElementById('btn-clear').addEventListener('click', clearList);
   document.getElementById('btn-register').addEventListener('click', openConfirmModal);
+  document.getElementById('btn-view-toggle').addEventListener('click', toggleView);
   document.getElementById('btn-templates').addEventListener('click', openTemplatesPanel);
 
   // Templates panel
@@ -815,6 +926,7 @@ function initEvents() {
 async function init() {
   await I18N.init();
   initEvents();
+  updateViewToggleBtn();
   try {
     const ok = await loadInventory();
     if (!ok) return;

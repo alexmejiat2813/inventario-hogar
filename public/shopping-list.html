@@ -535,34 +535,44 @@
       font-weight: 400;
     }
 
-    /* ── Shopping list table ─────────────────────────────────── */
+    /* ── View toggle button ──────────────────────────────────── */
+    .btn-view-toggle {
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .4rem .65rem; flex-shrink: 0;
+      background: white; color: #787774;
+      border: 1px solid #EAEAEA; border-radius: 4px;
+      font-size: .78rem; font-weight: 500;
+      transition: border-color .15s, color .15s; white-space: nowrap;
+    }
+    .btn-view-toggle:hover { border-color: #111111; color: #111111; }
+    .btn-view-toggle--active { border-color: #111111; color: #111111; background: #F8F8F7; }
+
+    /* ── Table view ──────────────────────────────────────────── */
     .sl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .sl-table {
       width: 100%; border-collapse: collapse;
       background: white; border-radius: 8px;
       border: 1px solid #EAEAEA; font-size: .82rem;
     }
-    .sl-table thead tr {
-      background: #F8F8F7; border-bottom: 2px solid #EAEAEA;
-    }
+    .sl-table thead tr { background: #F8F8F7; border-bottom: 2px solid #EAEAEA; }
     .sl-th {
       padding: .5rem .625rem; text-align: left;
       font-size: .67rem; font-weight: 700; color: #787774;
-      text-transform: uppercase; letter-spacing: .04em;
-      white-space: nowrap; user-select: none;
+      text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+      user-select: none;
     }
-    .sl-th--r  { text-align: right; }
+    .sl-th--r { text-align: right; }
     .sl-td {
       padding: .4rem .625rem; border-bottom: 1px solid #F8F8F7;
       vertical-align: middle;
     }
     .sl-row:last-child .sl-td { border-bottom: none; }
-    .sl-row--checked .sl-td { opacity: .42; }
+    .sl-row--checked .sl-td { opacity: .4; }
     .sl-td--check { width: 36px; padding: 0; text-align: center; }
     .sl-cbtn {
-      width: 40px; height: 40px;
-      display: flex; align-items: center; justify-content: center;
-      background: none; border: none; cursor: pointer; padding: 0; margin: 0 auto;
+      width: 40px; height: 40px; display: flex; align-items: center;
+      justify-content: center; background: none; border: none;
+      cursor: pointer; padding: 0; margin: 0 auto;
       -webkit-tap-highlight-color: transparent;
     }
     .sl-circle {
@@ -594,12 +604,9 @@
     .sl-inp:focus { border-color: #111111; }
     .sl-inp--qty   { width: 64px; }
     .sl-inp--price { width: 78px; }
-    .sl-sub { font-weight: 700; color: #B2B0AD; white-space: nowrap;
-              font-variant-numeric: tabular-nums; }
+    .sl-sub { font-weight: 700; color: #B2B0AD; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .sl-sub--pos { color: #346538; }
-    @media (max-width: 600px) {
-      .sl-col-hide { display: none; }
-    }
+    @media (max-width: 600px) { .sl-col-hide { display: none; } }
   </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#111111">
@@ -626,6 +633,12 @@
         <button class="btn-templates" id="btn-templates">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="3" y="12" width="7" height="9" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/></svg>
           <span>Plantillas</span>
+        </button>
+        <button class="btn-view-toggle" id="btn-view-toggle" title="Cambiar vista">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="view-toggle-icon">
+            <rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/>
+          </svg>
+          <span id="view-toggle-label">Tabla</span>
         </button>
         <div class="export-wrap" id="export-wrap">
           <button class="btn-export" id="btn-export" aria-haspopup="true" aria-expanded="false">
