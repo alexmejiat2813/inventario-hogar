@@ -1,11 +1,12 @@
 'use strict';
 
 const dashState = {
-  data:       null,
-  budgetData: null,
-  period:     'month',
-  loading:    false,
-  loaded:     false,
+  data:          null,
+  budgetData:    null,
+  expiringData:  null,
+  period:        'month',
+  loading:       false,
+  loaded:        false,
 };
 
 let _chartMonthly  = null;
@@ -36,6 +37,10 @@ async function loadDashboard() {
       const br = await fetch(`/api/inventories/${state.inventory.id}/budget`);
       dashState.budgetData = br.ok ? await br.json() : null;
     } catch { dashState.budgetData = null; }
+    try {
+      const er = await fetch('/api/products/expiring?days=7');
+      dashState.expiringData = er.ok ? await er.json() : [];
+    } catch { dashState.expiringData = []; }
     renderDashboard(dashState.data);
   } catch {
     /* fail silently — skeletons will just stay hidden */
@@ -54,11 +59,43 @@ function showDashSkeletons(show) {
 // ── Render ─────────────────────────────────────────────────────
 function renderDashboard(data) {
   renderDashSummary(data.summary);
+  renderExpiryCard(dashState.expiringData || []);
   renderBudgetCard(dashState.budgetData);
   renderMonthlyChart(data.monthlySpend);
   renderCategoryChart(data.byCategory);
   renderStoreChart(data.byStore);
   renderTopProducts(data.topProducts);
+}
+
+function renderExpiryCard(products) {
+  const wrap = document.getElementById('dash-expiry-wrap');
+  if (!wrap) return;
+
+  if (!products.length) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  const rows = products.map(p => {
+    const d = p.days_left;
+    let cls, label;
+    if (d < 0)      { cls = 'expiry--expired'; label = t('dashboard.expiry.expired'); }
+    else if (d === 0) { cls = 'expiry--urgent';  label = t('dashboard.expiry.today'); }
+    else if (d === 1) { cls = 'expiry--urgent';  label = t('dashboard.expiry.tomorrow'); }
+    else if (d <= 3)  { cls = 'expiry--soon';    label = t('dashboard.expiry.inDays').replace('{{n}}', d); }
+    else              { cls = 'expiry--ok';       label = t('dashboard.expiry.inDays').replace('{{n}}', d); }
+    return `
+      <div class="dash-expiry-row">
+        <span class="dash-expiry-name">${escHtml(p.name)}</span>
+        <span class="expiry-badge ${cls}">${label}</span>
+      </div>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="dash-card">
+      <h3 class="dash-card-title">${t('dashboard.expiry.title')}</h3>
+      <div class="dash-expiry-list">${rows}</div>
+    </div>`;
 }
 
 function renderBudgetCard(summary) {

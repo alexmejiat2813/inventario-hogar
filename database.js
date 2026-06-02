@@ -832,6 +832,19 @@ module.exports = {
     ).run(id, inventoryId).changes > 0;
   },
 
+  getExpiringProducts(inventoryId, days = 7) {
+    return db.prepare(`
+      SELECT id, name, category, expiry_date,
+             CAST(julianday(expiry_date) - julianday('now','localtime') AS INTEGER) AS days_left
+      FROM products
+      WHERE inventory_id = ?
+        AND expiry_date IS NOT NULL
+        AND expiry_date != ''
+        AND julianday(expiry_date) <= julianday('now','localtime') + ?
+      ORDER BY expiry_date ASC
+    `).all(inventoryId, days);
+  },
+
   getStats(inventoryId) {
     const { total }    = db.prepare('SELECT COUNT(*) as total    FROM products WHERE inventory_id = ?').get(inventoryId);
     const { critical } = db.prepare('SELECT COUNT(*) as critical FROM products WHERE inventory_id = ? AND current_qty < min_qty').get(inventoryId);

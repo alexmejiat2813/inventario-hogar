@@ -581,7 +581,14 @@
     "topTitle": "Top 5 most purchased",
     "noData": "No data for this period",
     "thisMonthSpend": "Spent this month",
-    "vsLastMonth": "vs last month"
+    "vsLastMonth": "vs last month",
+    "expiry": {
+      "title": "🗓 Expiring soon (7 days)",
+      "expired": "Expired",
+      "today": "Expires today",
+      "tomorrow": "Tomorrow",
+      "inDays": "In {{n}} days"
+    }
   },
   "error": {
     "server": "Could not connect to the server",

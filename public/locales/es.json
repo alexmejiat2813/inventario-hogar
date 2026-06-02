@@ -581,7 +581,14 @@
     "topTitle": "Top 5 más comprados",
     "noData": "Sin datos para este período",
     "thisMonthSpend": "Gasto este mes",
-    "vsLastMonth": "vs mes anterior"
+    "vsLastMonth": "vs mes anterior",
+    "expiry": {
+      "title": "🗓 Próximos a vencer (7 días)",
+      "expired": "Vencido",
+      "today": "Vence hoy",
+      "tomorrow": "Mañana",
+      "inDays": "En {{n}} días"
+    }
   },
   "error": {
     "server": "No se pudo conectar con el servidor",

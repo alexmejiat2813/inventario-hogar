@@ -581,7 +581,14 @@
     "topTitle": "Top 5 plus achetés",
     "noData": "Aucune donnée pour cette période",
     "thisMonthSpend": "Dépenses ce mois",
-    "vsLastMonth": "vs mois précédent"
+    "vsLastMonth": "vs mois précédent",
+    "expiry": {
+      "title": "🗓 Bientôt périmés (7 jours)",
+      "expired": "Périmé",
+      "today": "Expire aujourd'hui",
+      "tomorrow": "Demain",
+      "inDays": "Dans {{n}} jours"
+    }
   },
   "error": {
     "server": "Impossible de se connecter au serveur",

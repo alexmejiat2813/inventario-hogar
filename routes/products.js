@@ -15,6 +15,13 @@ router.get('/', (req, res) => {
   } catch { res.status(500).json({ error: 'Error al obtener productos' }); }
 });
 
+router.get('/expiring', (req, res) => {
+  try {
+    const days = Math.min(Math.max(parseInt(req.query.days) || 7, 0), 90);
+    res.json(db.getExpiringProducts(req.inventoryId, days));
+  } catch { res.status(500).json({ error: 'Error al obtener productos por vencer' }); }
+});
+
 router.get('/:id', (req, res) => {
   try {
     const p = db.getById(parseInt(req.params.id));
