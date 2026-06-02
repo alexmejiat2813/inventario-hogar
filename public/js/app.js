@@ -1233,6 +1233,7 @@ function initEvents() {
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     closeProfileDropdown();
+    closeMobDrawer();
     if (!document.getElementById('photos-overlay').hidden) closePhotoViewer();
     if (!document.getElementById('modal-overlay').hidden)  closeModal();
     if (!document.getElementById('access-overlay').hidden) closeAccessModal();
@@ -1284,6 +1285,28 @@ function initEvents() {
     });
   }
 
+  // Mobile drawer
+  const ham     = document.getElementById('mob-ham');
+  const overlay = document.getElementById('mob-overlay');
+  const drawer  = document.getElementById('mob-drawer');
+  const dclose  = document.getElementById('mob-dclose');
+  if (ham && overlay && drawer) {
+    ham.addEventListener('click', openMobDrawer);
+    overlay.addEventListener('click', closeMobDrawer);
+    if (dclose) dclose.addEventListener('click', closeMobDrawer);
+
+    drawer.querySelectorAll('[data-mob-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchTab(btn.dataset.mobTab);
+        closeMobDrawer();
+      });
+    });
+    const mobCatalog = document.getElementById('mob-add-catalog');
+    const mobCustom  = document.getElementById('mob-add-custom');
+    if (mobCatalog) mobCatalog.addEventListener('click', () => { closeMobDrawer(); window.location.href = '/catalog'; });
+    if (mobCustom)  mobCustom.addEventListener('click', () => { closeMobDrawer(); openModal(); });
+  }
+
   // Budget banner dismiss
   const bannerDismiss = document.getElementById('budget-banner-dismiss');
   if (bannerDismiss) {
@@ -1299,6 +1322,27 @@ function initEvents() {
     updateInventoryHeader();
     render();
     if (!document.getElementById('access-overlay').hidden) loadAccessData();
+  });
+}
+
+// ── Mobile drawer ─────────────────────────────────────────────
+
+function openMobDrawer() {
+  syncMobDrawerActive();
+  document.getElementById('mob-overlay').classList.add('mob-show');
+  document.getElementById('mob-drawer').classList.add('mob-open');
+  document.getElementById('mob-drawer').setAttribute('aria-hidden', 'false');
+}
+
+function closeMobDrawer() {
+  document.getElementById('mob-overlay').classList.remove('mob-show');
+  document.getElementById('mob-drawer').classList.remove('mob-open');
+  document.getElementById('mob-drawer').setAttribute('aria-hidden', 'true');
+}
+
+function syncMobDrawerActive() {
+  document.querySelectorAll('#mob-drawer [data-mob-tab]').forEach(btn => {
+    btn.classList.toggle('mob-active', btn.dataset.mobTab === state.activeTab);
   });
 }
 
