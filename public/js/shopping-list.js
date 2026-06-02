@@ -834,7 +834,6 @@ function initEvents() {
   // Header buttons
   document.getElementById('btn-clear').addEventListener('click', clearList);
   document.getElementById('btn-register').addEventListener('click', openConfirmModal);
-  document.getElementById('btn-view-toggle').addEventListener('click', toggleView);
   document.getElementById('btn-templates').addEventListener('click', openTemplatesPanel);
 
   // Templates panel

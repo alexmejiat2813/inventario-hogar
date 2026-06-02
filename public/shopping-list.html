@@ -921,8 +921,7 @@
         + '<table><thead><tr><th></th><th>Producto</th><th style="text-align:right">Cantidad</th></tr></thead>'
         + '<tbody>' + rows + '</tbody></table>'
         + '<script>window.onload=function(){window.print();}<\/script>'
-        + '  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
-</body></html>';
+        + '<\/body><\/html>';
 
       var win = window.open('', '_blank');
       if (!win) { showExportToast('Permitir ventanas emergentes para exportar a PDF.', true); return; }
@@ -963,6 +962,14 @@
         document.body.removeChild(ta);
       }
     });
+
+    /* ── View toggle ── */
+    var btnViewToggle = document.getElementById('btn-view-toggle');
+    if (btnViewToggle) {
+      btnViewToggle.addEventListener('click', function () {
+        if (typeof toggleView === 'function') toggleView();
+      });
+    }
   })();
   </script>
 </body>
