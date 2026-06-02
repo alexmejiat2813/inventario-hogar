@@ -596,6 +596,36 @@
     .sl-sub--pos { color: #346538; }
     @media (max-width: 600px) { .sl-col-hide { display: none; } }
 
+    /* Custom items */
+    .sl-row--custom { background: #FAFAFA; }
+    .sl-del-btn {
+      width: 22px; height: 22px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #FDF2F2; border: 1px solid #FAD4D4; border-radius: 4px;
+      color: #9F2F2D; cursor: pointer; transition: background .12s; padding: 0;
+    }
+    .sl-del-btn:hover { background: #FADBDB; }
+
+    /* Add-item row */
+    .sl-add-row td { padding: .5rem .625rem; border-bottom: none; }
+    .sl-add-form { display: flex; align-items: center; gap: .5rem; }
+    .sl-add-input {
+      flex: 1; min-width: 0; max-width: 260px;
+      border: 1px dashed #EAEAEA; border-radius: 4px;
+      padding: .3rem .5rem; font-size: .82rem; color: #111111;
+      background: #FAFAFA; outline: none; transition: border-color .12s;
+    }
+    .sl-add-input:focus { border-color: #111111; background: white; }
+    .sl-add-input::placeholder { color: #B2B0AD; }
+    .sl-add-btn {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .3rem .6rem; background: white; color: #787774;
+      border: 1px solid #EAEAEA; border-radius: 4px;
+      font-size: .78rem; font-weight: 500; cursor: pointer;
+      transition: border-color .12s, color .12s; white-space: nowrap;
+    }
+    .sl-add-btn:hover { border-color: #111111; color: #111111; }
+
     /* ── Mobile drawer ── */
     .mob-ham {
       display: none; align-items: center; justify-content: center;

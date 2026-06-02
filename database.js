@@ -171,6 +171,15 @@ db.exec(`
     quantity     REAL    NOT NULL DEFAULT 1,
     unit         TEXT    NOT NULL DEFAULT 'unidades'
   );
+
+  CREATE TABLE IF NOT EXISTS shopping_list_custom_items (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id INTEGER NOT NULL REFERENCES inventories(id) ON DELETE CASCADE,
+    name         TEXT    NOT NULL,
+    checked      INTEGER NOT NULL DEFAULT 0,
+    checked_at   TEXT,
+    created_at   TEXT    DEFAULT (datetime('now','localtime'))
+  );
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -781,9 +790,36 @@ module.exports = {
   },
 
   clearShoppingList(inventoryId) {
-    db.prepare(
-      'UPDATE shopping_list_items SET checked = 0, checked_at = NULL WHERE inventory_id = ?'
-    ).run(inventoryId);
+    db.prepare('UPDATE shopping_list_items SET checked = 0, checked_at = NULL WHERE inventory_id = ?').run(inventoryId);
+    db.prepare('UPDATE shopping_list_custom_items SET checked = 0, checked_at = NULL WHERE inventory_id = ?').run(inventoryId);
+  },
+
+  // ── Custom shopping items ──────────────────────────────────────
+  getCustomShoppingItems(inventoryId) {
+    return db.prepare(
+      'SELECT * FROM shopping_list_custom_items WHERE inventory_id = ? ORDER BY created_at ASC'
+    ).all(inventoryId);
+  },
+
+  addCustomShoppingItem(inventoryId, name) {
+    const { lastInsertRowid } = db.prepare(
+      'INSERT INTO shopping_list_custom_items (inventory_id, name) VALUES (?, ?)'
+    ).run(inventoryId, name.trim());
+    return db.prepare('SELECT * FROM shopping_list_custom_items WHERE id = ?').get(lastInsertRowid);
+  },
+
+  setCustomShoppingItem(inventoryId, itemId, checked) {
+    db.prepare(`
+      UPDATE shopping_list_custom_items
+      SET checked = ?, checked_at = ?
+      WHERE id = ? AND inventory_id = ?
+    `).run(checked ? 1 : 0, checked ? new Date().toISOString() : null, itemId, inventoryId);
+  },
+
+  deleteCustomShoppingItem(inventoryId, itemId) {
+    return db.prepare(
+      'DELETE FROM shopping_list_custom_items WHERE id = ? AND inventory_id = ?'
+    ).run(itemId, inventoryId).changes > 0;
   },
 
   // ── Shopping list templates ────────────────────────────────────────────────

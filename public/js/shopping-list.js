@@ -8,11 +8,12 @@ const CAT_ORDER = ['Alimentos','Aseo','Alacena','Bebidas','Otros'];
 
 const state = {
   items:        [],
+  customItems:  [],
   inventory:    null,
   stores:       [],
   taxes:        [],
   budget:       null,
-  purchaseData: {},        // { [productId]: { storeId, quantityBought, unitPrice } }
+  purchaseData: {},        // regular: { [productId]: {...} }  custom: { ['c'+id]: {...} }
   selectedTaxIds: [],
   expandedItems: new Set(),
   receiptFile:  null,
@@ -107,12 +108,13 @@ async function loadBudget() {
 // ── Budget bar ────────────────────────────────────────────────
 
 function calcCartTotal() {
-  return state.items
+  const autoTotal = state.items
     .filter(i => i.checked)
-    .reduce((sum, item) => {
-      const sub = calcSubtotal(state.purchaseData[item.id] || {});
-      return sum + (sub || 0);
-    }, 0);
+    .reduce((sum, item) => sum + (calcSubtotal(state.purchaseData[item.id] || {}) || 0), 0);
+  const customTotal = state.customItems
+    .filter(i => i.checked)
+    .reduce((sum, item) => sum + (calcSubtotal(state.purchaseData['c' + item.id] || {}) || 0), 0);
+  return autoTotal + customTotal;
 }
 
 function updateBudgetBar() {
@@ -155,14 +157,16 @@ function render() {
   const empty    = document.getElementById('empty-state');
   const btnClear = document.getElementById('btn-clear');
 
-  const unchecked = state.items.filter(i => !i.checked);
-  const checked   = state.items.filter(i =>  i.checked);
-  const total     = state.items.length;
+  const unchecked       = state.items.filter(i => !i.checked);
+  const checked         = state.items.filter(i =>  i.checked);
+  const customUnchecked = state.customItems.filter(i => !i.checked);
+  const customChecked   = state.customItems.filter(i =>  i.checked);
+  const total = state.items.length + state.customItems.length;
 
-  document.getElementById('list-count').textContent =
-    unchecked.length > 0 ? `(${unchecked.length})` : '';
+  const pendingCount = unchecked.length + customUnchecked.length;
+  document.getElementById('list-count').textContent = pendingCount > 0 ? `(${pendingCount})` : '';
 
-  btnClear.hidden = checked.length === 0;
+  btnClear.hidden = checked.length === 0 && customChecked.length === 0;
   updateRegisterBtn();
 
   if (total === 0) {
@@ -171,16 +175,6 @@ function render() {
     return;
   }
   empty.hidden = true;
-
-  if (unchecked.length === 0 && checked.length > 0) {
-    listEl.innerHTML = `
-      <div class="all-checked">
-        <div class="all-checked-icon">🎉</div>
-        <p class="all-checked-text">${t('shopping.allChecked')}</p>
-      </div>`;
-    updateBudgetBar();
-    return;
-  }
 
   renderTable(listEl, unchecked);
   updateBudgetBar();
@@ -195,6 +189,26 @@ function renderTable(container, items) {
     a.name.localeCompare(b.name)
   );
   const sym = getCurrencySym();
+  const autoRows = sorted.length
+    ? sorted.map(renderTableRow).join('')
+    : '<tr><td colspan="9" style="text-align:center;padding:1.25rem;color:#B2B0AD;font-size:.85rem;">Todo el stock está al día ✓</td></tr>';
+
+  const customRows = state.customItems.map(renderCustomRow).join('');
+
+  const addRow = `
+    <tr class="sl-add-row">
+      <td colspan="9">
+        <form class="sl-add-form" id="sl-add-form">
+          <input class="sl-add-input" id="sl-add-input" type="text"
+                 placeholder="Agregar item…" maxlength="100" autocomplete="off">
+          <button type="submit" class="sl-add-btn">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar
+          </button>
+        </form>
+      </td>
+    </tr>`;
+
   container.innerHTML = `
     <div class="sl-wrap">
       <table class="sl-table">
@@ -209,10 +223,7 @@ function renderTable(container, items) {
           <th class="sl-th sl-th--r">Precio/u</th>
           <th class="sl-th sl-th--r">Subtotal</th>
         </tr></thead>
-        <tbody>${sorted.length
-          ? sorted.map(renderTableRow).join('')
-          : '<tr><td colspan="9" style="text-align:center;padding:2rem;color:#B2B0AD;font-size:.85rem;">Todo el stock está al día ✓</td></tr>'
-        }</tbody>
+        <tbody>${autoRows}${customRows}${addRow}</tbody>
       </table>
     </div>`;
 }
@@ -260,6 +271,107 @@ function renderTableRow(item) {
         <span class="sl-sub${sub != null ? ' sl-sub--pos' : ''}" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
       </td>
     </tr>`;
+}
+
+function renderCustomRow(item) {
+  const pd  = state.purchaseData['c' + item.id] || {};
+  const sub = calcSubtotal(pd);
+  const storeOptions = [
+    `<option value="">—</option>`,
+    ...state.stores.map(s =>
+      `<option value="${s.id}" ${+pd.storeId === s.id ? 'selected' : ''}>${esc(s.emoji)} ${esc(s.name)}</option>`
+    ),
+  ].join('');
+
+  return `
+    <tr class="sl-row sl-row--custom${item.checked ? ' sl-row--checked' : ''}" data-custom-id="${item.id}">
+      <td class="sl-td sl-td--check">
+        <button class="sl-cbtn" data-action="check-custom" data-id="${item.id}" aria-label="Marcar">
+          <span class="sl-circle">
+            ${item.checked ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          </span>
+        </button>
+      </td>
+      <td class="sl-td"><span style="color:#B2B0AD;font-size:.73rem;">—</span></td>
+      <td class="sl-td"><span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span></td>
+      <td class="sl-td sl-td--r sl-col-hide" style="color:#B2B0AD">—</td>
+      <td class="sl-td sl-td--r sl-col-hide" style="color:#B2B0AD">—</td>
+      <td class="sl-td">
+        <select class="sl-sel" data-field="store" data-custom-id="${item.id}">${storeOptions}</select>
+      </td>
+      <td class="sl-td sl-td--r">
+        <input class="sl-inp sl-inp--qty" type="number" min="0" step="0.01"
+               data-field="qty" data-custom-id="${item.id}"
+               value="${pd.quantityBought != null ? pd.quantityBought : ''}">
+      </td>
+      <td class="sl-td sl-td--r">
+        <input class="sl-inp sl-inp--price" type="number" min="0" step="0.01"
+               data-field="price" data-custom-id="${item.id}"
+               value="${pd.unitPrice != null ? pd.unitPrice : ''}">
+      </td>
+      <td class="sl-td sl-td--r">
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:.4rem;">
+          <span class="sl-sub${sub != null ? ' sl-sub--pos' : ''}" data-subtotal="c${item.id}">${getSubtotalStr(pd)}</span>
+          <button class="sl-del-btn" data-action="delete-custom" data-id="${item.id}" title="Eliminar item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+}
+
+function handleCustomFieldChange(field, customId, value) {
+  const key = 'c' + customId;
+  if (!state.purchaseData[key]) state.purchaseData[key] = {};
+  const pd = state.purchaseData[key];
+  if (field === 'store')       pd.storeId        = value ? +value : null;
+  else if (field === 'qty')    pd.quantityBought  = value !== '' ? +value : null;
+  else if (field === 'price')  pd.unitPrice       = value !== '' ? +value : null;
+
+  const el = document.querySelector(`[data-subtotal="c${customId}"]`);
+  if (el) {
+    const sub = calcSubtotal(pd);
+    el.textContent = sub != null ? getCurrencySym() + ' ' + sub.toFixed(2) : '—';
+    el.classList.toggle('sl-sub--pos', sub != null);
+  }
+  updateBudgetBar();
+}
+
+async function checkCustomItem(id) {
+  const item = state.customItems.find(i => i.id === id);
+  if (!item) return;
+  const wasChecked = item.checked;
+  item.checked = !wasChecked;
+  render();
+  try {
+    await apiFetch('PUT', `/api/shopping/custom/${id}`, { checked: !wasChecked });
+  } catch (err) {
+    item.checked = wasChecked;
+    render();
+    showToast(err.message, 'error');
+  }
+}
+
+async function addCustomItem(name) {
+  try {
+    const item = await apiFetch('POST', '/api/shopping/custom', { name });
+    if (!item) return;
+    state.customItems.push(item);
+    render();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteCustomItem(id) {
+  try {
+    await apiFetch('DELETE', `/api/shopping/custom/${id}`);
+    delete state.purchaseData['c' + id];
+    state.customItems = state.customItems.filter(i => i.id !== id);
+    render();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 // ── Actions ───────────────────────────────────────────────────
@@ -320,7 +432,7 @@ function handleFieldChange(field, productId, value) {
 function updateRegisterBtn() {
   const btn = document.getElementById('btn-register');
   if (!btn) return;
-  const hasChecked = state.items.some(i => i.checked);
+  const hasChecked = state.items.some(i => i.checked) || state.customItems.some(i => i.checked);
   btn.disabled = !hasChecked;
   btn.classList.toggle('btn-register--active', hasChecked);
 }
@@ -329,6 +441,7 @@ async function clearList() {
   try {
     await apiFetch('DELETE', '/api/shopping');
     state.items.forEach(i => { i.checked = false; });
+    state.customItems.forEach(i => { i.checked = false; });
     state.purchaseData = {};
     state.expandedItems.clear();
     render();
@@ -341,8 +454,9 @@ async function clearList() {
 // ── Confirmation modal ────────────────────────────────────────
 
 function openConfirmModal() {
-  const checkedItems = state.items.filter(i => i.checked);
-  if (!checkedItems.length) return;
+  const checkedItems  = state.items.filter(i => i.checked);
+  const checkedCustom = state.customItems.filter(i => i.checked);
+  if (!checkedItems.length && !checkedCustom.length) return;
 
   if (state.budget?.config?.monthly_amount) {
     const cartTotal  = calcCartTotal();
@@ -361,14 +475,15 @@ function openConfirmModal() {
 }
 
 function showConfirmModal() {
-  const checkedItems = state.items.filter(i => i.checked);
-  if (!checkedItems.length) return;
+  const checkedItems  = state.items.filter(i => i.checked);
+  const checkedCustom = state.customItems.filter(i => i.checked);
+  if (!checkedItems.length && !checkedCustom.length) return;
 
   state.selectedTaxIds = state.taxes.map(tx => tx.id);
 
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('confirm-date').textContent = formatDate(today);
-  document.getElementById('confirm-items').innerHTML = buildConfirmItems(checkedItems);
+  document.getElementById('confirm-items').innerHTML = buildConfirmItems(checkedItems, checkedCustom);
   renderTaxSection();
   state.receiptFile = null;
   document.getElementById('receipt-input').value = '';
@@ -385,12 +500,17 @@ function closeBudgetWarning() {
   document.getElementById('budget-warning-overlay').hidden = true;
 }
 
-function buildConfirmItems(checkedItems) {
+function buildConfirmItems(checkedItems, checkedCustom = []) {
   const sym = getCurrencySym();
   const groups = {};
 
-  checkedItems.forEach(item => {
-    const pd  = state.purchaseData[item.id] || {};
+  const allItems = [
+    ...checkedItems.map(i => ({ ...i, _pdKey: i.id })),
+    ...checkedCustom.map(i => ({ ...i, _pdKey: 'c' + i.id, unit: 'unidades' })),
+  ];
+
+  allItems.forEach(item => {
+    const pd  = state.purchaseData[item._pdKey] || {};
     const key = pd.storeId ? String(pd.storeId) : '__none__';
     if (!groups[key]) {
       groups[key] = {
@@ -434,10 +554,12 @@ function renderTaxSection() {
   const section = document.getElementById('confirm-tax-section');
   if (!section) return;
 
-  const checkedItems = state.items.filter(i => i.checked);
-  const subtotal = checkedItems.reduce((sum, item) => {
-    return sum + (calcSubtotal(state.purchaseData[item.id] || {}) || 0);
-  }, 0);
+  const checkedItems  = state.items.filter(i => i.checked);
+  const checkedCustom = state.customItems.filter(i => i.checked);
+  const subtotal = [
+    ...checkedItems.map(i => calcSubtotal(state.purchaseData[i.id] || {}) || 0),
+    ...checkedCustom.map(i => calcSubtotal(state.purchaseData['c' + i.id] || {}) || 0),
+  ].reduce((s, v) => s + v, 0);
 
   const sym = getCurrencySym();
   let html = '';
@@ -489,8 +611,9 @@ function renderTaxSection() {
 }
 
 async function handleConfirm() {
-  const checkedItems = state.items.filter(i => i.checked);
-  if (!checkedItems.length) return;
+  const checkedItems  = state.items.filter(i => i.checked);
+  const checkedCustom = state.customItems.filter(i => i.checked);
+  if (!checkedItems.length && !checkedCustom.length) return;
 
   const btn = document.getElementById('btn-confirm-save');
   btn.disabled = true;
@@ -498,20 +621,36 @@ async function handleConfirm() {
 
   try {
     const today = new Date().toISOString().slice(0, 10);
-    const items = checkedItems.map(item => {
-      const pd   = state.purchaseData[item.id] || {};
-      const base = pd.quantityBought != null && pd.unitPrice != null
-        ? +pd.quantityBought * +pd.unitPrice : null;
-      return {
-        productId:      item.id,
-        productName:    item.name,
-        storeId:        pd.storeId    || null,
-        quantityBought: pd.quantityBought != null ? +pd.quantityBought : 0,
-        unit:           item.unit,
-        unitPrice:      pd.unitPrice  != null ? +pd.unitPrice : null,
-        subtotal:       base,
-      };
-    });
+    const items = [
+      ...checkedItems.map(item => {
+        const pd   = state.purchaseData[item.id] || {};
+        const base = pd.quantityBought != null && pd.unitPrice != null
+          ? +pd.quantityBought * +pd.unitPrice : null;
+        return {
+          productId:      item.id,
+          productName:    item.name,
+          storeId:        pd.storeId    || null,
+          quantityBought: pd.quantityBought != null ? +pd.quantityBought : 0,
+          unit:           item.unit,
+          unitPrice:      pd.unitPrice  != null ? +pd.unitPrice : null,
+          subtotal:       base,
+        };
+      }),
+      ...checkedCustom.map(item => {
+        const pd   = state.purchaseData['c' + item.id] || {};
+        const base = pd.quantityBought != null && pd.unitPrice != null
+          ? +pd.quantityBought * +pd.unitPrice : null;
+        return {
+          productId:      null,
+          productName:    item.name,
+          storeId:        pd.storeId    || null,
+          quantityBought: pd.quantityBought != null ? +pd.quantityBought : 0,
+          unit:           'unidades',
+          unitPrice:      pd.unitPrice  != null ? +pd.unitPrice : null,
+          subtotal:       base,
+        };
+      }),
+    ];
 
     const session = await apiFetch('POST', '/api/purchases', {
       items,
@@ -529,7 +668,15 @@ async function handleConfirm() {
       });
     }
 
-    // Clear checked items and purchaseData
+    // Uncheck custom items (they persist for reuse)
+    await Promise.all(
+      state.customItems.filter(i => i.checked).map(i =>
+        apiFetch('PUT', `/api/shopping/custom/${i.id}`, { checked: false })
+      )
+    );
+    state.customItems.forEach(i => { i.checked = false; });
+
+    // Clear auto items and purchaseData
     await apiFetch('DELETE', '/api/shopping');
     state.items.forEach(i => { i.checked = false; });
     state.purchaseData = {};
@@ -595,6 +742,11 @@ function showToast(message, type = 'success') {
 }
 
 // ── Templates ─────────────────────────────────────────────────
+
+async function loadCustomItems() {
+  const items = await apiFetch('GET', '/api/shopping/custom');
+  state.customItems = items || [];
+}
 
 async function loadTemplates() {
   try {
@@ -737,21 +889,41 @@ function initEvents() {
     if (btn.dataset.tplAction === 'delete') deleteTplById(id);
   });
 
-  // Table delegation (check, field change)
+  // Table delegation (check, field change, custom actions)
   const listEl = document.getElementById('shopping-list');
   listEl.addEventListener('click', e => {
-    const checkBtn = e.target.closest('[data-action="check"]');
-    if (checkBtn) checkItem(parseInt(checkBtn.dataset.id));
+    const checkBtn    = e.target.closest('[data-action="check"]');
+    const checkCustom = e.target.closest('[data-action="check-custom"]');
+    const delCustom   = e.target.closest('[data-action="delete-custom"]');
+    if (checkBtn)    checkItem(parseInt(checkBtn.dataset.id));
+    if (checkCustom) checkCustomItem(parseInt(checkCustom.dataset.id));
+    if (delCustom)   deleteCustomItem(parseInt(delCustom.dataset.id));
+  });
+  listEl.addEventListener('submit', e => {
+    const form = e.target.closest('#sl-add-form');
+    if (!form) return;
+    e.preventDefault();
+    const input = document.getElementById('sl-add-input');
+    const name  = input?.value.trim();
+    if (name) { addCustomItem(name); if (input) input.value = ''; }
   });
   listEl.addEventListener('change', e => {
     const el = e.target.closest('[data-field]');
     if (!el) return;
-    handleFieldChange(el.dataset.field, parseInt(el.dataset.id), el.value);
+    if (el.dataset.customId) {
+      handleCustomFieldChange(el.dataset.field, parseInt(el.dataset.customId), el.value);
+    } else {
+      handleFieldChange(el.dataset.field, parseInt(el.dataset.id), el.value);
+    }
   });
   listEl.addEventListener('input', e => {
     const el = e.target.closest('[data-field]');
     if (!el || el.tagName === 'SELECT') return;
-    handleFieldChange(el.dataset.field, parseInt(el.dataset.id), el.value);
+    if (el.dataset.customId) {
+      handleCustomFieldChange(el.dataset.field, parseInt(el.dataset.customId), el.value);
+    } else {
+      handleFieldChange(el.dataset.field, parseInt(el.dataset.id), el.value);
+    }
   });
 
   // Budget warning modal
@@ -812,7 +984,7 @@ async function init() {
     const ok = await loadInventory();
     if (!ok) return;
     await loadStores(); // must finish before loadList() renders the store dropdowns
-    await Promise.all([loadList(), loadTaxes(), loadBudget(), loadTemplates()]);
+    await Promise.all([loadList(), loadCustomItems(), loadTaxes(), loadBudget(), loadTemplates()]);
   } catch (err) {
     console.error(err);
     showToast(tSafe('shopping.loadError', 'Error al cargar'), 'error');
