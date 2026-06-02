@@ -159,6 +159,9 @@ app.use('/css',      express.static(path.join(__dirname, 'public/css')));
 app.use('/js',       express.static(path.join(__dirname, 'public/js')));
 app.use('/locales',  express.static(path.join(__dirname, 'public/locales')));
 app.use('/uploads',  express.static(path.join(__dirname, 'public/uploads')));
+app.use('/icons',    express.static(path.join(__dirname, 'public/icons')));
+app.get('/manifest.json', (req, res) => res.sendFile(path.join(__dirname, 'public/manifest.json')));
+app.get('/sw.js',         (req, res) => res.sendFile(path.join(__dirname, 'public/sw.js')));
 
 const CATALOG_CATEGORIES = ['Alimentos', 'Bebidas', 'Aseo Personal', 'Aseo del Hogar', 'Alacena'];
 
