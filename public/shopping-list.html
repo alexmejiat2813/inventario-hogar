@@ -967,8 +967,11 @@
     var btnViewToggle = document.getElementById('btn-view-toggle');
     if (btnViewToggle) {
       btnViewToggle.addEventListener('click', function () {
+        console.log('[btn-view-toggle] click, toggleView exists=', typeof toggleView === 'function');
         if (typeof toggleView === 'function') toggleView();
       });
+    } else {
+      console.error('[btn-view-toggle] element NOT FOUND in DOM');
     }
   })();
   </script>

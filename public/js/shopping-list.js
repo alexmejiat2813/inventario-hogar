@@ -168,7 +168,9 @@ function render() {
 
   if (state.viewMode === 'table') {
     empty.hidden = true;
+    console.log('[render] table mode, unchecked=', unchecked.length);
     renderTable(container, unchecked);
+    console.log('[render] container.innerHTML length=', container.innerHTML.length);
     updateBudgetBar();
     return;
   }
@@ -292,6 +294,7 @@ function renderItem(item) {
 // ── Table view ────────────────────────────────────────────────
 
 function renderTable(container, items) {
+  console.log('[renderTable] called, items=', items.length, 'container=', container?.id);
   const CAT_RANK = Object.fromEntries(CAT_ORDER.map((c, i) => [c, i]));
   const sorted = items.slice().sort((a, b) =>
     ((CAT_RANK[a.category] ?? 99) - (CAT_RANK[b.category] ?? 99)) ||
@@ -366,6 +369,7 @@ function renderTableRow(item) {
 function toggleView() {
   state.viewMode = state.viewMode === 'list' ? 'table' : 'list';
   localStorage.setItem('sl-view-mode', state.viewMode);
+  console.log('[toggle] viewMode=', state.viewMode, 'items=', state.items.length);
   updateViewToggleBtn();
   render();
 }
