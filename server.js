@@ -6,6 +6,7 @@ const passport = require('./auth');
 
 const { requireAuthApi }   = require('./middleware/auth');
 const { requireInventory } = require('./middleware/inventory');
+const SQLiteStore          = require('./middleware/session-store');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 app.use(session({
+  store:             new SQLiteStore(),
   secret:            process.env.SESSION_SECRET || 'dev-secret',
   resave:            false,
   saveUninitialized: false,
