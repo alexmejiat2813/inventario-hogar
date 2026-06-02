@@ -166,6 +166,13 @@ function render() {
   btnClear.hidden = checked.length === 0;
   updateRegisterBtn();
 
+  if (state.viewMode === 'table') {
+    empty.hidden = true;
+    renderTable(container, unchecked);
+    updateBudgetBar();
+    return;
+  }
+
   if (total === 0) {
     container.innerHTML = '';
     empty.hidden = false;
@@ -179,12 +186,6 @@ function render() {
         <div class="all-checked-icon">🎉</div>
         <p class="all-checked-text">${t('shopping.allChecked')}</p>
       </div>`;
-    updateBudgetBar();
-    return;
-  }
-
-  if (state.viewMode === 'table') {
-    renderTable(container, unchecked);
     updateBudgetBar();
     return;
   }
@@ -312,7 +313,10 @@ function renderTable(container, items) {
           <th class="sl-th sl-th--r">${sym}/u</th>
           <th class="sl-th sl-th--r">Subtotal</th>
         </tr></thead>
-        <tbody>${sorted.map(renderTableRow).join('')}</tbody>
+        <tbody>${sorted.length
+          ? sorted.map(renderTableRow).join('')
+          : `<tr><td colspan="10" style="text-align:center;padding:2rem;color:#B2B0AD;font-size:.85rem;">Todo el stock está al día</td></tr>`
+        }</tbody>
       </table>
     </div>`;
 }
