@@ -383,9 +383,17 @@ async function checkItem(productId) {
   const wasChecked = item.checked;
   item.checked = !wasChecked;
 
-  // Auto-expand on mobile when checking
-  if (!wasChecked && window.innerWidth < 600) {
-    state.expandedItems.add(productId);
+  // Al marcar: si no hay cantidad ingresada, prellenar con lo que falta
+  // (min - actual) para que la compra reponga el stock por defecto.
+  if (!wasChecked) {
+    if (!state.purchaseData[productId]) state.purchaseData[productId] = {};
+    const pd = state.purchaseData[productId];
+    if (pd.quantityBought == null || pd.quantityBought === '' || +pd.quantityBought === 0) {
+      const needed = +(item.min_qty - item.current_qty);
+      if (needed > 0) pd.quantityBought = fmtQty(needed);
+    }
+    // Auto-expand on mobile when checking
+    if (window.innerWidth < 600) state.expandedItems.add(productId);
   }
 
   render();
