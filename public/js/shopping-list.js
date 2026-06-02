@@ -152,9 +152,10 @@ function updateBudgetBar() {
 // ── Render ────────────────────────────────────────────────────
 
 function render() {
-  const container = document.getElementById('shopping-list');
-  const empty     = document.getElementById('empty-state');
-  const btnClear  = document.getElementById('btn-clear');
+  const listEl   = document.getElementById('shopping-list');
+  const tableEl  = document.getElementById('sl-table-wrap');
+  const empty    = document.getElementById('empty-state');
+  const btnClear = document.getElementById('btn-clear');
 
   const unchecked = state.items.filter(i => !i.checked);
   const checked   = state.items.filter(i =>  i.checked);
@@ -166,24 +167,29 @@ function render() {
   btnClear.hidden = checked.length === 0;
   updateRegisterBtn();
 
+  // ── Table mode ──────────────────────────────────────────────
   if (state.viewMode === 'table') {
-    empty.hidden = true;
-    console.log('[render] table mode, unchecked=', unchecked.length);
-    renderTable(container, unchecked);
-    console.log('[render] container.innerHTML length=', container.innerHTML.length);
+    empty.hidden   = true;
+    listEl.hidden  = true;
+    tableEl.hidden = false;
+    renderTable(tableEl, unchecked);
     updateBudgetBar();
     return;
   }
 
+  // ── List mode ────────────────────────────────────────────────
+  tableEl.hidden = true;
+  listEl.hidden  = false;
+
   if (total === 0) {
-    container.innerHTML = '';
+    listEl.innerHTML = '';
     empty.hidden = false;
     return;
   }
   empty.hidden = true;
 
   if (unchecked.length === 0 && checked.length > 0) {
-    container.innerHTML = `
+    listEl.innerHTML = `
       <div class="all-checked">
         <div class="all-checked-icon">🎉</div>
         <p class="all-checked-text">${t('shopping.allChecked')}</p>
@@ -192,16 +198,13 @@ function render() {
     return;
   }
 
-  // Group unchecked by category
   const byCategory = {};
   unchecked.forEach(item => {
     (byCategory[item.category] = byCategory[item.category] || []).push(item);
   });
-
-  // Also show categories not in CAT_ORDER
   const allCats = [...CAT_ORDER, ...Object.keys(byCategory).filter(c => !CAT_ORDER.includes(c))];
 
-  container.innerHTML = allCats
+  listEl.innerHTML = allCats
     .filter(cat => byCategory[cat])
     .map(cat => `
       <section class="cat-group">
@@ -294,7 +297,6 @@ function renderItem(item) {
 // ── Table view ────────────────────────────────────────────────
 
 function renderTable(container, items) {
-  console.log('[renderTable] called, items=', items.length, 'container=', container?.id);
   const CAT_RANK = Object.fromEntries(CAT_ORDER.map((c, i) => [c, i]));
   const sorted = items.slice().sort((a, b) =>
     ((CAT_RANK[a.category] ?? 99) - (CAT_RANK[b.category] ?? 99)) ||
@@ -369,7 +371,6 @@ function renderTableRow(item) {
 function toggleView() {
   state.viewMode = state.viewMode === 'list' ? 'table' : 'list';
   localStorage.setItem('sl-view-mode', state.viewMode);
-  console.log('[toggle] viewMode=', state.viewMode, 'items=', state.items.length);
   updateViewToggleBtn();
   render();
 }
@@ -858,25 +859,30 @@ function initEvents() {
     if (btn.dataset.tplAction === 'delete') deleteTplById(id);
   });
 
-  // List delegation (check, expand, field change)
-  const listEl = document.getElementById('shopping-list');
-  listEl.addEventListener('click', e => {
+  // List + table delegation (check, expand, field change)
+  function onListClick(e) {
     const checkBtn  = e.target.closest('[data-action="check"]');
     const expandBtn = e.target.closest('[data-action="expand"]');
     if (checkBtn)  checkItem(parseInt(checkBtn.dataset.id));
     if (expandBtn) toggleExpand(parseInt(expandBtn.dataset.id));
-  });
-
-  listEl.addEventListener('change', e => {
+  }
+  function onListChange(e) {
     const el = e.target.closest('[data-field]');
     if (!el) return;
     handleFieldChange(el.dataset.field, parseInt(el.dataset.id), el.value);
-  });
-
-  listEl.addEventListener('input', e => {
+  }
+  function onListInput(e) {
     const el = e.target.closest('[data-field]');
     if (!el || el.tagName === 'SELECT') return;
     handleFieldChange(el.dataset.field, parseInt(el.dataset.id), el.value);
+  }
+
+  const listEl   = document.getElementById('shopping-list');
+  const tableWrap = document.getElementById('sl-table-wrap');
+  [listEl, tableWrap].forEach(el => {
+    el.addEventListener('click',  onListClick);
+    el.addEventListener('change', onListChange);
+    el.addEventListener('input',  onListInput);
   });
 
   // Budget warning modal

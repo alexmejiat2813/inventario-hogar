@@ -634,8 +634,9 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="3" y="12" width="7" height="9" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/></svg>
           <span>Plantillas</span>
         </button>
-        <button class="btn-view-toggle" id="btn-view-toggle" title="Cambiar vista">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="view-toggle-icon">
+        <button class="btn-view-toggle" id="btn-view-toggle" title="Cambiar vista"
+                onclick="if(typeof toggleView==='function')toggleView()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/>
           </svg>
           <span id="view-toggle-label">Tabla</span>
@@ -711,6 +712,7 @@
       <p class="empty-sub" data-i18n="shopping.empty.sub">Ningún producto está por debajo del mínimo.</p>
     </div>
     <div id="shopping-list"></div>
+    <div id="sl-table-wrap" hidden></div>
   </main>
 
   <!-- Modal: advertencia de presupuesto -->
@@ -963,16 +965,6 @@
       }
     });
 
-    /* ── View toggle ── */
-    var btnViewToggle = document.getElementById('btn-view-toggle');
-    if (btnViewToggle) {
-      btnViewToggle.addEventListener('click', function () {
-        console.log('[btn-view-toggle] click, toggleView exists=', typeof toggleView === 'function');
-        if (typeof toggleView === 'function') toggleView();
-      });
-    } else {
-      console.error('[btn-view-toggle] element NOT FOUND in DOM');
-    }
   })();
   </script>
 </body>
