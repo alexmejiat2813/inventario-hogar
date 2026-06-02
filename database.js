@@ -906,7 +906,7 @@ module.exports = {
       // Invoice-level taxes: look up each tax and apply to the total subtotal
       const groups = {};
       taxIds.forEach(taxId => {
-        const tax = db.prepare('SELECT * FROM taxes WHERE id = ? AND inventory_id = ?').get(+taxId, inventoryId);
+        const tax = db.prepare('SELECT * FROM tax_types WHERE id = ? AND inventory_id = ?').get(+taxId, inventoryId);
         if (tax) {
           const amt = subtotalBeforeTax * (+tax.rate / 100);
           totalTax += amt;
