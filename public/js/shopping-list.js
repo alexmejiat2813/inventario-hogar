@@ -14,7 +14,6 @@ const state = {
   budget:       null,
   purchaseData: {},        // { [productId]: { storeId, quantityBought, unitPrice } }
   selectedTaxIds: [],
-  expandedItems: new Set(),
   receiptFile:  null,
   templates:    [],
 };
@@ -178,106 +177,95 @@ function render() {
         <div class="all-checked-icon">🎉</div>
         <p class="all-checked-text">${t('shopping.allChecked')}</p>
       </div>`;
+    updateBudgetBar();
     return;
   }
 
-  // Group unchecked by category
-  const byCategory = {};
-  unchecked.forEach(item => {
-    (byCategory[item.category] = byCategory[item.category] || []).push(item);
-  });
+  const CAT_RANK = Object.fromEntries(CAT_ORDER.map((c, i) => [c, i]));
+  const sorted = [
+    ...unchecked.sort((a, b) =>
+      ((CAT_RANK[a.category] ?? 99) - (CAT_RANK[b.category] ?? 99)) ||
+      a.name.localeCompare(b.name)
+    ),
+    ...checked,
+  ];
 
-  // Also show categories not in CAT_ORDER
-  const allCats = [...CAT_ORDER, ...Object.keys(byCategory).filter(c => !CAT_ORDER.includes(c))];
+  const sym = getCurrencySym();
 
-  container.innerHTML = allCats
-    .filter(cat => byCategory[cat])
-    .map(cat => `
-      <section class="cat-group">
-        <div class="cat-group-header">
-          <span class="cat-group-icon">${CAT_ICONS[cat] || '📦'}</span>
-          <span class="cat-group-name">${tSafe('cat.' + cat, cat)}</span>
-          <span class="cat-group-count">${byCategory[cat].length}</span>
-        </div>
-        <div class="cat-group-items">
-          ${byCategory[cat].map(renderItem).join('')}
-        </div>
-      </section>
-    `).join('');
+  container.innerHTML = `
+    <div class="sl-wrap">
+      <table class="sl-table">
+        <thead>
+          <tr>
+            <th class="sl-th"></th>
+            <th class="sl-th">Producto</th>
+            <th class="sl-th sl-th--hide">Categoría</th>
+            <th class="sl-th sl-th--right sl-th--hide">Tiene</th>
+            <th class="sl-th sl-th--right sl-th--hide">Mín</th>
+            <th class="sl-th sl-th--right">Faltan</th>
+            <th class="sl-th">Tienda</th>
+            <th class="sl-th sl-th--right">Cant.</th>
+            <th class="sl-th sl-th--right">${sym}/u</th>
+            <th class="sl-th sl-th--right">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(renderRow).join('')}
+        </tbody>
+      </table>
+    </div>`;
 
   updateBudgetBar();
 }
 
-function renderItem(item) {
-  const needed     = fmtQty(item.needed);
-  const unit       = tSafe('units.' + item.unit, item.unit);
-  const isExpanded = state.expandedItems.has(item.id);
-  const pd         = state.purchaseData[item.id] || {};
-  const sym        = getCurrencySym();
+function renderRow(item) {
+  const needed = fmtQty(item.needed);
+  const unit   = tSafe('units.' + item.unit, item.unit);
+  const pd     = state.purchaseData[item.id] || {};
+  const sub    = calcSubtotal(pd);
 
   const storeOptions = [
-    `<option value="">${tSafe('shopping.fields.storePlaceholder','— Opcional —')}</option>`,
+    `<option value="">—</option>`,
     ...state.stores.map(s =>
       `<option value="${s.id}" ${+pd.storeId === s.id ? 'selected' : ''}>${esc(s.emoji)} ${esc(s.name)}</option>`
     ),
   ].join('');
 
-  const sub = calcSubtotal(pd);
-
   return `
-    <div class="list-item ${item.checked ? 'list-item--checked' : ''}" data-id="${item.id}">
-      <div class="item-main">
-        <button class="item-check-btn" data-action="check" data-id="${item.id}" aria-label="Marcar como comprado">
-          <span class="check-circle">
-            ${item.checked ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+    <tr class="sl-row${item.checked ? ' sl-row--checked' : ''}" data-id="${item.id}">
+      <td class="sl-td sl-td--check">
+        <button class="sl-check-btn" data-action="check" data-id="${item.id}" aria-label="Marcar">
+          <span class="sl-circle">
+            ${item.checked ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
           </span>
         </button>
-        <div class="item-body">
-          <span class="item-name ${item.checked ? 'item-name--checked' : ''}">${esc(item.name)}</span>
-          <span class="item-meta">
-            ${tSafe('shopping.have','Tenés')} <strong>${fmtQty(item.current_qty)} ${unit}</strong>
-            · ${tSafe('shopping.min','mín')} <strong>${fmtQty(item.min_qty)} ${unit}</strong>
-          </span>
-          <span class="item-needed">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
-            ${tSafe('shopping.missing','Faltan')} ${needed} ${unit}
-          </span>
-        </div>
-        <button class="item-expand-btn ${isExpanded ? 'item-expand-btn--open' : ''}" data-action="expand" data-id="${item.id}" aria-label="Ver campos de compra">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-      </div>
-      <div class="item-fields" ${isExpanded ? '' : 'hidden'}>
-        <div class="fields-grid">
-          <div class="field-col">
-            <label class="field-label">${tSafe('shopping.fields.store','Establecimiento')}</label>
-            <select class="field-select" data-field="store" data-id="${item.id}">${storeOptions}</select>
-          </div>
-          <div class="field-col">
-            <label class="field-label">${tSafe('shopping.fields.qtyBought','Cant.')}</label>
-            <div class="field-qty-wrap">
-              <input class="field-qty" type="number" min="0" step="0.01"
-                     data-field="qty" data-id="${item.id}"
-                     value="${pd.quantityBought != null ? pd.quantityBought : ''}">
-              <span class="field-unit">${unit}</span>
-            </div>
-          </div>
-          <div class="field-col">
-            <label class="field-label">${tSafe('shopping.fields.unitPrice','Precio unit.')}</label>
-            <div class="field-price-wrap">
-              <span class="field-sym">${sym}</span>
-              <input class="field-price" type="number" min="0" step="0.01"
-                     data-field="price" data-id="${item.id}"
-                     value="${pd.unitPrice != null ? pd.unitPrice : ''}">
-            </div>
-          </div>
-          <div class="field-col">
-            <label class="field-label">${tSafe('shopping.fields.subtotal','Subtotal')}</label>
-            <span class="field-subtotal ${sub != null ? 'field-subtotal--pos' : ''}" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
-          </div>
-        </div>
-      </div>
-    </div>`;
+      </td>
+      <td class="sl-td">
+        <span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span>
+      </td>
+      <td class="sl-td sl-td--hide">
+        <span class="sl-cat">${CAT_ICONS[item.category] || '📦'} ${tSafe('cat.' + item.category, item.category)}</span>
+      </td>
+      <td class="sl-td sl-td--num sl-td--hide">${fmtQty(item.current_qty)} <span class="sl-unit">${unit}</span></td>
+      <td class="sl-td sl-td--num sl-td--hide">${fmtQty(item.min_qty)} <span class="sl-unit">${unit}</span></td>
+      <td class="sl-td sl-td--num"><strong class="sl-missing">${needed}</strong> <span class="sl-unit">${unit}</span></td>
+      <td class="sl-td">
+        <select class="sl-select" data-field="store" data-id="${item.id}">${storeOptions}</select>
+      </td>
+      <td class="sl-td sl-td--num">
+        <input class="sl-qty" type="number" min="0" step="0.01"
+               data-field="qty" data-id="${item.id}"
+               value="${pd.quantityBought != null ? pd.quantityBought : ''}">
+      </td>
+      <td class="sl-td sl-td--num">
+        <input class="sl-price" type="number" min="0" step="0.01"
+               data-field="price" data-id="${item.id}"
+               value="${pd.unitPrice != null ? pd.unitPrice : ''}">
+      </td>
+      <td class="sl-td sl-td--num">
+        <span class="sl-subtotal${sub != null ? ' sl-subtotal--pos' : ''}" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
+      </td>
+    </tr>`;
 }
 
 // ── Actions ───────────────────────────────────────────────────
@@ -288,12 +276,6 @@ async function checkItem(productId) {
 
   const wasChecked = item.checked;
   item.checked = !wasChecked;
-
-  // Auto-expand on mobile when checking
-  if (!wasChecked && window.innerWidth < 600) {
-    state.expandedItems.add(productId);
-  }
-
   render();
 
   try {
@@ -305,14 +287,6 @@ async function checkItem(productId) {
   }
 }
 
-function toggleExpand(productId) {
-  if (state.expandedItems.has(productId)) {
-    state.expandedItems.delete(productId);
-  } else {
-    state.expandedItems.add(productId);
-  }
-  render();
-}
 
 function handleFieldChange(field, productId, value) {
   if (!state.purchaseData[productId]) state.purchaseData[productId] = {};
@@ -348,7 +322,6 @@ async function clearList() {
     await apiFetch('DELETE', '/api/shopping');
     state.items.forEach(i => { i.checked = false; });
     state.purchaseData = {};
-    state.expandedItems.clear();
     render();
     showToast(t('shopping.reset'));
   } catch (err) {
@@ -551,7 +524,6 @@ async function handleConfirm() {
     await apiFetch('DELETE', '/api/shopping');
     state.items.forEach(i => { i.checked = false; });
     state.purchaseData = {};
-    state.expandedItems.clear();
     state.receiptFile = null;
 
     closeConfirmModal();
@@ -703,7 +675,6 @@ async function applyTemplate(templateId) {
       const item = state.items.find(i => i.id === ti.product_id);
       if (!item) return;
       item.checked = true;
-      state.expandedItems.add(item.id);
       if (!state.purchaseData[item.id]) state.purchaseData[item.id] = {};
       if (ti.quantity) state.purchaseData[item.id].quantityBought = ti.quantity;
       checks.push(apiFetch('PUT', `/api/shopping/${item.id}`, { checked: true }));
@@ -758,10 +729,8 @@ function initEvents() {
   // List delegation (check, expand, field change)
   const listEl = document.getElementById('shopping-list');
   listEl.addEventListener('click', e => {
-    const checkBtn  = e.target.closest('[data-action="check"]');
-    const expandBtn = e.target.closest('[data-action="expand"]');
-    if (checkBtn)  checkItem(parseInt(checkBtn.dataset.id));
-    if (expandBtn) toggleExpand(parseInt(expandBtn.dataset.id));
+    const checkBtn = e.target.closest('[data-action="check"]');
+    if (checkBtn) checkItem(parseInt(checkBtn.dataset.id));
   });
 
   listEl.addEventListener('change', e => {
