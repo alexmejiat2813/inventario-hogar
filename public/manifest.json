@@ -1,0 +1,20 @@
+{
+  "name": "Inventario Hogar",
+  "short_name": "IH",
+  "description": "Gestión de inventario doméstico",
+  "start_url": "/inventories",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#111111",
+  "background_color": "#FBFBFA",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"]
+}

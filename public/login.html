@@ -190,6 +190,11 @@
     .lang-check { display: none; font-size: .65rem; }
     .lang-btn.lang-active .lang-check { display: inline; }
   </style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IH">
 </head>
 <body>
   <div class="card">
@@ -253,5 +258,6 @@
       }
     });
   </script>
+  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
 </body>
 </html>

@@ -534,6 +534,11 @@
       font-weight: 400;
     }
   </style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IH">
 </head>
 <body>
 
@@ -836,7 +841,8 @@
         + '<table><thead><tr><th></th><th>Producto</th><th style="text-align:right">Cantidad</th></tr></thead>'
         + '<tbody>' + rows + '</tbody></table>'
         + '<script>window.onload=function(){window.print();}<\/script>'
-        + '</body></html>';
+        + '  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
+</body></html>';
 
       var win = window.open('', '_blank');
       if (!win) { showExportToast('Permitir ventanas emergentes para exportar a PDF.', true); return; }

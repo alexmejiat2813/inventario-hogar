@@ -384,6 +384,11 @@
     .toast-success { background: #1C3E1F; }
     .toast-error   { background: #5C1A19; }
   </style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IH">
 </head>
 <body>
 
@@ -505,5 +510,6 @@
 
   <script src="/js/i18n.js"></script>
   <script src="/js/inventories.js"></script>
+  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
 </body>
 </html>
