@@ -19,6 +19,18 @@ const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
 let _priceChart = null;
 
+function expiryInfo(expiry_date) {
+  if (!expiry_date) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const exp   = new Date(expiry_date + 'T00:00:00');
+  const days  = Math.round((exp - today) / 86400000);
+  if (days < 0)   return { days, label: 'Vencido',            cls: 'expiry--expired' };
+  if (days === 0) return { days, label: 'Vence hoy',          cls: 'expiry--urgent'  };
+  if (days <= 7)  return { days, label: `Vence en ${days}d`,  cls: 'expiry--urgent'  };
+  if (days <= 30) return { days, label: `Vence en ${days}d`,  cls: 'expiry--soon'    };
+  return { days, label: `Vence ${new Date(expiry_date + 'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}`, cls: 'expiry--ok' };
+}
+
 const state = {
   products:         [],
   stats:            null,
@@ -255,12 +267,14 @@ function renderProductCard(p) {
   const color      = progressColor(pct, isCritical);
   const isReader   = state.inventory?.role === 'reader';
   const unit       = t('units.' + p.unit) || esc(p.unit);
+  const expiry     = expiryInfo(p.expiry_date);
 
   return `
     <div class="product-card ${isCritical ? 'product-card--critical' : ''}">
       <div class="card-top">
         <span class="category-badge ${catClass(p.category)}">${CAT_ICONS[p.category] || ''} ${tCat(p.category)}</span>
         ${isCritical ? `<span class="critical-tag">⚠ ${t('inventory.card.critical')}</span>` : ''}
+        ${expiry ? `<span class="expiry-badge ${expiry.cls}">${expiry.label}</span>` : ''}
         ${p.image_count > 0 ? `<button class="btn-card-photos" data-action="photos" data-id="${p.id}" title="Ver fotos">📷 ${p.image_count}</button>` : ''}
       </div>
 
@@ -363,9 +377,34 @@ async function addToShoppingList(productId) {
   }
 }
 
+function renderExpirySection() {
+  const wrap = document.getElementById('dash-expiry-wrap');
+  if (!wrap) return;
+
+  const expiring = state.products
+    .map(p => ({ ...p, _expiry: expiryInfo(p.expiry_date) }))
+    .filter(p => p._expiry && p._expiry.days <= 30)
+    .sort((a, b) => a._expiry.days - b._expiry.days);
+
+  if (!expiring.length) { wrap.innerHTML = ''; return; }
+
+  wrap.innerHTML = `
+    <div class="dash-card dash-expiry-card">
+      <h3 class="dash-card-title">Vencimientos próximos</h3>
+      <div class="dash-expiry-list">
+        ${expiring.map(p => `
+          <div class="dash-expiry-row">
+            <span class="dash-expiry-name">${esc(p.name)}</span>
+            <span class="expiry-badge ${p._expiry.cls}">${p._expiry.label}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
 function render() {
   renderStats();
   renderLowStockPanel();
+  renderExpirySection();
   renderProducts();
   updateCartBadge();
 }
@@ -422,6 +461,7 @@ async function openModal(product = null) {
     document.getElementById('f-category').value = product.category;
     document.getElementById('f-current').value  = product.current_qty;
     document.getElementById('f-min').value      = product.min_qty;
+    document.getElementById('f-expiry').value   = product.expiry_date || '';
     setModalMode('edit');
 
     // Prepare photos section
@@ -547,6 +587,7 @@ async function handleFormSubmit(e) {
     category = document.getElementById('f-category').value;
   }
 
+  const expiryVal = document.getElementById('f-expiry').value;
   const body = {
     name,
     category,
@@ -554,6 +595,7 @@ async function handleFormSubmit(e) {
     min_qty:            parseFloat(document.getElementById('f-min').value)     || 0,
     unit:               document.getElementById('f-unit').value,
     catalog_product_id: catalogProductId,
+    expiry_date:        expiryVal || null,
   };
 
   const saveBtn = document.getElementById('btn-save');

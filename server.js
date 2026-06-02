@@ -57,12 +57,13 @@ function getValidUnits() {
   return db.getUnits().map(u => u.name);
 }
 
-function validateProduct({ name, category, current_qty, min_qty, unit }) {
+function validateProduct({ name, category, current_qty, min_qty, unit, expiry_date }) {
   if (!name?.trim())                              return 'El nombre es requerido';
   if (!getValidCategories().includes(category))  return 'Categoría inválida';
   if (current_qty == null || isNaN(+current_qty) || +current_qty < 0) return 'Cantidad actual inválida';
   if (min_qty    == null || isNaN(+min_qty)    || +min_qty    < 0) return 'Cantidad mínima inválida';
   if (!getValidUnits().includes(unit))           return 'Unidad inválida';
+  if (expiry_date && !/^\d{4}-\d{2}-\d{2}$/.test(expiry_date)) return 'Fecha de vencimiento inválida';
   return null;
 }
 
@@ -317,11 +318,12 @@ app.post('/api/products', requireEditorOrOwner, (req, res) => {
   try {
     const error = validateProduct(req.body);
     if (error) return res.status(400).json({ error });
-    const { name, category, current_qty, min_qty, unit, catalog_product_id } = req.body;
+    const { name, category, current_qty, min_qty, unit, catalog_product_id, expiry_date } = req.body;
     res.status(201).json(db.create({
       name: name.trim(), category, current_qty: +current_qty,
       min_qty: +min_qty, unit, inventoryId: req.inventoryId,
       catalogProductId: catalog_product_id || null,
+      expiry_date: expiry_date || null,
     }));
   } catch { res.status(500).json({ error: 'Error al crear el producto' }); }
 });
@@ -333,8 +335,8 @@ app.put('/api/products/:id', requireEditorOrOwner, (req, res) => {
     const p = db.getById(parseInt(req.params.id));
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
-    const { name, category, current_qty, min_qty, unit } = req.body;
-    res.json(db.update(parseInt(req.params.id), { name: name.trim(), category, current_qty: +current_qty, min_qty: +min_qty, unit }));
+    const { name, category, current_qty, min_qty, unit, expiry_date } = req.body;
+    res.json(db.update(parseInt(req.params.id), { name: name.trim(), category, current_qty: +current_qty, min_qty: +min_qty, unit, expiry_date: expiry_date || null }));
   } catch { res.status(500).json({ error: 'Error al actualizar el producto' }); }
 });
 

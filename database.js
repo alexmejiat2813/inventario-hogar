@@ -186,6 +186,9 @@ if (!productCols.includes('inventory_id')) {
 if (!productCols.includes('catalog_product_id')) {
   db.exec('ALTER TABLE products ADD COLUMN catalog_product_id INTEGER REFERENCES catalog_products(id) ON DELETE SET NULL');
 }
+if (!productCols.includes('expiry_date')) {
+  db.exec('ALTER TABLE products ADD COLUMN expiry_date TEXT');
+}
 
 const sessionCols = db.prepare('PRAGMA table_info(purchase_sessions)').all().map(c => c.name);
 if (!sessionCols.includes('subtotal_before_tax')) db.exec('ALTER TABLE purchase_sessions ADD COLUMN subtotal_before_tax REAL');
@@ -506,20 +509,20 @@ module.exports = {
     return db.prepare('SELECT * FROM products WHERE id = ?').get(id);
   },
 
-  create({ name, category, current_qty, min_qty, unit, inventoryId, catalogProductId = null }) {
+  create({ name, category, current_qty, min_qty, unit, inventoryId, catalogProductId = null, expiry_date = null }) {
     const { lastInsertRowid } = db.prepare(
-      'INSERT INTO products (name, category, current_qty, min_qty, unit, inventory_id, catalog_product_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(name, category, current_qty, min_qty, unit, inventoryId, catalogProductId);
+      'INSERT INTO products (name, category, current_qty, min_qty, unit, inventory_id, catalog_product_id, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(name, category, current_qty, min_qty, unit, inventoryId, catalogProductId, expiry_date || null);
     return this.getById(lastInsertRowid);
   },
 
-  update(id, { name, category, current_qty, min_qty, unit }) {
+  update(id, { name, category, current_qty, min_qty, unit, expiry_date = null }) {
     const { changes } = db.prepare(`
       UPDATE products
-      SET name=?, category=?, current_qty=?, min_qty=?, unit=?,
+      SET name=?, category=?, current_qty=?, min_qty=?, unit=?, expiry_date=?,
           updated_at=datetime('now','localtime')
       WHERE id=?
-    `).run(name, category, current_qty, min_qty, unit, id);
+    `).run(name, category, current_qty, min_qty, unit, expiry_date || null, id);
     return changes > 0 ? this.getById(id) : null;
   },
 
