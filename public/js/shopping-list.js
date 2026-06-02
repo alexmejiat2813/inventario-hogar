@@ -811,7 +811,8 @@ async function init() {
   try {
     const ok = await loadInventory();
     if (!ok) return;
-    await Promise.all([loadList(), loadStores(), loadTaxes(), loadBudget(), loadTemplates()]);
+    await loadStores(); // must finish before loadList() renders the store dropdowns
+    await Promise.all([loadList(), loadTaxes(), loadBudget(), loadTemplates()]);
   } catch (err) {
     console.error(err);
     showToast(tSafe('shopping.loadError', 'Error al cargar'), 'error');
