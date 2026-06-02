@@ -178,6 +178,8 @@ function render() {
 
   renderTable(listEl, unchecked);
   updateBudgetBar();
+  // Resaltar campos faltantes de items ya marcados (feedback inmediato)
+  refreshValidationMarks();
 }
 
 // ── Table render ──────────────────────────────────────────────
@@ -457,33 +459,32 @@ function clearInvalidMarks() {
   document.querySelectorAll('.sl-invalid').forEach(el => el.classList.remove('sl-invalid'));
 }
 
-// Devuelve lista de items marcados que NO tienen tienda + cantidad + precio.
-// Resalta los campos faltantes en la tabla.
-function validateCheckedItems() {
-  clearInvalidMarks();
+// Resalta los campos faltantes (tienda/cantidad/precio) de una fila.
+// Devuelve los campos que faltan.
+function markMissingFields(pd, sel) {
+  const miss = [];
+  if (!pd.storeId)                                          miss.push('store');
+  if (pd.quantityBought == null || +pd.quantityBought <= 0) miss.push('qty');
+  if (pd.unitPrice == null || +pd.unitPrice <= 0)           miss.push('price');
+  ['store', 'qty', 'price'].forEach(field => {
+    const el = document.querySelector(`[data-field="${field}"]${sel}`);
+    if (el) el.classList.toggle('sl-invalid', miss.includes(field));
+  });
+  return miss;
+}
+
+// Recorre todos los items MARCADOS y resalta sus campos incompletos.
+// Se llama tras cada render → marcar un item resalta sus campos al instante.
+function refreshValidationMarks() {
   const incomplete = [];
-
-  function check(pd, sel) {
-    const miss = [];
-    if (!pd.storeId)                                       miss.push('store');
-    if (pd.quantityBought == null || +pd.quantityBought <= 0) miss.push('qty');
-    if (pd.unitPrice == null || +pd.unitPrice <= 0)          miss.push('price');
-    miss.forEach(field => {
-      const el = document.querySelector(`[data-field="${field}"]${sel}`);
-      if (el) el.classList.add('sl-invalid');
-    });
-    return miss;
-  }
-
   state.items.filter(i => i.checked).forEach(i => {
-    const miss = check(state.purchaseData[i.id] || {}, `[data-id="${i.id}"]`);
+    const miss = markMissingFields(state.purchaseData[i.id] || {}, `[data-id="${i.id}"]`);
     if (miss.length) incomplete.push(i.name);
   });
   state.customItems.filter(i => i.checked).forEach(i => {
-    const miss = check(state.purchaseData['c' + i.id] || {}, `[data-custom-id="${i.id}"]`);
+    const miss = markMissingFields(state.purchaseData['c' + i.id] || {}, `[data-custom-id="${i.id}"]`);
     if (miss.length) incomplete.push(i.name);
   });
-
   return incomplete;
 }
 
@@ -495,7 +496,7 @@ function openConfirmModal() {
   if (!checkedItems.length && !checkedCustom.length) return;
 
   // Obligar tienda + cantidad + precio en cada item marcado
-  const incomplete = validateCheckedItems();
+  const incomplete = refreshValidationMarks();
   if (incomplete.length) {
     const names = incomplete.slice(0, 3).join(', ') + (incomplete.length > 3 ? '…' : '');
     showToast('Completá establecimiento, cantidad y precio en: ' + names, 'error');
