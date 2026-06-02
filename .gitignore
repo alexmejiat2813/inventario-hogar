@@ -8,6 +8,7 @@ inventario.db-wal
 inventory.db
 inventory.db-shm
 inventory.db-wal
+*.db.bak-*
 
 # Environment variables
 .env
