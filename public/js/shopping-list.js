@@ -176,7 +176,9 @@ function render() {
   }
   empty.hidden = true;
 
-  renderTable(listEl, unchecked);
+  // Pasar TODOS los items (no solo unchecked) para que un producto
+  // marcado siga visible con sus campos tienda/cantidad/precio editables.
+  renderTable(listEl, state.items);
   updateBudgetBar();
   // Resaltar campos faltantes de items ya marcados (feedback inmediato)
   refreshValidationMarks();
