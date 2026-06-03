@@ -157,6 +157,12 @@
     "title": "Liste de courses",
     "clear": "Effacer",
     "registerBtn": "Enregistrer l'achat",
+    "export": {
+      "btn": "Exporter",
+      "pdf": "Exporter en PDF",
+      "whatsapp": "Partager sur WhatsApp",
+      "copy": "Copier (Notes / Keep)"
+    },
     "empty": {
       "title": "Tout est bien approvisionné !",
       "sub": "Aucun produit n'est en dessous du minimum.\nL'inventaire est complet."

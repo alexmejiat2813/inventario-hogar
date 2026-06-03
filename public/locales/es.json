@@ -157,6 +157,12 @@
     "title": "Lista de compras",
     "clear": "Limpiar",
     "registerBtn": "Registrar compra",
+    "export": {
+      "btn": "Exportar",
+      "pdf": "Exportar a PDF",
+      "whatsapp": "Compartir por WhatsApp",
+      "copy": "Copiar (Notes / Keep)"
+    },
     "empty": {
       "title": "¡Todo está bien abastecido!",
       "sub": "Ningún producto está por debajo del mínimo.\nEl inventario está completo."

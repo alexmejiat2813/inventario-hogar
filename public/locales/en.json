@@ -157,6 +157,12 @@
     "title": "Shopping list",
     "clear": "Clear",
     "registerBtn": "Register purchase",
+    "export": {
+      "btn": "Export",
+      "pdf": "Export to PDF",
+      "whatsapp": "Share on WhatsApp",
+      "copy": "Copy (Notes / Keep)"
+    },
     "empty": {
       "title": "Everything is well stocked!",
       "sub": "No product is below the minimum.\nThe inventory is complete."
