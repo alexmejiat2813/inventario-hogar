@@ -1242,13 +1242,19 @@ module.exports = {
   },
 
   getDashboardData(inventoryId, period = 'month') {
-    const daysMap = { month: 30, '3m': 90, '6m': 180, year: 365 };
-    const days = daysMap[period] || 30;
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-    const start = startDate.toISOString().slice(0, 10);
-
+    // 'year' = calendar year to date; others = rolling window
     const now = new Date();
+    let start;
+    if (period === 'year') {
+      start = now.getFullYear() + '-01-01';
+    } else {
+      const daysMap = { month: 30, '3m': 90, '6m': 180 };
+      const days = daysMap[period] || 30;
+      const d = new Date();
+      d.setDate(d.getDate() - days);
+      start = d.toISOString().slice(0, 10);
+    }
+
     const thisMonthStr = now.toISOString().slice(0, 7);
     const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastMonthStr = prevDate.toISOString().slice(0, 7);
@@ -1273,9 +1279,9 @@ module.exports = {
       SELECT strftime('%Y-%m', purchase_date) AS month,
              COALESCE(SUM(total_amount),0) AS total
       FROM purchase_sessions
-      WHERE inventory_id = ? AND purchase_date >= date('now','localtime','-6 months')
+      WHERE inventory_id = ? AND purchase_date >= ?
       GROUP BY month ORDER BY month
-    `).all(inventoryId);
+    `).all(inventoryId, start);
 
     const byCategory = db.prepare(`
       SELECT category, COUNT(*) AS count
