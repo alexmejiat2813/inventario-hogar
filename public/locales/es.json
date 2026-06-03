@@ -307,6 +307,12 @@
       "title": "Sin historial",
       "sub": "Aún no hay compras registradas."
     },
+    "export": {
+      "btn": "Exportar",
+      "pdf": "Exportar a PDF",
+      "csv": "Exportar a CSV",
+      "noData": "Sin datos para exportar"
+    },
     "filter": {
       "allMonths": "Todos los meses",
       "allStores": "Todos los establecimientos"

@@ -378,6 +378,107 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
+// ── Export ────────────────────────────────────────────────────
+
+function closeExportMenu() {
+  document.getElementById('export-menu').hidden = true;
+  document.getElementById('btn-export').setAttribute('aria-expanded', 'false');
+}
+
+function exportCSV() {
+  if (!state.sessions.length) { showToast(tSafe('history.export.noData', 'Sin datos para exportar'), 'error'); return; }
+  const invName  = state.inventory?.name || 'Inventario';
+  const headers  = ['Fecha', 'Usuario', 'Productos', 'Subtotal', 'Impuestos', 'Total', 'Moneda'];
+  const rows = state.sessions.map(s => [
+    s.purchase_date,
+    s.user_name || '',
+    s.item_count,
+    s.subtotal_before_tax != null ? (+s.subtotal_before_tax).toFixed(2) : (+s.total_amount).toFixed(2),
+    s.total_tax != null          ? (+s.total_tax).toFixed(2)          : '0.00',
+    (+s.total_amount).toFixed(2),
+    s.currency || state.inventory?.currency || 'USD',
+  ]);
+  const csv = [headers, ...rows]
+    .map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `historial-${invName.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportPDF() {
+  if (!state.sessions.length) { showToast(tSafe('history.export.noData', 'Sin datos para exportar'), 'error'); return; }
+  const invName  = state.inventory?.name || 'Inventario';
+  const currency = state.inventory?.currency || 'USD';
+  const fmtAmt   = (n, cur) => sym(cur || currency) + ' ' + (+n).toFixed(2);
+  const date     = new Date().toLocaleDateString('es', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  let filterDesc = '';
+  if (state.filterMonth) filterDesc += fmtMonth(state.filterMonth);
+  if (state.filterStore) {
+    const store = state.stores.find(s => s.id === +state.filterStore);
+    if (store) filterDesc += (filterDesc ? ' · ' : '') + store.name;
+  }
+
+  const byMonth = {};
+  state.sessions.forEach(s => {
+    const ym = fmtMonthFromDate(s.purchase_date);
+    (byMonth[ym] = byMonth[ym] || []).push(s);
+  });
+
+  let rows = '';
+  Object.entries(byMonth).sort(([a], [b]) => b.localeCompare(a)).forEach(([ym, sessions]) => {
+    rows += `<tr class="month-row"><td colspan="5">${fmtMonth(ym)}</td></tr>`;
+    sessions.forEach(s => {
+      rows += `<tr>
+        <td>${s.purchase_date}</td>
+        <td>${esc(s.user_name || '—')}</td>
+        <td class="num">${s.item_count}</td>
+        <td class="num">${s.subtotal_before_tax != null ? fmtAmt(s.subtotal_before_tax, s.currency) : '—'}</td>
+        <td class="num">${fmtAmt(s.total_amount, s.currency)}</td>
+      </tr>`;
+    });
+    const monthTotal = sessions.reduce((sum, s) => sum + (+s.total_amount || 0), 0);
+    rows += `<tr class="month-total"><td colspan="4" style="text-align:right;font-size:10px;color:#787774;">${fmtMonth(ym)}</td><td class="num">${sym(currency)} ${monthTotal.toFixed(2)}</td></tr>`;
+  });
+
+  const grandTotal = state.sessions.reduce((sum, s) => sum + (+s.total_amount || 0), 0);
+  rows += `<tr class="total-row"><td colspan="4">TOTAL</td><td class="num">${sym(currency)} ${grandTotal.toFixed(2)}</td></tr>`;
+
+  const html = `<!DOCTYPE html><html lang="es"><head>
+    <meta charset="UTF-8"><title>Historial — ${esc(invName)}</title><style>
+    body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#111;margin:0;padding:2cm}
+    h1{font-size:17px;font-weight:700;margin-bottom:3px}
+    .meta{font-size:11px;color:#787774;margin-bottom:20px}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#787774;font-weight:600;border-bottom:1px solid #EAEAEA;padding:5px 8px}
+    td{padding:6px 8px;border-bottom:1px solid #F4F4F3;vertical-align:top}
+    .num{text-align:right;white-space:nowrap}
+    tr.month-row td{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#787774;background:#F8F8F7;padding:4px 8px;border-bottom:1px solid #EAEAEA}
+    tr.month-total td{color:#787774;font-size:11px;border-bottom:1px solid #EAEAEA}
+    tr.total-row td{font-weight:700;border-top:2px solid #EAEAEA;border-bottom:none}
+    @media print{body{padding:1cm}}
+    </style></head><body>
+    <h1>Historial de compras — ${esc(invName)}</h1>
+    <div class="meta">${date}${filterDesc ? ' · ' + esc(filterDesc) : ''} · ${state.sessions.length} compras</div>
+    <table><thead><tr>
+      <th>Fecha</th><th>Usuario</th><th>Items</th><th class="num">Subtotal</th><th class="num">Total</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) { showToast('Permitir ventanas emergentes para exportar a PDF.', 'error'); return; }
+  win.document.write(html);
+  win.document.close();
+}
+
 // ── Events ────────────────────────────────────────────────────
 
 function initEvents() {
@@ -439,6 +540,18 @@ function initEvents() {
   });
 
   document.addEventListener('langchange', () => renderSessions());
+
+  // Export
+  document.getElementById('btn-export').addEventListener('click', e => {
+    e.stopPropagation();
+    const menu   = document.getElementById('export-menu');
+    const isOpen = !menu.hidden;
+    menu.hidden  = isOpen;
+    e.currentTarget.setAttribute('aria-expanded', String(!isOpen));
+  });
+  document.addEventListener('click', () => closeExportMenu());
+  document.getElementById('export-pdf').addEventListener('click', () => { closeExportMenu(); exportPDF(); });
+  document.getElementById('export-csv').addEventListener('click', () => { closeExportMenu(); exportCSV(); });
 }
 
 // ── Init ──────────────────────────────────────────────────────
