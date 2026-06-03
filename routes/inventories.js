@@ -85,6 +85,10 @@ router.put('/:id/members/:userId/role', requireMember, requireOwner, (req, res) 
     if (target.role === 'owner') return res.status(400).json({ error: 'No se puede cambiar el rol del dueño' });
     const ok = db.updateMemberRole(req.inventoryId, targetId, role);
     if (!ok) return res.status(404).json({ error: 'Miembro no encontrado' });
+    const members = db.getMembers(req.inventoryId);
+    const targetName = members.find(m => m.user_id === targetId)?.name;
+    db.audit(req.inventoryId, req.user.id, req.user.name, 'member.role_change', 'member', targetId,
+      { user_name: targetName, from: target.role, to: role });
     res.json({ ok: true });
   } catch { res.status(500).json({ error: 'Error al cambiar el rol' }); }
 });
@@ -93,17 +97,29 @@ router.delete('/:id/members/:userId', requireMember, requireOwner, (req, res) =>
   try {
     const targetId = parseInt(req.params.userId);
     if (targetId === req.user.id) return res.status(400).json({ error: 'No podés removerte a vos mismo' });
+    const members   = db.getMembers(req.inventoryId);
+    const targetName = members.find(m => m.user_id === targetId)?.name;
     const ok = db.removeMember(req.inventoryId, targetId);
     if (!ok) return res.status(404).json({ error: 'Miembro no encontrado' });
+    db.audit(req.inventoryId, req.user.id, req.user.name, 'member.remove', 'member', targetId,
+      { user_name: targetName });
     res.json({ message: 'Miembro removido' });
   } catch { res.status(500).json({ error: 'Error al remover miembro' }); }
+});
+
+router.get('/:id/audit', requireMember, (req, res) => {
+  try { res.json(db.getAuditLog(req.inventoryId)); }
+  catch { res.status(500).json({ error: 'Error al obtener el registro de actividad' }); }
 });
 
 router.put('/:id/name', requireMember, requireOwner, (req, res) => {
   try {
     const { name } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    const old = db.getInventory(req.inventoryId);
     const inv = db.renameInventory(req.inventoryId, name);
+    db.audit(req.inventoryId, req.user.id, req.user.name, 'inventory.rename', 'inventory', req.inventoryId,
+      { old_name: old?.name, new_name: name.trim() });
     res.json(inv);
   } catch { res.status(500).json({ error: 'Error al renombrar el inventario' }); }
 });

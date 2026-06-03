@@ -933,13 +933,18 @@ async function loadAccessData() {
   const invId = state.inventory?.id;
   if (!invId) return;
   try {
-    const data = await apiFetch('GET', `/api/inventories/${invId}/members`);
+    const [data, auditEntries] = await Promise.all([
+      apiFetch('GET', `/api/inventories/${invId}/members`),
+      apiFetch('GET', `/api/inventories/${invId}/audit`).catch(() => []),
+    ]);
     if (!data) return;
 
     renderMembers(data.members, data.role);
     renderCodes(data.codes, data.role);
+    renderAuditLog(auditEntries || [], data.role);
 
-    document.getElementById('codes-section').hidden = (data.role === 'reader');
+    document.getElementById('codes-section').hidden  = (data.role === 'reader');
+    document.getElementById('audit-section').hidden  = (data.role === 'reader');
 
     const inviteRole = document.getElementById('invite-role');
     if (data.role === 'editor') {
@@ -976,6 +981,65 @@ function renderMembers(members, viewerRole) {
       ` : ''}
     </div>
   `).join('');
+}
+
+function renderAuditLog(entries, viewerRole) {
+  const list = document.getElementById('audit-list');
+  if (!list) return;
+  if (!entries.length) {
+    list.innerHTML = `<div class="audit-empty">${t('inventory.access.auditEmpty')}</div>`;
+    return;
+  }
+
+  const ACTION_LABEL = {
+    'product.create':      t('inventory.audit.productCreate'),
+    'product.update':      t('inventory.audit.productUpdate'),
+    'product.delete':      t('inventory.audit.productDelete'),
+    'purchase.create':     t('inventory.audit.purchaseCreate'),
+    'purchase.delete':     t('inventory.audit.purchaseDelete'),
+    'member.remove':       t('inventory.audit.memberRemove'),
+    'member.role_change':  t('inventory.audit.memberRoleChange'),
+    'inventory.rename':    t('inventory.audit.inventoryRename'),
+  };
+
+  function relativeTime(isoStr) {
+    const diff = Date.now() - new Date(isoStr).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1)  return t('inventory.audit.justNow');
+    if (m < 60) return t('inventory.audit.minutesAgo').replace('{{n}}', m);
+    const h = Math.floor(m / 60);
+    if (h < 24) return t('inventory.audit.hoursAgo').replace('{{n}}', h);
+    const d = Math.floor(h / 24);
+    if (d < 30) return t('inventory.audit.daysAgo').replace('{{n}}', d);
+    return new Date(isoStr).toLocaleDateString();
+  }
+
+  function detailSuffix(entry) {
+    try {
+      const d = entry.details ? JSON.parse(entry.details) : {};
+      if (entry.action === 'product.create' || entry.action === 'product.delete' || entry.action === 'product.update')
+        return d.name ? ` — ${esc(d.name)}` : '';
+      if (entry.action === 'purchase.create')
+        return d.total_amount != null ? ` — ${d.total_amount.toFixed ? d.total_amount.toFixed(2) : d.total_amount} ${d.currency || ''}` : '';
+      if (entry.action === 'member.remove')       return d.user_name ? ` — ${esc(d.user_name)}` : '';
+      if (entry.action === 'member.role_change')  return d.user_name ? ` — ${esc(d.user_name)} (${d.from} → ${d.to})` : '';
+      if (entry.action === 'inventory.rename')    return d.new_name  ? ` → "${esc(d.new_name)}"` : '';
+    } catch {}
+    return '';
+  }
+
+  list.innerHTML = entries.map(e => {
+    const initial = e.user_name?.[0]?.toUpperCase() || '?';
+    return `
+      <div class="audit-entry">
+        <div class="audit-avatar-ph">${esc(initial)}</div>
+        <div class="audit-body">
+          <span class="audit-actor">${esc(e.user_name || '?')}</span>
+          <span class="audit-desc"> ${ACTION_LABEL[e.action] || esc(e.action)}${detailSuffix(e)}</span>
+        </div>
+        <div class="audit-time">${relativeTime(e.created_at)}</div>
+      </div>`;
+  }).join('');
 }
 
 function renderCodes(codes, viewerRole) {

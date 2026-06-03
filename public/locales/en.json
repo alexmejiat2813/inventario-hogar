@@ -119,7 +119,23 @@
       "copy": "Copy",
       "revoke": "Revoke",
       "confirmRevoke": "Revoke code {{code}}?",
-      "confirmRemove": "Remove this collaborator from the inventory?"
+      "confirmRemove": "Remove this collaborator from the inventory?",
+      "activity": "Recent activity",
+      "auditEmpty": "No activity recorded yet."
+    },
+    "audit": {
+      "productCreate":    "added product",
+      "productUpdate":    "updated product",
+      "productDelete":    "deleted product",
+      "purchaseCreate":   "recorded a purchase",
+      "purchaseDelete":   "deleted a purchase",
+      "memberRemove":     "removed collaborator",
+      "memberRoleChange": "changed role of",
+      "inventoryRename":  "renamed the inventory",
+      "justNow":          "just now",
+      "minutesAgo":       "{{n}} min ago",
+      "hoursAgo":         "{{n}} h ago",
+      "daysAgo":          "{{n}} days ago"
     },
     "confirmDelete": "Delete \"{{name}}\"?\nThis action cannot be undone.",
     "addMenu": {

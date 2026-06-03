@@ -119,7 +119,23 @@
       "copy": "Copiar",
       "revoke": "Revocar",
       "confirmRevoke": "¿Revocar el código {{code}}?",
-      "confirmRemove": "¿Remover a este colaborador del inventario?"
+      "confirmRemove": "¿Remover a este colaborador del inventario?",
+      "activity": "Actividad reciente",
+      "auditEmpty": "Sin actividad registrada aún."
+    },
+    "audit": {
+      "productCreate":    "agregó el producto",
+      "productUpdate":    "actualizó el producto",
+      "productDelete":    "eliminó el producto",
+      "purchaseCreate":   "registró una compra",
+      "purchaseDelete":   "eliminó una compra",
+      "memberRemove":     "removió al colaborador",
+      "memberRoleChange": "cambió el rol de",
+      "inventoryRename":  "renombró el inventario",
+      "justNow":          "ahora",
+      "minutesAgo":       "hace {{n}} min",
+      "hoursAgo":         "hace {{n}} h",
+      "daysAgo":          "hace {{n}} días"
     },
     "confirmDelete": "¿Eliminar \"{{name}}\"?\nEsta acción no se puede deshacer.",
     "addMenu": {

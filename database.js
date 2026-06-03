@@ -180,6 +180,18 @@ db.exec(`
     checked_at   TEXT,
     created_at   TEXT    DEFAULT (datetime('now','localtime'))
   );
+
+  CREATE TABLE IF NOT EXISTS audit_log (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id  INTEGER NOT NULL REFERENCES inventories(id) ON DELETE CASCADE,
+    user_id       INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    user_name     TEXT,
+    action        TEXT    NOT NULL,
+    resource_type TEXT,
+    resource_id   INTEGER,
+    details       TEXT,
+    created_at    TEXT    DEFAULT (datetime('now','localtime'))
+  );
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -799,6 +811,36 @@ module.exports = {
   clearShoppingList(inventoryId) {
     db.prepare('UPDATE shopping_list_items SET checked = 0, checked_at = NULL WHERE inventory_id = ?').run(inventoryId);
     db.prepare('UPDATE shopping_list_custom_items SET checked = 0, checked_at = NULL WHERE inventory_id = ?').run(inventoryId);
+  },
+
+  // ── Custom shopping items ──────────────────────────────────────
+  // ── Audit log ──────────────────────────────────────────────────────────────────
+  /** Fire-and-forget — never throws. Call after main operation succeeds. */
+  audit(inventoryId, userId, userName, action, resourceType, resourceId, details) {
+    try {
+      db.prepare(`
+        INSERT INTO audit_log (inventory_id, user_id, user_name, action, resource_type, resource_id, details)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        inventoryId,
+        userId   ?? null,
+        userName ?? null,
+        action,
+        resourceType ?? null,
+        resourceId   ?? null,
+        details ? JSON.stringify(details) : null,
+      );
+    } catch {}
+  },
+
+  getAuditLog(inventoryId, limit = 30) {
+    return db.prepare(`
+      SELECT id, user_name, action, resource_type, resource_id, details, created_at
+      FROM audit_log
+      WHERE inventory_id = ?
+      ORDER BY created_at DESC
+      LIMIT ?
+    `).all(inventoryId, limit);
   },
 
   // ── Custom shopping items ──────────────────────────────────────

@@ -36,12 +36,15 @@ router.post('/', requireEditorOrOwner, (req, res) => {
     const error = validateProduct(req.body);
     if (error) return res.status(400).json({ error });
     const { name, category, current_qty, min_qty, unit, catalog_product_id, expiry_date } = req.body;
-    res.status(201).json(db.create({
+    const product = db.create({
       name: name.trim(), category, current_qty: +current_qty,
       min_qty: +min_qty, unit, inventoryId: req.inventoryId,
       catalogProductId: catalog_product_id || null,
       expiry_date: expiry_date || null,
-    }));
+    });
+    db.audit(req.inventoryId, req.user.id, req.user.name, 'product.create', 'product', product.id,
+      { name: product.name, category });
+    res.status(201).json(product);
   } catch { res.status(500).json({ error: 'Error al crear el producto' }); }
 });
 
@@ -53,11 +56,14 @@ router.put('/:id', requireEditorOrOwner, (req, res) => {
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     const { name, category, current_qty, min_qty, unit, expiry_date } = req.body;
-    res.json(db.update(parseInt(req.params.id), {
+    const updated = db.update(parseInt(req.params.id), {
       name: name.trim(), category,
       current_qty: +current_qty, min_qty: +min_qty,
       unit, expiry_date: expiry_date || null,
-    }));
+    });
+    db.audit(req.inventoryId, req.user.id, req.user.name, 'product.update', 'product', p.id,
+      { name: name.trim() });
+    res.json(updated);
   } catch { res.status(500).json({ error: 'Error al actualizar el producto' }); }
 });
 
@@ -67,6 +73,8 @@ router.delete('/:id', requireEditorOrOwner, (req, res) => {
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     db.remove(parseInt(req.params.id));
+    db.audit(req.inventoryId, req.user.id, req.user.name, 'product.delete', 'product', p.id,
+      { name: p.name });
     res.json({ message: 'Producto eliminado' });
   } catch { res.status(500).json({ error: 'Error al eliminar el producto' }); }
 });
