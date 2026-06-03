@@ -331,8 +331,10 @@ a { color: inherit; text-decoration: none; }
   text-align: left; cursor: pointer; text-decoration: none;
   transition: background .12s;
 }
-.mob-ditem:hover   { background: var(--bg); }
-.mob-ditem.mob-active { background: var(--bg); font-weight: 700; }
+.mob-ditem:hover   { background: var(--accent-bg); color: var(--accent); }
+.mob-ditem:hover svg { color: var(--accent); }
+.mob-ditem.mob-active { background: var(--accent-bg); color: var(--accent); font-weight: 700; }
+.mob-ditem.mob-active svg { color: var(--accent); }
 .mob-ditem[disabled] { opacity: .38; cursor: not-allowed; pointer-events: none; }
 .mob-ditem--danger { color: var(--danger); }
 .mob-ditem--danger:hover { background: var(--danger-bg); }
@@ -1177,7 +1179,8 @@ a { color: inherit; text-decoration: none; }
   text-align: left; cursor: pointer;
   transition: background .12s;
 }
-.add-menu-item:hover { background: var(--bg); }
+.add-menu-item:hover { background: var(--accent-bg); color: var(--accent); }
+.add-menu-item:hover svg { color: var(--accent); }
 .add-menu-item + .add-menu-item { border-top: 1px solid var(--border); }
 
 /* ── Role badges ── */
@@ -1286,12 +1289,14 @@ a { color: inherit; text-decoration: none; }
   text-align: left; cursor: pointer;
   transition: background .12s;
 }
-.dropdown-item:hover { background: var(--bg); }
+.dropdown-item:hover { background: var(--accent-bg); color: var(--accent); }
+.dropdown-item:hover svg { color: var(--accent); }
 .dropdown-item svg   { flex-shrink: 0; color: var(--text-muted); }
 
-.dropdown-item-danger       { color: var(--danger); }
-.dropdown-item-danger:hover { background: var(--danger-bg); }
-.dropdown-item-danger svg   { color: var(--danger); }
+.dropdown-item-danger             { color: var(--danger); }
+.dropdown-item-danger:hover       { background: var(--danger-bg); color: var(--danger); }
+.dropdown-item-danger svg,
+.dropdown-item-danger:hover svg   { color: var(--danger); }
 
 /* Language selector */
 .dropdown-lang { padding: .5rem 1rem .75rem; }
