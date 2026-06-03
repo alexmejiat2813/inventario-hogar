@@ -97,8 +97,12 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || 'Error interno del servidor' });
 });
 
-app.listen(PORT, () => {
-  console.log('\n🏠  Inventario Hogar');
-  console.log(`📡  Servidor corriendo en http://localhost:${PORT}`);
-  console.log('     Presiona Ctrl+C para detener\n');
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log('\n🏠  Inventario Hogar');
+    console.log(`📡  Servidor corriendo en http://localhost:${PORT}`);
+    console.log('     Presiona Ctrl+C para detener\n');
+  });
+}
+
+module.exports = app;

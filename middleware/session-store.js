@@ -2,7 +2,8 @@ const { Store } = require('express-session');
 const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 
-const db = new DatabaseSync(path.join(__dirname, '..', 'inventario.db'));
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'inventario.db');
+const db = new DatabaseSync(DB_PATH);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS sessions (
