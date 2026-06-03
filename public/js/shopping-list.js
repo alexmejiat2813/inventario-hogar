@@ -1022,6 +1022,18 @@ function initEvents() {
 
   // Language changes
   document.addEventListener('langchange', () => render());
+
+  // Offline/online detection
+  window.addEventListener('offline', updateOfflineBanner);
+  window.addEventListener('online',  updateOfflineBanner);
+  updateOfflineBanner();
+}
+
+// ── Offline indicator ─────────────────────────────────────────
+
+function updateOfflineBanner() {
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.hidden = navigator.onLine;
 }
 
 // ── Init ──────────────────────────────────────────────────────

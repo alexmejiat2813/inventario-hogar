@@ -1,5 +1,5 @@
 /* Inventario Hogar — Service Worker */
-const CACHE = 'ih-v7';
+const CACHE = 'ih-v8';
 
 const PRECACHE = [
   '/css/styles.css',
@@ -18,6 +18,17 @@ const PRECACHE = [
   '/manifest.json',
   '/icons/icon.svg',
 ];
+
+// GET API paths safe to cache (network-first → stale fallback when offline)
+function isCacheableApi(pathname) {
+  return (
+    pathname === '/api/me'               ||
+    pathname === '/api/active-inventory' ||
+    pathname === '/api/stores'           ||
+    pathname.startsWith('/api/shopping') ||
+    pathname.startsWith('/api/settings/taxes')
+  );
+}
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -41,28 +52,44 @@ self.addEventListener('fetch', e => {
   const { request } = e;
   const url = new URL(request.url);
 
-  // Only handle GET from same origin
+  // Only handle same-origin GETs
   if (request.method !== 'GET') return;
   if (url.origin !== self.location.origin) return;
 
-  // API and auth: always network-only (never serve stale data)
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) return;
+  // Auth: always network-only
+  if (url.pathname.startsWith('/auth/')) return;
+
+  // Cacheable API endpoints: network-first, stale fallback when offline
+  if (url.pathname.startsWith('/api/') && isCacheableApi(url.pathname)) {
+    e.respondWith(
+      fetch(request)
+        .then(resp => {
+          if (resp.ok) {
+            caches.open(CACHE).then(c => c.put(request, resp.clone()));
+          }
+          return resp;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Other API routes: network-only (never serve stale)
+  if (url.pathname.startsWith('/api/')) return;
 
   // Static assets (CSS, JS, locales, icons, manifest): cache-first
   if (
-    url.pathname.startsWith('/css/') ||
-    url.pathname.startsWith('/js/') ||
+    url.pathname.startsWith('/css/')     ||
+    url.pathname.startsWith('/js/')      ||
     url.pathname.startsWith('/locales/') ||
-    url.pathname.startsWith('/icons/') ||
+    url.pathname.startsWith('/icons/')   ||
     url.pathname === '/manifest.json'
   ) {
     e.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached;
         return fetch(request).then(resp => {
-          if (resp.ok) {
-            caches.open(CACHE).then(c => c.put(request, resp.clone()));
-          }
+          if (resp.ok) caches.open(CACHE).then(c => c.put(request, resp.clone()));
           return resp;
         });
       })
@@ -86,13 +113,11 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // HTML navigation: network-first, fall back to cache
+  // HTML navigation: network-first, fall back to cached shell
   e.respondWith(
     fetch(request)
       .then(resp => {
-        if (resp.ok) {
-          caches.open(CACHE).then(c => c.put(request, resp.clone()));
-        }
+        if (resp.ok) caches.open(CACHE).then(c => c.put(request, resp.clone()));
         return resp;
       })
       .catch(() => caches.match(request))
