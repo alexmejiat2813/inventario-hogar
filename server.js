@@ -4,9 +4,10 @@ const path     = require('path');
 const session  = require('express-session');
 const passport = require('./auth');
 
-const { requireAuthApi }   = require('./middleware/auth');
-const { requireInventory } = require('./middleware/inventory');
-const SQLiteStore          = require('./middleware/session-store');
+const { requireAuthApi }    = require('./middleware/auth');
+const { requireInventory }  = require('./middleware/inventory');
+const SQLiteStore           = require('./middleware/session-store');
+const { createRateLimiter } = require('./middleware/rate-limit');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -39,6 +40,23 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/icons',   express.static(path.join(__dirname, 'public/icons')));
 app.get('/manifest.json', (req, res) => res.sendFile(path.join(__dirname, 'public/manifest.json')));
 app.get('/sw.js',         (req, res) => res.sendFile(path.join(__dirname, 'public/sw.js')));
+
+// ── Rate limiting ──────────────────────────────────────────────────────────────
+// Auth: 20 req / 15 min / IP  — prevents OAuth abuse
+app.use('/auth', createRateLimiter({
+  windowMs:  15 * 60 * 1000,
+  max:       20,
+  keyPrefix: 'auth',
+  message:   'Demasiados intentos. Intentá de nuevo en 15 minutos.',
+}));
+
+// API: 200 req / min / IP  — blocks bots/scrapers, generous for real users
+app.use('/api', createRateLimiter({
+  windowMs:  60 * 1000,
+  max:       200,
+  keyPrefix: 'api',
+  message:   'Demasiadas solicitudes. Intentá más tarde.',
+}));
 
 // ── Auth & page routes ─────────────────────────────────────────────────────────
 app.use(require('./routes/auth'));
