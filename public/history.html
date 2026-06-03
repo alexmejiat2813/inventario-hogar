@@ -12,7 +12,7 @@
     html { -webkit-text-size-adjust: 100%; }
     body {
       font-family: 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
-      background: #FBFBFA; color: #111111;
+      background: #FBFBFA; color: #082F49;
       min-height: 100vh; padding-bottom: 4rem;
     }
     button, input, select, a { font: inherit; cursor: pointer; text-decoration: none; }
@@ -34,8 +34,8 @@
       background: none; border: none; padding: 0;
       white-space: nowrap; flex-shrink: 0; transition: color .15s;
     }
-    .btn-back:hover { color: #111111; }
-    .header-title { font-size: .9375rem; font-weight: 700; flex: 1; color: #111111; }
+    .btn-back:hover { color: #082F49; }
+    .header-title { font-size: .9375rem; font-weight: 700; flex: 1; color: #082F49; }
     .header-inv-sub { font-size: .68rem; color: #787774; font-weight: 500; }
 
     /* Tab bar */
@@ -55,8 +55,8 @@
       white-space: nowrap; flex-shrink: 0; text-decoration: none;
       transition: color .15s, border-color .15s;
     }
-    .inv-tab:hover { color: #111111; }
-    .inv-tab.active { color: #111111; border-bottom-color: #111111; font-weight: 600; }
+    .inv-tab:hover { color: #082F49; }
+    .inv-tab.active { color: #082F49; border-bottom-color: #082F49; font-weight: 600; }
     .tab-icon-svg { flex-shrink: 0; }
     @media (max-width: 480px) {
       .inv-tab { padding: .6rem .8rem; }
@@ -77,7 +77,7 @@
       font-size: .72rem; font-weight: 700; color: #787774;
       text-transform: uppercase; letter-spacing: .04em; margin-bottom: .25rem;
     }
-    .summary-amount { font-size: 1.25rem; font-weight: 700; color: #111111; }
+    .summary-amount { font-size: 1.25rem; font-weight: 700; color: #082F49; }
     .summary-sub { font-size: .75rem; color: #B2B0AD; margin-top: .15rem; }
     .summary-diff { font-size: .78rem; font-weight: 600; }
     .summary-diff--up   { color: #9F2F2D; }
@@ -89,10 +89,10 @@
       flex: 1; min-width: 160px;
       padding: .45rem .75rem;
       background: white; border: 1px solid #EAEAEA; border-radius: 4px;
-      font-size: .8rem; font-weight: 500; color: #111111;
+      font-size: .8rem; font-weight: 500; color: #082F49;
       outline: none; transition: border-color .12s;
     }
-    .filter-select:focus { border-color: #111111; }
+    .filter-select:focus { border-color: #082F49; }
 
     /* Export button */
     .export-wrap { position: relative; flex-shrink: 0; }
@@ -103,7 +103,7 @@
       font-size: .78rem; font-weight: 500;
       transition: border-color .15s, color .15s; cursor: pointer;
     }
-    .btn-export:hover { border-color: #111111; color: #111111; }
+    .btn-export:hover { border-color: #082F49; color: #082F49; }
     .export-menu {
       position: absolute; top: calc(100% + 6px); right: 0;
       background: white; border: 1px solid #EAEAEA; border-radius: 6px;
@@ -114,7 +114,7 @@
       display: flex; align-items: center; gap: .625rem;
       width: 100%; padding: .65rem 1rem;
       background: none; border: none; text-align: left;
-      font-size: .8rem; font-weight: 500; color: #111111;
+      font-size: .8rem; font-weight: 500; color: #082F49;
       transition: background .12s; cursor: pointer;
     }
     .export-menu-item:hover { background: #F8F8F7; }
@@ -124,7 +124,7 @@
     /* Empty state */
     .empty-state { text-align: center; padding: 4rem 2rem; color: #787774; }
     .empty-icon  { margin: 0 auto 1rem; color: #B2B0AD; }
-    .empty-title { font-size: 1.1rem; font-weight: 700; color: #111111; margin-bottom: .5rem; }
+    .empty-title { font-size: 1.1rem; font-weight: 700; color: #082F49; margin-bottom: .5rem; }
     .empty-sub   { font-size: .875rem; line-height: 1.6; }
 
     /* Month heading */
@@ -149,16 +149,16 @@
       padding: .875rem 1rem; cursor: pointer; transition: background .12s;
     }
     .session-header:hover { background: #FBFBFA; }
-    .session-date { font-size: .875rem; font-weight: 600; color: #111111; }
+    .session-date { font-size: .875rem; font-weight: 600; color: #082F49; }
     .session-meta { font-size: .75rem; color: #787774; margin-top: .1rem; }
     .session-right { margin-left: auto; display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
-    .session-total { font-size: .95rem; font-weight: 700; color: #111111; }
+    .session-total { font-size: .95rem; font-weight: 700; color: #082F49; }
     .session-total--zero { color: #B2B0AD; font-size: .875rem; }
     .session-receipt-icon {
       color: #787774; cursor: pointer; text-decoration: none;
       transition: color .12s;
     }
-    .session-receipt-icon:hover { color: #111111; }
+    .session-receipt-icon:hover { color: #082F49; }
     .session-chevron { color: #B2B0AD; transition: transform .18s; flex-shrink: 0; }
     .session-chevron--open { transform: rotate(180deg); }
 
@@ -177,7 +177,7 @@
       gap: .375rem; padding: .25rem .5rem; font-size: .82rem;
     }
     .detail-item-bullet { color: #EAEAEA; font-size: .8rem; flex-shrink: 0; }
-    .detail-item-name   { flex: 1; font-weight: 500; color: #111111; }
+    .detail-item-name   { flex: 1; font-weight: 500; color: #082F49; }
     .detail-item-qty    { color: #787774; white-space: nowrap; }
     .detail-item-price  { font-weight: 600; white-space: nowrap; margin-left: auto; }
 
@@ -192,7 +192,7 @@
       font-size: .82rem; padding: .2rem 0; color: #787774;
     }
     .fin-row--total {
-      font-weight: 700; font-size: .9rem; color: #111111;
+      font-weight: 700; font-size: .9rem; color: #082F49;
       padding-top: .375rem; border-top: 1px solid #EAEAEA; margin-top: .2rem;
     }
 
@@ -204,8 +204,8 @@
       cursor: pointer; transition: border-color .12s, background .12s;
     }
     .delete-option:hover { background: #FBFBFA; }
-    .delete-option input[type=radio] { margin-top: .2rem; flex-shrink: 0; cursor: pointer; accent-color: #111111; }
-    .delete-option-title { font-size: .875rem; font-weight: 600; color: #111111; }
+    .delete-option input[type=radio] { margin-top: .2rem; flex-shrink: 0; cursor: pointer; accent-color: #082F49; }
+    .delete-option-title { font-size: .875rem; font-weight: 600; color: #082F49; }
     .delete-option-sub   { font-size: .775rem; color: #787774; margin-top: .15rem; }
     .delete-confirm-section { margin-top: .25rem; }
     .delete-confirm-label { font-size: .8rem; font-weight: 600; color: #787774; display: block; margin-bottom: .375rem; }
@@ -280,13 +280,13 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.25rem 1.5rem .875rem; border-bottom: 1px solid #EAEAEA; flex-shrink: 0;
     }
-    .modal-inner-title { font-size: 1rem; font-weight: 700; color: #111111; }
+    .modal-inner-title { font-size: 1rem; font-weight: 700; color: #082F49; }
     .modal-inner-close {
       width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
       background: #F8F8F7; border: 1px solid #EAEAEA; border-radius: 4px;
       color: #787774; font-size: .9rem;
     }
-    .modal-inner-close:hover { border-color: #111111; color: #111111; }
+    .modal-inner-close:hover { border-color: #082F49; color: #082F49; }
     .modal-inner-body { overflow-y: auto; flex: 1; padding: 1rem 1.5rem; }
     .modal-inner-foot {
       display: flex; gap: .5rem; padding: 1rem 1.5rem;
@@ -297,10 +297,10 @@
       border: 1px solid #EAEAEA; border-radius: 4px;
       font-size: .875rem; font-weight: 500;
     }
-    .btn-modal-cancel:hover { border-color: #111111; color: #111111; }
+    .btn-modal-cancel:hover { border-color: #082F49; color: #082F49; }
   </style>
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#111111">
+  <meta name="theme-color" content="#082F49">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="IH">

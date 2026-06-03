@@ -8,24 +8,33 @@
 [hidden] { display: none !important; }
 
 :root {
-  --bg:           #FBFBFA;
+  --bg:           #F1F5F9;
   --surface:      #FFFFFF;
-  --border:       #EAEAEA;
-  --text:         #111111;
-  --text-muted:   #787774;
-  --text-light:   #B2B0AD;
+  --border:       #E2E8F0;
+  --text:         #082F49;
+  --text-muted:   #64748B;
+  --text-light:   #94A3B8;
 
-  --accent:       #1F6C9F;
-  --accent-bg:    #E1F3FE;
+  /* Brand palette: #082F49 navy · #0EA5E9 sky · #F97316 orange · #14B8A6 teal */
+  --brand:        #082F49;
+  --brand-hover:  #0C3F61;
 
-  --danger:       #9F2F2D;
-  --danger-bg:    #FDEBEC;
+  --accent:       #0EA5E9;
+  --accent-hover: #0284C7;
+  --accent-bg:    #E0F2FE;
 
-  --success:      #346538;
-  --success-bg:   #EDF3EC;
+  --cta:          #F97316;
+  --cta-hover:    #EA580C;
+  --cta-bg:       #FFF1E6;
 
-  --warn:         #956400;
-  --warn-bg:      #FBF3DB;
+  --danger:       #DC2626;
+  --danger-bg:    #FEECEC;
+
+  --success:      #14B8A6;
+  --success-bg:   #CCFBF1;
+
+  --warn:         #B45309;
+  --warn-bg:      #FEF3C7;
 
   /* category palette — desaturated */
   --c-alimentos-bg:       #FFF7ED; --c-alimentos-fg:       #9A3412;
@@ -238,7 +247,7 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: .01em;
 }
 .inv-tab:hover  { color: var(--text); }
-.inv-tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 600; }
+.inv-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 .tab-icon  { font-size: .9rem; }
 .tab-label { font-size: .8rem; }
 
@@ -398,8 +407,8 @@ a { color: inherit; text-decoration: none; }
   transition: all .15s;
 }
 .dash-period-btn.active {
-  background: var(--text);
-  border-color: var(--text);
+  background: var(--accent);
+  border-color: var(--accent);
   color: white;
   font-weight: 600;
 }
@@ -617,10 +626,10 @@ a { color: inherit; text-decoration: none; }
 }
 
 .btn-primary {
-  background: var(--text);
+  background: var(--brand);
   color: white;
 }
-.btn-primary:hover  { background: #333; }
+.btn-primary:hover  { background: var(--brand-hover); }
 .btn-primary:active { transform: scale(0.98); }
 
 .btn-secondary {
@@ -939,8 +948,8 @@ a { color: inherit; text-decoration: none; }
 .btn-card-edit  { }
 .btn-card-del   { color: var(--danger); border-color: var(--danger-bg); background: var(--danger-bg); }
 .btn-card-del:hover { background: #FADBDB; }
-.btn-card-list  { color: var(--warn); border-color: var(--warn-bg); background: var(--warn-bg); }
-.btn-card-list:hover { background: #F5E8B0; }
+.btn-card-list  { color: var(--cta); border-color: var(--cta-bg); background: var(--cta-bg); font-weight: 600; }
+.btn-card-list:hover { background: #FFE3CC; }
 
 /* ============================================================
    Low-stock Alert Panel

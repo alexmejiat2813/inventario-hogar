@@ -214,7 +214,7 @@ function getProgress(current, min) {
 
 function progressColor(pct, isCritical) {
   if (!isCritical)  return 'var(--success)';
-  if (pct >= 50)    return 'var(--warning)';
+  if (pct >= 50)    return 'var(--warn)';
   return 'var(--danger)';
 }
 

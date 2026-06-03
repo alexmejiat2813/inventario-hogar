@@ -14,8 +14,8 @@ let _chartCategory = null;
 let _chartStore    = null;
 
 const CHART_COLORS = [
-  '#2563eb','#16a34a','#dc2626','#f59e0b',
-  '#6d28d9','#0891b2','#be123c','#047857',
+  '#0EA5E9','#14B8A6','#F97316','#082F49',
+  '#38BDF8','#0D9488','#FB923C','#155E75',
 ];
 
 // ── Load ───────────────────────────────────────────────────────
@@ -235,12 +235,12 @@ function renderMonthlyChart(monthlySpend) {
       labels,
       datasets: [{
         data: monthlySpend.map(m => m.total),
-        borderColor: '#2563eb',
-        backgroundColor: 'rgba(37,99,235,.1)',
+        borderColor: '#0EA5E9',
+        backgroundColor: 'rgba(14,165,233,.12)',
         tension: 0.35,
         fill: true,
         pointRadius: 4,
-        pointBackgroundColor: '#2563eb',
+        pointBackgroundColor: '#0EA5E9',
       }],
     },
     options: {
