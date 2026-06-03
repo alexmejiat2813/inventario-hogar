@@ -73,6 +73,22 @@ router.delete('/:id/invite/:code', requireMember, requireOwner, (req, res) => {
   } catch { res.status(500).json({ error: 'Error al revocar código' }); }
 });
 
+router.put('/:id/members/:userId/role', requireMember, requireOwner, (req, res) => {
+  try {
+    const targetId = parseInt(req.params.userId);
+    if (isNaN(targetId)) return res.status(400).json({ error: 'ID inválido' });
+    if (targetId === req.user.id) return res.status(400).json({ error: 'No podés cambiar tu propio rol' });
+    const { role } = req.body;
+    if (!['editor', 'reader'].includes(role)) return res.status(400).json({ error: 'Rol inválido' });
+    const target = db.getMember(req.inventoryId, targetId);
+    if (!target) return res.status(404).json({ error: 'Miembro no encontrado' });
+    if (target.role === 'owner') return res.status(400).json({ error: 'No se puede cambiar el rol del dueño' });
+    const ok = db.updateMemberRole(req.inventoryId, targetId, role);
+    if (!ok) return res.status(404).json({ error: 'Miembro no encontrado' });
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Error al cambiar el rol' }); }
+});
+
 router.delete('/:id/members/:userId', requireMember, requireOwner, (req, res) => {
   try {
     const targetId = parseInt(req.params.userId);

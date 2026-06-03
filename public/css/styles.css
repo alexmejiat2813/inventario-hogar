@@ -1338,6 +1338,14 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: .04em; text-transform: uppercase; white-space: nowrap;
 }
 
+.member-role-select {
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: .15rem .4rem; font-size: .72rem; font-weight: 600;
+  background: white; color: var(--text); outline: none;
+  cursor: pointer; transition: border-color .12s;
+}
+.member-role-select:focus { border-color: var(--accent); }
+
 .codes-list { display: flex; flex-direction: column; gap: .375rem; margin-bottom: .75rem; }
 
 .no-codes { font-size: .8rem; color: var(--text-muted); padding: .5rem 0; }

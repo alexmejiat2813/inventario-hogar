@@ -460,6 +460,13 @@ module.exports = {
     ).run(inventoryId, userId).changes > 0;
   },
 
+  updateMemberRole(inventoryId, userId, role) {
+    const { changes } = db.prepare(
+      'UPDATE inventory_members SET role = ? WHERE inventory_id = ? AND user_id = ?'
+    ).run(role, inventoryId, userId);
+    return changes > 0;
+  },
+
   // ── Invite codes ───────────────────────────────────────────────────────────
   generateInviteCode(inventoryId, role, createdBy) {
     const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

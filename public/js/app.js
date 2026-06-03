@@ -962,10 +962,15 @@ function renderMembers(members, viewerRole) {
       ${m.photo ? `<img class="member-avatar" src="${esc(m.photo)}" alt="${esc(m.name)}">` : `<div class="member-avatar member-avatar-placeholder">${esc(m.name[0])}</div>`}
       <div class="member-info">
         <span class="member-name">${esc(m.name)}</span>
-        <span class="role-badge-small ${ROLE_CLASS[m.role]}">${t('roles.' + m.role)}</span>
+        ${viewerRole === 'owner' && m.role !== 'owner' ? `
+          <select class="member-role-select" data-user-id="${m.user_id}" title="${t('inventory.access.changeRole')}">
+            <option value="editor" ${m.role === 'editor' ? 'selected' : ''}>${t('roles.editor')}</option>
+            <option value="reader" ${m.role === 'reader' ? 'selected' : ''}>${t('roles.reader')}</option>
+          </select>
+        ` : `<span class="role-badge-small ${ROLE_CLASS[m.role]}">${t('roles.' + m.role)}</span>`}
       </div>
       ${viewerRole === 'owner' && m.role !== 'owner' ? `
-        <button class="btn btn-danger btn-sm btn-remove-member" data-user-id="${m.user_id}" title="Remover colaborador">
+        <button class="btn btn-danger btn-sm btn-remove-member" data-user-id="${m.user_id}" title="${t('inventory.access.remove')}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       ` : ''}
@@ -1037,6 +1042,17 @@ async function removeMember(userId) {
     await loadAccessData();
   } catch (err) {
     showToast(err.message, 'error');
+  }
+}
+
+async function changeMemberRole(userId, role) {
+  const invId = state.inventory?.id;
+  try {
+    await apiFetch('PUT', `/api/inventories/${invId}/members/${userId}/role`, { role });
+    showToast(t('inventory.access.roleChanged'), 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+    await loadAccessData(); // revert UI to actual state
   }
 }
 
@@ -1195,6 +1211,10 @@ function initEvents() {
   document.getElementById('members-list').addEventListener('click', e => {
     const btn = e.target.closest('.btn-remove-member');
     if (btn) removeMember(parseInt(btn.dataset.userId));
+  });
+  document.getElementById('members-list').addEventListener('change', e => {
+    const sel = e.target.closest('.member-role-select');
+    if (sel) changeMemberRole(parseInt(sel.dataset.userId), sel.value);
   });
   document.getElementById('codes-list').addEventListener('click', e => {
     const copyBtn   = e.target.closest('.btn-copy-code');
