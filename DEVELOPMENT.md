@@ -33,6 +33,10 @@
 | 13 | P4 | Rate limiting auth (20/15min) y API (200/min) sin dependencias externas | `09238bd` | ✅ |
 | 14 | P4 | Audit log de actividad por inventario (30 últimas acciones, modal acceso) | `4d123f5` | ✅ |
 | 16 | bug | Filtros período dashboard no filtraban gráficas — monthlySpend usaba fecha hardcodeada | `746647c` | ✅ |
+| 21 | UI | Ajustes visuales — badge dueño inline, grid stock 6/3/1, thumbnails de foto, charts con % responsive | `289a7b4` | ✅ |
+| 22 | UI | Paleta de marca navy/sky/orange/teal aplicada a botones, tabs, menús, charts | `804d62f` | ✅ |
+| 23 | bug | `progressColor` usaba `var(--warning)` inexistente → `var(--warn)` | `804d62f` | ✅ |
+| 24 | chore | gitignore `public/uploads/` (contenido de usuarios) | `984608d` | ✅ |
 
 ---
 
