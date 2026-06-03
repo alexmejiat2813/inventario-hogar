@@ -521,7 +521,8 @@ module.exports = {
   getAll(inventoryId) {
     return db.prepare(`
       SELECT p.*,
-             (SELECT COUNT(*) FROM product_images WHERE product_id = p.id) AS image_count
+             (SELECT COUNT(*) FROM product_images WHERE product_id = p.id) AS image_count,
+             (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY created_at LIMIT 1) AS first_image
       FROM products p
       WHERE p.inventory_id = ?
       ORDER BY p.category, p.name
@@ -529,9 +530,14 @@ module.exports = {
   },
 
   getByCategory(inventoryId, category) {
-    return db.prepare(
-      'SELECT * FROM products WHERE inventory_id = ? AND category = ? ORDER BY name'
-    ).all(inventoryId, category);
+    return db.prepare(`
+      SELECT p.*,
+             (SELECT COUNT(*) FROM product_images WHERE product_id = p.id) AS image_count,
+             (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY created_at LIMIT 1) AS first_image
+      FROM products p
+      WHERE p.inventory_id = ? AND p.category = ?
+      ORDER BY p.name
+    `).all(inventoryId, category);
   },
 
   getById(id) {

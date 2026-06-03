@@ -244,17 +244,22 @@ function renderMonthlyChart(monthlySpend) {
       }],
     },
     options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: { legend: { display: false }, tooltip: { callbacks: {
-        label: ctx => {
-          const currency = state.inventory?.currency || 'USD';
-          try {
-            return new Intl.NumberFormat(undefined, {
-              style: 'currency', currency, minimumFractionDigits: 0,
-            }).format(ctx.parsed.y);
-          } catch { return String(ctx.parsed.y); }
-        },
-      }}},
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 8, right: 8 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: { display: false },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const currency = state.inventory?.currency || 'USD';
+            try {
+              return new Intl.NumberFormat(undefined, {
+                style: 'currency', currency, minimumFractionDigits: 0,
+              }).format(ctx.parsed.y);
+            } catch { return String(ctx.parsed.y); }
+          },
+        }},
+      },
       scales: {
         y: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: '#f1f5f9' } },
         x: { ticks: { font: { size: 11 } }, grid: { display: false } },
@@ -279,6 +284,8 @@ function renderCategoryChart(byCategory) {
 
   if (_chartCategory) { _chartCategory.destroy(); _chartCategory = null; }
 
+  const catTotal = filled.reduce((sum, c) => sum + c.count, 0);
+
   _chartCategory = new Chart(canvas, {
     type: 'bar',
     data: {
@@ -291,13 +298,32 @@ function renderCategoryChart(byCategory) {
     },
     options: {
       indexAxis: 'y',
-      responsive: true, maintainAspectRatio: true,
-      plugins: { legend: { display: false } },
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 28 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end', align: 'end', offset: 2,
+          color: '#64748b',
+          font: { size: 10, weight: 700 },
+          formatter: (value) => {
+            const pct = catTotal > 0 ? Math.round((value / catTotal) * 100) : 0;
+            return `${value} (${pct}%)`;
+          },
+        },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const pct = catTotal > 0 ? Math.round((ctx.parsed.x / catTotal) * 100) : 0;
+            return `${ctx.parsed.x} ${ctx.parsed.x === 1 ? 'producto' : 'productos'} (${pct}%)`;
+          },
+        }},
+      },
       scales: {
         x: { beginAtZero: true, ticks: { font: { size: 11 }, stepSize: 1 }, grid: { color: '#f1f5f9' } },
         y: { ticks: { font: { size: 11 } }, grid: { display: false } },
       },
     },
+    plugins: [ChartDataLabels],
   });
 }
 
@@ -317,6 +343,8 @@ function renderStoreChart(byStore) {
 
   if (_chartStore) { _chartStore.destroy(); _chartStore = null; }
 
+  const storeTotal = filled.reduce((sum, s) => sum + s.total, 0);
+
   _chartStore = new Chart(canvas, {
     type: 'doughnut',
     data: {
@@ -325,15 +353,36 @@ function renderStoreChart(byStore) {
         data: filled.map(s => s.total),
         backgroundColor: CHART_COLORS.slice(0, filled.length),
         borderWidth: 0,
-        hoverOffset: 4,
+        hoverOffset: 6,
       }],
     },
     options: {
-      responsive: true, maintainAspectRatio: true,
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: 4 },
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8 } },
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8, boxWidth: 12 } },
+        datalabels: {
+          color: '#fff',
+          font: { size: 11, weight: 700 },
+          formatter: (value) => {
+            const pct = storeTotal > 0 ? Math.round((value / storeTotal) * 100) : 0;
+            return pct >= 6 ? pct + '%' : '';
+          },
+        },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const currency = state.inventory?.currency || 'USD';
+            const pct = storeTotal > 0 ? Math.round((ctx.parsed / storeTotal) * 100) : 0;
+            let amt;
+            try {
+              amt = new Intl.NumberFormat(undefined, { style: 'currency', currency, minimumFractionDigits: 0 }).format(ctx.parsed);
+            } catch { amt = String(ctx.parsed); }
+            return `${ctx.label}: ${amt} (${pct}%)`;
+          },
+        }},
       },
     },
+    plugins: [ChartDataLabels],
   });
 }
 
