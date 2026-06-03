@@ -74,6 +74,8 @@ async function loadInventory() {
   if (!inv) { window.location.href = '/inventories'; return false; }
   state.inventory = inv;
   document.getElementById('inv-name').textContent = inv.name;
+  const badge = document.getElementById('role-badge');
+  if (badge && inv.role) badge.textContent = tSafe('roles.' + inv.role, inv.role);
   return true;
 }
 

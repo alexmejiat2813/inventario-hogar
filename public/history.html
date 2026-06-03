@@ -35,8 +35,21 @@
       white-space: nowrap; flex-shrink: 0; transition: color .15s;
     }
     .btn-back:hover { color: #082F49; }
-    .header-title { font-size: .9375rem; font-weight: 700; flex: 1; color: #082F49; }
-    .header-inv-sub { font-size: .68rem; color: #787774; font-weight: 500; }
+    .header-brand { display: flex; align-items: center; gap: .625rem; flex: 1; min-width: 0; }
+    .header-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; background: #082F49; color: white;
+      border-radius: 5px; font-size: .65rem; font-weight: 800;
+      letter-spacing: .04em; flex-shrink: 0;
+    }
+    .header-title-row { display: flex; align-items: center; gap: .5rem; min-width: 0; flex-wrap: wrap; }
+    .header-title { font-size: .9375rem; font-weight: 700; color: #082F49; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .role-badge-header {
+      display: inline-flex; align-items: center; padding: .15rem .55rem;
+      border-radius: 999px; font-size: .6rem; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase; flex-shrink: 0;
+      background: #E0F2FE; color: #0EA5E9;
+    }
 
     /* Tab bar */
     .inv-tabs-bar {
@@ -309,13 +322,16 @@
 
   <header class="header">
     <div class="header-inner">
-      <a href="/inventory" class="btn-back">
+      <a href="/inventories" class="btn-back">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        <span data-i18n="history.back">Inventario</span>
+        <span data-i18n="inventory.back">Inventarios</span>
       </a>
-      <div style="flex:1;min-width:0;">
-        <div class="header-inv-sub" id="inv-name"></div>
-        <div class="header-title" data-i18n="history.title">Historial de compras</div>
+      <div class="header-brand">
+        <div class="header-icon">IH</div>
+        <div class="header-title-row">
+          <h1 class="header-title" id="inv-name">Inventario</h1>
+          <span class="role-badge-header" id="role-badge"></span>
+        </div>
       </div>
       <div class="export-wrap" id="export-wrap">
         <button class="btn-export" id="btn-export" aria-haspopup="true" aria-expanded="false">

@@ -78,6 +78,8 @@ async function loadAll() {
   state.summary   = summary || [];
 
   document.getElementById('inv-name').textContent = inv.name;
+  const badge = document.getElementById('role-badge');
+  if (badge && inv.role) badge.textContent = tSafe('roles.' + inv.role, inv.role);
 
   populateStoreFilter();
   renderSummary();
