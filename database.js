@@ -891,6 +891,15 @@ module.exports = {
   },
 
   // ── Inventory currency ─────────────────────────────────────────────────────
+  renameInventory(id, name) {
+    db.prepare('UPDATE inventories SET name = ? WHERE id = ?').run(name.trim(), id);
+    return this.getInventory(id);
+  },
+
+  deleteInventory(id) {
+    return db.prepare('DELETE FROM inventories WHERE id = ?').run(id).changes > 0;
+  },
+
   updateInventoryCurrency(inventoryId, currency) {
     db.prepare('UPDATE inventories SET currency = ? WHERE id = ?').run(currency, inventoryId);
     return this.getInventory(inventoryId);

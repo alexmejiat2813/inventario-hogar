@@ -83,6 +83,27 @@ router.delete('/:id/members/:userId', requireMember, requireOwner, (req, res) =>
   } catch { res.status(500).json({ error: 'Error al remover miembro' }); }
 });
 
+router.put('/:id/name', requireMember, requireOwner, (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    const inv = db.renameInventory(req.inventoryId, name);
+    res.json(inv);
+  } catch { res.status(500).json({ error: 'Error al renombrar el inventario' }); }
+});
+
+router.delete('/:id', requireMember, requireOwner, (req, res) => {
+  try {
+    const ok = db.deleteInventory(req.inventoryId);
+    if (!ok) return res.status(404).json({ error: 'Inventario no encontrado' });
+    // Clear active inventory from session if it was this one
+    if (req.session.activeInventoryId === req.inventoryId) {
+      req.session.activeInventoryId = null;
+    }
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Error al eliminar el inventario' }); }
+});
+
 router.put('/:id/currency', requireMember, requireOwner, (req, res) => {
   try {
     const { currency } = req.body;

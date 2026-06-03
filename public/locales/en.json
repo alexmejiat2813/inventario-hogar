@@ -27,6 +27,19 @@
     },
     "joined": "You joined \"{{name}}\" as {{role}}",
     "created": "Inventory created",
+    "rename": {
+      "action": "Rename",
+      "title": "Rename inventory",
+      "submit": "Save",
+      "success": "Inventory renamed"
+    },
+    "delete": {
+      "action": "Delete",
+      "title": "Delete inventory",
+      "warning": "This action is irreversible. All products, purchase history and inventory data will be deleted.",
+      "confirm": "Delete",
+      "success": "Inventory deleted"
+    },
     "modalCreate": {
       "title": "Create inventory",
       "label": "Inventory name",

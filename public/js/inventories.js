@@ -41,6 +41,22 @@ function renderInventories(list) {
     <div class="inv-card" data-id="${inv.id}">
       <div class="inv-card-top">
         <span class="role-badge ${ROLE_CLASS[inv.role]}">${t('roles.' + inv.role)}</span>
+        ${inv.role === 'owner' ? `
+          <div class="inv-card-menu" data-menu-id="${inv.id}">
+            <button class="inv-card-menu-btn" data-action="menu" data-id="${inv.id}" aria-label="Opciones">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+            <div class="inv-card-dropdown" id="menu-${inv.id}" hidden>
+              <button class="inv-card-dropdown-item" data-action="rename" data-id="${inv.id}" data-name="${esc(inv.name)}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                ${t('inventories.rename.action')}
+              </button>
+              <button class="inv-card-dropdown-item inv-card-dropdown-item--danger" data-action="delete" data-id="${inv.id}" data-name="${esc(inv.name)}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                ${t('inventories.delete.action')}
+              </button>
+            </div>
+          </div>` : ''}
       </div>
       <div class="inv-card-name">${esc(inv.name)}</div>
       <div class="inv-card-meta">
@@ -53,6 +69,12 @@ function renderInventories(list) {
       </div>
     </div>
   `).join('');
+}
+
+function closeAllCardMenus(exceptId) {
+  document.querySelectorAll('.inv-card-dropdown').forEach(d => {
+    if (d.id !== `menu-${exceptId}`) d.hidden = true;
+  });
 }
 
 async function loadInventories() {
@@ -105,6 +127,61 @@ async function handleCreate(e) {
     await apiFetch('POST', '/api/inventories', { name });
     closeModal('create-overlay');
     showToast(t('inventories.created'));
+    loadInventories();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+let _renameTargetId = null;
+
+function openRenameModal(id, currentName) {
+  _renameTargetId = id;
+  document.getElementById('rename-inv-name').value = currentName;
+  openModal('rename-overlay');
+  requestAnimationFrame(() => {
+    const inp = document.getElementById('rename-inv-name');
+    inp.focus(); inp.select();
+  });
+}
+
+async function handleRename(e) {
+  e.preventDefault();
+  const name = document.getElementById('rename-inv-name').value.trim();
+  if (!name || !_renameTargetId) return;
+  const btn = e.submitter;
+  btn.disabled = true;
+  try {
+    await apiFetch('PUT', `/api/inventories/${_renameTargetId}/name`, { name });
+    closeModal('rename-overlay');
+    showToast(t('inventories.rename.success'));
+    loadInventories();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+let _deleteTargetId = null;
+
+function openDeleteModal(id, name) {
+  _deleteTargetId = id;
+  document.getElementById('delete-inv-name-label').textContent = name;
+  openModal('delete-overlay');
+}
+
+async function handleDelete() {
+  if (!_deleteTargetId) return;
+  const btn = document.getElementById('btn-delete-confirm');
+  btn.disabled = true;
+  try {
+    await apiFetch('DELETE', `/api/inventories/${_deleteTargetId}`);
+    closeModal('delete-overlay');
+    showToast(t('inventories.delete.success'));
+    _deleteTargetId = null;
     loadInventories();
   } catch (err) {
     showToast(err.message, 'error');
@@ -215,11 +292,43 @@ function initEvents() {
     document.querySelectorAll('.modal-overlay:not([hidden])').forEach(o => closeModal(o.id));
   });
 
-  // Enter inventory
+  // Inventory grid: enter, menu, rename, delete
   document.getElementById('inv-grid').addEventListener('click', e => {
-    const btn = e.target.closest('.btn-enter');
-    if (btn) enterInventory(parseInt(btn.dataset.id));
+    const enter  = e.target.closest('.btn-enter');
+    const menu   = e.target.closest('[data-action="menu"]');
+    const rename = e.target.closest('[data-action="rename"]');
+    const del    = e.target.closest('[data-action="delete"]');
+
+    if (enter) { enterInventory(parseInt(enter.dataset.id)); return; }
+
+    if (menu) {
+      e.stopPropagation();
+      const id       = menu.dataset.id;
+      const dropdown = document.getElementById(`menu-${id}`);
+      const isOpen   = !dropdown.hidden;
+      closeAllCardMenus(null);
+      dropdown.hidden = isOpen;
+      return;
+    }
+
+    if (rename) {
+      closeAllCardMenus(null);
+      openRenameModal(parseInt(rename.dataset.id), rename.dataset.name);
+      return;
+    }
+
+    if (del) {
+      closeAllCardMenus(null);
+      openDeleteModal(parseInt(del.dataset.id), del.dataset.name);
+      return;
+    }
   });
+
+  // Close menus on outside click
+  document.addEventListener('click', () => closeAllCardMenus(null));
+
+  document.getElementById('rename-form').addEventListener('submit', handleRename);
+  document.getElementById('btn-delete-confirm').addEventListener('click', handleDelete);
 
   // Profile dropdown
   document.getElementById('profile-btn').addEventListener('click', e => {

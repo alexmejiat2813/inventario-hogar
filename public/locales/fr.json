@@ -27,6 +27,19 @@
     },
     "joined": "Vous avez rejoint \"{{name}}\" en tant que {{role}}",
     "created": "Inventaire créé",
+    "rename": {
+      "action": "Renommer",
+      "title": "Renommer l'inventaire",
+      "submit": "Enregistrer",
+      "success": "Inventaire renommé"
+    },
+    "delete": {
+      "action": "Supprimer",
+      "title": "Supprimer l'inventaire",
+      "warning": "Cette action est irréversible. Tous les produits, l'historique des achats et les données seront supprimés.",
+      "confirm": "Supprimer",
+      "success": "Inventaire supprimé"
+    },
     "modalCreate": {
       "title": "Créer un inventaire",
       "label": "Nom de l'inventaire",

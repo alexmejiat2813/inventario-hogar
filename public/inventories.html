@@ -230,7 +230,34 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .inv-card-top { display: flex; align-items: center; justify-content: space-between; }
+    .inv-card-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+
+    /* Card kebab menu */
+    .inv-card-menu { position: relative; }
+    .inv-card-menu-btn {
+      width: 28px; height: 28px; border-radius: 5px;
+      background: none; border: 1px solid transparent;
+      color: #B2B0AD; display: flex; align-items: center; justify-content: center;
+      transition: background .12s, border-color .12s, color .12s;
+    }
+    .inv-card-menu-btn:hover { background: #F8F8F7; border-color: #EAEAEA; color: #111111; }
+    .inv-card-dropdown {
+      position: absolute; top: calc(100% + 4px); right: 0;
+      background: white; border: 1px solid #EAEAEA; border-radius: 8px;
+      min-width: 160px; z-index: 200;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08); overflow: hidden;
+    }
+    .inv-card-dropdown-item {
+      display: flex; align-items: center; gap: .5rem;
+      width: 100%; padding: .6rem .875rem;
+      background: none; border: none; text-align: left;
+      font-size: .82rem; font-weight: 500; color: #111111;
+      transition: background .1s; cursor: pointer;
+    }
+    .inv-card-dropdown-item:hover { background: #F8F8F7; }
+    .inv-card-dropdown-item + .inv-card-dropdown-item { border-top: 1px solid #F4F4F3; }
+    .inv-card-dropdown-item--danger { color: #9F2F2D; }
+    .inv-card-dropdown-item--danger:hover { background: #FDF2F2; }
 
     .role-badge {
       display: inline-flex; align-items: center; gap: .2rem;
@@ -557,6 +584,51 @@
           <button type="submit" class="btn btn-primary" data-i18n="inventories.modalJoin.submit">Unirme</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Renombrar inventario -->
+  <div class="modal-overlay" id="rename-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="inventories.rename.title">Renombrar inventario</h2>
+        <button class="modal-close" data-close="rename-overlay">&#215;</button>
+      </div>
+      <form class="modal-form" id="rename-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="rename-inv-name" data-i18n="inventories.modalCreate.label">Nombre del inventario</label>
+          <input class="form-input" type="text" id="rename-inv-name"
+                 maxlength="80" required autocomplete="off">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="rename-overlay" data-i18n="inventories.modalCreate.cancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary" data-i18n="inventories.rename.submit">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Eliminar inventario -->
+  <div class="modal-overlay" id="delete-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" style="color:#9F2F2D;" data-i18n="inventories.delete.title">Eliminar inventario</h2>
+        <button class="modal-close" data-close="delete-overlay">&#215;</button>
+      </div>
+      <div style="padding:1.25rem 1.5rem;">
+        <p style="font-size:.875rem;color:#787774;line-height:1.55;margin-bottom:.875rem;" data-i18n="inventories.delete.warning">
+          Esta acción es irreversible. Se eliminarán todos los productos, historial de compras y datos del inventario.
+        </p>
+        <p style="font-size:.875rem;font-weight:600;color:#111111;margin-bottom:1.25rem;">
+          &ldquo;<span id="delete-inv-name-label"></span>&rdquo;
+        </p>
+        <div style="display:flex;gap:.5rem;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" data-close="delete-overlay" data-i18n="inventories.modalCreate.cancel">Cancelar</button>
+          <button type="button" class="btn" id="btn-delete-confirm"
+                  style="flex:1;background:#9F2F2D;color:white;border:none;border-radius:4px;padding:.55rem;font-size:.875rem;font-weight:600;transition:opacity .15s;"
+                  data-i18n="inventories.delete.confirm">Eliminar</button>
+        </div>
+      </div>
     </div>
   </div>
 

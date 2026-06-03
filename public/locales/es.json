@@ -27,6 +27,19 @@
     },
     "joined": "Te uniste a \"{{name}}\" como {{role}}",
     "created": "Inventario creado",
+    "rename": {
+      "action": "Renombrar",
+      "title": "Renombrar inventario",
+      "submit": "Guardar",
+      "success": "Inventario renombrado"
+    },
+    "delete": {
+      "action": "Eliminar",
+      "title": "Eliminar inventario",
+      "warning": "Esta acción es irreversible. Se eliminarán todos los productos, historial de compras y datos del inventario.",
+      "confirm": "Eliminar",
+      "success": "Inventario eliminado"
+    },
     "modalCreate": {
       "title": "Crear inventario",
       "label": "Nombre del inventario",
