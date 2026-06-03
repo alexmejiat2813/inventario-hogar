@@ -43,7 +43,7 @@
       letter-spacing: .04em; flex-shrink: 0;
     }
     .header-title-row { display: flex; align-items: center; gap: .5rem; min-width: 0; flex-wrap: wrap; }
-    .header-title { font-size: .9375rem; font-weight: 700; color: #082F49; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-title { font-size: 1rem; font-weight: 600; letter-spacing: -.01em; color: #082F49; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .role-badge-header {
       display: inline-flex; align-items: center; padding: .15rem .55rem;
       border-radius: 999px; font-size: .6rem; font-weight: 700;
@@ -106,6 +106,15 @@
       outline: none; transition: border-color .12s;
     }
     .filter-select:focus { border-color: #082F49; }
+
+    .header-profile { flex-shrink: 0; display: inline-flex; }
+    .header-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #E2E8F0; }
+    .header-avatar-ph {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #082F49; color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; font-weight: 700;
+    }
 
     /* Export button */
     .export-wrap { position: relative; flex-shrink: 0; }
@@ -349,6 +358,10 @@
           </button>
         </div>
       </div>
+      <a class="header-profile" href="/settings" title="Perfil" aria-label="Perfil">
+        <img class="header-avatar" id="profile-avatar" src="" alt="" hidden>
+        <span class="header-avatar-ph" id="profile-avatar-ph"></span>
+      </a>
     </div>
   </header>
 

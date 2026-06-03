@@ -80,10 +80,26 @@ async function loadAll() {
   document.getElementById('inv-name').textContent = inv.name;
   const badge = document.getElementById('role-badge');
   if (badge && inv.role) badge.textContent = tSafe('roles.' + inv.role, inv.role);
+  loadProfileAvatar();
 
   populateStoreFilter();
   renderSummary();
   await loadSessions();
+}
+
+async function loadProfileAvatar() {
+  try {
+    const user = await apiFetch('/api/me');
+    if (!user) return;
+    const img = document.getElementById('profile-avatar');
+    const ph  = document.getElementById('profile-avatar-ph');
+    if (user.photo && img) {
+      img.src = user.photo; img.alt = user.name || ''; img.hidden = false;
+      if (ph) ph.hidden = true;
+    } else if (ph) {
+      ph.textContent = (user.name || '?')[0].toUpperCase();
+    }
+  } catch {}
 }
 
 async function loadSessions() {

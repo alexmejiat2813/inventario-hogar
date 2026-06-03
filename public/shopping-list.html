@@ -45,7 +45,7 @@
     }
     .header-title-row { display: flex; align-items: center; gap: .5rem; min-width: 0; flex-wrap: wrap; }
     .header-title {
-      font-size: .9375rem; font-weight: 700; color: #082F49;
+      font-size: 1rem; font-weight: 600; letter-spacing: -.01em; color: #082F49;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .role-badge-header {
@@ -56,6 +56,14 @@
     }
     .list-count { font-weight: 500; color: #787774; font-size: .85rem; }
     .header-actions { display: flex; gap: .5rem; flex-shrink: 0; }
+    .header-profile { flex-shrink: 0; display: inline-flex; }
+    .header-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #E2E8F0; }
+    .header-avatar-ph {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #082F49; color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; font-weight: 700;
+    }
     .btn-register {
       padding: .4rem .75rem; flex-shrink: 0;
       background: #082F49; color: white;
@@ -754,6 +762,10 @@
       <button class="mob-ham" id="mob-ham" aria-label="Abrir menú">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
+      <a class="header-profile" href="/settings" title="Perfil" aria-label="Perfil">
+        <img class="header-avatar" id="profile-avatar" src="" alt="" hidden>
+        <span class="header-avatar-ph" id="profile-avatar-ph"></span>
+      </a>
     </div>
   </header>
 
