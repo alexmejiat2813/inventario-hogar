@@ -278,10 +278,9 @@ function renderProductCard(p) {
         ${p.image_count > 0 ? `<button class="btn-card-photos" data-action="photos" data-id="${p.id}" title="Ver fotos">📷 ${p.image_count}</button>` : ''}
       </div>
 
-      <div class="product-name-row">
-        ${p.first_image ? `<img class="product-thumb" src="${esc(p.first_image)}" alt="${esc(p.name)}" data-action="photos" data-id="${p.id}" loading="lazy">` : ''}
-        <h3 class="product-name">${esc(p.name)}</h3>
-      </div>
+      ${p.first_image ? `<div class="product-thumb-wrap"><img class="product-thumb" src="${esc(p.first_image)}" alt="${esc(p.name)}" data-action="photos" data-id="${p.id}" loading="lazy"></div>` : ''}
+
+      <h3 class="product-name">${esc(p.name)}</h3>
 
       <div class="product-qty-info">
         <span class="qty-current">${p.current_qty} ${unit}</span>
