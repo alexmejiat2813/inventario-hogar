@@ -91,15 +91,53 @@ async function loadProfileAvatar() {
   try {
     const user = await apiFetch('/api/me');
     if (!user) return;
-    const img = document.getElementById('profile-avatar');
-    const ph  = document.getElementById('profile-avatar-ph');
-    if (user.photo && img) {
-      img.src = user.photo; img.alt = user.name || ''; img.hidden = false;
-      if (ph) ph.hidden = true;
-    } else if (ph) {
-      ph.textContent = (user.name || '?')[0].toUpperCase();
+    const initial = (user.name || '?')[0].toUpperCase();
+    const av  = document.getElementById('user-avatar');
+    const avp = document.getElementById('avatar-placeholder');
+    if (user.photo && av) {
+      av.src = user.photo; av.alt = user.name || ''; av.hidden = false;
+      if (avp) avp.hidden = true;
+    } else if (avp) {
+      avp.textContent = initial;
+    }
+    const dn = document.getElementById('dropdown-name');
+    const de = document.getElementById('dropdown-email');
+    if (dn) dn.textContent = user.name  || '';
+    if (de) de.textContent = user.email || '';
+    const dav = document.getElementById('dropdown-avatar');
+    const davp = document.getElementById('dropdown-avatar-ph');
+    if (user.photo && dav) {
+      dav.src = user.photo; dav.alt = user.name || ''; dav.hidden = false;
+      if (davp) davp.hidden = true;
+    } else if (davp) {
+      davp.textContent = initial;
     }
   } catch {}
+}
+
+function initProfileMenu() {
+  const btn  = document.getElementById('profile-btn');
+  const menu = document.getElementById('profile-dropdown');
+  const wrap = document.getElementById('profile-menu-wrap');
+  if (!btn || !menu) return;
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = menu.hidden;
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', e => {
+    if (wrap && !wrap.contains(e.target)) {
+      menu.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+  const logout = document.getElementById('btn-logout');
+  if (logout) logout.addEventListener('click', async () => {
+    menu.hidden = true;
+    await fetch('/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  });
 }
 
 async function loadSessions() {
@@ -577,6 +615,7 @@ function initEvents() {
 async function init() {
   await I18N.init();
   initEvents();
+  initProfileMenu();
   try {
     await loadAll();
   } catch (err) {

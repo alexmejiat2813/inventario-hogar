@@ -321,6 +321,7 @@
     }
     .btn-modal-cancel:hover { border-color: #082F49; color: #082F49; }
   </style>
+  <link rel="stylesheet" href="/css/header.css">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#082F49">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -333,15 +334,82 @@
     <div class="header-inner">
       <a href="/inventories" class="btn-back">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        <span data-i18n="inventory.back">Inventarios</span>
+        <span class="btn-back-label" data-i18n="inventory.back">Inventarios</span>
       </a>
       <div class="header-brand">
         <div class="header-icon">IH</div>
-        <div class="header-title-row">
-          <h1 class="header-title" id="inv-name">Inventario</h1>
-          <span class="role-badge-header" id="role-badge"></span>
+        <h1 class="header-title" id="inv-name">Inventario</h1>
+        <span class="header-crumb">/ <span data-i18n="invTabs.history">Historial</span></span>
+        <span class="role-badge-header" id="role-badge" hidden></span>
+      </div>
+
+      <!-- Tabs principales -->
+      <nav class="top-tabs" id="top-tabs">
+        <a class="top-tab" href="/inventory">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="5" height="9"/><rect x="10" y="7" width="5" height="14"/><rect x="17" y="3" width="5" height="18"/></svg>
+          <span data-i18n="invTabs.dashboard">Dashboard</span>
+        </a>
+        <a class="top-tab" href="/inventory?tab=stock">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <span data-i18n="invTabs.stock">Stock</span>
+        </a>
+        <a class="top-tab" href="/shopping-list">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span data-i18n="invTabs.shopping">Compras</span>
+        </a>
+        <a class="top-tab active" href="/history">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span data-i18n="invTabs.history">Historial</span>
+        </a>
+      </nav>
+
+      <div class="header-right">
+        <button class="mob-ham" id="mob-ham" aria-label="Abrir menú">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+
+        <div class="profile-menu-wrap" id="profile-menu-wrap">
+          <button class="profile-btn" id="profile-btn" aria-label="Menú de usuario" aria-expanded="false">
+            <img class="user-avatar" id="user-avatar" src="" alt="" hidden>
+            <div class="avatar-placeholder" id="avatar-placeholder"></div>
+          </button>
+          <div class="profile-dropdown" id="profile-dropdown" hidden>
+            <div class="dropdown-header">
+              <img class="dropdown-avatar" id="dropdown-avatar" src="" alt="" hidden>
+              <div class="dropdown-avatar-ph" id="dropdown-avatar-ph"></div>
+              <div class="dropdown-user-info">
+                <span class="dropdown-name"  id="dropdown-name"></span>
+                <span class="dropdown-email" id="dropdown-email"></span>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-lang">
+              <span class="dropdown-lang-label" data-i18n="profile.language">Idioma</span>
+              <div class="lang-btns">
+                <button class="lang-btn" data-lang="es">ES <span class="lang-check">✓</span></button>
+                <button class="lang-btn" data-lang="en">EN <span class="lang-check">✓</span></button>
+                <button class="lang-btn" data-lang="fr">FR <span class="lang-check">✓</span></button>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/settings" class="dropdown-item" onclick="sessionStorage.setItem('settings_referrer', window.location.href)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span data-i18n="profile.settings">Configuración</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-item-danger" id="btn-logout">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span data-i18n="profile.logout">Cerrar sesión</span>
+            </button>
+          </div>
         </div>
       </div>
+    </div>
+  </header>
+
+  <!-- ===== BARRA DE ACCIONES (Historial) ===== -->
+  <div class="action-bar" id="action-bar">
+    <div class="action-bar-inner">
       <div class="export-wrap" id="export-wrap">
         <button class="btn-export" id="btn-export" aria-haspopup="true" aria-expanded="false">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -358,33 +426,46 @@
           </button>
         </div>
       </div>
-      <a class="header-profile" href="/settings" title="Perfil" aria-label="Perfil">
-        <img class="header-avatar" id="profile-avatar" src="" alt="" hidden>
-        <span class="header-avatar-ph" id="profile-avatar-ph"></span>
-      </a>
     </div>
-  </header>
+  </div>
 
-  <nav class="inv-tabs-bar">
-    <div class="inv-tabs-inner">
-      <a href="/inventory" class="inv-tab">
-        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="5" height="9"/><rect x="10" y="7" width="5" height="14"/><rect x="17" y="3" width="5" height="18"/></svg>
-        <span class="tab-label" data-i18n="invTabs.dashboard">Dashboard</span>
-      </a>
-      <a href="/inventory?tab=stock" class="inv-tab">
-        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        <span class="tab-label" data-i18n="invTabs.stock">Stock</span>
-      </a>
-      <a href="/shopping-list" class="inv-tab">
-        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        <span class="tab-label" data-i18n="invTabs.shopping">Compras</span>
-      </a>
-      <span class="inv-tab active">
-        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span class="tab-label" data-i18n="invTabs.history">Historial</span>
-      </span>
+  <!-- Drawer móvil -->
+  <div class="mob-overlay" id="mob-overlay"></div>
+  <aside class="mob-drawer" id="mob-drawer" aria-hidden="true">
+    <div class="mob-dhead">
+      <span class="mob-dhead-title" data-i18n="history.title">Historial de compras</span>
+      <button class="mob-dclose" id="mob-dclose" aria-label="Cerrar menú">✕</button>
     </div>
-  </nav>
+    <div class="mob-dbody">
+      <div class="mob-dlabel" data-i18n="invTabs.section">Navegación</div>
+      <a class="mob-ditem" href="/inventory">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="5" height="9"/><rect x="10" y="7" width="5" height="14"/><rect x="17" y="3" width="5" height="18"/></svg>
+        <span data-i18n="invTabs.dashboard">Dashboard</span>
+      </a>
+      <a class="mob-ditem" href="/inventory?tab=stock">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span data-i18n="invTabs.stock">Stock</span>
+      </a>
+      <a class="mob-ditem" href="/shopping-list">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span data-i18n="invTabs.shopping">Compras</span>
+      </a>
+      <span class="mob-ditem mob-active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span data-i18n="invTabs.history">Historial</span>
+      </span>
+      <div class="mob-ddivider"></div>
+      <div class="mob-dlabel" data-i18n="history.export.btn">Exportar</div>
+      <button class="mob-ditem" data-mob-act="export-pdf">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span data-i18n="history.export.pdf">Exportar a PDF</span>
+      </button>
+      <button class="mob-ditem" data-mob-act="export-csv">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+        <span data-i18n="history.export.csv">Exportar a CSV</span>
+      </button>
+    </div>
+  </aside>
 
   <main class="main">
     <!-- Monthly summary -->
@@ -476,6 +557,30 @@
 
   <script src="/js/i18n.js"></script>
   <script src="/js/history.js"></script>
+  <script>
+  /* ── Mobile drawer ── */
+  (function () {
+    var ham     = document.getElementById('mob-ham');
+    var overlay = document.getElementById('mob-overlay');
+    var drawer  = document.getElementById('mob-drawer');
+    var dclose  = document.getElementById('mob-dclose');
+    if (!ham || !overlay || !drawer) return;
+    function openDrawer()  { overlay.classList.add('mob-open'); drawer.classList.add('mob-open'); drawer.setAttribute('aria-hidden','false'); }
+    function closeDrawer() { overlay.classList.remove('mob-open'); drawer.classList.remove('mob-open'); drawer.setAttribute('aria-hidden','true'); }
+    ham.addEventListener('click', openDrawer);
+    overlay.addEventListener('click', closeDrawer);
+    if (dclose) dclose.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
+    var ACT = { 'export-pdf': 'export-pdf', 'export-csv': 'export-csv' };
+    drawer.querySelectorAll('[data-mob-act]').forEach(function (item) {
+      item.addEventListener('click', function () {
+        var real = document.getElementById(ACT[item.dataset.mobAct]);
+        closeDrawer();
+        if (real) real.click();
+      });
+    });
+  })();
+  </script>
   <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
 </body>
 </html>

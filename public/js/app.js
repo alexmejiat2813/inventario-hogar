@@ -420,6 +420,11 @@ function switchTab(tabName) {
   document.querySelectorAll('.top-tab[data-tab]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
+  // Breadcrumb: "/ Stock" en stock, vacío en dashboard
+  const crumb = document.getElementById('header-crumb');
+  if (crumb) {
+    crumb.textContent = tabName === 'stock' ? '/ ' + (t('invTabs.stock') || 'Stock') : '';
+  }
   // Barra de acciones: mostrar el grupo de la vista activa
   document.querySelectorAll('.action-group[data-action-group]').forEach(g => {
     g.classList.toggle('active', g.dataset.actionGroup === tabName);

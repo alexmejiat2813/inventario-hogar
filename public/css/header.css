@@ -4,6 +4,10 @@
    Linkear DESPUÉS de styles.css / del <style> inline para que mande.
    ============================================================ */
 
+/* Transición suave entre páginas (Compras/Historial/Stock) — elimina
+   el parpadeo del cambio de documento en navegadores compatibles. */
+@view-transition { navigation: auto; }
+
 /* ── Top header ── */
 .header {
   background: #FFFFFF; border-bottom: 1px solid #E2E8F0;
@@ -12,6 +16,7 @@
 .header-inner {
   max-width: 1600px; margin: 0 auto; height: 100%;
   padding: 0 1.25rem; display: flex; align-items: center; gap: 1rem;
+  justify-content: flex-start;
 }
 
 .btn-back {
@@ -25,7 +30,7 @@
 .btn-back-label { display: none; }
 @media (min-width: 560px) { .btn-back-label { display: inline; } }
 
-.header-brand { display: flex; align-items: center; gap: .625rem; flex-shrink: 0; min-width: 0; }
+.header-brand { display: flex; align-items: center; gap: .625rem; flex: 0 0 auto; min-width: 0; }
 .header-icon {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; background: #082F49; color: #fff;
@@ -37,6 +42,11 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   max-width: 38vw;
 }
+.header-crumb {
+  font-size: 1rem; font-weight: 500; color: #94A3B8;
+  white-space: nowrap; flex-shrink: 0;
+}
+.header-crumb:empty { display: none; }
 
 /* ── Tabs principales (en el top header) ── */
 .top-tabs {
@@ -78,6 +88,46 @@
 .action-group.active { display: flex; }
 /* En móvil la barra de acciones se oculta (las acciones van al drawer) */
 @media (max-width: 768px) { .action-bar { display: none; } }
+
+/* ── Botones de la barra de acciones: tamaño/forma unificados ── */
+.action-bar-inner .btn,
+.action-bar-inner .add-menu-main,
+.action-bar-inner .add-menu-chevron,
+.action-bar-inner .btn-templates,
+.action-bar-inner .btn-export,
+.action-bar-inner .btn-register,
+.action-bar-inner .btn-clear {
+  height: 36px; padding: 0 .85rem; font-size: .8rem; font-weight: 600;
+  border-radius: 6px; display: inline-flex; align-items: center; gap: .4rem;
+  white-space: nowrap; line-height: 1; cursor: pointer; transition: all .15s;
+}
+.action-bar-inner .add-menu-chevron { padding: 0 .55rem; }
+/* Secundarios: outline slate, hover navy */
+.action-bar-inner .btn-templates,
+.action-bar-inner .btn-export,
+.action-bar-inner .btn-clear {
+  background: #FFFFFF; color: #64748B; border: 1px solid #E2E8F0;
+}
+.action-bar-inner .btn-templates:hover,
+.action-bar-inner .btn-export:hover,
+.action-bar-inner .btn-clear:hover { border-color: #082F49; color: #082F49; }
+/* Primarios: navy filled */
+.action-bar-inner .btn-register,
+.action-bar-inner .add-menu-main,
+.action-bar-inner .add-menu-chevron {
+  background: #082F49; color: #FFFFFF; border: 1px solid #082F49;
+}
+.action-bar-inner .btn-register:not(:disabled):hover,
+.action-bar-inner .add-menu-main:hover,
+.action-bar-inner .add-menu-chevron:hover { background: #0C3F61; border-color: #0C3F61; }
+.action-bar-inner .btn-register:disabled { opacity: .4; cursor: not-allowed; }
+/* Grupo split del +Agregar: unir main + chevron */
+.action-bar-inner .add-menu-main { border-radius: 6px 0 0 6px; border-right: none; }
+.action-bar-inner .add-menu-chevron { border-radius: 0 6px 6px 0; }
+.action-bar-inner .add-menu-btn-group { display: inline-flex; }
+.action-bar-inner .btn-export svg,
+.action-bar-inner .btn-templates svg,
+.action-bar-inner .btn-clear svg { color: inherit; }
 
 /* ── Hamburguesa (solo móvil) ── */
 .mob-ham {

@@ -727,7 +727,79 @@
     .mob-ditem.mob-active svg { color: #0EA5E9; }
     .mob-ditem[disabled] { opacity: .38; cursor: not-allowed; pointer-events: none; }
     .mob-ddivider { height: 1px; background: #E2E8F0; margin: .375rem 0; }
+
+    /* Profile dropdown */
+    .profile-menu-wrap { position: relative; flex-shrink: 0; }
+    .profile-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid #E2E8F0; padding: 0; overflow: hidden;
+      background: #F1F5F9; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: border-color .15s; flex-shrink: 0;
+    }
+    .profile-btn:hover, .profile-btn[aria-expanded="true"] { border-color: #082F49; }
+    .user-avatar { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+    .avatar-placeholder {
+      width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; color: #64748B; text-transform: uppercase;
+    }
+    .profile-dropdown {
+      position: absolute; top: calc(100% + 8px); right: 0; width: 240px;
+      background: #FFFFFF; border-radius: 8px; border: 1px solid #E2E8F0;
+      overflow: hidden; z-index: 300; box-shadow: 0 4px 16px rgba(8,47,73,.08);
+      animation: dropdown-in .14s ease;
+    }
+    @media (max-width: 400px) {
+      .profile-dropdown { right: -4px; width: min(240px, calc(100vw - 1.5rem)); }
+    }
+    @keyframes dropdown-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .dropdown-header {
+      display: flex; align-items: center; gap: .75rem; padding: .875rem 1rem;
+      background: #F1F5F9; border-bottom: 1px solid #E2E8F0;
+    }
+    .dropdown-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .dropdown-avatar-ph {
+      width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%;
+      background: #E0F2FE; color: #0EA5E9; display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; text-transform: uppercase;
+    }
+    .dropdown-user-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .1rem; }
+    .dropdown-name {
+      font-size: .8rem; font-weight: 700; color: #082F49;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dropdown-email {
+      font-size: .68rem; color: #64748B;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dropdown-divider { height: 1px; background: #E2E8F0; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: .625rem; width: 100%; padding: .7rem 1rem;
+      background: none; border: none; font-size: .8rem; font-weight: 500; color: #082F49;
+      text-align: left; cursor: pointer; transition: background .12s; text-decoration: none;
+    }
+    .dropdown-item:hover { background: #E0F2FE; color: #0EA5E9; }
+    .dropdown-item:hover svg { color: #0EA5E9; }
+    .dropdown-item svg { flex-shrink: 0; color: #64748B; }
+    .dropdown-item-danger { color: #DC2626; }
+    .dropdown-item-danger:hover { background: #FEECEC; color: #DC2626; }
+    .dropdown-item-danger svg, .dropdown-item-danger:hover svg { color: #DC2626; }
+    .dropdown-lang { padding: .5rem 1rem .75rem; }
+    .dropdown-lang-label {
+      display: block; font-size: .65rem; font-weight: 700; color: #94A3B8;
+      text-transform: uppercase; letter-spacing: .07em; margin-bottom: .375rem;
+    }
+    .lang-btns { display: flex; gap: .3rem; }
+    .lang-btn {
+      display: inline-flex; align-items: center; gap: .2rem; padding: .25rem .55rem;
+      border: 1px solid #E2E8F0; border-radius: 4px; background: #FFFFFF;
+      font-size: .72rem; font-weight: 500; color: #64748B; cursor: pointer; transition: all .15s;
+    }
+    .lang-btn:hover { border-color: #64748B; color: #082F49; }
+    .lang-btn.lang-active { border-color: #082F49; color: #082F49; background: #F1F5F9; font-weight: 700; }
+    .lang-check { display: none; font-size: .65rem; }
+    .lang-btn.lang-active .lang-check { display: inline; }
   </style>
+  <link rel="stylesheet" href="/css/header.css">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#082F49">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -736,78 +808,141 @@
 </head>
 <body>
 
+  <!-- ===== HEADER OPTIMIZADO Y UNIFICADO ===== -->
   <header class="header">
     <div class="header-inner">
-      <a href="/inventories" class="btn-back">
+      
+      <a href="/inventories" class="btn-back" title="Mis inventarios">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        <span data-i18n="inventory.back">Inventarios</span>
+        <span class="btn-back-label" data-i18n="inventory.back">Inventarios</span>
       </a>
       <div class="header-brand">
         <div class="header-icon">IH</div>
-        <div class="header-title-row">
-          <h1 class="header-title" id="inv-name">Inventario</h1>
-          <span class="role-badge-header" id="role-badge"></span>
-          <span class="list-count" id="list-count"></span>
-        </div>
+        <h1 class="header-title" id="inv-name">Inventario</h1>
+        <span class="header-crumb">/ <span data-i18n="invTabs.shopping">Compras</span></span>
+        <span class="list-count" id="list-count"></span>
+        <span class="role-badge-header" id="role-badge" hidden></span>
       </div>
-      <div class="header-actions">
-        <button class="btn-templates" id="btn-templates">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="3" y="12" width="7" height="9" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/></svg>
-          <span>Plantillas</span>
+
+      <!-- Tabs principales -->
+      <nav class="top-tabs" id="top-tabs">
+        <a class="top-tab" href="/inventory">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="5" height="9"/><rect x="10" y="7" width="5" height="14"/><rect x="17" y="3" width="5" height="18"/></svg>
+          <span data-i18n="invTabs.dashboard">Dashboard</span>
+        </a>
+        <a class="top-tab" href="/inventory?tab=stock">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <span data-i18n="invTabs.stock">Stock</span>
+        </a>
+        <a class="top-tab active" href="/shopping-list">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span data-i18n="invTabs.shopping">Compras</span>
+        </a>
+        <a class="top-tab" href="/history">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span data-i18n="invTabs.history">Historial</span>
+        </a>
+      </nav>
+
+      <div class="header-right">
+
+        <!-- Hamburger (mobile) -->
+        <button class="mob-ham" id="mob-ham" aria-label="Abrir menú">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <div class="export-wrap" id="export-wrap">
-          <button class="btn-export" id="btn-export" aria-haspopup="true" aria-expanded="false">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span data-i18n="shopping.export.btn">Exportar</span>
+
+        <!-- Profile button + dropdown -->
+        <div class="profile-menu-wrap" id="profile-menu-wrap">
+          <button class="profile-btn" id="profile-btn" aria-label="Menú de usuario" aria-expanded="false">
+            <img class="user-avatar" id="user-avatar" src="" alt="" hidden>
+            <div class="avatar-placeholder" id="avatar-placeholder"></div>
           </button>
-          <div class="export-menu" id="export-menu" hidden>
-            <button class="export-menu-item" id="export-pdf">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              <span data-i18n="shopping.export.pdf">Exportar a PDF</span>
-            </button>
-            <button class="export-menu-item" id="export-whatsapp">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-              <span data-i18n="shopping.export.whatsapp">Compartir por WhatsApp</span>
-            </button>
-            <button class="export-menu-item" id="export-copy">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              <span data-i18n="shopping.export.copy">Copiar (Notes / Keep)</span>
+
+          <div class="profile-dropdown" id="profile-dropdown" hidden>
+            <!-- User info -->
+            <div class="dropdown-header">
+              <img class="dropdown-avatar" id="dropdown-avatar" src="" alt="" hidden>
+              <div class="dropdown-avatar-ph" id="dropdown-avatar-ph"></div>
+              <div class="dropdown-user-info">
+                <span class="dropdown-name"  id="dropdown-name"></span>
+                <span class="dropdown-email" id="dropdown-email"></span>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+
+            <!-- Language selector -->
+            <div class="dropdown-lang">
+              <span class="dropdown-lang-label" data-i18n="profile.language">Idioma</span>
+              <div class="lang-btns">
+                <button class="lang-btn" data-lang="es">ES <span class="lang-check">✓</span></button>
+                <button class="lang-btn" data-lang="en">EN <span class="lang-check">✓</span></button>
+                <button class="lang-btn" data-lang="fr">FR <span class="lang-check">✓</span></button>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+
+            <!-- Configuración -->
+            <a href="/settings" class="dropdown-item" onclick="sessionStorage.setItem('settings_referrer', window.location.href)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span data-i18n="profile.settings">Configuración</span>
+            </a>
+            <div class="dropdown-divider"></div>
+
+            <!-- Gestionar acceso (oculto para readers) -->
+            <div id="manage-section">
+              <button class="dropdown-item" id="btn-manage">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                <span data-i18n="profile.manage">Gestionar acceso</span>
+              </button>
+              <div class="dropdown-divider"></div>
+            </div>
+
+            <!-- Cerrar sesión -->
+            <button class="dropdown-item dropdown-item-danger" id="btn-logout">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span data-i18n="profile.logout">Cerrar sesión</span>
             </button>
           </div>
         </div>
-        <button class="btn-register" id="btn-register" disabled data-i18n="shopping.registerBtn">Registrar compra</button>
-        <button class="btn-clear" id="btn-clear" hidden data-i18n="shopping.clear">Limpiar</button>
+
       </div>
-      <button class="mob-ham" id="mob-ham" aria-label="Abrir menú">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-      <a class="header-profile" href="/settings" title="Perfil" aria-label="Perfil">
-        <img class="header-avatar" id="profile-avatar" src="" alt="" hidden>
-        <span class="header-avatar-ph" id="profile-avatar-ph"></span>
-      </a>
+
     </div>
   </header>
 
-  <nav class="inv-tabs-bar">
-    <div class="inv-tabs-inner">
-      <a href="/inventory" class="inv-tab">
-        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="5" height="9"/><rect x="10" y="7" width="5" height="14"/><rect x="17" y="3" width="5" height="18"/></svg>
-        <span class="tab-label" data-i18n="invTabs.dashboard">Dashboard</span>
-      </a>
-      <a href="/inventory?tab=stock" class="inv-tab">
-        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        <span class="tab-label" data-i18n="invTabs.stock">Stock</span>
-      </a>
-      <span class="inv-tab active">
-        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        <span class="tab-label" data-i18n="invTabs.shopping">Compras</span>
-      </span>
-      <a href="/history" class="inv-tab">
-        <svg class="tab-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span class="tab-label" data-i18n="invTabs.history">Historial</span>
-      </a>
+  <!-- ===== BARRA DE ACCIONES (Compras) ===== -->
+  <div class="action-bar" id="action-bar">
+    <div class="action-bar-inner">
+      <button class="btn-templates" id="btn-templates">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="3" y="12" width="7" height="9" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/></svg>
+        <span>Plantillas</span>
+      </button>
+
+      <div class="export-wrap" id="export-wrap">
+        <button class="btn-export" id="btn-export" aria-haspopup="true" aria-expanded="false">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span data-i18n="shopping.export.btn">Exportar</span>
+        </button>
+        <div class="export-menu" id="export-menu" hidden>
+          <button class="export-menu-item" id="export-pdf">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span data-i18n="shopping.export.pdf">Exportar a PDF</span>
+          </button>
+          <button class="export-menu-item" id="export-whatsapp">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <span data-i18n="shopping.export.whatsapp">Compartir por WhatsApp</span>
+          </button>
+          <button class="export-menu-item" id="export-copy">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span data-i18n="shopping.export.copy">Copiar (Notes / Keep)</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-register" id="btn-register" disabled data-i18n="shopping.registerBtn">Registrar compra</button>
+      <button class="btn-clear" id="btn-clear" hidden data-i18n="shopping.clear">Limpiar</button>
     </div>
-  </nav>
+  </div>
 
   <div id="offline-banner" class="offline-banner" hidden>
     📶 Sin conexión — mostrando datos guardados. Los cambios no se sincronizarán.
