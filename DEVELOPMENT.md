@@ -34,11 +34,11 @@
 | 14 | P4 | Audit log de actividad por inventario (30 últimas acciones, modal acceso) | `4d123f5` | ✅ |
 | 16 | bug | Filtros período dashboard no filtraban gráficas — monthlySpend usaba fecha hardcodeada | `746647c` | ✅ |
 | 21 | UI | Ajustes visuales — badge dueño inline, grid stock 6/3/1, thumbnails de foto, charts con % responsive | `289a7b4` | ✅ |
-| 22 | UI | Paleta de marca navy/sky/orange/teal aplicada a botones, tabs, menús, charts | `804d62f` | ✅ |
-| 23 | bug | `progressColor` usaba `var(--warning)` inexistente → `var(--warn)` | `804d62f` | ✅ |
-| 24 | chore | gitignore `public/uploads/` (contenido de usuarios) | `984608d` | ✅ |
-| 25 | UI | Compras/historial: header estilo dashboard, paleta marca, avatar perfil, font igualado | `3fe3acf` | ✅ |
-| 26 | UI | Rediseño tabla lista de compras (sombra, hover, inputs alineados, botón navy) | `5205ea8` | ✅ |
+| 22 | UI | Paleta de marca navy/sky/orange/teal aplicada a botones, tabs, menús, charts | `76b1757` | ✅ |
+| 23 | bug | `progressColor` usaba `var(--warning)` inexistente → `var(--warn)` | `76b1757` | ✅ |
+| 24 | chore | gitignore `public/uploads/` (contenido de usuarios) | `a4ce276` | ✅ |
+| 25 | UI | Compras/historial: header estilo dashboard, paleta marca, avatar perfil, font igualado | `8dd2e6f` | ✅ |
+| 26 | UI | Rediseño tabla lista de compras (sombra, hover, inputs alineados, botón navy) | `8b18cec` | ✅ |
 | 27 | deploy | Producción en Fly.io — env-aware, Docker, volumen yyz, OAuth client prod | `babd26c`, `c7bea0c` | ✅ |
 | 28 | deploy | CI auto-deploy GitHub Action en push a master (verificado) | `babd26c` | ✅ |
 
