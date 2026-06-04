@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de Despliegue — Inventario Hogar</title>
+<style>
+  :root {
+    --navy: #082F49; --sky: #0EA5E9; --orange: #F97316;
+    --teal: #14B8A6; --bg: #F1F5F9; --border: #E2E8F0;
+    --muted: #64748B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
+    color: var(--navy); line-height: 1.6; background: #fff;
+    max-width: 860px; margin: 0 auto; padding: 2.5rem 2rem;
+  }
+  header.cover {
+    background: var(--navy); color: #fff; border-radius: 14px;
+    padding: 2.5rem; margin-bottom: 2.5rem;
+  }
+  header.cover h1 { font-size: 2rem; letter-spacing: -.02em; margin-bottom: .5rem; }
+  header.cover .sub { color: #93C5FD; font-size: 1rem; font-weight: 500; }
+  header.cover .meta { margin-top: 1.25rem; font-size: .85rem; color: #CBD5E1; }
+  header.cover .meta a { color: var(--sky); text-decoration: none; }
+  header.cover .pill {
+    display: inline-block; background: var(--teal); color: #042F2A;
+    font-size: .7rem; font-weight: 700; padding: .2rem .6rem;
+    border-radius: 999px; text-transform: uppercase; letter-spacing: .05em;
+    margin-top: 1rem;
+  }
+  h2 {
+    font-size: 1.3rem; color: var(--navy); margin: 2rem 0 .75rem;
+    padding-bottom: .4rem; border-bottom: 2px solid var(--sky);
+  }
+  h3 { font-size: 1rem; color: var(--navy); margin: 1.25rem 0 .5rem; }
+  p { margin-bottom: .75rem; }
+  ul, ol { margin: 0 0 .75rem 1.5rem; }
+  li { margin-bottom: .3rem; }
+  code {
+    background: var(--bg); color: var(--navy);
+    padding: .1rem .35rem; border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace; font-size: .85em;
+  }
+  pre {
+    background: var(--navy); color: #E2E8F0;
+    padding: 1rem 1.25rem; border-radius: 8px;
+    overflow-x: auto; margin-bottom: 1rem; font-size: .82rem;
+    line-height: 1.5;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  table {
+    width: 100%; border-collapse: collapse; margin-bottom: 1.25rem;
+    font-size: .85rem;
+  }
+  th {
+    background: var(--navy); color: #fff; text-align: left;
+    padding: .55rem .75rem; font-weight: 600;
+  }
+  td { padding: .5rem .75rem; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #F8FAFC; }
+  .callout {
+    background: #FFF1E6; border-left: 4px solid var(--orange);
+    padding: .75rem 1rem; border-radius: 6px; margin: 1rem 0;
+    font-size: .9rem;
+  }
+  .callout--sky { background: #E0F2FE; border-left-color: var(--sky); }
+  .callout strong { color: var(--navy); }
+  .flow {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0;
+    font-family: 'Consolas', monospace; font-size: .82rem;
+    white-space: pre-wrap; line-height: 1.7;
+  }
+  footer {
+    margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border);
+    font-size: .8rem; color: var(--muted); text-align: center;
+  }
+  @media print {
+    body { padding: 0; max-width: none; }
+    header.cover { border-radius: 0; }
+    h2 { page-break-after: avoid; }
+    pre, table, .flow, .callout { page-break-inside: avoid; }
+    a { color: var(--navy); }
+  }
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <h1>Guía de Desarrollo y Despliegue</h1>
+  <div class="sub">Inventario Hogar — de local a producción</div>
+  <div class="pill">Fly.io · Node · SQLite · CI/CD</div>
+  <div class="meta">
+    Producción: <a href="https://inventario-hogar-alex.fly.dev">inventario-hogar-alex.fly.dev</a><br>
+    Repo: <a href="https://github.com/alexmejiat2813/inventario-hogar">github.com/alexmejiat2813/inventario-hogar</a><br>
+    Región: yyz (Toronto)
+  </div>
+</header>
+
+<h2>1. Arquitectura</h2>
+<table>
+  <tr><th>Capa</th><th>Tecnología</th></tr>
+  <tr><td>Backend</td><td>Node.js + Express 4</td></tr>
+  <tr><td>Base de datos</td><td>SQLite (node:sqlite, built-in)</td></tr>
+  <tr><td>Auth</td><td>Google OAuth 2.0 + sesiones en SQLite</td></tr>
+  <tr><td>Frontend</td><td>Vanilla JS (sin framework)</td></tr>
+  <tr><td>Contenedor</td><td>Docker (node:24-slim)</td></tr>
+  <tr><td>Hosting</td><td>Fly.io + volumen persistente</td></tr>
+  <tr><td>CI/CD</td><td>GitHub Actions → flyctl deploy</td></tr>
+</table>
+<div class="callout--sky callout">
+  <strong>Principio clave:</strong> un solo código para todos los entornos. La diferencia entre
+  local y producción son <strong>variables de entorno</strong>, no archivos ni ramas distintas.
+</div>
+
+<h2>2. Modelo de ramas</h2>
+<div class="flow">develop  →  trabajo local y pruebas (localhost:3000)
+master   →  producción (auto-despliega a Fly.io)</div>
+<p><strong>Nunca</strong> trabajes directo en <code>master</code>. Siempre <code>develop</code> → merge → <code>master</code>.</p>
+
+<h2>3. Diferencias por entorno (no por rama)</h2>
+<table>
+  <tr><th>Variable</th><th>Local (develop)</th><th>Producción (master)</th></tr>
+  <tr><td>Config</td><td>archivo .env</td><td>fly secrets</td></tr>
+  <tr><td>NODE_ENV</td><td>development</td><td>production</td></tr>
+  <tr><td>Cookie secure</td><td>false (HTTP)</td><td>true (HTTPS)</td></tr>
+  <tr><td>DB_PATH</td><td>./inventario.db</td><td>/data/inventario.db (volumen)</td></tr>
+  <tr><td>UPLOADS_DIR</td><td>public/uploads</td><td>/data/uploads (volumen)</td></tr>
+  <tr><td>OAuth</td><td>client dev (localhost)</td><td>client prod (fly.dev)</td></tr>
+</table>
+
+<h2>4. Flujo de trabajo diario</h2>
+<h3>Empezar</h3>
+<pre><code>git checkout develop
+git pull origin develop
+npm run dev          # localhost:3000 con auto-reload</code></pre>
+<h3>Hacer cambios</h3>
+<pre><code>npm test                          # correr tests
+git add .
+git commit -m "feat: descripción"
+git push origin develop           # backup, NO despliega</code></pre>
+<h3>Publicar a producción</h3>
+<pre><code>git checkout master
+git merge develop
+git push origin master            # ← dispara el despliegue automático
+git checkout develop              # volver a trabajar</code></pre>
+<h3>Verificar</h3>
+<pre><code>gh run list --limit 3             # estado de la Action</code></pre>
+
+<h2>5. Qué pasa al pushear master</h2>
+<div class="flow">1. push a master en GitHub
+2. GitHub Action se dispara (.github/workflows/fly-deploy.yml)
+3. Ejecuta: flyctl deploy --remote-only (usa FLY_API_TOKEN)
+4. Fly construye la imagen Docker (remote builder)
+5. Sube la imagen y arranca máquina en yyz
+6. Monta el volumen ih_data en /data (datos persisten)
+7. Inyecta los fly secrets como variables de entorno
+8. App live en https://inventario-hogar-alex.fly.dev</div>
+<div class="callout">
+  El <strong>volumen ih_data NO se toca</strong> en los deploys → productos, compras,
+  fotos y sesiones sobreviven a cada actualización.
+</div>
+
+<h2>6. Archivos de infraestructura</h2>
+<table>
+  <tr><th>Archivo</th><th>Rol</th></tr>
+  <tr><td>Dockerfile</td><td>Imagen (node:24-slim, npm ci, puerto 8080)</td></tr>
+  <tr><td>.dockerignore</td><td>Excluye node_modules, .env, *.db, uploads, test</td></tr>
+  <tr><td>fly.toml</td><td>Config Fly: app, región yyz, volumen, HTTPS</td></tr>
+  <tr><td>.github/workflows/fly-deploy.yml</td><td>Action de auto-deploy</td></tr>
+</table>
+<div class="callout">
+  <strong>Nunca</strong> pongas secrets en fly.toml, Dockerfile ni código.
+  Solo en fly secrets (prod) o .env (local, gitignored).
+</div>
+
+<h2>7. Variables y secrets</h2>
+<h3>Local — .env (gitignored)</h3>
+<pre><code>GOOGLE_CLIENT_ID=&lt;client-id-dev&gt;
+GOOGLE_CLIENT_SECRET=&lt;secret-dev&gt;
+CALLBACK_URL=http://localhost:3000/auth/google/callback
+SESSION_SECRET=&lt;texto-largo&gt;
+PORT=3000</code></pre>
+<h3>Producción — fly secrets</h3>
+<pre><code>fly secrets set \
+  GOOGLE_CLIENT_ID="&lt;client-id-prod&gt;" \
+  GOOGLE_CLIENT_SECRET="&lt;secret-prod&gt;" \
+  SESSION_SECRET="&lt;texto-aleatorio&gt;" \
+  CALLBACK_URL="https://inventario-hogar-alex.fly.dev/auth/google/callback" \
+  --app inventario-hogar-alex</code></pre>
+<h3>GitHub — para la Action</h3>
+<p><code>FLY_API_TOKEN</code> en repo → Settings → Secrets and variables → Actions.</p>
+
+<h2>8. Google OAuth (dos clients)</h2>
+<p>Un client por entorno aísla los secrets.</p>
+<table>
+  <tr><th>Client</th><th>Redirect URI</th><th>Secret va en</th></tr>
+  <tr><td>Desarrollo</td><td>http://localhost:3000/auth/google/callback</td><td>.env local</td></tr>
+  <tr><td>Producción</td><td>https://inventario-hogar-alex.fly.dev/auth/google/callback</td><td>fly secrets</td></tr>
+</table>
+<div class="callout">Si el login da <code>redirect_uri_mismatch</code>, falta registrar el redirect URI en el client correcto (Google Cloud Console → Credentials).</div>
+
+<h2>9. Comandos Fly.io útiles</h2>
+<table>
+  <tr><th>Acción</th><th>Comando</th></tr>
+  <tr><td>Estado</td><td>fly status --app inventario-hogar-alex</td></tr>
+  <tr><td>Logs en vivo</td><td>fly logs --app inventario-hogar-alex</td></tr>
+  <tr><td>Deploy manual</td><td>fly deploy --app inventario-hogar-alex</td></tr>
+  <tr><td>Listar secrets</td><td>fly secrets list --app inventario-hogar-alex</td></tr>
+  <tr><td>SSH a la máquina</td><td>fly ssh console --app inventario-hogar-alex</td></tr>
+  <tr><td>Listar volúmenes</td><td>fly volumes list --app inventario-hogar-alex</td></tr>
+  <tr><td>Revocar token</td><td>fly tokens revoke &lt;id&gt;</td></tr>
+</table>
+<div class="callout--sky callout">
+  En Windows usá la ruta completa si flyctl no está en el PATH:<br>
+  <code>&amp; "C:\Users\AlexMejia\.fly\bin\flyctl.exe" &lt;comando&gt;</code>
+</div>
+
+<h2>10. Respaldo de la base de datos</h2>
+<p>La DB vive en el volumen. Bajá copias periódicas:</p>
+<pre><code>fly sftp get /data/inventario.db ./backup-inventario.db --app inventario-hogar-alex</code></pre>
+<div class="callout">Un volumen es persistente pero <strong>no es un backup</strong>. Descargá copias seguido.</div>
+
+<h2>11. Problemas comunes</h2>
+<table>
+  <tr><th>Síntoma</th><th>Causa</th><th>Solución</th></tr>
+  <tr><td>Login redirect_uri_mismatch</td><td>URI no registrado</td><td>Agregar URI en client prod</td></tr>
+  <tr><td>client secret is invalid</td><td>secret malo/inhabilitado</td><td>Verificar fly secrets / rotar</td></tr>
+  <tr><td>Action: token validation error</td><td>FLY_API_TOKEN mal copiado</td><td>Recrear token, actualizar secret</td></tr>
+  <tr><td>Pierde datos al desplegar</td><td>volumen no montado / región distinta</td><td>Verificar mounts y región</td></tr>
+  <tr><td>region X not found</td><td>falta método de pago</td><td>Agregar tarjeta en Billing</td></tr>
+</table>
+<p>Siempre revisá logs primero: <code>fly logs --app inventario-hogar-alex</code></p>
+
+<h2>12. Checklist de seguridad</h2>
+<ul>
+  <li>.env en .gitignore (nunca commitear)</li>
+  <li>Secrets de prod solo en fly secrets</li>
+  <li>FLY_API_TOKEN solo en GitHub Secrets</li>
+  <li>OAuth client separado dev/prod</li>
+  <li>Cookie secure:true en producción (automático por NODE_ENV)</li>
+  <li>Rotar cualquier secret expuesto</li>
+  <li>Backups periódicos de la DB</li>
+</ul>
+
+<h2>13. Resumen de un vistazo</h2>
+<div class="flow">TRABAJAR:
+  git checkout develop
+  npm run dev
+  ... cambios ...
+  npm test
+  git add . &amp;&amp; git commit -m "..."
+  git push origin develop
+
+PUBLICAR:
+  git checkout master
+  git merge develop
+  git push origin master      ← despliega solo
+  git checkout develop
+
+VERIFICAR:
+  gh run list --limit 3
+  https://inventario-hogar-alex.fly.dev</div>
+
+<footer>
+  Inventario Hogar — Guía de despliegue. Mantener actualizado si cambia la infraestructura.<br>
+  Para guardar como PDF: abrir este archivo en el navegador → Ctrl+P → Destino: "Guardar como PDF".
+</footer>
+
+</body>
+</html>
