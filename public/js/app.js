@@ -331,6 +331,7 @@ function renderProducts() {
 
 function updateCartBadge() {
   const badge = document.getElementById('cart-badge');
+  if (!badge) return;
   const count = state.stats?.critical || 0;
   badge.textContent = count;
   badge.hidden = count === 0;
@@ -415,8 +416,17 @@ function render() {
 
 function switchTab(tabName) {
   state.activeTab = tabName;
-  document.querySelectorAll('#inv-tabs-bar .inv-tab[data-tab]').forEach(btn => {
+  // Tabs del top header
+  document.querySelectorAll('.top-tab[data-tab]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  // Barra de acciones: mostrar el grupo de la vista activa
+  document.querySelectorAll('.action-group[data-action-group]').forEach(g => {
+    g.classList.toggle('active', g.dataset.actionGroup === tabName);
+  });
+  // Drawer móvil: marcar tab activo
+  document.querySelectorAll('#mob-drawer [data-mob-tab]').forEach(btn => {
+    btn.classList.toggle('mob-active', btn.dataset.mobTab === tabName);
   });
   const dashPanel  = document.getElementById('panel-dashboard');
   const stockPanel = document.getElementById('panel-stock');
@@ -1361,11 +1371,11 @@ function initEvents() {
     el.addEventListener('input', () => el.classList.remove('invalid'));
   });
 
-  // Inventory tab bar
-  const tabBar = document.getElementById('inv-tabs-bar');
+  // Tabs principales (top header)
+  const tabBar = document.getElementById('top-tabs');
   if (tabBar) {
     tabBar.addEventListener('click', e => {
-      const tab = e.target.closest('.inv-tab[data-tab]');
+      const tab = e.target.closest('.top-tab[data-tab]');
       if (!tab) return;
       switchTab(tab.dataset.tab);
     });
