@@ -1,0 +1,29 @@
+name: Deploy to Fly.io
+
+# Despliega a producción cada vez que master recibe cambios.
+# Trabajá en la rama 'develop' (o feature/*) y hacé merge a master para publicar.
+on:
+  push:
+    branches:
+      - master
+
+# Evita despliegues solapados si llegan varios push seguidos
+concurrency:
+  group: fly-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

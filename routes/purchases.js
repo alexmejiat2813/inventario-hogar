@@ -3,7 +3,7 @@ const path    = require('path');
 const fs      = require('fs');
 const db      = require('../database');
 const { requireEditorOrOwner } = require('../middleware/inventory');
-const { uploadReceipt }        = require('../middleware/upload');
+const { uploadReceipt, uploadFilePath } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -74,7 +74,7 @@ router.delete('/:sessionId', requireEditorOrOwner, (req, res) => {
     const { revert_inventory } = req.body;
     const result = db.deletePurchaseSession(sessionId, req.inventoryId, { revertInventory: !!revert_inventory });
     if (!result) return res.status(404).json({ error: 'Sesión no encontrada' });
-    if (result.receipt_image) fs.unlink(path.join(__dirname, '..', 'public', result.receipt_image), () => {});
+    if (result.receipt_image) fs.unlink(uploadFilePath(result.receipt_image), () => {});
     db.audit(req.inventoryId, req.user.id, req.user.name, 'purchase.delete', 'purchase', sessionId,
       { revert: !!revert_inventory });
     res.json({ ok: true });
@@ -87,7 +87,7 @@ router.delete('/:sessionId/receipt', requireEditorOrOwner, (req, res) => {
     if (isNaN(sessionId)) return res.status(400).json({ error: 'ID inválido' });
     const session = db.getPurchaseSession(sessionId);
     if (!session || session.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Sesión no encontrada' });
-    if (session.receipt_image) fs.unlink(path.join(__dirname, '..', 'public', session.receipt_image), () => {});
+    if (session.receipt_image) fs.unlink(uploadFilePath(session.receipt_image), () => {});
     db.updateReceiptImage(sessionId, null);
     res.json({ ok: true });
   } catch { res.status(500).json({ error: 'Error al eliminar el recibo' }); }

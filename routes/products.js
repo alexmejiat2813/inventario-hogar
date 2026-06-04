@@ -4,7 +4,7 @@ const fs      = require('fs');
 const db      = require('../database');
 const { requireEditorOrOwner }   = require('../middleware/inventory');
 const { validateProduct }        = require('../middleware/validate');
-const { uploadProductImage }     = require('../middleware/upload');
+const { uploadProductImage, uploadFilePath } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -125,7 +125,7 @@ router.delete('/:id/images/:imageId', requireEditorOrOwner, (req, res) => {
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     const { deleted, image_path } = db.deleteProductImage(imageId, productId);
     if (!deleted) return res.status(404).json({ error: 'Imagen no encontrada' });
-    if (image_path) fs.unlink(path.join(__dirname, '..', 'public', image_path), () => {});
+    if (image_path) fs.unlink(uploadFilePath(image_path), () => {});
     res.json({ message: 'Imagen eliminada' });
   } catch { res.status(500).json({ error: 'Error al eliminar imagen' }); }
 });

@@ -2,7 +2,10 @@ const path   = require('path');
 const fs     = require('fs');
 const multer = require('multer');
 
-const RECEIPTS_DIR = path.join(__dirname, '..', 'public', 'uploads', 'receipts');
+// Persistent uploads root — overridable so it can point to a volume in production
+const UPLOADS_DIR  = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'public', 'uploads');
+
+const RECEIPTS_DIR = path.join(UPLOADS_DIR, 'receipts');
 if (!fs.existsSync(RECEIPTS_DIR)) fs.mkdirSync(RECEIPTS_DIR, { recursive: true });
 
 const receiptStorage = multer.diskStorage({
@@ -22,7 +25,7 @@ const uploadReceipt = multer({
   },
 });
 
-const PRODUCT_IMAGES_DIR = path.join(__dirname, '..', 'public', 'uploads', 'products');
+const PRODUCT_IMAGES_DIR = path.join(UPLOADS_DIR, 'products');
 if (!fs.existsSync(PRODUCT_IMAGES_DIR)) fs.mkdirSync(PRODUCT_IMAGES_DIR, { recursive: true });
 
 const productImageStorage = multer.diskStorage({
@@ -42,4 +45,12 @@ const uploadProductImage = multer({
   },
 }).array('photos', 5);
 
-module.exports = { uploadReceipt, uploadProductImage };
+// Resolve a stored web path ('/uploads/products/x.jpg') to its physical file
+// path inside UPLOADS_DIR (which may be a persistent volume in production).
+function uploadFilePath(webPath) {
+  if (!webPath) return null;
+  const rel = String(webPath).replace(/^\/?uploads\//, '');
+  return path.join(UPLOADS_DIR, rel);
+}
+
+module.exports = { uploadReceipt, uploadProductImage, uploadFilePath, UPLOADS_DIR };

@@ -1,0 +1,38 @@
+# fly.toml — Inventario Hogar
+# Run `fly launch --no-deploy` once to register the app name, or edit `app` below.
+# Secrets (GOOGLE_CLIENT_ID/SECRET, SESSION_SECRET, CALLBACK_URL) are NOT here —
+# set them with: fly secrets set KEY=value
+
+app = "inventario-hogar"          # <-- cambia por un nombre único global
+primary_region = "iad"            # <-- región más cercana (ej: iad, gru, scl, mia)
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV    = "production"
+  PORT        = "8080"
+  DB_PATH     = "/data/inventario.db"
+  UPLOADS_DIR = "/data/uploads"
+
+# Persistent volume — survives deploys/restarts. SQLite DB + uploads live here.
+[mounts]
+  source      = "ih_data"
+  destination = "/data"
+
+[http_service]
+  internal_port        = 8080
+  force_https          = true
+  auto_stop_machines   = "stop"
+  auto_start_machines  = true
+  min_machines_running = 0        # escala a cero cuando no hay tráfico (free)
+
+  [http_service.concurrency]
+    type       = "requests"
+    hard_limit = 200
+    soft_limit = 150
+
+# Single machine: SQLite is a local file, no horizontal scaling.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

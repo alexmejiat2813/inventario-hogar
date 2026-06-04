@@ -11,6 +11,14 @@ const { createRateLimiter } = require('./middleware/rate-limit');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+// Uploads dir — overridable so it can live on a persistent volume in production
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, 'public', 'uploads');
+
+// Behind a reverse proxy (Fly.io, Render, nginx): trust X-Forwarded-* headers
+// so secure cookies and req.ip (rate limiter) work correctly.
+if (IS_PROD) app.set('trust proxy', 1);
 
 // ── Core middleware ────────────────────────────────────────────────────────────
 app.use(express.json());
@@ -20,7 +28,12 @@ app.use(session({
   secret:            process.env.SESSION_SECRET || 'dev-secret',
   resave:            false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, secure: false, maxAge: 7 * 24 * 60 * 60 * 1000 },
+  cookie: {
+    httpOnly: true,
+    secure:   IS_PROD,          // HTTPS-only cookie in production
+    sameSite: 'lax',
+    maxAge:   7 * 24 * 60 * 60 * 1000,
+  },
 }));
 
 app.use(passport.initialize());
@@ -36,7 +49,7 @@ app.use((req, res, next) => {
 app.use('/css',     express.static(path.join(__dirname, 'public/css')));
 app.use('/js',      express.static(path.join(__dirname, 'public/js')));
 app.use('/locales', express.static(path.join(__dirname, 'public/locales')));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', express.static(UPLOADS_DIR));
 app.use('/icons',   express.static(path.join(__dirname, 'public/icons')));
 app.get('/manifest.json', (req, res) => res.sendFile(path.join(__dirname, 'public/manifest.json')));
 app.get('/sw.js',         (req, res) => res.sendFile(path.join(__dirname, 'public/sw.js')));

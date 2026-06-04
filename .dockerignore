@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.env.*
+*.db
+*.db-shm
+*.db-wal
+*.db.bak-*
+public/uploads
+test
+DEVELOPMENT.md
+.vscode
+.vs
+.idea
+.DS_Store
