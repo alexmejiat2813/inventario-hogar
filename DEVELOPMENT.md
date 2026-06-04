@@ -37,6 +37,27 @@
 | 22 | UI | Paleta de marca navy/sky/orange/teal aplicada a botones, tabs, menús, charts | `804d62f` | ✅ |
 | 23 | bug | `progressColor` usaba `var(--warning)` inexistente → `var(--warn)` | `804d62f` | ✅ |
 | 24 | chore | gitignore `public/uploads/` (contenido de usuarios) | `984608d` | ✅ |
+| 25 | UI | Compras/historial: header estilo dashboard, paleta marca, avatar perfil, font igualado | `3fe3acf` | ✅ |
+| 26 | UI | Rediseño tabla lista de compras (sombra, hover, inputs alineados, botón navy) | `5205ea8` | ✅ |
+| 27 | deploy | Producción en Fly.io — env-aware, Docker, volumen yyz, OAuth client prod | `babd26c`, `c7bea0c` | ✅ |
+| 28 | deploy | CI auto-deploy GitHub Action en push a master (verificado) | `babd26c` | ✅ |
+
+---
+
+## Despliegue
+
+- **Producción:** https://inventario-hogar-alex.fly.dev (Fly.io, región `yyz` Toronto)
+- **Volumen:** `ih_data` montado en `/data` — SQLite (`/data/inventario.db`) + uploads (`/data/uploads`) persisten entre deploys
+- **OAuth:** client de producción separado del de desarrollo (localhost)
+- **CI:** push a `master` → GitHub Action (`flyctl deploy`) → producción
+- **Flujo:** trabajar en `develop` → merge a `master` → deploy automático
+- **Secrets en Fly:** `GOOGLE_CLIENT_ID/SECRET`, `SESSION_SECRET`, `CALLBACK_URL` (vía `fly secrets`)
+- **Secret en GitHub:** `FLY_API_TOKEN`
+
+### Pendiente de seguridad (rotar)
+
+- ⚠️ `GOOGLE_CLIENT_SECRET` de **dev** (`...VHby`) fue expuesto en chat → rotar en Google Console + actualizar `.env` local
+- ⚠️ `FLY_API_TOKEN` inicial apareció en screenshot → revocar el viejo (`fly tokens list` / `revoke`), ya se recreó el activo
 
 ---
 
