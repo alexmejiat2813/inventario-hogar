@@ -1,5 +1,5 @@
 /* Inventario Hogar — Service Worker */
-const CACHE = 'ih-v8';
+const CACHE = 'ih-v9';
 
 const PRECACHE = [
   '/css/styles.css',
@@ -77,14 +77,27 @@ self.addEventListener('fetch', e => {
   // Other API routes: network-only (never serve stale)
   if (url.pathname.startsWith('/api/')) return;
 
-  // Static assets (CSS, JS, locales, icons, manifest): cache-first
+  // App shell (CSS, JS, locales): NETWORK-FIRST.
+  // Garantiza que tras un deploy el codigo nuevo se sirve siempre (no
+  // queda JS/CSS viejo pegado de cache). Cache solo como fallback offline.
   if (
     url.pathname.startsWith('/css/')     ||
     url.pathname.startsWith('/js/')      ||
-    url.pathname.startsWith('/locales/') ||
-    url.pathname.startsWith('/icons/')   ||
-    url.pathname === '/manifest.json'
+    url.pathname.startsWith('/locales/')
   ) {
+    e.respondWith(
+      fetch(request)
+        .then(resp => {
+          if (resp.ok) caches.open(CACHE).then(c => c.put(request, resp.clone()));
+          return resp;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Estaticos que casi no cambian (iconos, manifest): cache-first
+  if (url.pathname.startsWith('/icons/') || url.pathname === '/manifest.json') {
     e.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached;
