@@ -642,35 +642,61 @@
     /* Toggle acordeon (solo movil) */
     .sl-acc-toggle { display: none; }
 
-    /* ── Acordeon movil: columnas establecimiento/cantidad/precio/subtotal
-       se ocultan y se revelan bajo el producto al expandir ── */
+    /* ── Vista movil: cada fila es un card.
+       Layout: [check] [categoria / producto / tenes·min] [flechita derecha]
+       Los campos de compra (establecimiento/cantidad/precio/subtotal) se
+       revelan apilados al expandir con la flechita. ── */
     @media (max-width: 600px) {
       .sl-col-hide { display: none; }
       .sl-wrap { overflow-x: visible; }
       .sl-table { display: block; font-size: .9rem; }
       .sl-table thead { display: none; }
       .sl-table tbody { display: block; }
+      .sl-table tbody > tr { display: block; }
+
       .sl-row {
-        display: flex; flex-wrap: wrap; align-items: center;
-        gap: .15rem .4rem; padding: .5rem .55rem;
-        border-bottom: 1px solid #F1F5F9;
+        display: grid;
+        grid-template-columns: 30px auto 1fr;
+        grid-template-areas:
+          "chk cat   cat"
+          "chk name  name"
+          "chk tenes min";
+        column-gap: .5rem; row-gap: .15rem;
+        align-items: center;
+        position: relative;
+        padding: .65rem 2.4rem .65rem .55rem;
+        border-bottom: 1px solid #E2E8F0;
       }
-      .sl-row .sl-td { border: none; padding: .1rem .15rem; }
-      .sl-td--check { width: auto; padding-left: 0; }
-      .sl-row > .sl-td:nth-child(3) { flex: 1 1 auto; min-width: 0; }
-      .sl-name { white-space: normal; }
+      .sl-row .sl-td { border: none; padding: 0; white-space: normal; }
+
+      .sl-td--check { grid-area: chk; width: auto; padding: 0; justify-self: center; }
+      .sl-row > .sl-td:nth-child(2) { grid-area: cat; }
+      .sl-row > .sl-td:nth-child(3) { grid-area: name; }
+      .sl-row > .sl-td:nth-child(4) { grid-area: tenes; text-align: left; justify-self: start; }
+      .sl-row > .sl-td:nth-child(5) { grid-area: min;   text-align: left; justify-self: start; }
+
+      .sl-row > .sl-td:nth-child(4)::before { content: "Tenés "; color: #94A3B8; font-size: .7rem; font-weight: 600; }
+      .sl-row > .sl-td:nth-child(5)::before { content: "Mín ";   color: #94A3B8; font-size: .7rem; font-weight: 600; }
+
+      .sl-cat  { font-size: .72rem; }
+      .sl-name { white-space: normal; font-size: .95rem; }
+
+      /* Flechita del acordeon: a la derecha, centrada vertical */
       .sl-acc-toggle {
         display: inline-flex; align-items: center; justify-content: center;
-        width: 26px; height: 26px; border: none; background: none;
-        color: #94A3B8; cursor: pointer; padding: 0; flex-shrink: 0;
+        position: absolute; right: .4rem; top: 50%; transform: translateY(-50%);
+        width: 32px; height: 32px; border: none; background: none;
+        color: #94A3B8; cursor: pointer; padding: 0;
         transition: transform .15s; -webkit-tap-highlight-color: transparent;
       }
-      .sl-row--expanded .sl-acc-toggle { transform: rotate(180deg); }
-      .sl-field {
-        display: none; flex-basis: 100%; width: 100%;
-        text-align: left !important; white-space: normal;
+      .sl-row--expanded .sl-acc-toggle { transform: translateY(-50%) rotate(180deg); }
+
+      /* Campos de compra: ocultos hasta expandir, ancho completo */
+      .sl-field { display: none; }
+      .sl-row--expanded .sl-field {
+        display: flex; align-items: center; gap: .5rem;
+        grid-column: 1 / -1; padding-top: .35rem; text-align: left;
       }
-      .sl-row--expanded .sl-field { display: flex; align-items: center; gap: .5rem; }
       .sl-field::before {
         content: attr(data-label); flex: 0 0 104px;
         color: #94A3B8; font-size: .68rem; font-weight: 700;
