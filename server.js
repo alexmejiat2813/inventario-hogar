@@ -52,7 +52,11 @@ app.use('/locales', express.static(path.join(__dirname, 'public/locales')));
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use('/icons',   express.static(path.join(__dirname, 'public/icons')));
 app.get('/manifest.json', (req, res) => res.sendFile(path.join(__dirname, 'public/manifest.json')));
-app.get('/sw.js',         (req, res) => res.sendFile(path.join(__dirname, 'public/sw.js')));
+// sw.js siempre revalidado: el browser debe ver al instante un SW nuevo tras deploy
+app.get('/sw.js', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(path.join(__dirname, 'public/sw.js'));
+});
 
 // ── Rate limiting ──────────────────────────────────────────────────────────────
 // Auth: 20 req / 15 min / IP  — prevents OAuth abuse

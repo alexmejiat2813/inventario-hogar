@@ -660,28 +660,27 @@
         display: grid;
         grid-template-columns: 30px auto 1fr;
         grid-template-areas:
-          "chk cat   cat"
-          "chk name  name"
+          "chk cat   name"
           "chk tenes min";
-        column-gap: .5rem; row-gap: .15rem;
+        column-gap: .75rem; row-gap: .3rem;
         align-items: center;
         position: relative;
-        padding: .65rem 2.4rem .65rem .55rem;
+        padding: .7rem 2.4rem .7rem .55rem;
         border-bottom: 1px solid #E2E8F0;
       }
       .sl-row .sl-td { border: none; padding: 0; white-space: normal; }
 
       .sl-td--check { grid-area: chk; width: auto; padding: 0; justify-self: center; }
-      .sl-row > .sl-td:nth-child(2) { grid-area: cat; }
-      .sl-row > .sl-td:nth-child(3) { grid-area: name; }
-      .sl-row > .sl-td:nth-child(4) { grid-area: tenes; text-align: left; justify-self: start; }
-      .sl-row > .sl-td:nth-child(5) { grid-area: min;   text-align: left; justify-self: start; }
+      .sl-row > .sl-td:nth-child(2) { grid-area: cat;  align-self: end; }
+      .sl-row > .sl-td:nth-child(3) { grid-area: name; align-self: end; }
+      .sl-row > .sl-td:nth-child(4) { grid-area: tenes; text-align: left; justify-self: start; align-self: start; }
+      .sl-row > .sl-td:nth-child(5) { grid-area: min;   text-align: left; justify-self: start; align-self: start; }
 
       .sl-row > .sl-td:nth-child(4)::before { content: "Tenés "; color: #94A3B8; font-size: .7rem; font-weight: 600; }
       .sl-row > .sl-td:nth-child(5)::before { content: "Mín ";   color: #94A3B8; font-size: .7rem; font-weight: 600; }
 
       .sl-cat  { font-size: .72rem; }
-      .sl-name { white-space: normal; font-size: .95rem; }
+      .sl-name { white-space: normal; font-size: .98rem; font-weight: 700; }
 
       /* Flechita del acordeon: a la derecha, centrada vertical */
       .sl-acc-toggle {
