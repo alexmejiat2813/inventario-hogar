@@ -272,7 +272,7 @@ function renderCategoryChart(byCategory) {
   const wrap = document.getElementById('dash-cat-wrap');
   wrap.innerHTML = '';
 
-  const filled = byCategory.filter(c => c.count > 0);
+  const filled = byCategory.filter(c => c.total > 0);
   if (!filled.length) {
     wrap.innerHTML = `<div class="dash-no-data">${t('dashboard.noData')}</div>`;
     return;
@@ -284,14 +284,19 @@ function renderCategoryChart(byCategory) {
 
   if (_chartCategory) { _chartCategory.destroy(); _chartCategory = null; }
 
-  const catTotal = filled.reduce((sum, c) => sum + c.count, 0);
+  const catTotal = filled.reduce((sum, c) => sum + c.total, 0);
+  const currency = state.inventory?.currency || 'USD';
+  const fmtCur = n => {
+    try { return new Intl.NumberFormat(undefined, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n); }
+    catch { return String(Math.round(n)); }
+  };
 
   _chartCategory = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: filled.map(c => c.category),
       datasets: [{
-        data: filled.map(c => c.count),
+        data: filled.map(c => c.total),
         backgroundColor: CHART_COLORS.slice(0, filled.length),
         borderRadius: 4,
       }],
@@ -299,7 +304,7 @@ function renderCategoryChart(byCategory) {
     options: {
       indexAxis: 'y',
       responsive: true, maintainAspectRatio: false,
-      layout: { padding: { right: 28 } },
+      layout: { padding: { right: 40 } },
       plugins: {
         legend: { display: false },
         datalabels: {
@@ -308,18 +313,18 @@ function renderCategoryChart(byCategory) {
           font: { size: 10, weight: 700 },
           formatter: (value) => {
             const pct = catTotal > 0 ? Math.round((value / catTotal) * 100) : 0;
-            return `${value} (${pct}%)`;
+            return `${pct}%`;
           },
         },
         tooltip: { callbacks: {
           label: ctx => {
             const pct = catTotal > 0 ? Math.round((ctx.parsed.x / catTotal) * 100) : 0;
-            return `${ctx.parsed.x} ${ctx.parsed.x === 1 ? 'producto' : 'productos'} (${pct}%)`;
+            return `${fmtCur(ctx.parsed.x)} (${pct}%)`;
           },
         }},
       },
       scales: {
-        x: { beginAtZero: true, ticks: { font: { size: 11 }, stepSize: 1 }, grid: { color: '#f1f5f9' } },
+        x: { beginAtZero: true, ticks: { font: { size: 11 }, callback: v => fmtCur(v) }, grid: { color: '#f1f5f9' } },
         y: { ticks: { font: { size: 11 } }, grid: { display: false } },
       },
     },
@@ -413,6 +418,32 @@ function escHtml(str) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Período ─────────────────────────────────────────────────────
+function updateMonthlyTitle() {
+  const suffix = t('dashboard.period.' + dashState.period) || '';
+  const set = (id, baseKey, fallback) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const base = t(baseKey) || fallback;
+    el.textContent = suffix ? `${base} (${suffix})` : base;
+  };
+  set('dash-monthly-title', 'dashboard.spendTitle', 'Gasto mensual');
+  set('dash-cat-title',     'dashboard.catTitle',   'Gasto por categoría');
+  set('dash-store-title',   'dashboard.storeTitle', 'Gasto por establecimiento');
+}
+
+function setPeriod(period) {
+  dashState.period = period;
+  // Marca activo en todos los botones de periodo (barra + drawer)
+  document.querySelectorAll('.dash-period-btn[data-period]').forEach(b =>
+    b.classList.toggle('active', b.dataset.period === period));
+  document.querySelectorAll('[data-mob-period]').forEach(b =>
+    b.classList.toggle('mob-active', b.dataset.mobPeriod === period));
+  updateMonthlyTitle();
+  dashState.loaded = false;
+  loadDashboard();
+}
+
 // ── Init ───────────────────────────────────────────────────────
 function initDashboard() {
   const periodBar = document.querySelector('.dash-period-bar');
@@ -420,15 +451,13 @@ function initDashboard() {
     periodBar.addEventListener('click', e => {
       const btn = e.target.closest('.dash-period-btn');
       if (!btn) return;
-      periodBar.querySelectorAll('.dash-period-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      dashState.period = btn.dataset.period;
-      dashState.loaded = false;
-      loadDashboard();
+      setPeriod(btn.dataset.period);
     });
   }
+  updateMonthlyTitle();
 
   document.addEventListener('langchange', () => {
+    updateMonthlyTitle();
     if (dashState.loaded && dashState.data) renderDashboard(dashState.data);
   });
 }

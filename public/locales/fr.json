@@ -620,6 +620,10 @@
       "year": "Cette année"
     },
     "monthlyTitle": "Dépenses mensuelles (6 derniers mois)",
+    "spendTitle": "Dépenses mensuelles",
+    "catTitle": "Dépenses par catégorie",
+    "storeTitle": "Dépenses par établissement",
+    "periodLabel": "Période (Tableau de bord)",
     "byCategoryTitle": "Par catégorie",
     "byStoreTitle": "Par établissement",
     "topTitle": "Top 5 plus achetés",

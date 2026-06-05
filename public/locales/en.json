@@ -620,6 +620,10 @@
       "year": "This year"
     },
     "monthlyTitle": "Monthly spend (last 6 months)",
+    "spendTitle": "Monthly spend",
+    "catTitle": "Spend by category",
+    "storeTitle": "Spend by store",
+    "periodLabel": "Period (Dashboard)",
     "byCategoryTitle": "By category",
     "byStoreTitle": "By store",
     "topTitle": "Top 5 most purchased",

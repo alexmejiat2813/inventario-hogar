@@ -620,6 +620,10 @@
       "year": "Este año"
     },
     "monthlyTitle": "Gasto mensual (últimos 6 meses)",
+    "spendTitle": "Gasto mensual",
+    "catTitle": "Gasto por categoría",
+    "storeTitle": "Gasto por establecimiento",
+    "periodLabel": "Período (Dashboard)",
     "byCategoryTitle": "Por categoría",
     "byStoreTitle": "Por establecimiento",
     "topTitle": "Top 5 más comprados",

@@ -320,7 +320,12 @@ function renderTableRow(item) {
         </button>
       </td>
       <td class="sl-td"><span class="sl-cat">${CAT_ICONS[item.category] || '📦'} ${esc(cat)}</span></td>
-      <td class="sl-td"><span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span></td>
+      <td class="sl-td">
+        <span class="sl-name-wrap">
+          <span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span>
+          ${item.image_count > 0 ? `<button class="sl-photo-btn" data-action="photo" data-images='${esc(item.images || "[]")}' title="Ver foto" aria-label="Ver foto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>` : ''}
+        </span>
+      </td>
       <td class="sl-td sl-td--r">${fmtQty(item.current_qty)} <span class="sl-unit">${unit}</span></td>
       <td class="sl-td sl-td--r">${fmtQty(item.min_qty)} <span class="sl-unit">${unit}</span></td>
       <td class="sl-td">
@@ -853,6 +858,49 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
+// ── Photo popup ───────────────────────────────────────────────
+
+let _photoImgs = [];
+let _photoIdx  = 0;
+
+function openPhotoPopup(images) {
+  _photoImgs = Array.isArray(images) ? images.filter(Boolean) : [];
+  if (!_photoImgs.length) return;
+  _photoIdx = 0;
+  renderPhotoPopup();
+  document.getElementById('photo-popup').hidden = false;
+}
+
+function closePhotoPopup() {
+  const el = document.getElementById('photo-popup');
+  if (el) el.hidden = true;
+}
+
+function renderPhotoPopup() {
+  const img  = document.getElementById('photo-popup-img');
+  const dots = document.getElementById('photo-popup-dots');
+  const prev = document.getElementById('photo-popup-prev');
+  const next = document.getElementById('photo-popup-next');
+  if (!img) return;
+  img.src = _photoImgs[_photoIdx];
+  const multi = _photoImgs.length > 1;
+  if (prev) prev.hidden = !multi;
+  if (next) next.hidden = !multi;
+  if (dots) {
+    dots.hidden = !multi;
+    dots.innerHTML = _photoImgs.map((_, i) =>
+      `<span class="pp-dot${i === _photoIdx ? ' active' : ''}"></span>`).join('');
+  }
+}
+
+function photoPopupStep(dir) {
+  if (_photoImgs.length < 2) return;
+  _photoIdx = dir === 'next'
+    ? (_photoIdx + 1) % _photoImgs.length
+    : (_photoIdx - 1 + _photoImgs.length) % _photoImgs.length;
+  renderPhotoPopup();
+}
+
 // ── Templates ─────────────────────────────────────────────────
 
 async function loadCustomItems() {
@@ -1004,6 +1052,14 @@ function initEvents() {
   // Table delegation (check, field change, custom actions)
   const listEl = document.getElementById('shopping-list');
   listEl.addEventListener('click', e => {
+    const photoBtn   = e.target.closest('[data-action="photo"]');
+    if (photoBtn) {
+      e.stopPropagation();
+      let imgs = [];
+      try { imgs = JSON.parse(photoBtn.dataset.images || '[]'); } catch {}
+      openPhotoPopup(imgs);
+      return;
+    }
     const checkBtn    = e.target.closest('[data-action="check"]');
     const checkCustom = e.target.closest('[data-action="check-custom"]');
     const delCustom   = e.target.closest('[data-action="delete-custom"]');
@@ -1038,6 +1094,22 @@ function initEvents() {
     } else {
       handleFieldChange(el.dataset.field, parseInt(el.dataset.id), el.value);
     }
+  });
+
+  // Photo popup
+  const ppClose = document.getElementById('photo-popup-close');
+  const ppOv    = document.getElementById('photo-popup');
+  const ppPrev  = document.getElementById('photo-popup-prev');
+  const ppNext  = document.getElementById('photo-popup-next');
+  if (ppClose) ppClose.addEventListener('click', closePhotoPopup);
+  if (ppOv) ppOv.addEventListener('click', e => { if (e.target === e.currentTarget) closePhotoPopup(); });
+  if (ppPrev) ppPrev.addEventListener('click', () => photoPopupStep('prev'));
+  if (ppNext) ppNext.addEventListener('click', () => photoPopupStep('next'));
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('photo-popup')?.hidden) return;
+    if (e.key === 'Escape') closePhotoPopup();
+    else if (e.key === 'ArrowLeft')  photoPopupStep('prev');
+    else if (e.key === 'ArrowRight') photoPopupStep('next');
   });
 
   // Budget warning modal

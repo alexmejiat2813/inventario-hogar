@@ -522,7 +522,8 @@ module.exports = {
     return db.prepare(`
       SELECT p.*,
              (SELECT COUNT(*) FROM product_images WHERE product_id = p.id) AS image_count,
-             (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY created_at LIMIT 1) AS first_image
+             (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY created_at LIMIT 1) AS first_image,
+             (SELECT json_group_array(image_path) FROM (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY created_at)) AS images
       FROM products p
       WHERE p.inventory_id = ?
       ORDER BY p.category, p.name
@@ -533,7 +534,8 @@ module.exports = {
     return db.prepare(`
       SELECT p.*,
              (SELECT COUNT(*) FROM product_images WHERE product_id = p.id) AS image_count,
-             (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY created_at LIMIT 1) AS first_image
+             (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY created_at LIMIT 1) AS first_image,
+             (SELECT json_group_array(image_path) FROM (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY created_at)) AS images
       FROM products p
       WHERE p.inventory_id = ? AND p.category = ?
       ORDER BY p.name
@@ -790,7 +792,9 @@ module.exports = {
       SELECT p.*,
              COALESCE(s.checked, 0) AS checked,
              s.checked_at,
-             (p.min_qty - p.current_qty) AS needed
+             (p.min_qty - p.current_qty) AS needed,
+             (SELECT COUNT(*) FROM product_images WHERE product_id = p.id) AS image_count,
+             (SELECT json_group_array(image_path) FROM (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY created_at)) AS images
       FROM products p
       LEFT JOIN shopping_list_items s
         ON s.product_id = p.id AND s.inventory_id = ?
@@ -1289,11 +1293,18 @@ module.exports = {
       GROUP BY month ORDER BY month
     `).all(inventoryId, start);
 
+    // Gasto por categoria en el periodo (segun compras, no inventario)
     const byCategory = db.prepare(`
-      SELECT category, COUNT(*) AS count
-      FROM products WHERE inventory_id = ?
-      GROUP BY category ORDER BY count DESC
-    `).all(inventoryId);
+      SELECT COALESCE(pr.category, 'Otros') AS category,
+             COALESCE(SUM(pi.subtotal), 0) AS total
+      FROM purchase_items pi
+      JOIN purchase_sessions ps ON ps.id = pi.session_id
+      LEFT JOIN products pr ON pr.id = pi.product_id
+      WHERE ps.inventory_id = ? AND ps.purchase_date >= ?
+      GROUP BY COALESCE(pr.category, 'Otros')
+      HAVING total > 0
+      ORDER BY total DESC
+    `).all(inventoryId, start);
 
     const byStore = db.prepare(`
       SELECT COALESCE(s.name,'Sin establecimiento') AS store_name,

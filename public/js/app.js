@@ -255,10 +255,68 @@ function renderStats() {
 function filteredProducts() {
   const q = state.searchQuery.toLowerCase();
   return state.products.filter(p => {
+    // Stock muestra mientras quede cantidad; solo desaparece al llegar a 0
+    // (los productos bajo el minimo igual aparecen en Compras)
+    const hasStock    = p.current_qty > 0;
     const matchCat    = state.activeCategory === 'all' || p.category === state.activeCategory;
     const matchSearch = p.name.toLowerCase().includes(q);
-    return matchCat && matchSearch;
+    return hasStock && matchCat && matchSearch;
   });
+}
+
+const PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" width="40" height="40"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
+
+function parseImages(p) {
+  try { return JSON.parse(p.images || '[]'); } catch { return p.first_image ? [p.first_image] : []; }
+}
+
+function renderCardImage(p) {
+  const imgs = parseImages(p);
+  if (!imgs.length) {
+    return `<div class="card-img card-img--empty">${PLACEHOLDER_SVG}</div>`;
+  }
+  const multi = imgs.length > 1;
+  return `
+    <div class="card-img" data-action="photos" data-id="${p.id}" data-images='${esc(JSON.stringify(imgs))}' data-idx="0">
+      <img class="card-img-el" src="${esc(imgs[0])}" alt="${esc(p.name)}" loading="lazy">
+      ${multi ? `
+        <button class="card-img-nav card-img-prev" data-carousel="prev" aria-label="Anterior">‹</button>
+        <button class="card-img-nav card-img-next" data-carousel="next" aria-label="Siguiente">›</button>
+        <div class="card-img-dots">${imgs.map((_, i) => `<span class="card-dot${i === 0 ? ' active' : ''}"></span>`).join('')}</div>
+      ` : ''}
+    </div>`;
+}
+
+// Paso del stepper segun la unidad (gramos/ml saltan mas que unidades)
+function qtyStep(unit) {
+  const u = (unit || '').toLowerCase();
+  if (u === 'g' || u === 'ml') return 50;
+  if (u === 'kg' || u === 'lt') return 0.5;
+  return 1;
+}
+
+async function persistQty(productId, newQty) {
+  const p = state.products.find(x => x.id === productId);
+  if (!p) return;
+  newQty = Math.max(0, Math.round(newQty * 10000) / 10000);
+  if (newQty === p.current_qty) return;
+  try {
+    await apiFetch('PUT', `/api/products/${productId}`, {
+      name: p.name, category: p.category,
+      current_qty: newQty, min_qty: p.min_qty,
+      unit: p.unit, expiry_date: p.expiry_date || null,
+    });
+    await loadData();
+    renderProducts();
+    renderStats();
+    updateCartBadge();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+function adjustQty(productId, dir) {
+  const p = state.products.find(x => x.id === productId);
+  if (!p) return;
+  persistQty(productId, p.current_qty + dir * qtyStep(p.unit));
 }
 
 function renderProductCard(p) {
@@ -271,22 +329,28 @@ function renderProductCard(p) {
 
   return `
     <div class="product-card ${isCritical ? 'product-card--critical' : ''}">
+      ${renderCardImage(p)}
+
       <div class="card-top">
         <span class="category-badge ${catClass(p.category)}">${CAT_ICONS[p.category] || ''} ${tCat(p.category)}</span>
-        ${isCritical ? `<span class="critical-tag">⚠ ${t('inventory.card.critical')}</span>` : ''}
         ${expiry ? `<span class="expiry-badge ${expiry.cls}">${expiry.label}</span>` : ''}
-        ${p.image_count > 0 ? `<button class="btn-card-photos" data-action="photos" data-id="${p.id}" title="Ver fotos">📷 ${p.image_count}</button>` : ''}
       </div>
-
-      ${p.first_image ? `<div class="product-thumb-wrap"><img class="product-thumb" src="${esc(p.first_image)}" alt="${esc(p.name)}" data-action="photos" data-id="${p.id}" loading="lazy"></div>` : ''}
 
       <h3 class="product-name">${esc(p.name)}</h3>
 
+      ${isReader ? `
       <div class="product-qty-info">
         <span class="qty-current">${p.current_qty} ${unit}</span>
         <span class="qty-sep">·</span>
         <span class="qty-min">${t('inventory.card.min')}: ${p.min_qty} ${unit}</span>
+      </div>` : `
+      <div class="qty-stepper">
+        <button class="qty-step-btn" data-action="qty-dec" data-id="${p.id}" aria-label="Restar">−</button>
+        <input class="qty-step-input" type="number" min="0" step="any" inputmode="decimal" data-action="qty-set" data-id="${p.id}" value="${p.current_qty}">
+        <span class="qty-step-unit">${unit}</span>
+        <button class="qty-step-btn" data-action="qty-inc" data-id="${p.id}" aria-label="Sumar">+</button>
       </div>
+      <div class="qty-min-row">${t('inventory.card.min')}: ${p.min_qty} ${unit}</div>`}
 
       <div class="progress-bar-wrap">
         <div class="progress-bar">
@@ -338,37 +402,9 @@ function updateCartBadge() {
 }
 
 function renderLowStockPanel() {
+  // Banner de stock bajo eliminado — los criticos se ven en Compras.
   const panel = document.getElementById('low-stock-panel');
-  if (!panel) return;
-
-  if (sessionStorage.getItem('low_stock_dismissed')) {
-    panel.hidden = true;
-    return;
-  }
-
-  const critical = state.products.filter(p => p.current_qty < p.min_qty);
-  if (!critical.length) { panel.hidden = true; return; }
-
-  panel.hidden = false;
-  const n = critical.length;
-  document.getElementById('low-stock-count').textContent =
-    `${n} producto${n !== 1 ? 's' : ''} con stock bajo`;
-
-  const isReader = state.inventory?.role === 'reader';
-  document.getElementById('low-stock-list').innerHTML = critical.map(p => {
-    const unit   = t('units.' + p.unit) || esc(p.unit);
-    const needed = +(p.min_qty - p.current_qty).toFixed(2);
-    return `
-      <div class="low-stock-item">
-        <span class="low-stock-name">${esc(p.name)}</span>
-        <span class="low-stock-deficit">faltan ${needed} ${unit}</span>
-        ${!isReader ? `
-        <button class="btn-low-stock-add" data-action="add-to-list" data-id="${p.id}" title="Activar en lista de compras">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          Agregar
-        </button>` : ''}
-      </div>`;
-  }).join('');
+  if (panel) panel.hidden = true;
 }
 
 async function addToShoppingList(productId) {
@@ -1353,6 +1389,24 @@ function initEvents() {
   });
 
   document.getElementById('products-grid').addEventListener('click', e => {
+    // Flechas del carrusel: cambiar foto sin abrir el visor
+    const nav = e.target.closest('[data-carousel]');
+    if (nav) {
+      e.stopPropagation();
+      const wrap = nav.closest('.card-img');
+      let imgs = [];
+      try { imgs = JSON.parse(wrap.dataset.images || '[]'); } catch {}
+      if (imgs.length < 2) return;
+      let idx = (parseInt(wrap.dataset.idx, 10) || 0);
+      idx = nav.dataset.carousel === 'next'
+        ? (idx + 1) % imgs.length
+        : (idx - 1 + imgs.length) % imgs.length;
+      wrap.dataset.idx = idx;
+      const img = wrap.querySelector('.card-img-el');
+      if (img) img.src = imgs[idx];
+      wrap.querySelectorAll('.card-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+      return;
+    }
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const id = parseInt(btn.dataset.id, 10);
@@ -1360,16 +1414,20 @@ function initEvents() {
     if (btn.dataset.action === 'delete')      deleteProduct(id);
     if (btn.dataset.action === 'photos')      openProductPhotoViewer(id);
     if (btn.dataset.action === 'add-to-list') addToShoppingList(id);
+    if (btn.dataset.action === 'qty-dec')     adjustQty(id, -1);
+    if (btn.dataset.action === 'qty-inc')     adjustQty(id, +1);
   });
 
-  document.getElementById('low-stock-list').addEventListener('click', e => {
+  // Ajuste directo de cantidad escribiendo en el input de la card
+  document.getElementById('products-grid').addEventListener('change', e => {
+    const inp = e.target.closest('[data-action="qty-set"]');
+    if (inp) persistQty(parseInt(inp.dataset.id, 10), parseFloat(inp.value) || 0);
+  });
+
+  const lowStockList = document.getElementById('low-stock-list');
+  if (lowStockList) lowStockList.addEventListener('click', e => {
     const btn = e.target.closest('[data-action="add-to-list"]');
     if (btn) addToShoppingList(parseInt(btn.dataset.id, 10));
-  });
-
-  document.getElementById('low-stock-dismiss').addEventListener('click', () => {
-    sessionStorage.setItem('low_stock_dismissed', '1');
-    document.getElementById('low-stock-panel').hidden = true;
   });
 
   document.querySelectorAll('.form-input, .form-select').forEach(el => {
@@ -1406,6 +1464,15 @@ function initEvents() {
     const mobCustom  = document.getElementById('mob-add-custom');
     if (mobCatalog) mobCatalog.addEventListener('click', () => { closeMobDrawer(); window.location.href = '/catalog'; });
     if (mobCustom)  mobCustom.addEventListener('click', () => { closeMobDrawer(); openModal(); });
+
+    // Período del dashboard desde el drawer (móvil)
+    drawer.querySelectorAll('[data-mob-period]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (typeof setPeriod === 'function') setPeriod(btn.dataset.mobPeriod);
+        if (state.activeTab !== 'dashboard') switchTab('dashboard');
+        closeMobDrawer();
+      });
+    });
   }
 
   // Budget banner dismiss

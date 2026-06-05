@@ -181,7 +181,7 @@
 
       <!-- Monthly spend line chart -->
       <div class="dash-card">
-        <h3 class="dash-card-title" data-i18n="dashboard.monthlyTitle">Gasto mensual (últimos 6 meses)</h3>
+        <h3 class="dash-card-title" id="dash-monthly-title">Gasto mensual</h3>
         <div class="dash-chart-wrap" id="dash-monthly-wrap">
           <div class="dash-chart-skeleton skeleton"></div>
         </div>
@@ -190,13 +190,13 @@
       <!-- Category + Store charts row -->
       <div class="dash-charts-row">
         <div class="dash-card">
-          <h3 class="dash-card-title" data-i18n="dashboard.byCategoryTitle">Por categoría</h3>
+          <h3 class="dash-card-title" id="dash-cat-title">Gasto por categoría</h3>
           <div class="dash-chart-wrap dash-chart-wrap--sm" id="dash-cat-wrap">
             <div class="dash-chart-skeleton skeleton"></div>
           </div>
         </div>
         <div class="dash-card">
-          <h3 class="dash-card-title" data-i18n="dashboard.byStoreTitle">Por establecimiento</h3>
+          <h3 class="dash-card-title" id="dash-store-title">Gasto por establecimiento</h3>
           <div class="dash-chart-wrap dash-chart-wrap--sm" id="dash-store-wrap">
             <div class="dash-chart-skeleton skeleton"></div>
           </div>
@@ -245,21 +245,6 @@
         <div id="stat-categories" class="cat-stats-grid"></div>
       </div>
     </section>
-
-    <!-- ===== LOW-STOCK ALERT ===== -->
-    <div id="low-stock-panel" class="low-stock-panel" hidden>
-      <div class="low-stock-header">
-        <span class="low-stock-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <span id="low-stock-count"></span>
-        </span>
-        <div class="low-stock-header-actions">
-          <a href="/shopping-list" class="btn-low-stock-view">Ver lista</a>
-          <button class="btn-low-stock-dismiss" id="low-stock-dismiss" aria-label="Cerrar">✕</button>
-        </div>
-      </div>
-      <div id="low-stock-list" class="low-stock-list"></div>
-    </div>
 
     <!-- ===== FILTROS ===== -->
     <section class="filters-section">
@@ -469,6 +454,13 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span data-i18n="invTabs.history">Historial</span>
       </a>
+      <div class="mob-ddivider"></div>
+      <div class="mob-dlabel" data-i18n="dashboard.periodLabel">Período (Dashboard)</div>
+      <button class="mob-ditem mob-active" data-mob-period="month"><span data-i18n="dashboard.period.month">Este mes</span></button>
+      <button class="mob-ditem" data-mob-period="3m"><span data-i18n="dashboard.period.3m">3 meses</span></button>
+      <button class="mob-ditem" data-mob-period="6m"><span data-i18n="dashboard.period.6m">6 meses</span></button>
+      <button class="mob-ditem" data-mob-period="year"><span data-i18n="dashboard.period.year">Este año</span></button>
+
       <div class="mob-ddivider"></div>
       <div class="mob-dlabel" data-i18n="inventory.add">Agregar</div>
       <button class="mob-ditem" id="mob-add-catalog">
