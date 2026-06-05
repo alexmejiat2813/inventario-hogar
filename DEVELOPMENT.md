@@ -88,6 +88,8 @@
 | 40 | Anti-cache definitivo | `Cache-Control: no-cache` en páginas HTML y sw.js + `reg.update()` por carga | ✅ |
 | 41 | Alineación tabla desktop | Títulos numéricos + datos left-align; inputs cantidad/precio al ancho con tope, Producto más ancho | ✅ |
 | 42 | Resumen en card de inventario | Productos, críticos, budget gastado/restante con barra. API extendida + i18n ES/EN/FR | ✅ |
+| 43 | Orientación móvil | manifest `orientation` portrait→any, la app rota con la pantalla | ✅ |
+| 44 | Auditoría técnica | Revisión completa en `AUDIT.md` (seguridad, deuda, roadmap) | ✅ |
 | 17 | P0 ruta `/api/shopping/custom` | 404 con servidor viejo sin reiniciar — verificar que SW v8 no sirve respuestas cacheadas de rutas inexistentes | ⬜ |
 | 18 | Historial de precios — locale hardcodeado | `expiryInfo()` en app.js usa strings en español hardcodeados, no responde a cambio de idioma | ⬜ |
 | 19 | Export lista de compras — custom items | `buildExportText()` en shopping-list.html no incluye `state.customItems` en PDF/WhatsApp/clipboard | ⬜ |
