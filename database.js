@@ -195,6 +195,24 @@ db.exec(`
   );
 `);
 
+// ── Indexes ───────────────────────────────────────────────────────────────────
+// FKs y columnas de filtro frecuente. SQLite no indexa FKs automaticamente.
+db.exec(`
+  CREATE INDEX IF NOT EXISTS idx_products_inventory       ON products(inventory_id);
+  CREATE INDEX IF NOT EXISTS idx_product_images_product   ON product_images(product_id);
+  CREATE INDEX IF NOT EXISTS idx_stores_inventory         ON stores(inventory_id);
+  CREATE INDEX IF NOT EXISTS idx_psessions_inv_date       ON purchase_sessions(inventory_id, purchase_date);
+  CREATE INDEX IF NOT EXISTS idx_pitems_session           ON purchase_items(session_id);
+  CREATE INDEX IF NOT EXISTS idx_pitems_product           ON purchase_items(product_id);
+  CREATE INDEX IF NOT EXISTS idx_tax_types_inventory      ON tax_types(inventory_id);
+  CREATE INDEX IF NOT EXISTS idx_budget_resets_inv_date   ON budget_resets(inventory_id, reset_date);
+  CREATE INDEX IF NOT EXISTS idx_templates_inventory      ON list_templates(inventory_id);
+  CREATE INDEX IF NOT EXISTS idx_template_items_template  ON list_template_items(template_id);
+  CREATE INDEX IF NOT EXISTS idx_custom_items_inventory   ON shopping_list_custom_items(inventory_id);
+  CREATE INDEX IF NOT EXISTS idx_audit_inv_created        ON audit_log(inventory_id, created_at);
+  CREATE INDEX IF NOT EXISTS idx_members_user             ON inventory_members(user_id);
+`);
+
 // ── Migrations ────────────────────────────────────────────────────────────────
 const invCols = db.prepare('PRAGMA table_info(inventories)').all().map(c => c.name);
 if (!invCols.includes('currency')) {

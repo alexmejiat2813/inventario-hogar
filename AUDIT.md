@@ -41,8 +41,7 @@ Veredicto: **bueno**. Listo para uso real; endurecer seguridad antes de exponer 
 
 3. ~~**Uploads públicos sin auth.**~~ ✅ RESUELTO: `/uploads` ahora pasa por `requireAuthApi` + verificación de membresía del inventario dueño del archivo (`getUploadOwnerInventory`). Guard anti path-traversal. Las `<img>` mandan la cookie de sesión. Test: 401 sin auth.
 
-4. **`SESSION_SECRET` con fallback `'dev-secret'`.** Si en prod falta el env var, arranca con secreto débil silenciosamente.
-   - Fix: en prod, `throw` si `!process.env.SESSION_SECRET`.
+4. ~~**`SESSION_SECRET` con fallback `'dev-secret'`.**~~ ✅ RESUELTO: en prod `throw` si falta `SESSION_SECRET` (no arranca con secreto débil).
 
 ### P2 — Robustez
 
@@ -53,8 +52,7 @@ Veredicto: **bueno**. Listo para uso real; endurecer seguridad antes de exponer 
 
 7. **`express.json()` sin límite explícito.** Default 100kb está bien, pero conviene declararlo (`limit: '100kb'`) para que sea intencional.
 
-8. **Sin índices declarados** en tablas grandes (products.inventory_id, purchase_sessions.inventory_id, purchase_items.session_id). SQLite hace scans; con pocos datos no se nota, escala mal.
-   - Fix: `CREATE INDEX` en FKs y columnas de filtro frecuente.
+8. ~~**Sin índices declarados.**~~ ✅ RESUELTO: índices en FKs y columnas de filtro (products, product_images, purchase_sessions(inv,date), purchase_items, stores, tax_types, budget_resets, templates, custom_items, audit_log, inventory_members(user)).
 
 ### P3 — Mantenibilidad
 
@@ -94,7 +92,7 @@ Veredicto: **bueno**. Listo para uso real; endurecer seguridad antes de exponer 
 - **Suite de tests de autorización** (IDOR cross-inventory) y de lógica de budget/shopping.
 - **Headers de seguridad + CSP** (#1) y auto-hospedar Chart.js (quitar dependencia de CDN, mejora offline real).
 - **Índices SQLite** (#8).
-- **CI**: agregar `npm test` como gate ANTES del deploy (hoy el deploy no corre tests).
+- ~~**CI**: `npm test` como gate antes del deploy.~~ ✅ RESUELTO: job `test` (Node 24) corre antes; `deploy` usa `needs: test`.
 - **Versionado automático del SW** en build.
 - **Observabilidad**: structured logging + error tracking (Sentry o similar).
 - **Backups automáticos** del volumen SQLite (snapshot Fly o dump programado).

@@ -15,6 +15,12 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
+// En produccion el SESSION_SECRET es obligatorio: nunca arrancar con el
+// fallback debil 'dev-secret' (sesiones falsificables).
+if (IS_PROD && !process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET es requerido en producción');
+}
+
 // Uploads dir — overridable so it can live on a persistent volume in production
 const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, 'public', 'uploads');
 
