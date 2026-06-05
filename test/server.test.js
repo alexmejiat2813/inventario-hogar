@@ -86,6 +86,13 @@ describe('security headers', () => {
   });
 });
 
+describe('uploads are private', () => {
+  test('GET /uploads/* returns 401 without auth', async () => {
+    const res = await get('/uploads/products/whatever.jpg');
+    assert.equal(res.status, 401);
+  });
+});
+
 // ── Redirect for unauthenticated pages ─────────────────────────
 
 describe('page routes redirect when unauthenticated', () => {

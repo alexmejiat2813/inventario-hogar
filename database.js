@@ -717,6 +717,21 @@ module.exports = {
     ).all(productId);
   },
 
+  // Inventario dueño de un archivo subido (por su web path), para autorizar
+  // el acceso a /uploads. Devuelve inventory_id o null.
+  getUploadOwnerInventory(webPath) {
+    const img = db.prepare(`
+      SELECT p.inventory_id AS inv
+      FROM product_images pi JOIN products p ON p.id = pi.product_id
+      WHERE pi.image_path = ? LIMIT 1
+    `).get(webPath);
+    if (img) return img.inv;
+    const rec = db.prepare(
+      'SELECT inventory_id AS inv FROM purchase_sessions WHERE receipt_image = ? LIMIT 1'
+    ).get(webPath);
+    return rec ? rec.inv : null;
+  },
+
   addProductImage(productId, imagePath) {
     const { lastInsertRowid } = db.prepare(
       'INSERT INTO product_images (product_id, image_path) VALUES (?, ?)'

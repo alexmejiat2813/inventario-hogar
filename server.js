@@ -9,6 +9,7 @@ const { requireInventory }  = require('./middleware/inventory');
 const SQLiteStore           = require('./middleware/session-store');
 const { createRateLimiter } = require('./middleware/rate-limit');
 const { securityHeaders }   = require('./middleware/security-headers');
+const db                    = require('./database');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -51,14 +52,29 @@ app.use((req, res, next) => {
 app.use('/css',     express.static(path.join(__dirname, 'public/css')));
 app.use('/js',      express.static(path.join(__dirname, 'public/js')));
 app.use('/locales', express.static(path.join(__dirname, 'public/locales')));
-// Uploads: defensa en profundidad. Si un archivo malicioso (ej. SVG con script)
-// llegara a colarse, esta CSP lo neutraliza al abrirlo como documento; las
-// imagenes via <img> no se afectan (la CSP del recurso no aplica al render).
-app.use('/uploads', (req, res, next) => {
+// Uploads: privados. Solo miembros del inventario dueño del archivo pueden
+// verlo. Las <img> mandan la cookie de sesion, asi que la auth funciona.
+// Defensa en profundidad: CSP sandbox + nosniff por si un archivo se cuela.
+app.use('/uploads', requireAuthApi, (req, res) => {
   res.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
   res.set('X-Content-Type-Options', 'nosniff');
-  next();
-}, express.static(UPLOADS_DIR));
+
+  const rel      = req.path.replace(/^\/+/, '');
+  const filePath = path.normalize(path.join(UPLOADS_DIR, rel));
+  // Guard anti path-traversal: el archivo debe quedar dentro de UPLOADS_DIR
+  if (filePath !== UPLOADS_DIR && !filePath.startsWith(UPLOADS_DIR + path.sep)) {
+    return res.status(400).end();
+  }
+
+  const webPath = '/uploads/' + rel;
+  const invId   = db.getUploadOwnerInventory(webPath);
+  if (!invId) return res.status(404).end();
+  if (!db.getMember(invId, req.user.id)) return res.status(403).end();
+
+  res.sendFile(filePath, err => {
+    if (err && !res.headersSent) res.status(404).end();
+  });
+});
 app.use('/icons',   express.static(path.join(__dirname, 'public/icons')));
 app.get('/manifest.json', (req, res) => res.sendFile(path.join(__dirname, 'public/manifest.json')));
 // sw.js siempre revalidado: el browser debe ver al instante un SW nuevo tras deploy

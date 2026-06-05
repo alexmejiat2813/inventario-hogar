@@ -39,8 +39,7 @@ Veredicto: **bueno**. Listo para uso real; endurecer seguridad antes de exponer 
 
 2. ~~**SVG subido = XSS almacenado.**~~ ✅ RESUELTO: `uploadProductImage` ahora usa allowlist raster (jpeg/png/webp/gif/heic/heif) y rechaza SVG explícitamente. Además `/uploads` se sirve con CSP `sandbox` + `nosniff` (defensa en profundidad).
 
-3. **Uploads públicos sin auth.** `/uploads` es `express.static` abierto. Fotos de productos y **recibos** (pueden tener datos personales) son accesibles por URL sin sesión. Filenames aleatorios mitigan pero no es control de acceso.
-   - Fix: servir uploads tras `requireAuthApi` + verificación de pertenencia al inventario, o firmar URLs.
+3. ~~**Uploads públicos sin auth.**~~ ✅ RESUELTO: `/uploads` ahora pasa por `requireAuthApi` + verificación de membresía del inventario dueño del archivo (`getUploadOwnerInventory`). Guard anti path-traversal. Las `<img>` mandan la cookie de sesión. Test: 401 sin auth.
 
 4. **`SESSION_SECRET` con fallback `'dev-secret'`.** Si en prod falta el env var, arranca con secreto débil silenciosamente.
    - Fix: en prod, `throw` si `!process.env.SESSION_SECRET`.
