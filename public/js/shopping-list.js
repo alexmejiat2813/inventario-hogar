@@ -1158,6 +1158,14 @@ function initEvents() {
   });
   document.getElementById('receipt-input').addEventListener('change', e => {
     handleReceiptPick(e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('btn-receipt-camera').addEventListener('click', () => {
+    document.getElementById('receipt-camera-input').click();
+  });
+  document.getElementById('receipt-camera-input').addEventListener('change', e => {
+    handleReceiptPick(e.target.files[0]);
+    e.target.value = '';
   });
   document.getElementById('btn-receipt-remove').addEventListener('click', removeReceipt);
 

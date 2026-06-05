@@ -318,6 +318,8 @@
       font-size: .825rem; font-weight: 500; transition: border-color .12s;
     }
     .receipt-pick-btn:hover { border-color: #082F49; }
+    .receipt-pick-row { display: flex; gap: .5rem; }
+    .receipt-pick-row .receipt-pick-btn { flex: 1; justify-content: center; }
     .receipt-hint { font-size: .73rem; color: #B2B0AD; margin-top: .4rem; }
     .receipt-preview-wrap {
       position: relative; margin-top: .5rem; display: inline-block; max-width: 100%;
@@ -1121,11 +1123,18 @@
         <div class="receipt-section">
           <p class="receipt-title" data-i18n="shopping.register.receipt">Foto del recibo (opcional)</p>
           <input type="file" id="receipt-input" accept="image/*" style="display:none">
+          <input type="file" id="receipt-camera-input" accept="image/*" capture="environment" style="display:none">
           <div id="receipt-pick-wrap">
-            <button type="button" class="receipt-pick-btn" id="btn-receipt-pick">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <span data-i18n="shopping.register.receiptBtn">Tomar foto o subir imagen</span>
-            </button>
+            <div class="receipt-pick-row">
+              <button type="button" class="receipt-pick-btn" id="btn-receipt-camera">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span data-i18n="shopping.register.receiptCamera">Cámara</span>
+              </button>
+              <button type="button" class="receipt-pick-btn" id="btn-receipt-pick">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span data-i18n="shopping.register.receiptGallery">Galería</span>
+              </button>
+            </div>
             <p class="receipt-hint" data-i18n="shopping.register.receiptHint">Podés omitir este paso</p>
           </div>
           <div id="receipt-preview-wrap" class="receipt-preview-wrap" hidden>

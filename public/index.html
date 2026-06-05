@@ -346,8 +346,12 @@
           <div class="form-group photos-section">
             <div class="photos-section-title" data-i18n="inventory.photos.title">Fotos de referencia</div>
             <div class="photos-grid" id="modal-photos-grid"></div>
-            <button type="button" class="btn-photos-add" id="btn-modal-photos" data-i18n="inventory.photos.btn">Agregar fotos</button>
+            <div class="photos-add-row">
+              <button type="button" class="btn-photos-add" id="btn-modal-camera">📷 <span data-i18n="inventory.photos.camera">Cámara</span></button>
+              <button type="button" class="btn-photos-add" id="btn-modal-photos">🖼️ <span data-i18n="inventory.photos.gallery">Galería</span></button>
+            </div>
             <input type="file" id="modal-file-input" accept="image/*,.heic" multiple hidden>
+            <input type="file" id="modal-camera-input" accept="image/*" capture="environment" hidden>
           </div>
         </div>
 

@@ -324,7 +324,11 @@ function renderReceipt() {
       <img class="receipt-img" id="receipt-img" src="${esc(session.receipt_image)}" alt="recibo">
       <div class="receipt-actions">
         <label class="btn-receipt">
-          📷 ${tSafe('purchaseEdit.receipt.change','Cambiar foto')}
+          📷 ${tSafe('purchaseEdit.receipt.camera','Cámara')}
+          <input type="file" accept="image/*" capture="environment" id="receipt-file-cam" hidden>
+        </label>
+        <label class="btn-receipt">
+          🖼️ ${tSafe('purchaseEdit.receipt.gallery','Galería')}
           <input type="file" accept="image/*" id="receipt-file" hidden>
         </label>
         <button class="btn-receipt btn-receipt--danger" id="btn-remove-receipt">
@@ -343,10 +347,16 @@ function renderReceipt() {
       <button class="btn-receipt btn-receipt--danger" id="btn-cancel-receipt-change">${tSafe('purchaseEdit.receipt.cancelChange','Cancelar cambio')}</button>
     </div>`;
   } else {
-    html = `<label class="btn-receipt btn-receipt--add">
-      ${tSafe('purchaseEdit.receipt.add','📷 Agregar foto')}
-      <input type="file" accept="image/*" id="receipt-file" hidden>
-    </label>`;
+    html = `<div class="receipt-actions">
+      <label class="btn-receipt btn-receipt--add">
+        📷 ${tSafe('purchaseEdit.receipt.camera','Cámara')}
+        <input type="file" accept="image/*" capture="environment" id="receipt-file-cam" hidden>
+      </label>
+      <label class="btn-receipt btn-receipt--add">
+        🖼️ ${tSafe('purchaseEdit.receipt.gallery','Galería')}
+        <input type="file" accept="image/*" id="receipt-file" hidden>
+      </label>
+    </div>`;
   }
 
   wrap.innerHTML = html;
@@ -542,7 +552,7 @@ function initEvents() {
   // Receipt — delegation
   const receiptWrap = document.getElementById('receipt-wrap');
   receiptWrap.addEventListener('change', async e => {
-    if (e.target.id === 'receipt-file') {
+    if (e.target.id === 'receipt-file' || e.target.id === 'receipt-file-cam') {
       let file = e.target.files[0];
       e.target.value = '';
       if (!file) return;

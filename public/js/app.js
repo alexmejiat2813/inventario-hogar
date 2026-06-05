@@ -1355,6 +1355,10 @@ function initEvents() {
     document.getElementById('modal-file-input').click();
   });
   document.getElementById('modal-file-input').addEventListener('change', handleModalFileInputChange);
+  document.getElementById('btn-modal-camera').addEventListener('click', () => {
+    document.getElementById('modal-camera-input').click();
+  });
+  document.getElementById('modal-camera-input').addEventListener('change', handleModalFileInputChange);
   document.getElementById('modal-photos-grid').addEventListener('click', e => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;

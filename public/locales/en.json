@@ -156,7 +156,9 @@
       "maxFiles": "Maximum 5 photos per product",
       "maxSize": "Maximum file size 5MB per photo",
       "deleted": "Photo deleted",
-      "uploaded": "Photo(s) saved"
+      "uploaded": "Photo(s) saved",
+      "camera": "Camera",
+      "gallery": "Gallery"
     }
   },
   "shopping": {
@@ -197,6 +199,8 @@
       "receiptBtn": "Upload photo",
       "receiptChange": "Change photo",
       "receiptRemove": "Remove",
+      "receiptCamera": "Camera",
+      "receiptGallery": "Gallery",
       "cancel": "Cancel",
       "taxes": "Taxes",
       "confirm": "Register purchase",
@@ -406,7 +410,9 @@
       "add": "📷 Add photo",
       "removed": "Photo removed",
       "undo": "Undo",
-      "cancelChange": "Cancel change"
+      "cancelChange": "Cancel change",
+      "camera": "Camera",
+      "gallery": "Gallery"
     },
     "bar": {
       "subtotal": "Subtotal",

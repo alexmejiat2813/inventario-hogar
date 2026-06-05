@@ -2,6 +2,17 @@
    i18n — Internationalisation module
    ============================================================ */
 
+// Auto-recarga cuando un Service Worker nuevo toma control tras un deploy,
+// asi la pagina abierta no se queda con CSS/JS viejo en cache.
+if ('serviceWorker' in navigator) {
+  let _swReloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (_swReloading) return;
+    _swReloading = true;
+    window.location.reload();
+  });
+}
+
 const I18N = (() => {
   const LANGS = ['es', 'en', 'fr'];
   let _lang = 'es';
