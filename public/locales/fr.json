@@ -1,5 +1,12 @@
 {
   "appName": "Inventaire Maison",
+  "cropper": {
+    "title": "Recadrer l'image",
+    "reset": "Réinitialiser",
+    "cancel": "Annuler",
+    "apply": "Appliquer",
+    "hint": "Glissez pour déplacer, les coins pour ajuster"
+  },
   "login": {
     "desc": "Gérez le stock de votre maison, recevez des alertes quand quelque chose manque et restez organisé.",
     "pills": {

@@ -310,8 +310,10 @@ function renderTableRow(item) {
     ),
   ].join('');
 
+  const expanded = state.expandedItems.has(String(item.id));
+
   return `
-    <tr class="sl-row${item.checked ? ' sl-row--checked' : ''}" data-id="${item.id}">
+    <tr class="sl-row${item.checked ? ' sl-row--checked' : ''}${expanded ? ' sl-row--expanded' : ''}" data-id="${item.id}">
       <td class="sl-td sl-td--check">
         <button class="sl-cbtn" data-action="check" data-id="${item.id}" aria-label="Marcar como comprado">
           <span class="sl-circle">
@@ -324,24 +326,27 @@ function renderTableRow(item) {
         <span class="sl-name-wrap">
           <span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span>
           ${item.image_count > 0 ? `<button class="sl-photo-btn" data-action="photo" data-images='${esc(item.images || "[]")}' title="Ver foto" aria-label="Ver foto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>` : ''}
+          <button class="sl-acc-toggle" data-action="expand" data-key="${item.id}" aria-label="Detalles de compra" aria-expanded="${expanded}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
         </span>
       </td>
       <td class="sl-td sl-td--r">${fmtQty(item.current_qty)} <span class="sl-unit">${unit}</span></td>
       <td class="sl-td sl-td--r">${fmtQty(item.min_qty)} <span class="sl-unit">${unit}</span></td>
-      <td class="sl-td">
+      <td class="sl-td sl-field" data-label="Establecimiento">
         <select class="sl-sel" data-field="store" data-id="${item.id}">${storeOptions}</select>
       </td>
-      <td class="sl-td sl-td--r">
+      <td class="sl-td sl-td--r sl-field" data-label="Cantidad">
         <input class="sl-inp sl-inp--qty" type="number" min="0" step="0.01"
                data-field="qty" data-id="${item.id}"
                value="${pd.quantityBought != null ? pd.quantityBought : ''}">
       </td>
-      <td class="sl-td sl-td--r">
+      <td class="sl-td sl-td--r sl-field" data-label="Precio/u">
         <input class="sl-inp sl-inp--price" type="number" min="0" step="0.01"
                data-field="price" data-id="${item.id}"
                value="${pd.unitPrice != null ? pd.unitPrice : ''}">
       </td>
-      <td class="sl-td sl-td--r">
+      <td class="sl-td sl-td--r sl-field" data-label="Subtotal">
         <span class="sl-sub${sub != null ? ' sl-sub--pos' : ''}" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
       </td>
     </tr>`;
@@ -357,8 +362,10 @@ function renderCustomRow(item) {
     ),
   ].join('');
 
+  const expanded = state.expandedItems.has('c' + item.id);
+
   return `
-    <tr class="sl-row sl-row--custom${item.checked ? ' sl-row--checked' : ''}" data-custom-id="${item.id}">
+    <tr class="sl-row sl-row--custom${item.checked ? ' sl-row--checked' : ''}${expanded ? ' sl-row--expanded' : ''}" data-custom-id="${item.id}">
       <td class="sl-td sl-td--check">
         <button class="sl-cbtn" data-action="check-custom" data-id="${item.id}" aria-label="Marcar">
           <span class="sl-circle">
@@ -367,23 +374,30 @@ function renderCustomRow(item) {
         </button>
       </td>
       <td class="sl-td"><span style="color:#B2B0AD;font-size:.73rem;">—</span></td>
-      <td class="sl-td"><span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span></td>
-      <td class="sl-td sl-td--r sl-col-hide" style="color:#B2B0AD">—</td>
-      <td class="sl-td sl-td--r sl-col-hide" style="color:#B2B0AD">—</td>
       <td class="sl-td">
+        <span class="sl-name-wrap">
+          <span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span>
+          <button class="sl-acc-toggle" data-action="expand" data-key="c${item.id}" aria-label="Detalles de compra" aria-expanded="${expanded}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </span>
+      </td>
+      <td class="sl-td sl-td--r sl-col-hide" style="color:#B2B0AD">—</td>
+      <td class="sl-td sl-td--r sl-col-hide" style="color:#B2B0AD">—</td>
+      <td class="sl-td sl-field" data-label="Establecimiento">
         <select class="sl-sel" data-field="store" data-custom-id="${item.id}">${storeOptions}</select>
       </td>
-      <td class="sl-td sl-td--r">
+      <td class="sl-td sl-td--r sl-field" data-label="Cantidad">
         <input class="sl-inp sl-inp--qty" type="number" min="0" step="0.01"
                data-field="qty" data-custom-id="${item.id}"
                value="${pd.quantityBought != null ? pd.quantityBought : ''}">
       </td>
-      <td class="sl-td sl-td--r">
+      <td class="sl-td sl-td--r sl-field" data-label="Precio/u">
         <input class="sl-inp sl-inp--price" type="number" min="0" step="0.01"
                data-field="price" data-custom-id="${item.id}"
                value="${pd.unitPrice != null ? pd.unitPrice : ''}">
       </td>
-      <td class="sl-td sl-td--r">
+      <td class="sl-td sl-td--r sl-field" data-label="Subtotal">
         <div style="display:flex;align-items:center;justify-content:flex-end;gap:.4rem;">
           <span class="sl-sub${sub != null ? ' sl-sub--pos' : ''}" data-subtotal="c${item.id}">${getSubtotalStr(pd)}</span>
           <button class="sl-del-btn" data-action="delete-custom" data-id="${item.id}" title="Eliminar item">
@@ -459,7 +473,7 @@ async function checkItem(productId) {
 
   // Auto-expand on mobile when checking (para diligenciar tienda/cant/precio)
   if (!wasChecked && window.innerWidth < 600) {
-    state.expandedItems.add(productId);
+    state.expandedItems.add(String(productId));
   }
 
   render();
@@ -473,11 +487,12 @@ async function checkItem(productId) {
   }
 }
 
-function toggleExpand(productId) {
-  if (state.expandedItems.has(productId)) {
-    state.expandedItems.delete(productId);
+function toggleExpand(key) {
+  key = String(key);
+  if (state.expandedItems.has(key)) {
+    state.expandedItems.delete(key);
   } else {
-    state.expandedItems.add(productId);
+    state.expandedItems.add(key);
   }
   render();
 }
@@ -816,15 +831,23 @@ async function handleConfirm() {
 
 // ── Receipt ───────────────────────────────────────────────────
 
-function handleReceiptPick(file) {
+async function handleReceiptPick(file) {
   if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showToast(tSafe('shopping.register.fileInvalid', 'Formato de imagen no válido'), 'error');
+    return;
+  }
+
+  // Recorte/redimension antes de subir (cancelar aborta)
+  if (typeof openCropper === 'function') {
+    const cropped = await openCropper(file);
+    if (!cropped) return;
+    file = cropped;
+  }
 
   if (file.size > 5 * 1024 * 1024) {
     showToast(tSafe('shopping.register.fileTooLarge', 'Imagen demasiado grande (máx 5 MB)'), 'error');
-    return;
-  }
-  if (!file.type.startsWith('image/')) {
-    showToast(tSafe('shopping.register.fileInvalid', 'Formato de imagen no válido'), 'error');
     return;
   }
 
@@ -997,7 +1020,7 @@ async function applyTemplate(templateId) {
       const item = state.items.find(i => i.id === ti.product_id);
       if (!item) return;
       item.checked = true;
-      state.expandedItems.add(item.id);
+      state.expandedItems.add(String(item.id));
       if (!state.purchaseData[item.id]) state.purchaseData[item.id] = {};
       if (ti.quantity) state.purchaseData[item.id].quantityBought = ti.quantity;
       checks.push(apiFetch('PUT', `/api/shopping/${item.id}`, { checked: true }));
@@ -1060,6 +1083,8 @@ function initEvents() {
       openPhotoPopup(imgs);
       return;
     }
+    const expandBtn  = e.target.closest('[data-action="expand"]');
+    if (expandBtn) { toggleExpand(expandBtn.dataset.key); return; }
     const checkBtn    = e.target.closest('[data-action="check"]');
     const checkCustom = e.target.closest('[data-action="check-custom"]');
     const delCustom   = e.target.closest('[data-action="delete-custom"]');

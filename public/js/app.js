@@ -758,23 +758,33 @@ async function deleteProductPhoto(imageId, productId) {
   }
 }
 
-function handleModalFileInputChange(e) {
+async function handleModalFileInputChange(e) {
   const files = Array.from(e.target.files || []);
+  e.target.value = '';
   let skipped = 0;
 
-  files.forEach(file => {
+  for (const original of files) {
     const total = state.existingPhotos.length + state.pendingPhotos.length;
-    if (total >= MAX_PHOTOS) { skipped++; return; }
+    if (total >= MAX_PHOTOS) { skipped++; continue; }
+
+    // Recorte/redimension antes de encolar (cancelar salta este archivo)
+    let file = original;
+    if (typeof openCropper === 'function') {
+      const cropped = await openCropper(file);
+      if (!cropped) continue;
+      file = cropped;
+    }
+
     if (file.size > MAX_PHOTO_SIZE) {
       showToast(t('inventory.photos.maxSize') || `Tamaño máximo 5MB: ${file.name}`, 'error');
-      return;
+      continue;
     }
     const url = URL.createObjectURL(file);
     state.pendingPhotos.push({ file, url });
-  });
+    renderModalPhotos();
+  }
 
   if (skipped > 0) showToast(t('inventory.photos.maxFiles') || 'Máximo 5 fotos', 'info');
-  e.target.value = '';
   renderModalPhotos();
 }
 

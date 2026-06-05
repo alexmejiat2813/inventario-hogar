@@ -1,9 +1,10 @@
 /* Inventario Hogar — Service Worker */
-const CACHE = 'ih-v9';
+const CACHE = 'ih-v10';
 
 const PRECACHE = [
   '/css/styles.css',
   '/js/i18n.js',
+  '/js/cropper.js',
   '/js/app.js',
   '/js/dashboard.js',
   '/js/catalog.js',

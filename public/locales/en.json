@@ -1,5 +1,12 @@
 {
   "appName": "Home Inventory",
+  "cropper": {
+    "title": "Crop image",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "hint": "Drag to move, corners to resize"
+  },
   "login": {
     "desc": "Track your home stock, get alerts when something runs low and keep everything organized.",
     "pills": {

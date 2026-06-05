@@ -541,14 +541,19 @@ function initEvents() {
 
   // Receipt — delegation
   const receiptWrap = document.getElementById('receipt-wrap');
-  receiptWrap.addEventListener('change', e => {
+  receiptWrap.addEventListener('change', async e => {
     if (e.target.id === 'receipt-file') {
-      const file = e.target.files[0];
-      if (file) {
-        state.receiptFile   = file;
-        state.receiptAction = 'replace';
-        renderReceipt();
+      let file = e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      if (typeof openCropper === 'function') {
+        const cropped = await openCropper(file);
+        if (!cropped) return;
+        file = cropped;
       }
+      state.receiptFile   = file;
+      state.receiptAction = 'replace';
+      renderReceipt();
     }
   });
   receiptWrap.addEventListener('click', e => {

@@ -1,5 +1,12 @@
 {
   "appName": "Inventario Hogar",
+  "cropper": {
+    "title": "Recortar imagen",
+    "reset": "Reiniciar",
+    "cancel": "Cancelar",
+    "apply": "Aplicar",
+    "hint": "Arrastrá para mover, las esquinas para ajustar"
+  },
   "login": {
     "desc": "Controlá el stock de tu hogar, recibí alertas cuando algo falta y mantené todo organizado.",
     "pills": {
