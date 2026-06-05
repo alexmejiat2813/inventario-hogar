@@ -37,8 +37,7 @@ Veredicto: **bueno**. Listo para uso real; endurecer seguridad antes de exponer 
 
 1. ~~**Sin headers de seguridad.**~~ ✅ RESUELTO (`middleware/security-headers.js`): CSP, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, COOP, HSTS (prod), Permissions-Policy. Sin dependencia. CSP usa `'unsafe-inline'` por ahora (CSS/scripts inline); endurecer tras migrar CSS a archivos (#9).
 
-2. **SVG subido = XSS almacenado.** `uploadProductImage` acepta `image/svg+xml` (regex `/^image\//`). Un SVG con `<script>` servido desde `/uploads/...` ejecuta en el origin si se abre la URL directa.
-   - Fix: rechazar SVG en el fileFilter, o servir uploads con `Content-Disposition: attachment` + `X-Content-Type-Options: nosniff`.
+2. ~~**SVG subido = XSS almacenado.**~~ ✅ RESUELTO: `uploadProductImage` ahora usa allowlist raster (jpeg/png/webp/gif/heic/heif) y rechaza SVG explícitamente. Además `/uploads` se sirve con CSP `sandbox` + `nosniff` (defensa en profundidad).
 
 3. **Uploads públicos sin auth.** `/uploads` es `express.static` abierto. Fotos de productos y **recibos** (pueden tener datos personales) son accesibles por URL sin sesión. Filenames aleatorios mitigan pero no es control de acceso.
    - Fix: servir uploads tras `requireAuthApi` + verificación de pertenencia al inventario, o firmar URLs.

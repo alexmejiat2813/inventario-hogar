@@ -36,11 +36,19 @@ const productImageStorage = multer.diskStorage({
   },
 });
 
+// Allowlist de rasterizados. SVG queda EXCLUIDO a proposito: un SVG puede
+// contener <script> y, servido desde el mismo origin, seria XSS almacenado.
+const RASTER_RE = /^image\/(jpe?g|png|webp|gif|heic|heif)$/i;
+const RASTER_EXT_RE = /\.(jpe?g|png|webp|gif|heic|heif)$/i;
+const SVG_RE = /svg/i;
+
 const uploadProductImage = multer({
   storage: productImageStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter(req, file, cb) {
-    if (/^image\//i.test(file.mimetype) || /\.heic$/i.test(file.originalname)) cb(null, true);
+    const isSvg = SVG_RE.test(file.mimetype) || /\.svgz?$/i.test(file.originalname);
+    const ok    = RASTER_RE.test(file.mimetype) || RASTER_EXT_RE.test(file.originalname);
+    if (!isSvg && ok) cb(null, true);
     else cb(new Error('Formato de imagen no válido'));
   },
 }).array('photos', 5);

@@ -51,7 +51,14 @@ app.use((req, res, next) => {
 app.use('/css',     express.static(path.join(__dirname, 'public/css')));
 app.use('/js',      express.static(path.join(__dirname, 'public/js')));
 app.use('/locales', express.static(path.join(__dirname, 'public/locales')));
-app.use('/uploads', express.static(UPLOADS_DIR));
+// Uploads: defensa en profundidad. Si un archivo malicioso (ej. SVG con script)
+// llegara a colarse, esta CSP lo neutraliza al abrirlo como documento; las
+// imagenes via <img> no se afectan (la CSP del recurso no aplica al render).
+app.use('/uploads', (req, res, next) => {
+  res.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+  res.set('X-Content-Type-Options', 'nosniff');
+  next();
+}, express.static(UPLOADS_DIR));
 app.use('/icons',   express.static(path.join(__dirname, 'public/icons')));
 app.get('/manifest.json', (req, res) => res.sendFile(path.join(__dirname, 'public/manifest.json')));
 // sw.js siempre revalidado: el browser debe ver al instante un SW nuevo tras deploy
