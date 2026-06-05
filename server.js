@@ -8,6 +8,7 @@ const { requireAuthApi }    = require('./middleware/auth');
 const { requireInventory }  = require('./middleware/inventory');
 const SQLiteStore           = require('./middleware/session-store');
 const { createRateLimiter } = require('./middleware/rate-limit');
+const { securityHeaders }   = require('./middleware/security-headers');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, 'public', 'u
 if (IS_PROD) app.set('trust proxy', 1);
 
 // ── Core middleware ────────────────────────────────────────────────────────────
+app.use(securityHeaders(IS_PROD));
 app.use(express.json());
 
 app.use(session({

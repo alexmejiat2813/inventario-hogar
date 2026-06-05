@@ -35,9 +35,7 @@ Veredicto: **bueno**. Listo para uso real; endurecer seguridad antes de exponer 
 
 ### P1 — Seguridad
 
-1. **Sin headers de seguridad.** No hay CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
-   - Riesgo: clickjacking, MIME-sniffing, XSS más explotable.
-   - Fix: agregar `helmet` o setear headers manualmente. CSP estricta es lo de mayor impacto (el frontend usa CDN para Chart.js — habría que permitirlo o auto-hospedarlo).
+1. ~~**Sin headers de seguridad.**~~ ✅ RESUELTO (`middleware/security-headers.js`): CSP, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, COOP, HSTS (prod), Permissions-Policy. Sin dependencia. CSP usa `'unsafe-inline'` por ahora (CSS/scripts inline); endurecer tras migrar CSS a archivos (#9).
 
 2. **SVG subido = XSS almacenado.** `uploadProductImage` acepta `image/svg+xml` (regex `/^image\//`). Un SVG con `<script>` servido desde `/uploads/...` ejecuta en el origin si se abre la URL directa.
    - Fix: rechazar SVG en el fileFilter, o servir uploads con `Content-Disposition: attachment` + `X-Content-Type-Options: nosniff`.
