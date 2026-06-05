@@ -654,7 +654,9 @@
       .sl-table { display: block; font-size: .9rem; }
       .sl-table thead { display: none; }
       .sl-table tbody { display: block; }
-      .sl-table tbody > tr { display: block; }
+      /* Filas no-card (agregar item, vacio) en bloque; NO .sl-row para no
+         pisar su display:grid por especificidad mayor */
+      .sl-table tbody > tr:not(.sl-row) { display: block; }
 
       .sl-row {
         display: grid;
