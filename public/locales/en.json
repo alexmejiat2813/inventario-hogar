@@ -30,6 +30,10 @@
       "member": "member",
       "members": "members",
       "ownedBy": "by",
+      "products": "Products",
+      "critical": "Critical",
+      "spent": "Spent",
+      "left": "Left",
       "enter": "Enter →"
     },
     "joined": "You joined \"{{name}}\" as {{role}}",

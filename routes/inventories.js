@@ -7,8 +7,19 @@ const router = express.Router();
 const VALID_CURRENCIES = ['CAD', 'USD', 'COP', 'EUR', 'MXN', 'BRL', 'GBP'];
 
 router.get('/', (req, res) => {
-  try { res.json(db.getUserInventories(req.user.id)); }
-  catch { res.status(500).json({ error: 'Error al obtener inventarios' }); }
+  try {
+    const list = db.getUserInventories(req.user.id).map(inv => {
+      const b = db.getBudgetSummary(inv.id);
+      return {
+        ...inv,
+        budget_amount:    b.config?.monthly_amount || 0,
+        budget_spent:     b.spent,
+        budget_available: b.available,
+        budget_pct:       b.percentage,
+      };
+    });
+    res.json(list);
+  } catch { res.status(500).json({ error: 'Error al obtener inventarios' }); }
 });
 
 router.post('/', (req, res) => {

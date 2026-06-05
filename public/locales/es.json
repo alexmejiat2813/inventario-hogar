@@ -30,6 +30,10 @@
       "member": "miembro",
       "members": "miembros",
       "ownedBy": "de",
+      "products": "Productos",
+      "critical": "Críticos",
+      "spent": "Gastado",
+      "left": "Restante",
       "enter": "Entrar →"
     },
     "joined": "Te uniste a \"{{name}}\" como {{role}}",

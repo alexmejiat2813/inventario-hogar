@@ -415,10 +415,12 @@ module.exports = {
   // ── Inventories ────────────────────────────────────────────────────────────
   getUserInventories(userId) {
     return db.prepare(`
-      SELECT i.id, i.name, i.owner_id, i.created_at,
+      SELECT i.id, i.name, i.owner_id, i.created_at, i.currency,
              im.role,
              u.name  AS owner_name,
-             (SELECT COUNT(*) FROM inventory_members WHERE inventory_id = i.id) AS member_count
+             (SELECT COUNT(*) FROM inventory_members WHERE inventory_id = i.id) AS member_count,
+             (SELECT COUNT(*) FROM products WHERE inventory_id = i.id) AS product_count,
+             (SELECT COUNT(*) FROM products WHERE inventory_id = i.id AND current_qty < min_qty) AS critical_count
       FROM inventories i
       JOIN inventory_members im ON im.inventory_id = i.id AND im.user_id = ?
       JOIN users u ON u.id = i.owner_id

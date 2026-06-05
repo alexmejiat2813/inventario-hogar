@@ -3,6 +3,12 @@
    ============================================================ */
 
 const ROLE_CLASS = { owner: 'role-owner', editor: 'role-editor', reader: 'role-reader' };
+const CURRENCY_SYMBOLS = { CAD: 'C$', USD: '$', COP: '$', EUR: '€', MXN: '$', BRL: 'R$', GBP: '£' };
+function curSym(c) { return CURRENCY_SYMBOLS[c] || '$'; }
+function fmtMoney(n) {
+  return (Math.round((+n || 0) * 100) / 100)
+    .toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
@@ -64,6 +70,29 @@ function renderInventories(list) {
         ${inv.member_count} ${inv.member_count === 1 ? t('inventories.card.member') : t('inventories.card.members')}
         ${inv.role !== 'owner' ? `· <span style="color:#94a3b8">${t('inventories.card.ownedBy')} ${esc(inv.owner_name)}</span>` : ''}
       </div>
+
+      <div class="inv-card-stats">
+        <div class="inv-stat">
+          <span class="inv-stat-num">${inv.product_count ?? 0}</span>
+          <span class="inv-stat-lbl">${t('inventories.card.products')}</span>
+        </div>
+        <div class="inv-stat">
+          <span class="inv-stat-num${inv.critical_count > 0 ? ' inv-stat-num--crit' : ''}">${inv.critical_count ?? 0}</span>
+          <span class="inv-stat-lbl">${t('inventories.card.critical')}</span>
+        </div>
+      </div>
+
+      ${inv.budget_amount > 0 ? `
+      <div class="inv-card-budget">
+        <div class="inv-budget-bar">
+          <div class="inv-budget-fill${inv.budget_pct >= 100 ? ' inv-budget-fill--over' : ''}" style="width:${Math.min(100, inv.budget_pct)}%"></div>
+        </div>
+        <div class="inv-budget-row">
+          <span>${t('inventories.card.spent')} <strong>${curSym(inv.currency)}${fmtMoney(inv.budget_spent)}</strong></span>
+          <span class="${inv.budget_available < 0 ? 'inv-budget-over' : ''}">${t('inventories.card.left')} <strong>${curSym(inv.currency)}${fmtMoney(inv.budget_available)}</strong></span>
+        </div>
+      </div>` : ''}
+
       <div class="inv-card-footer">
         <button class="btn-enter" data-id="${inv.id}">${t('inventories.card.enter')}</button>
       </div>

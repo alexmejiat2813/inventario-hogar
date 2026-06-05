@@ -285,6 +285,28 @@
     }
     .inv-card-meta svg { flex-shrink: 0; }
 
+    /* Resumen en la card */
+    .inv-card-stats { display: flex; gap: .5rem; margin-top: .25rem; }
+    .inv-stat {
+      flex: 1; background: #F8FAFC; border: 1px solid #EEF2F6;
+      border-radius: 8px; padding: .5rem .6rem;
+      display: flex; flex-direction: column; gap: .15rem;
+    }
+    .inv-stat-num { font-size: 1.2rem; font-weight: 800; color: #082F49; line-height: 1; }
+    .inv-stat-num--crit { color: #DC2626; }
+    .inv-stat-lbl {
+      font-size: .66rem; color: #94A3B8; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .03em;
+    }
+
+    .inv-card-budget { display: flex; flex-direction: column; gap: .35rem; margin-top: .15rem; }
+    .inv-budget-bar { height: 6px; background: #EEF2F6; border-radius: 99px; overflow: hidden; }
+    .inv-budget-fill { height: 100%; background: #14B8A6; border-radius: 99px; transition: width .3s; }
+    .inv-budget-fill--over { background: #DC2626; }
+    .inv-budget-row { display: flex; justify-content: space-between; gap: .5rem; font-size: .72rem; color: #64748B; }
+    .inv-budget-row strong { color: #082F49; font-weight: 700; }
+    .inv-budget-over strong { color: #DC2626; }
+
     .inv-card-footer { margin-top: auto; }
     .btn-enter {
       width: 100%;

@@ -634,8 +634,13 @@
     .sl-inp::-webkit-outer-spin-button,
     .sl-inp::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .sl-inp:focus { border-color: #0EA5E9; box-shadow: 0 0 0 3px rgba(14,165,233,.12); }
-    .sl-inp--qty   { width: 100%; min-width: 84px; }
-    .sl-inp--price { width: 100%; min-width: 96px; }
+    .sl-inp--qty   { width: 100%; min-width: 84px; max-width: 120px; }
+    .sl-inp--price { width: 100%; min-width: 96px; max-width: 120px; }
+    /* Desktop: dar mas ancho a Producto, menos a cantidad/precio */
+    @media (min-width: 601px) {
+      .sl-table thead th:nth-child(3),
+      .sl-table tbody td:nth-child(3) { min-width: 230px; }
+    }
     .sl-invalid { border-color: #DC2626 !important; background: #FEECEC; }
     .sl-invalid:focus { border-color: #DC2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,.12); }
     .sl-sub { font-weight: 700; color: #CBD5E1; white-space: nowrap; font-variant-numeric: tabular-nums; }
