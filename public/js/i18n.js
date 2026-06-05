@@ -11,6 +11,8 @@ if ('serviceWorker' in navigator) {
     _swReloading = true;
     window.location.reload();
   });
+  // Forzar chequeo de SW nuevo en cada carga (jala el deploy mas reciente ya).
+  navigator.serviceWorker.ready.then(reg => reg.update()).catch(() => {});
 }
 
 const I18N = (() => {

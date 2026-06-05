@@ -4,6 +4,13 @@ const { requireAuthPage } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Las paginas tienen CSS/JS inline; revalidar siempre para no servir HTML viejo
+// tras un deploy (el browser hace conditional GET y recibe 200 fresco si cambio).
+router.use((req, res, next) => {
+  res.set('Cache-Control', 'no-cache');
+  next();
+});
+
 router.get('/', requireAuthPage, (req, res) => res.redirect('/inventories'));
 
 router.get('/inventories', requireAuthPage, (req, res) =>
