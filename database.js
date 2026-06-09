@@ -941,7 +941,8 @@ module.exports = {
   },
 
   createTemplate(inventoryId, userId, name, items) {
-    return db.transaction(() => {
+    db.exec('BEGIN');
+    try {
       const { lastInsertRowid } = db.prepare(
         'INSERT INTO list_templates (inventory_id, created_by, name) VALUES (?, ?, ?)'
       ).run(inventoryId, userId, name.trim());
@@ -949,12 +950,16 @@ module.exports = {
         'INSERT INTO list_template_items (template_id, product_id, product_name, quantity, unit) VALUES (?, ?, ?, ?, ?)'
       );
       items.forEach(item => {
-        ins.run(lastInsertRowid, item.productId || null, item.productName, +item.quantity || 1, item.unit);
+        ins.run(lastInsertRowid, item.productId || null, item.productName, +item.quantity || 1, item.unit || 'unidades');
       });
       const template = db.prepare('SELECT * FROM list_templates WHERE id = ?').get(lastInsertRowid);
       template.items = db.prepare('SELECT * FROM list_template_items WHERE template_id = ?').all(lastInsertRowid);
+      db.exec('COMMIT');
       return template;
-    })();
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
   },
 
   deleteTemplate(id, inventoryId) {

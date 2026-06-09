@@ -315,6 +315,43 @@ describe('custom shopping items', () => {
   });
 });
 
+describe('list templates (regression: node:sqlite no tiene db.transaction)', () => {
+  test('createTemplate persiste plantilla e items', () => {
+    const { inv, userId } = makeInventory();
+    const tpl = db.createTemplate(inv.id, userId, 'Compra semanal', [
+      { productId: null, productName: 'Arroz',  quantity: 2, unit: 'kg' },
+      { productId: null, productName: 'Fideos', quantity: 1, unit: 'paquetes' },
+    ]);
+    assert.ok(tpl.id);
+    assert.equal(tpl.items.length, 2);
+
+    const list = db.getTemplates(inv.id);
+    assert.equal(list.length, 1);
+    assert.equal(list[0].item_count, 2);
+
+    const full = db.getTemplate(tpl.id, inv.id);
+    assert.equal(full.items[0].product_name, 'Arroz');
+    assert.equal(full.items[0].quantity, 2);
+  });
+
+  test('createTemplate sin unit usa default unidades', () => {
+    const { inv, userId } = makeInventory();
+    const tpl = db.createTemplate(inv.id, userId, 'Sin unidad', [
+      { productName: 'Sal', quantity: 1 },
+    ]);
+    assert.equal(tpl.items[0].unit, 'unidades');
+  });
+
+  test('deleteTemplate elimina la plantilla', () => {
+    const { inv, userId } = makeInventory();
+    const tpl = db.createTemplate(inv.id, userId, 'Temporal', [
+      { productName: 'Pan', quantity: 1, unit: 'unidades' },
+    ]);
+    assert.equal(db.deleteTemplate(tpl.id, inv.id), true);
+    assert.equal(db.getTemplates(inv.id).length, 0);
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {
