@@ -97,7 +97,7 @@
 | 45 | Bug foto→Dashboard (móvil) | Al dar OK a la foto del producto a veces vuelve al Dashboard (posible eviction PWA Android). PROMPT-PROXIMA-SESION #1 | ⬜ |
 | 46 | Unificar header Catálogo | Header de catalog.html con hamburguesa + avatar + drawer como Stock/Compras (header.css compartido, SW v22). PROMPT-PROXIMA-SESION #3 — `b0f7971` | ✅ |
 | 47 | Pestañas En/Fuera de stock | Sub-tabs en vista Stock para recuperar productos a qty 0. PROMPT-PROXIMA-SESION #4 | ⬜ |
-| 48 | Botón Ver separado de Editar | Vista read-only del producto en Stock (precios/fotos). PROMPT-PROXIMA-SESION #7 | 🔄 |
+| 48 | Botón Ver separado de Editar | Vista read-only del producto en Stock (reusa modal en modo readonly). Incluye modal 2-col, quita botón Lista, campos obligatorios con * rojo. PROMPT-PROXIMA-SESION #7 — `be28869` | ✅ |
 
 > **Nota deuda:** `initProfileMenu()` + `loadProfileAvatar()` están duplicados en app.js/history.js/shopping-list.js/inventories.js/catalog.js. Candidato a extraer a un módulo compartido `public/js/header.js` (no hecho aquí para mantener el cambio acotado).
 
