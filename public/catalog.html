@@ -239,12 +239,13 @@
     }
     .modal-close:hover { background: #EAEAEA; color: #082F49; }
 
-    .form-group { display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1rem; min-width: 0; }
     .form-label {
       font-size: .72rem; font-weight: 700; color: #082F49;
       text-transform: uppercase; letter-spacing: .06em;
     }
     .form-input, .form-select {
+      width: 100%; min-width: 0;
       padding: .5rem .75rem;
       border: 1px solid #EAEAEA; border-radius: 4px;
       font-size: .9rem; color: #082F49; background: white;
