@@ -45,6 +45,7 @@ const state = {
   pendingPhotos:    [],
   editingProductId: null,
   activeTab:        'dashboard',
+  stockTab:         'in',   // 'in' (qty>0) | 'out' (qty===0)
 };
 
 // ── API ───────────────────────────────────────────────────────
@@ -252,16 +253,34 @@ function renderStats() {
 
 // ── Products ──────────────────────────────────────────────────
 
-function filteredProducts() {
+function matchesFilter(p) {
   const q = state.searchQuery.toLowerCase();
+  const matchCat    = state.activeCategory === 'all' || p.category === state.activeCategory;
+  const matchSearch = p.name.toLowerCase().includes(q);
+  return matchCat && matchSearch;
+}
+
+function filteredProducts() {
+  // Sub-pestaña "Fuera de stock" = qty 0 (editables para devolverlos a stock);
+  // "En stock" = qty>0 (incluye criticos bajo el minimo, que ademas salen en Compras).
   return state.products.filter(p => {
-    // Stock muestra mientras quede cantidad; solo desaparece al llegar a 0
-    // (los productos bajo el minimo igual aparecen en Compras)
-    const hasStock    = p.current_qty > 0;
-    const matchCat    = state.activeCategory === 'all' || p.category === state.activeCategory;
-    const matchSearch = p.name.toLowerCase().includes(q);
-    return hasStock && matchCat && matchSearch;
+    if (!matchesFilter(p)) return false;
+    return state.stockTab === 'out' ? p.current_qty === 0 : p.current_qty > 0;
   });
+}
+
+function stockCounts() {
+  let inC = 0, outC = 0;
+  state.products.forEach(p => {
+    if (!matchesFilter(p)) return;
+    if (p.current_qty === 0) outC++; else inC++;
+  });
+  return { in: inC, out: outC };
+}
+
+function setStockTab(tab) {
+  state.stockTab = tab === 'out' ? 'out' : 'in';
+  renderProducts();
 }
 
 const PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" width="40" height="40"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
@@ -319,6 +338,12 @@ function adjustQty(productId, dir) {
   persistQty(productId, p.current_qty + dir * qtyStep(p.unit));
 }
 
+function closeAllCardMenus() {
+  document.querySelectorAll('.card-menu:not([hidden])').forEach(m => { m.hidden = true; });
+  document.querySelectorAll('.card-menu-btn[aria-expanded="true"]')
+    .forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+
 function renderProductCard(p) {
   const isCritical = p.current_qty < p.min_qty;
   const pct        = getProgress(p.current_qty, p.min_qty);
@@ -333,7 +358,25 @@ function renderProductCard(p) {
 
       <div class="card-top">
         <span class="category-badge ${catClass(p.category)}">${CAT_ICONS[p.category] || ''} ${tCat(p.category)}</span>
-        ${expiry ? `<span class="expiry-badge ${expiry.cls}">${expiry.label}</span>` : ''}
+        <div class="card-top-right">
+          ${expiry ? `<span class="expiry-badge ${expiry.cls}">${expiry.label}</span>` : ''}
+          ${isReader ? '' : `
+          <div class="card-menu-wrap">
+            <button class="card-menu-btn" data-action="menu" data-id="${p.id}" aria-label="Más opciones" aria-haspopup="true" aria-expanded="false">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </button>
+            <div class="card-menu" hidden>
+              <button class="card-menu-item" data-action="edit" data-id="${p.id}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                ${t('inventory.card.edit')}
+              </button>
+              <button class="card-menu-item card-menu-item-danger" data-action="delete" data-id="${p.id}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                ${t('inventory.card.delete')}
+              </button>
+            </div>
+          </div>`}
+        </div>
       </div>
 
       <h3 class="product-name">${esc(p.name)}</h3>
@@ -361,18 +404,9 @@ function renderProductCard(p) {
 
       <div class="card-actions">
         <button class="btn btn-card btn-card-view" data-action="view" data-id="${p.id}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           ${t('inventory.card.view')}
         </button>
-        ${isReader ? '' : `
-        <button class="btn btn-card btn-card-edit" data-action="edit" data-id="${p.id}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          ${t('inventory.card.edit')}
-        </button>
-        <button class="btn btn-card btn-card-del" data-action="delete" data-id="${p.id}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        </button>
-        `}
       </div>
     </div>
   `;
@@ -381,6 +415,17 @@ function renderProductCard(p) {
 function renderProducts() {
   const grid  = document.getElementById('products-grid');
   const empty = document.getElementById('empty-state');
+
+  // Sub-pestañas En/Fuera de stock: contadores + estado activo
+  const counts = stockCounts();
+  const cIn  = document.getElementById('stock-count-in');
+  const cOut = document.getElementById('stock-count-out');
+  if (cIn)  cIn.textContent  = counts.in;
+  if (cOut) cOut.textContent = counts.out;
+  document.querySelectorAll('.stock-subtab[data-stock-tab]').forEach(b => {
+    b.classList.toggle('active', b.dataset.stockTab === state.stockTab);
+  });
+
   const list  = filteredProducts();
 
   if (list.length === 0) {
@@ -1423,10 +1468,28 @@ function initEvents() {
     if (btn) setCategory(btn.dataset.category);
   });
 
+  const stockSubtabs = document.getElementById('stock-subtabs');
+  if (stockSubtabs) stockSubtabs.addEventListener('click', e => {
+    const btn = e.target.closest('.stock-subtab[data-stock-tab]');
+    if (btn) setStockTab(btn.dataset.stockTab);
+  });
+
+  // Boton volver arriba: aparece tras scrollear
+  const backTop = document.getElementById('back-to-top');
+  if (backTop) {
+    const toggleBackTop = () => backTop.classList.toggle('show', window.scrollY > 400);
+    window.addEventListener('scroll', toggleBackTop, { passive: true });
+    backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    toggleBackTop();
+  }
+
   document.getElementById('search').addEventListener('input', e => {
     state.searchQuery = e.target.value;
     renderProducts();
   });
+
+  // Click fuera de un menu kebab abierto lo cierra
+  document.addEventListener('click', closeAllCardMenus);
 
   document.getElementById('products-grid').addEventListener('click', e => {
     // Flechas del carrusel: cambiar foto sin abrir el visor
@@ -1450,6 +1513,16 @@ function initEvents() {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const id = parseInt(btn.dataset.id, 10);
+    // Menu kebab de la card: abre/cierra el submenu (Editar/Eliminar)
+    if (btn.dataset.action === 'menu') {
+      e.stopPropagation();
+      const menu = btn.closest('.card-menu-wrap').querySelector('.card-menu');
+      const willOpen = menu.hidden;
+      closeAllCardMenus();
+      menu.hidden = !willOpen;
+      btn.setAttribute('aria-expanded', String(willOpen));
+      return;
+    }
     if (btn.dataset.action === 'view')        viewProduct(id);
     if (btn.dataset.action === 'edit')        editProduct(id);
     if (btn.dataset.action === 'delete')      deleteProduct(id);

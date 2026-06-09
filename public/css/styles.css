@@ -780,6 +780,43 @@ a { color: inherit; text-decoration: none; }
   font-weight: 600;
 }
 
+/* Sub-pestañas En stock / Fuera de stock */
+.stock-subtabs {
+  display: inline-flex; gap: .25rem;
+  padding: .25rem; margin-bottom: 1rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.stock-subtab {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .4rem .9rem; border: none; border-radius: 999px;
+  background: transparent; color: var(--text-muted);
+  font-size: .8rem; font-weight: 600; cursor: pointer;
+  transition: all .15s;
+}
+.stock-subtab:hover { color: var(--text); }
+.stock-subtab.active { background: var(--text); color: white; }
+.stock-subtab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.25rem; height: 1.25rem; padding: 0 .3rem;
+  border-radius: 999px; font-size: .68rem; font-weight: 700;
+  background: var(--border); color: var(--text-muted);
+}
+.stock-subtab.active .stock-subtab-count { background: rgba(255,255,255,.22); color: #fff; }
+
+/* Boton volver arriba */
+.back-to-top {
+  position: fixed; right: 1rem; bottom: 1.25rem; z-index: 150;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--text); color: #fff; border: none;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(8,47,73,.28); cursor: pointer;
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity .2s, transform .2s, background .15s;
+}
+.back-to-top.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.back-to-top:hover { background: var(--accent); }
+
 .search-wrap { position: relative; flex: 1; min-width: 0; }
 
 .search-icon {
@@ -807,11 +844,11 @@ a { color: inherit; text-decoration: none; }
    ============================================================ */
 .products-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: .75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .625rem;
 }
-@media (min-width: 600px)  { .products-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1200px) { .products-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 600px)  { .products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; } }
+@media (min-width: 1200px) { .products-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
 /* ============================================================
    Product Card
@@ -824,6 +861,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   flex-direction: column;
   gap: .75rem;
+  min-width: 0;
   transition: box-shadow 200ms;
   animation: card-in .25s ease both;
 }
@@ -1006,6 +1044,50 @@ a { color: inherit; text-decoration: none; }
 .btn-card-del:hover { background: #FADBDB; }
 .btn-card-list  { color: var(--cta); border-color: var(--cta-bg); background: var(--cta-bg); font-weight: 600; }
 .btn-card-list:hover { background: #FFE3CC; }
+/* Ver = accion principal (navy filled) */
+.btn-card-view { background: var(--text); border-color: var(--text); color: #fff; }
+.btn-card-view:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Menu kebab (Editar / Eliminar) en la esquina superior de la card */
+.card-top-right { display: flex; align-items: center; gap: .35rem; flex-shrink: 0; }
+.card-menu-wrap { position: relative; }
+.card-menu-btn {
+  width: 26px; height: 26px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.card-menu-btn:hover,
+.card-menu-btn[aria-expanded="true"] { background: var(--bg); color: var(--text); border-color: var(--border); }
+.card-menu {
+  position: absolute; top: calc(100% + 4px); right: 0; z-index: 20;
+  min-width: 152px; padding: .25rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; box-shadow: 0 6px 20px rgba(8,47,73,.12);
+}
+.card-menu-item {
+  display: flex; align-items: center; gap: .5rem; width: 100%;
+  padding: .5rem .6rem; border: none; background: none; border-radius: 6px;
+  font-size: .8rem; font-weight: 600; color: var(--text);
+  text-align: left; cursor: pointer; transition: background .12s, color .12s;
+}
+.card-menu-item:hover { background: var(--accent-bg); color: var(--accent); }
+.card-menu-item svg { flex-shrink: 0; color: var(--text-muted); }
+.card-menu-item:hover svg { color: var(--accent); }
+.card-menu-item-danger { color: var(--danger); }
+.card-menu-item-danger svg { color: var(--danger); }
+.card-menu-item-danger:hover { background: var(--danger-bg); color: var(--danger); }
+.card-menu-item-danger:hover svg { color: var(--danger); }
+
+/* Movil (2 col): achicar stepper y padding para que la card entre */
+@media (max-width: 599px) {
+  .product-card { padding: .8rem; }
+  .qty-stepper { gap: .3rem; }
+  .qty-step-btn { width: 26px; height: 26px; }
+  .qty-step-input { width: auto; flex: 1 1 0; min-width: 0; }
+  .qty-step-unit { min-width: auto; }
+}
 
 /* ============================================================
    Low-stock Alert Panel
