@@ -1459,6 +1459,15 @@ function initEvents() {
     if (btn) setStockTab(btn.dataset.stockTab);
   });
 
+  // Boton volver arriba: aparece tras scrollear
+  const backTop = document.getElementById('back-to-top');
+  if (backTop) {
+    const toggleBackTop = () => backTop.classList.toggle('show', window.scrollY > 400);
+    window.addEventListener('scroll', toggleBackTop, { passive: true });
+    backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    toggleBackTop();
+  }
+
   document.getElementById('search').addEventListener('input', e => {
     state.searchQuery = e.target.value;
     renderProducts();
