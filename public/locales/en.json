@@ -96,7 +96,8 @@
       "min": "min",
       "critical": "Critical",
       "edit": "Edit",
-      "view": "View"
+      "view": "View",
+      "delete": "Delete"
     },
     "modal": {
       "addTitle": "Add product",

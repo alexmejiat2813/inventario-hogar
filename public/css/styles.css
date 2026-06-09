@@ -844,11 +844,11 @@ a { color: inherit; text-decoration: none; }
    ============================================================ */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .625rem;
 }
-@media (min-width: 600px)  { .products-grid { grid-template-columns: repeat(3, 1fr); gap: .75rem; } }
-@media (min-width: 1200px) { .products-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 600px)  { .products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; } }
+@media (min-width: 1200px) { .products-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
 /* ============================================================
    Product Card
@@ -861,6 +861,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   flex-direction: column;
   gap: .75rem;
+  min-width: 0;
   transition: box-shadow 200ms;
   animation: card-in .25s ease both;
 }
@@ -1043,12 +1044,49 @@ a { color: inherit; text-decoration: none; }
 .btn-card-del:hover { background: #FADBDB; }
 .btn-card-list  { color: var(--cta); border-color: var(--cta-bg); background: var(--cta-bg); font-weight: 600; }
 .btn-card-list:hover { background: #FFE3CC; }
-/* Movil (2 col): Ver|Editar al 50% y Eliminar en su propia fila */
+/* Ver = accion principal (navy filled) */
+.btn-card-view { background: var(--text); border-color: var(--text); color: #fff; }
+.btn-card-view:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Menu kebab (Editar / Eliminar) en la esquina superior de la card */
+.card-top-right { display: flex; align-items: center; gap: .35rem; flex-shrink: 0; }
+.card-menu-wrap { position: relative; }
+.card-menu-btn {
+  width: 26px; height: 26px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.card-menu-btn:hover,
+.card-menu-btn[aria-expanded="true"] { background: var(--bg); color: var(--text); border-color: var(--border); }
+.card-menu {
+  position: absolute; top: calc(100% + 4px); right: 0; z-index: 20;
+  min-width: 152px; padding: .25rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; box-shadow: 0 6px 20px rgba(8,47,73,.12);
+}
+.card-menu-item {
+  display: flex; align-items: center; gap: .5rem; width: 100%;
+  padding: .5rem .6rem; border: none; background: none; border-radius: 6px;
+  font-size: .8rem; font-weight: 600; color: var(--text);
+  text-align: left; cursor: pointer; transition: background .12s, color .12s;
+}
+.card-menu-item:hover { background: var(--accent-bg); color: var(--accent); }
+.card-menu-item svg { flex-shrink: 0; color: var(--text-muted); }
+.card-menu-item:hover svg { color: var(--accent); }
+.card-menu-item-danger { color: var(--danger); }
+.card-menu-item-danger svg { color: var(--danger); }
+.card-menu-item-danger:hover { background: var(--danger-bg); color: var(--danger); }
+.card-menu-item-danger:hover svg { color: var(--danger); }
+
+/* Movil (2 col): achicar stepper y padding para que la card entre */
 @media (max-width: 599px) {
-  .card-actions { flex-wrap: wrap; }
-  .btn-card { flex: 1 1 calc(50% - .2rem); }
-  .btn-card-del { flex-basis: 100%; }
-  .btn-card:only-child { flex-basis: 100%; }
+  .product-card { padding: .8rem; }
+  .qty-stepper { gap: .3rem; }
+  .qty-step-btn { width: 26px; height: 26px; }
+  .qty-step-input { width: auto; flex: 1 1 0; min-width: 0; }
+  .qty-step-unit { min-width: auto; }
 }
 
 /* ============================================================

@@ -96,7 +96,8 @@
       "min": "mín",
       "critical": "Crítico",
       "edit": "Editar",
-      "view": "Ver"
+      "view": "Ver",
+      "delete": "Eliminar"
     },
     "modal": {
       "addTitle": "Agregar producto",
