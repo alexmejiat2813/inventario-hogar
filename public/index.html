@@ -268,6 +268,16 @@
 
     <!-- ===== PRODUCTOS ===== -->
     <section class="products-section">
+      <div class="stock-subtabs" id="stock-subtabs">
+        <button class="stock-subtab active" data-stock-tab="in">
+          <span data-i18n="inventory.stockTabs.in">En stock</span>
+          <span class="stock-subtab-count" id="stock-count-in">0</span>
+        </button>
+        <button class="stock-subtab" data-stock-tab="out">
+          <span data-i18n="inventory.stockTabs.out">Fuera de stock</span>
+          <span class="stock-subtab-count" id="stock-count-out">0</span>
+        </button>
+      </div>
       <div class="products-grid" id="products-grid"></div>
       <div class="empty-state" id="empty-state" hidden>
         <div class="empty-icon">

@@ -88,6 +88,10 @@
       "title": "Aucun produit",
       "sub": "Il n'y a aucun produit dans cette catégorie.\nAjoutez-en un avec le bouton ci-dessus."
     },
+    "stockTabs": {
+      "in": "En stock",
+      "out": "En rupture"
+    },
     "card": {
       "min": "min",
       "critical": "Critique",

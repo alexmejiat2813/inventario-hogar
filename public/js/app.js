@@ -45,6 +45,7 @@ const state = {
   pendingPhotos:    [],
   editingProductId: null,
   activeTab:        'dashboard',
+  stockTab:         'in',   // 'in' (qty>0) | 'out' (qty===0)
 };
 
 // ── API ───────────────────────────────────────────────────────
@@ -252,16 +253,34 @@ function renderStats() {
 
 // ── Products ──────────────────────────────────────────────────
 
-function filteredProducts() {
+function matchesFilter(p) {
   const q = state.searchQuery.toLowerCase();
+  const matchCat    = state.activeCategory === 'all' || p.category === state.activeCategory;
+  const matchSearch = p.name.toLowerCase().includes(q);
+  return matchCat && matchSearch;
+}
+
+function filteredProducts() {
+  // Sub-pestaña "Fuera de stock" = qty 0 (editables para devolverlos a stock);
+  // "En stock" = qty>0 (incluye criticos bajo el minimo, que ademas salen en Compras).
   return state.products.filter(p => {
-    // Stock muestra mientras quede cantidad; solo desaparece al llegar a 0
-    // (los productos bajo el minimo igual aparecen en Compras)
-    const hasStock    = p.current_qty > 0;
-    const matchCat    = state.activeCategory === 'all' || p.category === state.activeCategory;
-    const matchSearch = p.name.toLowerCase().includes(q);
-    return hasStock && matchCat && matchSearch;
+    if (!matchesFilter(p)) return false;
+    return state.stockTab === 'out' ? p.current_qty === 0 : p.current_qty > 0;
   });
+}
+
+function stockCounts() {
+  let inC = 0, outC = 0;
+  state.products.forEach(p => {
+    if (!matchesFilter(p)) return;
+    if (p.current_qty === 0) outC++; else inC++;
+  });
+  return { in: inC, out: outC };
+}
+
+function setStockTab(tab) {
+  state.stockTab = tab === 'out' ? 'out' : 'in';
+  renderProducts();
 }
 
 const PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" width="40" height="40"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
@@ -381,6 +400,17 @@ function renderProductCard(p) {
 function renderProducts() {
   const grid  = document.getElementById('products-grid');
   const empty = document.getElementById('empty-state');
+
+  // Sub-pestañas En/Fuera de stock: contadores + estado activo
+  const counts = stockCounts();
+  const cIn  = document.getElementById('stock-count-in');
+  const cOut = document.getElementById('stock-count-out');
+  if (cIn)  cIn.textContent  = counts.in;
+  if (cOut) cOut.textContent = counts.out;
+  document.querySelectorAll('.stock-subtab[data-stock-tab]').forEach(b => {
+    b.classList.toggle('active', b.dataset.stockTab === state.stockTab);
+  });
+
   const list  = filteredProducts();
 
   if (list.length === 0) {
@@ -1421,6 +1451,12 @@ function initEvents() {
   document.getElementById('category-tabs').addEventListener('click', e => {
     const btn = e.target.closest('.tab-btn');
     if (btn) setCategory(btn.dataset.category);
+  });
+
+  const stockSubtabs = document.getElementById('stock-subtabs');
+  if (stockSubtabs) stockSubtabs.addEventListener('click', e => {
+    const btn = e.target.closest('.stock-subtab[data-stock-tab]');
+    if (btn) setStockTab(btn.dataset.stockTab);
   });
 
   document.getElementById('search').addEventListener('input', e => {

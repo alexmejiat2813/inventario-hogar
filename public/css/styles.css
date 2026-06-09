@@ -780,6 +780,30 @@ a { color: inherit; text-decoration: none; }
   font-weight: 600;
 }
 
+/* Sub-pestañas En stock / Fuera de stock */
+.stock-subtabs {
+  display: inline-flex; gap: .25rem;
+  padding: .25rem; margin-bottom: 1rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.stock-subtab {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .4rem .9rem; border: none; border-radius: 999px;
+  background: transparent; color: var(--text-muted);
+  font-size: .8rem; font-weight: 600; cursor: pointer;
+  transition: all .15s;
+}
+.stock-subtab:hover { color: var(--text); }
+.stock-subtab.active { background: var(--text); color: white; }
+.stock-subtab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.25rem; height: 1.25rem; padding: 0 .3rem;
+  border-radius: 999px; font-size: .68rem; font-weight: 700;
+  background: var(--border); color: var(--text-muted);
+}
+.stock-subtab.active .stock-subtab-count { background: rgba(255,255,255,.22); color: #fff; }
+
 .search-wrap { position: relative; flex: 1; min-width: 0; }
 
 .search-icon {

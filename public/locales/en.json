@@ -88,6 +88,10 @@
       "title": "No products",
       "sub": "There are no products in this category.\nAdd one with the button above."
     },
+    "stockTabs": {
+      "in": "In stock",
+      "out": "Out of stock"
+    },
     "card": {
       "min": "min",
       "critical": "Critical",
