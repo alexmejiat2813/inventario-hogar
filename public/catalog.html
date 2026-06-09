@@ -648,6 +648,19 @@
     });
   })();
   </script>
+  <!-- Volver arriba -->
+  <button class="back-to-top" id="back-to-top" aria-label="Subir" title="Subir">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+  <script>
+  (function(){
+    var b = document.getElementById('back-to-top'); if (!b) return;
+    var t = function(){ b.classList.toggle('show', window.scrollY > 400); };
+    window.addEventListener('scroll', t, { passive: true });
+    b.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    t();
+  })();
+  </script>
   <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
 </body>
 </html>
