@@ -862,6 +862,7 @@ a { color: inherit; text-decoration: none; }
   flex-direction: column;
   gap: .75rem;
   min-width: 0;
+  position: relative;
   transition: box-shadow 200ms;
   animation: card-in .25s ease both;
 }
@@ -880,7 +881,9 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: .5rem;
+  flex-wrap: wrap;
+  gap: .35rem .5rem;
+  min-width: 0;
 }
 
 /* Category badges */
@@ -1048,18 +1051,18 @@ a { color: inherit; text-decoration: none; }
 .btn-card-view { background: var(--text); border-color: var(--text); color: #fff; }
 .btn-card-view:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-/* Menu kebab (Editar / Eliminar) en la esquina superior de la card */
-.card-top-right { display: flex; align-items: center; gap: .35rem; flex-shrink: 0; }
-.card-menu-wrap { position: relative; }
+/* Menu kebab (Editar / Eliminar) flotante en la esquina superior de la card */
+.card-menu-wrap { position: absolute; top: .5rem; right: .5rem; z-index: 20; }
 .card-menu-btn {
-  width: 26px; height: 26px; flex-shrink: 0;
+  width: 28px; height: 28px; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid transparent; border-radius: 6px;
-  background: transparent; color: var(--text-muted); cursor: pointer;
+  border: 1px solid var(--border); border-radius: 7px;
+  background: rgba(255,255,255,.92); color: var(--text); cursor: pointer;
+  box-shadow: 0 1px 4px rgba(8,47,73,.12); backdrop-filter: blur(2px);
   transition: background .12s, color .12s, border-color .12s;
 }
 .card-menu-btn:hover,
-.card-menu-btn[aria-expanded="true"] { background: var(--bg); color: var(--text); border-color: var(--border); }
+.card-menu-btn[aria-expanded="true"] { background: #fff; color: var(--accent); border-color: var(--accent); }
 .card-menu {
   position: absolute; top: calc(100% + 4px); right: 0; z-index: 20;
   min-width: 152px; padding: .25rem;
