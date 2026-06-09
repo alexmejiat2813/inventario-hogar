@@ -98,6 +98,8 @@
       "addTitle": "Ajouter un produit",
       "editTitle": "Modifier le produit",
       "viewTitle": "Voir le produit",
+      "expiry": "Date d'expiration",
+      "requiredNote": "Tout ce qui porte * est obligatoire",
       "product": "Produit",
       "productPlaceholder": "— Choisir dans le catalogue —",
       "customProduct": "✏ Produit personnalisé",

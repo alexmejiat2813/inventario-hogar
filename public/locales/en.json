@@ -98,6 +98,8 @@
       "addTitle": "Add product",
       "editTitle": "Edit product",
       "viewTitle": "View product",
+      "expiry": "Expiry date",
+      "requiredNote": "Everything marked with * is required",
       "product": "Product",
       "productPlaceholder": "— Select from catalog —",
       "customProduct": "✏ Custom product",
