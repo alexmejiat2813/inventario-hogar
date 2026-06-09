@@ -1165,6 +1165,15 @@ a { color: inherit; text-decoration: none; }
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 
+/* Campos obligatorios */
+.req { color: var(--danger); font-weight: 700; }
+.form-required-note {
+  font-size: .72rem; color: var(--danger); font-weight: 600;
+  margin-bottom: .875rem;
+}
+.modal--readonly .form-required-note,
+.modal--readonly .req { display: none; }
+
 .modal-footer {
   display: flex; gap: .625rem; justify-content: flex-end;
   padding-top: .25rem;
@@ -1536,6 +1545,12 @@ a { color: inherit; text-decoration: none; }
   cursor: pointer;
 }
 .photo-thumb-del:hover { background: rgba(0,0,0,.8); }
+/* Modo solo-lectura (boton "Ver"): sin borrar fotos, inputs sin cursor de edicion */
+.modal--readonly .photo-thumb-del { display: none; }
+.modal--readonly .form-input:disabled,
+.modal--readonly .form-select:disabled {
+  opacity: 1; cursor: default; color: var(--text); background: var(--bg);
+}
 .btn-photos-add {
   display: inline-flex; align-items: center; gap: .35rem;
   padding: .375rem .75rem;

@@ -91,11 +91,15 @@
     "card": {
       "min": "mín",
       "critical": "Crítico",
-      "edit": "Editar"
+      "edit": "Editar",
+      "view": "Ver"
     },
     "modal": {
       "addTitle": "Agregar producto",
       "editTitle": "Editar producto",
+      "viewTitle": "Ver producto",
+      "expiry": "Fecha de vencimiento",
+      "requiredNote": "Todo lo que tenga * es obligatorio",
       "product": "Producto",
       "productPlaceholder": "— Elegir del catálogo —",
       "customProduct": "✏ Producto personalizado",

@@ -359,13 +359,12 @@ function renderProductCard(p) {
         <span class="progress-pct">${Math.round(pct)}%</span>
       </div>
 
-      ${isReader ? '' : `
       <div class="card-actions">
-        ${isCritical ? `
-        <button class="btn btn-card btn-card-list" data-action="add-to-list" data-id="${p.id}" title="Activar en lista de compras">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          Lista
-        </button>` : ''}
+        <button class="btn btn-card btn-card-view" data-action="view" data-id="${p.id}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          ${t('inventory.card.view')}
+        </button>
+        ${isReader ? '' : `
         <button class="btn btn-card btn-card-edit" data-action="edit" data-id="${p.id}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           ${t('inventory.card.edit')}
@@ -373,8 +372,8 @@ function renderProductCard(p) {
         <button class="btn btn-card btn-card-del" data-action="delete" data-id="${p.id}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
         </button>
+        `}
       </div>
-      `}
     </div>
   `;
 }
@@ -499,7 +498,22 @@ function setModalMode(mode) {
   document.getElementById('fg-category').hidden       = isCatalog;
 }
 
-async function openModal(product = null) {
+// Alterna el modal entre edicion y solo-lectura (boton "Ver").
+function applyReadonly(ro) {
+  const modal = document.querySelector('#modal-overlay .modal');
+  if (modal) modal.classList.toggle('modal--readonly', ro);
+  ['f-name', 'f-category', 'f-current', 'f-min', 'f-unit', 'f-expiry'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = ro;
+  });
+  const save = document.getElementById('btn-save');
+  if (save) save.hidden = ro;
+  const addRow = document.querySelector('#fg-photos .photos-add-row');
+  if (addRow) addRow.hidden = ro;
+}
+
+async function openModal(product = null, opts = {}) {
+  const readonly = !!opts.readonly;
   const overlay = document.getElementById('modal-overlay');
   const title   = document.getElementById('modal-title');
   clearValidation();
@@ -507,7 +521,7 @@ async function openModal(product = null) {
   populateUnitSelect(product?.unit || 'unidades');
 
   if (product) {
-    title.textContent = t('inventory.modal.editTitle');
+    title.textContent = readonly ? t('inventory.modal.viewTitle') : t('inventory.modal.editTitle');
     document.getElementById('product-id').value = product.id;
     document.getElementById('f-catalog-product-id').value = '';
     document.getElementById('f-name').value     = product.name;
@@ -516,6 +530,7 @@ async function openModal(product = null) {
     document.getElementById('f-min').value      = product.min_qty;
     document.getElementById('f-expiry').value   = product.expiry_date || '';
     setModalMode('edit');
+    applyReadonly(readonly);
 
     // Prepare photos section
     state.editingProductId = product.id;
@@ -537,6 +552,7 @@ async function openModal(product = null) {
     populateCategorySelect();
     populateUnitSelect();
     setModalMode('catalog');
+    applyReadonly(false);
     document.getElementById('fg-photos').hidden = true;
     document.getElementById('fg-price-chart').hidden = true;
     document.getElementById('fg-store-prices').hidden = true;
@@ -546,9 +562,11 @@ async function openModal(product = null) {
   }
 
   overlay.hidden = false;
-  const focusEl = product
-    ? document.getElementById('f-name')
-    : document.getElementById('f-catalog-product');
+  const focusEl = readonly
+    ? document.getElementById('modal-close')
+    : (product
+        ? document.getElementById('f-name')
+        : document.getElementById('f-catalog-product'));
   requestAnimationFrame(() => focusEl?.focus());
 
   // Load existing photos asynchronously after modal is visible
@@ -556,6 +574,8 @@ async function openModal(product = null) {
     try {
       state.existingPhotos = await apiFetch('GET', `/api/products/${product.id}/images`) || [];
       renderModalPhotos();
+      // En modo Ver, sin fotos: ocultar la seccion entera
+      if (readonly) document.getElementById('fg-photos').hidden = state.existingPhotos.length === 0;
     } catch { /* no photos to show */ }
   }
 }
@@ -566,6 +586,7 @@ function closeModal() {
   state.existingPhotos   = [];
   state.editingProductId = null;
   if (_priceChart) { _priceChart.destroy(); _priceChart = null; }
+  applyReadonly(false);
   document.getElementById('modal-overlay').hidden = true;
 }
 
@@ -695,6 +716,11 @@ async function handleFormSubmit(e) {
 function editProduct(id) {
   const product = state.products.find(p => p.id === id);
   if (product) openModal(product);
+}
+
+function viewProduct(id) {
+  const product = state.products.find(p => p.id === id);
+  if (product) openModal(product, { readonly: true });
 }
 
 async function deleteProduct(id) {
@@ -1424,6 +1450,7 @@ function initEvents() {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const id = parseInt(btn.dataset.id, 10);
+    if (btn.dataset.action === 'view')        viewProduct(id);
     if (btn.dataset.action === 'edit')        editProduct(id);
     if (btn.dataset.action === 'delete')      deleteProduct(id);
     if (btn.dataset.action === 'photos')      openProductPhotoViewer(id);
