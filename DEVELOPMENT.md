@@ -94,6 +94,12 @@
 | 18 | Historial de precios — locale hardcodeado | `expiryInfo()` en app.js usa strings en español hardcodeados, no responde a cambio de idioma | ⬜ |
 | 19 | Export lista de compras — custom items | `buildExportText()` en shopping-list.html no incluye `state.customItems` en PDF/WhatsApp/clipboard | ⬜ |
 | 20 | Sesión activa al eliminar inventario | Solo limpia `activeInventoryId` del request actual. Otros dispositivos/sesiones del mismo user no se limpian hasta el próximo request | ⬜ |
+| 45 | Bug foto→Dashboard (móvil) | Al dar OK a la foto del producto a veces vuelve al Dashboard (posible eviction PWA Android). PROMPT-PROXIMA-SESION #1 | ⬜ |
+| 46 | Unificar header Catálogo | Header de catalog.html con hamburguesa + avatar + drawer como Stock/Compras. PROMPT-PROXIMA-SESION #3 | 🔄 |
+| 47 | Pestañas En/Fuera de stock | Sub-tabs en vista Stock para recuperar productos a qty 0. PROMPT-PROXIMA-SESION #4 | ⬜ |
+| 48 | Botón Ver separado de Editar | Vista read-only del producto en Stock (precios/fotos). PROMPT-PROXIMA-SESION #7 | ⬜ |
+
+> **Nota deuda:** `initProfileMenu()` + `loadProfileAvatar()` están duplicados en app.js/history.js/shopping-list.js/inventories.js/catalog.js. Candidato a extraer a un módulo compartido `public/js/header.js` (no hecho aquí para mantener el cambio acotado).
 
 ---
 

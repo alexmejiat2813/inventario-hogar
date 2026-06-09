@@ -627,7 +627,8 @@
     "dashboard": "Dashboard",
     "stock": "Stock",
     "shopping": "Compras",
-    "history": "Historial"
+    "history": "Historial",
+    "catalog": "Catálogo"
   },
   "dashboard": {
     "period": {

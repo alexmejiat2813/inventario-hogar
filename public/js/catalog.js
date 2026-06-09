@@ -126,7 +126,71 @@ async function loadInventoryId() {
     if (!res.ok) return;
     const inv = await res.json();
     state.inventoryId = inv?.id ?? null;
+    if (inv?.name) {
+      const el = document.getElementById('inv-name');
+      if (el) el.textContent = inv.name;
+    }
   } catch { state.inventoryId = null; }
+}
+
+// ── Header: perfil ────────────────────────────────────────────────────────────
+async function loadProfileAvatar() {
+  try {
+    const res = await fetch('/api/me');
+    if (!res.ok) return;
+    const user = await res.json();
+    if (!user) return;
+    const initial = (user.name || '?')[0].toUpperCase();
+
+    const av  = document.getElementById('user-avatar');
+    const avp = document.getElementById('avatar-placeholder');
+    if (user.photo && av) {
+      av.src = user.photo; av.alt = user.name || ''; av.hidden = false;
+      if (avp) avp.hidden = true;
+    } else if (avp) {
+      avp.textContent = initial;
+    }
+
+    const dn   = document.getElementById('dropdown-name');
+    const de   = document.getElementById('dropdown-email');
+    if (dn) dn.textContent = user.name  || '';
+    if (de) de.textContent = user.email || '';
+    const dav  = document.getElementById('dropdown-avatar');
+    const davp = document.getElementById('dropdown-avatar-ph');
+    if (user.photo && dav) {
+      dav.src = user.photo; dav.alt = user.name || ''; dav.hidden = false;
+      if (davp) davp.hidden = true;
+    } else if (davp) {
+      davp.textContent = initial;
+    }
+  } catch { /* non-fatal */ }
+}
+
+function initProfileMenu() {
+  const btn  = document.getElementById('profile-btn');
+  const menu = document.getElementById('profile-dropdown');
+  const wrap = document.getElementById('profile-menu-wrap');
+  if (!btn || !menu) return;
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = menu.hidden;
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', e => {
+    if (wrap && !wrap.contains(e.target)) {
+      menu.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  const logout = document.getElementById('btn-logout');
+  if (logout) logout.addEventListener('click', async () => {
+    menu.hidden = true;
+    await fetch('/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  });
 }
 
 async function loadUnits() {
@@ -523,7 +587,7 @@ function initEvents() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   await I18N.init();
-  await Promise.all([loadInventoryId(), loadUnits()]);
+  await Promise.all([loadInventoryId(), loadUnits(), loadProfileAvatar()]);
   try {
     await loadCatalog();
   } catch {
@@ -531,6 +595,7 @@ async function init() {
   }
   renderCatalog();
   initEvents();
+  initProfileMenu();
 }
 
 document.addEventListener('DOMContentLoaded', init);
