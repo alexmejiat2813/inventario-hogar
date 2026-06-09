@@ -20,6 +20,20 @@ const state = {
   templates:    [],
 };
 
+// ── Persistencia de campos de compra (sobrevive cambio de vista) ──────────────
+function pdKey() { return 'ih_pd_' + (state.inventory?.id || 0); }
+function savePurchaseData() {
+  try { localStorage.setItem(pdKey(), JSON.stringify(state.purchaseData)); } catch { /* noop */ }
+}
+function restorePurchaseData() {
+  try { const r = localStorage.getItem(pdKey()); if (r) state.purchaseData = JSON.parse(r) || {}; }
+  catch { /* noop */ }
+}
+function clearPurchaseData() {
+  state.purchaseData = {};
+  try { localStorage.removeItem(pdKey()); } catch { /* noop */ }
+}
+
 // ── API ───────────────────────────────────────────────────────
 
 async function apiFetch(method, url, body) {
@@ -422,6 +436,7 @@ function handleCustomFieldChange(field, customId, value) {
     el.textContent = sub != null ? getCurrencySym() + ' ' + sub.toFixed(2) : '—';
     el.classList.toggle('sl-sub--pos', sub != null);
   }
+  savePurchaseData();
   updateBudgetBar();
 }
 
@@ -516,6 +531,7 @@ function handleFieldChange(field, productId, value) {
     el.textContent = sub != null ? getCurrencySym() + ' ' + sub.toFixed(2) : '—';
     el.classList.toggle('field-subtotal--pos', sub != null);
   }
+  savePurchaseData();
 }
 
 function updateRegisterBtn() {
@@ -531,7 +547,7 @@ async function clearList() {
     await apiFetch('DELETE', '/api/shopping');
     state.items.forEach(i => { i.checked = false; });
     state.customItems.forEach(i => { i.checked = false; });
-    state.purchaseData = {};
+    clearPurchaseData();
     state.expandedItems.clear();
     render();
     showToast(t('shopping.reset'));
@@ -811,7 +827,7 @@ async function handleConfirm() {
     // Clear auto items and purchaseData
     await apiFetch('DELETE', '/api/shopping');
     state.items.forEach(i => { i.checked = false; });
-    state.purchaseData = {};
+    clearPurchaseData();
     state.expandedItems.clear();
     state.receiptFile = null;
 
@@ -1215,6 +1231,7 @@ async function init() {
   try {
     const ok = await loadInventory();
     if (!ok) return;
+    restorePurchaseData(); // recupera campos de compra a medio diligenciar
     await loadStores(); // must finish before loadList() renders the store dropdowns
     await Promise.all([loadList(), loadCustomItems(), loadTaxes(), loadBudget(), loadTemplates(), loadProfileAvatar()]);
   } catch (err) {

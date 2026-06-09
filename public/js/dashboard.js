@@ -398,17 +398,18 @@ function renderTopProducts(topProducts) {
     return;
   }
 
-  const max = topProducts[0].purchase_count || 1;
+  const qty = p => +(+p.total_qty || 0).toFixed(2);
+  const max = qty(topProducts[0]) || 1;
   list.innerHTML = topProducts.map((p, i) => `
     <div class="dash-top-row">
       <span class="dash-top-rank">${i + 1}</span>
       <div class="dash-top-info">
         <div class="dash-top-name">${escHtml(p.product_name)}</div>
         <div class="dash-progress-wrap">
-          <div class="dash-progress-bar" style="width:${Math.round((p.purchase_count / max) * 100)}%"></div>
+          <div class="dash-progress-bar" style="width:${Math.round((qty(p) / max) * 100)}%"></div>
         </div>
       </div>
-      <span class="dash-top-count">${p.purchase_count}×</span>
+      <span class="dash-top-count">${qty(p)}${p.unit ? ' ' + escHtml(p.unit) : ''}</span>
     </div>`).join('');
 }
 

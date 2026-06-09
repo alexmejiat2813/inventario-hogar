@@ -1361,7 +1361,7 @@ module.exports = {
       JOIN purchase_sessions ps ON ps.id = pi.session_id
       WHERE ps.inventory_id = ? AND ps.purchase_date >= ?
       GROUP BY pi.product_name
-      ORDER BY purchase_count DESC, total_qty DESC LIMIT 5
+      ORDER BY total_qty DESC, purchase_count DESC LIMIT 5
     `).all(inventoryId, start);
 
     return {
