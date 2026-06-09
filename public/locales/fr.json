@@ -91,11 +91,13 @@
     "card": {
       "min": "min",
       "critical": "Critique",
-      "edit": "Modifier"
+      "edit": "Modifier",
+      "view": "Voir"
     },
     "modal": {
       "addTitle": "Ajouter un produit",
       "editTitle": "Modifier le produit",
+      "viewTitle": "Voir le produit",
       "product": "Produit",
       "productPlaceholder": "— Choisir dans le catalogue —",
       "customProduct": "✏ Produit personnalisé",

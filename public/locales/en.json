@@ -91,11 +91,13 @@
     "card": {
       "min": "min",
       "critical": "Critical",
-      "edit": "Edit"
+      "edit": "Edit",
+      "view": "View"
     },
     "modal": {
       "addTitle": "Add product",
       "editTitle": "Edit product",
+      "viewTitle": "View product",
       "product": "Product",
       "productPlaceholder": "— Select from catalog —",
       "customProduct": "✏ Custom product",
