@@ -1,0 +1,182 @@
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      min-height: 100vh;
+      background: #FBFBFA;
+      font-family: 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      animation: rise .5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Wordmark */
+    .wordmark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px; height: 40px;
+      background: #082F49;
+      color: white;
+      border-radius: 8px;
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      margin: 0 auto 1.5rem;
+    }
+
+    .app-name {
+      font-family: 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
+      font-size: 1.875rem;
+      font-weight: 400;
+      color: #082F49;
+      letter-spacing: -.03em;
+      line-height: 1.1;
+      margin-bottom: .625rem;
+    }
+
+    .app-desc {
+      font-size: .85rem;
+      color: #787774;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Feature tags */
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .375rem;
+      margin-bottom: 2rem;
+    }
+    .feature-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      padding: .25rem .75rem;
+      background: #F8F8F7;
+      border: 1px solid #EAEAEA;
+      border-radius: 999px;
+      font-size: .73rem;
+      color: #787774;
+      font-weight: 500;
+      letter-spacing: .03em;
+    }
+    .feature-tag-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #B2B0AD;
+      flex-shrink: 0;
+    }
+
+    /* Error banner */
+    .error-banner {
+      display: none;
+      background: #FDEBEC;
+      color: #9F2F2D;
+      border: 1px solid #F5C0C0;
+      border-radius: 6px;
+      padding: .625rem .875rem;
+      font-size: .82rem;
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+      text-align: left;
+    }
+    .error-banner.visible { display: block; }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: #EAEAEA;
+    }
+    .divider-text {
+      font-size: .72rem;
+      color: #B2B0AD;
+      font-weight: 500;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* Google button */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .75rem;
+      width: 100%;
+      padding: .75rem 1rem;
+      background: #FFFFFF;
+      color: #082F49;
+      border: 1px solid #EAEAEA;
+      border-radius: 6px;
+      font-size: .875rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: border-color .15s, background .15s;
+      cursor: pointer;
+      letter-spacing: .01em;
+      margin-bottom: 1.5rem;
+    }
+    .btn-google:hover {
+      border-color: #082F49;
+      background: #FBFBFA;
+    }
+    .btn-google:active { transform: scale(0.99); }
+    .btn-google svg { flex-shrink: 0; }
+
+    .footer-note {
+      font-size: .72rem;
+      color: #B2B0AD;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Language selector */
+    .lang-selector {
+      display: flex;
+      justify-content: center;
+      gap: .25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #EAEAEA;
+    }
+    .lang-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .2rem;
+      padding: .25rem .55rem;
+      border: 1px solid #EAEAEA;
+      border-radius: 4px;
+      background: white;
+      font-size: .72rem;
+      font-weight: 500;
+      color: #787774;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .lang-btn:hover { border-color: #082F49; color: #082F49; }
+    .lang-btn.lang-active { border-color: #082F49; color: #082F49; background: #F8F8F7; font-weight: 700; }
+    .lang-check { display: none; font-size: .65rem; }
+    .lang-btn.lang-active .lang-check { display: inline; }
