@@ -18,14 +18,7 @@ const state = {
 };
 
 // ── API ───────────────────────────────────────────────────────
-
-async function apiFetch(url, options = {}) {
-  const res  = await fetch(url, options);
-  if (res.status === 401) { window.location.href = '/login'; return null; }
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error');
-  return data;
-}
+// apiFetch → utils.js
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -67,9 +60,9 @@ function fmtMonthFromDate(iso) {
 
 async function loadAll() {
   const [inv, stores, summary] = await Promise.all([
-    apiFetch('/api/active-inventory'),
-    apiFetch('/api/stores'),
-    apiFetch('/api/purchases/summary'),
+    apiFetch('GET', '/api/active-inventory'),
+    apiFetch('GET', '/api/stores'),
+    apiFetch('GET', '/api/purchases/summary'),
   ]);
 
   if (!inv) { window.location.href = '/inventories'; return; }
@@ -94,7 +87,7 @@ async function loadSessions() {
   if (state.filterMonth) params.set('month', state.filterMonth);
   if (state.filterStore) params.set('store_id', state.filterStore);
 
-  const sessions = await apiFetch('/api/purchases?' + params.toString());
+  const sessions = await apiFetch('GET', '/api/purchases?' + params.toString());
   state.sessions = sessions || [];
 
   populateMonthFilter();
@@ -240,7 +233,7 @@ async function loadDetail(sessionId) {
   if (!detailEl) return;
 
   try {
-    const session = await apiFetch(`/api/purchases/${sessionId}`);
+    const session = await apiFetch('GET', `/api/purchases/${sessionId}`);
     if (!session) return;
 
     const currency = session.currency || state.inventory?.currency || 'USD';
@@ -340,11 +333,7 @@ async function executeDeleteSession() {
   btn.textContent = tSafe('history.deleteSession.deleting', 'Eliminando…');
 
   try {
-    await apiFetch(`/api/purchases/${state.deleteSessionId}`, {
-      method:  'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ revert_inventory: mode === 'revert' }),
-    });
+    await apiFetch('DELETE', `/api/purchases/${state.deleteSessionId}`, { revert_inventory: mode === 'revert' });
     closeDeleteModal();
     showToast(tSafe('history.deleteSession.success', 'Compra eliminada'), 'success');
     state.expanded.delete(state.deleteSessionId);

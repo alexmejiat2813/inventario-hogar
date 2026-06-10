@@ -35,16 +35,7 @@ function clearPurchaseData() {
 }
 
 // ── API ───────────────────────────────────────────────────────
-
-async function apiFetch(method, url, body) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
-  if (body !== undefined) opts.body = JSON.stringify(body);
-  const res  = await fetch(url, opts);
-  if (res.status === 401) { window.location.href = '/login'; return null; }
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error en el servidor');
-  return data;
-}
+// apiFetch → utils.js
 
 // ── Helpers ───────────────────────────────────────────────────
 

@@ -223,7 +223,7 @@ function renderMonthlyChart(monthlySpend) {
 
   if (_chartMonthly) { _chartMonthly.destroy(); _chartMonthly = null; }
 
-  const lang = (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
+  const lang = catLang();
   const labels = monthlySpend.map(m => {
     const [y, mo] = m.month.split('-');
     return new Date(+y, +mo - 1, 1).toLocaleDateString(lang, { month: 'short', year: '2-digit' });

@@ -49,16 +49,7 @@ const state = {
 };
 
 // ── API ───────────────────────────────────────────────────────
-
-async function apiFetch(method, url, body) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
-  if (body !== undefined) opts.body = JSON.stringify(body);
-  const res = await fetch(url, opts);
-  if (res.status === 401) { window.location.href = '/login'; return null; }
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error en el servidor');
-  return data;
-}
+// apiFetch → utils.js
 
 async function loadData() {
   const [products, stats] = await Promise.all([
@@ -223,9 +214,7 @@ function catClass(category) {
   return 'cat-' + (category || '').toLowerCase().replace(/\s+/g, '-');
 }
 
-function catLang() {
-  return (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
-}
+// catLang → utils.js
 
 // Nombre de la categoría traducido desde la tabla `categories`
 // (name/name_en/name_fr). Fallback: i18n cat.* (legado) y texto crudo.
@@ -960,7 +949,7 @@ async function renderPriceChart(productId) {
     });
 
     const allDates = [...new Set(rows.map(r => r.date))].sort();
-    const lang     = (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
+    const lang     = catLang();
     const currency = state.inventory?.currency || 'USD';
 
     const fmt = n => {
@@ -1044,7 +1033,7 @@ async function renderStorePrices(productId) {
     }
 
     const currency = state.inventory?.currency || 'USD';
-    const lang     = (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
+    const lang     = catLang();
     const fmt = n => {
       try {
         return new Intl.NumberFormat(lang, {

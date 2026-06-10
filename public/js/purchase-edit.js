@@ -20,16 +20,7 @@ let _itemKey = 0;
 function nextKey() { return ++_itemKey; }
 
 // ── API ───────────────────────────────────────────────────────
-
-async function apiFetch(url, options = {}) {
-  const res  = await fetch(url, options);
-  if (res.status === 401) { window.location.href = '/login'; return null; }
-  const ct = res.headers.get('content-type') || '';
-  if (!ct.includes('application/json')) throw new Error(`Error ${res.status} en ${url}`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error');
-  return data;
-}
+// apiFetch → utils.js
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -74,16 +65,16 @@ async function loadData() {
   const purchaseId = getPurchaseIdFromURL();
   if (!purchaseId) { history.back(); return; }
 
-  const inv = await apiFetch('/api/active-inventory');
+  const inv = await apiFetch('GET', '/api/active-inventory');
   if (!inv) { history.back(); return; }
   state.inventory = inv;
 
   const [session, stores, taxes, units, products] = await Promise.all([
-    apiFetch(`/api/inventories/${inv.id}/purchases/${purchaseId}`),
-    apiFetch('/api/stores'),
-    apiFetch('/api/settings/taxes'),
-    apiFetch('/api/settings/units'),
-    apiFetch('/api/products'),
+    apiFetch('GET', `/api/inventories/${inv.id}/purchases/${purchaseId}`),
+    apiFetch('GET', '/api/stores'),
+    apiFetch('GET', '/api/settings/taxes'),
+    apiFetch('GET', '/api/settings/units'),
+    apiFetch('GET', '/api/products'),
   ]);
 
   if (!session) { history.back(); return; }
@@ -442,7 +433,7 @@ async function save() {
 
     // Receipt changes
     if (state.receiptAction === 'remove') {
-      await apiFetch(`/api/purchases/${sessionId}/receipt`, { method: 'DELETE' });
+      await apiFetch('DELETE', `/api/purchases/${sessionId}/receipt`);
     } else if (state.receiptAction === 'replace' && state.receiptFile) {
       const formData = new FormData();
       formData.append('receipt', state.receiptFile);
@@ -463,11 +454,7 @@ async function save() {
 
     if (!items.length) throw new Error('Agrega al menos un producto');
 
-    await apiFetch(`/api/inventories/${state.inventory.id}/purchases/${sessionId}`, {
-      method:  'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ purchase_date: purchaseDate, items, tax_ids: taxIds }),
-    });
+    await apiFetch('PUT', `/api/inventories/${state.inventory.id}/purchases/${sessionId}`, { purchase_date: purchaseDate, items, tax_ids: taxIds });
 
     showToast(tSafe('purchaseEdit.success', 'Compra guardada'), 'success');
     setTimeout(() => history.back(), 700);

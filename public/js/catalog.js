@@ -26,9 +26,7 @@ const state = {
 };
 
 // ── Categorías (tabla unificada `categories`) ─────────────────────────────────
-function catLang() {
-  return (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
-}
+// catLang → utils.js
 function catLabel(name) {
   const row = state.categories.find(c => c.name === name);
   if (!row) return name;
