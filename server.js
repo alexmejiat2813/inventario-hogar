@@ -49,7 +49,7 @@ app.use((req, res, next) => {
 
 // ── Core middleware ────────────────────────────────────────────────────────────
 app.use(securityHeaders(IS_PROD));
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
 app.use(session({
   store:             new SQLiteStore(),
@@ -174,7 +174,8 @@ app.use('/api', (req, res) => {
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   logger.error({ err, method: req.method, url: req.originalUrl }, 'Unhandled error');
-  res.status(err.status || 500).json({ error: err.message || 'Error interno del servidor' });
+  const message = IS_PROD ? 'Error interno del servidor' : (err.message || 'Error interno del servidor');
+  res.status(err.status || 500).json({ error: message });
 });
 
 if (require.main === module) {
