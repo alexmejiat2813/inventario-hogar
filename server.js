@@ -10,6 +10,7 @@ const SQLiteStore           = require('./middleware/session-store');
 const { createRateLimiter } = require('./middleware/rate-limit');
 const { securityHeaders }   = require('./middleware/security-headers');
 const db                    = require('./database');
+const logger                = require('./logger');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,17 @@ const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, 'public', 'u
 // Behind a reverse proxy (Fly.io, Render, nginx): trust X-Forwarded-* headers
 // so secure cookies and req.ip (rate limiter) work correctly.
 app.set('trust proxy', 1);
+
+// ── Request logging ────────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    const lvl = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
+    logger[lvl]({ method: req.method, url: req.originalUrl, status: res.statusCode, ms });
+  });
+  next();
+});
 
 // ── Core middleware ────────────────────────────────────────────────────────────
 app.use(securityHeaders(IS_PROD));
@@ -158,15 +170,13 @@ app.use('/api', (req, res) => {
 // ── Global error handler ───────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error(err);
+  logger.error({ err, method: req.method, url: req.originalUrl }, 'Unhandled error');
   res.status(err.status || 500).json({ error: err.message || 'Error interno del servidor' });
 });
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log('\n🏠  Inventario Hogar');
-    console.log(`📡  Servidor corriendo en http://localhost:${PORT}`);
-    console.log('     Presiona Ctrl+C para detener\n');
+    logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'Inventario Hogar started');
   });
 }
 
