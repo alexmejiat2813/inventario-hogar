@@ -123,7 +123,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 75 | Sugerencia de reposición inteligente | Predecir cuándo se acaba un producto basándose en historial de compras y consumo promedio. Requiere análisis de `purchase_sessions` + `purchase_items`. | Media | Alta | ⬜ |
 | 76 | Modo oscuro | CSS variables ya están parcialmente preparadas. Agregar `prefers-color-scheme: dark` + toggle manual. | Baja | Media | ⬜ |
 | 78 | Compartir la aplicación | Botón que abre el share nativo del SO (`navigator.share`) o copia la URL de la PWA al portapapeles. Punto de entrada: menú de perfil o header. | Alta | Baja | ⬜ |
-| 79 | Simplificar filtros de categoría en Stock | Actualmente hay dos filtros redundantes: chips horizontales + tarjetas con contador. Eliminar las tarjetas. Agregar el contador de productos al lado del nombre en cada chip (ej. "Alimentos (12)"). Una sola interfaz, más limpia. | Media | Baja | ✅ |
+| 79 | Simplificar filtros de categoría en Stock | Tarjetas eliminadas. Contador en chips horizontales. Reorden: buscar → categorías → en/fuera stock. | Media | Baja | ✅ |
 
 ---
 
@@ -158,6 +158,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 53 | Categorías no se reflejaban en todas las vistas + sin íconos | Tabs de filtro e íconos estaban hardcodeados en Stock/Catálogo; agregar/editar una categoría en settings no se veía. Fix: tabla `categories` unificada como fuente única (columnas `name_en`/`name_fr`), tabs e íconos data-driven en Stock y Catálogo, selects dinámicos, rename con cascade a productos/catálogo, migración auto-crea categorías usadas, delete bloqueado si está en uso, UI de traducción en settings. Eliminado mapeo catálogo→inventario | ✅ |
 | 54 | Push notifications al celular | Alertas al teléfono con la app cerrada (vencimientos, stock crítico, presupuesto). Tabla `push_subscriptions`, ruta `/api/notifications`, handlers `push`/`notificationclick` en sw.js, UI en settings con enable/disable. VAPID keys configurables vía .env. Graceful: sin keys = 503. Cron en Fly para enviar = futuro. iOS requiere PWA instalada. i18n ES/EN/FR | `96fd654` | ✅ |
 | 77 | Bug plantillas no guardaban establecimiento/precio | `list_template_items` sin columnas `store_id`/`unit_price`. Migration + fix en `createTemplate`, save y applyTemplate. | `b8eaf36` | ✅ |
+| 79 | Simplificar filtros categoría Stock | Tarjetas eliminadas. Contador en chips. Reorden: buscar → categorías → en/fuera stock. Fix overflow medianas. | `456f77f` | ✅ |
 | 57 | `CURRENCY_SYMBOLS` duplicado | Movido de shopping-list.js + inventories.js a utils.js. | `d35b450` | ✅ |
 | 58 | `catch {}` traga errores | 11 route files: logger require + `catch (err) { logger.error(...)` en todos los catch bare. | `d35b450` | ✅ |
 | 59 | SW versionado manual | Ya automatizado: `sw.js` fetch `/cache-version` devuelve `FLY_COMMIT_SHA` en prod. `ih-v1` es default pre-fetch. | `d35b450` | ✅ |
