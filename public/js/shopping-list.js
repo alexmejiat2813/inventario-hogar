@@ -936,6 +936,8 @@ async function saveAsTemplate() {
       productName: item.name,
       quantity:    pd.quantityBought != null ? +pd.quantityBought : +fmtQty(item.needed),
       unit:        item.unit,
+      storeId:     pd.storeId   || null,
+      unitPrice:   pd.unitPrice != null ? +pd.unitPrice : null,
     };
   });
 
@@ -968,7 +970,9 @@ async function applyTemplate(templateId) {
       item.checked = true;
       state.expandedItems.add(String(item.id));
       if (!state.purchaseData[item.id]) state.purchaseData[item.id] = {};
-      if (ti.quantity) state.purchaseData[item.id].quantityBought = ti.quantity;
+      if (ti.quantity)    state.purchaseData[item.id].quantityBought = ti.quantity;
+      if (ti.store_id)    state.purchaseData[item.id].storeId        = ti.store_id;
+      if (ti.unit_price != null) state.purchaseData[item.id].unitPrice = ti.unit_price;
       checks.push(apiFetch('PUT', `/api/shopping/${item.id}`, { checked: true }));
       applied++;
     });

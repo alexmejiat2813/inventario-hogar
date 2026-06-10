@@ -253,6 +253,10 @@ if (!itemCols.includes('tax_id'))     db.exec('ALTER TABLE purchase_items ADD CO
 if (!itemCols.includes('tax_rate'))   db.exec('ALTER TABLE purchase_items ADD COLUMN tax_rate REAL');
 if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD COLUMN tax_amount REAL');
 
+const tplItemCols = db.prepare('PRAGMA table_info(list_template_items)').all().map(c => c.name);
+if (!tplItemCols.includes('store_id'))   db.exec('ALTER TABLE list_template_items ADD COLUMN store_id INTEGER REFERENCES stores(id) ON DELETE SET NULL');
+if (!tplItemCols.includes('unit_price')) db.exec('ALTER TABLE list_template_items ADD COLUMN unit_price REAL');
+
 // ── Categorías: una sola tabla manda en todas las vistas ──────────────────────
 // [name ES (canónico/almacenado en productos), name EN, name FR, emoji].
 const BASE_CATEGORIES = [
@@ -1047,10 +1051,10 @@ module.exports = {
         'INSERT INTO list_templates (inventory_id, created_by, name) VALUES (?, ?, ?)'
       ).run(inventoryId, userId, name.trim());
       const ins = db.prepare(
-        'INSERT INTO list_template_items (template_id, product_id, product_name, quantity, unit) VALUES (?, ?, ?, ?, ?)'
+        'INSERT INTO list_template_items (template_id, product_id, product_name, quantity, unit, store_id, unit_price) VALUES (?, ?, ?, ?, ?, ?, ?)'
       );
       items.forEach(item => {
-        ins.run(lastInsertRowid, item.productId || null, item.productName, +item.quantity || 1, item.unit || 'unidades');
+        ins.run(lastInsertRowid, item.productId || null, item.productName, +item.quantity || 1, item.unit || 'unidades', item.storeId || null, item.unitPrice != null ? +item.unitPrice : null);
       });
       const template = db.prepare('SELECT * FROM list_templates WHERE id = ?').get(lastInsertRowid);
       template.items = db.prepare('SELECT * FROM list_template_items WHERE template_id = ?').all(lastInsertRowid);

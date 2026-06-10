@@ -75,7 +75,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | # | Tarea | Descripción | Estado |
 |---|-------|-------------|--------|
 | 55 | Error handler expone `err.message` | `server.js` manda detalles internos al cliente en prod. Fix: mensaje genérico en prod + `logger.error(err)` completo en servidor. | ✅ |
-| 56 | Endurecer CSP — quitar `unsafe-inline` | **Bloqueado**: quedan 40 `style=""` attrs en catalog/inventories/settings/shopping-list.html + inline `<script>` en todas las páginas. Requiere: (a) convertir style attrs a clases CSS, (b) mover inline scripts a archivos externos. Dos sub-tareas grandes antes de poder tocar CSP. | ⬜ |
+| 56 | Endurecer CSP — quitar `unsafe-inline` | 40 style="" convertidos a clases CSS, 5 inline scripts extraídos a archivos externos, onclick delegados a header.js/app.js. CSP limpio. | `6eae06f` | ✅ |
 
 ### P1 — Bugs conocidos
 
