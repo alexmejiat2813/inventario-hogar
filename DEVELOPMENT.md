@@ -68,12 +68,60 @@
 
 ## Pendiente
 
-Solo queda 1 tarea sin resolver:
+Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo explícito para saltarse.
+
+### P0 — Seguridad (arreglar antes del próximo deploy público)
 
 | # | Tarea | Descripción | Estado |
 |---|-------|-------------|--------|
-| 45 | Bug foto→Dashboard (móvil) | Al dar OK a la foto del producto a veces vuelve al Dashboard (posible eviction PWA Android). PROMPT-PROXIMA-SESION #1 | ⬜ |
-| P2.4 | Keyboard shortcuts | Ctrl+K/Cmd+K command palette para navegación rápida entre páginas | ✅ |
+| 55 | Error handler expone `err.message` | `server.js` manda detalles internos al cliente en prod. Fix: mensaje genérico en prod + `logger.error(err)` completo en servidor. | ⬜ |
+| 56 | Endurecer CSP — quitar `unsafe-inline` | CSS ya es externo (P2.3c). Eliminar `'unsafe-inline'` de `style-src` en `middleware/security-headers.js`. Verificar que ninguna página tenga `<style>` inline restante. | ⬜ |
+
+### P1 — Bugs conocidos
+
+| # | Tarea | Descripción | Estado |
+|---|-------|-------------|--------|
+| 45 | Bug foto→Dashboard (móvil) | Al abrir cámara en Android, el SO puede descartar la PWA de memoria; al volver recarga en Dashboard perdiendo el modal. Fix: persistir `{productoActivo, tabActiva}` en `sessionStorage` + restaurar en `init()`. Requiere dispositivo para reproducir. | ⬜ |
+
+### P2 — Deuda técnica
+
+| # | Tarea | Descripción | Estado |
+|---|-------|-------------|--------|
+| 57 | `CURRENCY_SYMBOLS` duplicado | Definido en `app.js`, `shopping-list.js`, `inventories.js`. Mover a `utils.js` (ya existe y se carga en todas las páginas). | ⬜ |
+| 58 | `catch {}` traga errores sin loguear | Varias rutas backend hacen `catch { res.status(500) }` perdiendo el detalle. Agregar `logger.error(err)` antes de responder. | ⬜ |
+| 59 | SW versionado manual | `ih-vNN` en `sw.js` se bump a mano — se olvida. Generar en CI con `Date.now()` o hash del commit para que sea automático. | ⬜ |
+| 60 | Strings hardcodeados en español | Algunos `<th>` de la lista de compras están en español fijo, no usan i18n. Agregar keys ES/EN/FR faltantes. | ⬜ |
+| 61 | Números mágicos sin constante | `5` (fotos máx) y `5MB` repetidos en frontend y backend sin constante compartida. Declarar en un lugar, referenciar desde ambos lados. | ⬜ |
+| 62 | `express.json()` sin `limit` explícito | Default 100kb implícito. Declarar `express.json({ limit: '100kb' })` para que sea intencional y auditable. | ⬜ |
+
+### P3 — Calidad e infraestructura
+
+| # | Tarea | Descripción | Estado |
+|---|-------|-------------|--------|
+| 63 | ESLint + Prettier + pre-commit hook | Sin linter hoy. Setup `eslint` + `.eslintrc` + `prettier` + hook pre-commit (script git o husky). Evita errores silenciosos y mantiene formato consistente. | ⬜ |
+| 64 | Ampliar cobertura de tests | Hoy: 53 tests — faltan: budget (cálculo/reset), shopping list (custom items, templates), purchases (createSession/IDOR cross-inventory), autorización IDOR. Meta: ~80 tests. | ⬜ |
+| 65 | Chart.js self-hosted | Hoy carga desde CDN (`cdn.jsdelivr.net`) — rompe offline real y es dependencia externa. Copiar a `/js/vendor/chart.min.js` + lazy-load solo en `/inventory`. | ⬜ |
+| 66 | Backup automático SQLite en Fly | Si el volumen se corrompe, datos perdidos. Configurar cron en Fly (`fly machine run`) que haga `sqlite3 /data/inventario.db .dump` y suba a un bucket S3/R2. | ⬜ |
+| 67 | Magic bytes en uploads | `fileFilter` confía en `Content-Type` del cliente (falsificable). Leer primeros bytes del buffer y verificar firma real (JPEG: `FF D8`, PNG: `89 50 4E 47`, WebP: `52 49 46 46`). | ⬜ |
+
+### P4 — Performance
+
+| # | Tarea | Descripción | Estado |
+|---|-------|-------------|--------|
+| 68 | Lazy loading de imágenes | Agregar `loading="lazy"` a todos los `<img>` de cards de productos. 1 atributo, mejora TTI en inventarios grandes. | ⬜ |
+| 69 | Chart.js lazy load (depende de #65) | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a import dinámico o script condicional. | ⬜ |
+| 70 | Minificación JS/CSS | Build step con `esbuild` para minificar antes del deploy. ~20-30% adicional sobre gzip. Requiere ajustar CI y rutas de assets. | ⬜ |
+
+### P5 — Features nuevas
+
+| # | Tarea | Descripción | Estado |
+|---|-------|-------------|--------|
+| 71 | Cron push notifications | Endpoint ya existe (`/api/notifications/send-alerts`). Falta dispararlo desde Fly con `fly machine run` en un cron diario. | ⬜ |
+| 72 | Export/import inventario | Exportar productos + stock a CSV/JSON para backup manual del usuario. Importar desde CSV para onboarding. | ⬜ |
+| 73 | Comparador de precios por tienda | Datos ya existen (`getProductStorePrices`). Falta UI: tabla/chart de precio por tienda en el modal de producto, con recomendación de dónde comprar más barato. | ⬜ |
+| 74 | Escaner de códigos de barras | Cámara ya integrada. Agregar librería de decode (ej. `zxing-js`) para identificar/agregar productos escaneando el código. | ⬜ |
+| 75 | Sugerencia de reposición inteligente | Predecir cuándo se acaba un producto basándose en historial de compras y consumo promedio. Requiere análisis de `purchase_sessions` + `purchase_items`. | ⬜ |
+| 76 | Modo oscuro | CSS variables ya están parcialmente preparadas. Agregar `prefers-color-scheme: dark` + toggle manual. | ⬜ |
 
 ---
 
