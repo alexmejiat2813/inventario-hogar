@@ -834,6 +834,98 @@ function handleTableClick(e) {
   if (action === 'del-tax')  deleteTax(numId, name);
 }
 
+// ── Notificaciones ───────────────────────────────────────────────────────────
+async function initNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    document.getElementById('notification-status').innerHTML =
+      '<span>' + t('settings.notAvailable') + '</span>';
+    return;
+  }
+
+  const btnEnable = document.getElementById('btn-enable-notifications');
+  const btnDisable = document.getElementById('btn-disable-notifications');
+  const statusText = document.getElementById('notification-status-text');
+
+  try {
+    const permission = Notification.permission;
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+
+    const isSubscribed = permission === 'granted' && subscription !== null;
+
+    if (isSubscribed) {
+      btnEnable.hidden = true;
+      btnDisable.hidden = false;
+      statusText.textContent = t('notifications.enabled');
+    } else {
+      btnEnable.hidden = false;
+      btnDisable.hidden = true;
+      statusText.textContent = permission === 'denied'
+        ? t('settings.notificationsBlocked')
+        : t('settings.notificationsDisabled');
+    }
+  } catch (err) {
+    console.error('Notification init error:', err);
+  }
+
+  btnEnable.addEventListener('click', enableNotifications);
+  btnDisable.addEventListener('click', disableNotifications);
+}
+
+async function enableNotifications() {
+  try {
+    const res = await fetch('/api/notifications/vapid-key');
+    const { vapidPublicKey } = await res.json();
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      toast(t('settings.notificationsRejected'), 'error');
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    });
+
+    await fetch('/api/notifications/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription }),
+    });
+
+    toast(t('notifications.enabled'), 'success');
+    await initNotifications();
+  } catch (err) {
+    console.error('Enable notifications error:', err);
+    toast(t('settings.notificationsError'), 'error');
+  }
+}
+
+async function disableNotifications() {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) await subscription.unsubscribe();
+
+    await fetch('/api/notifications/unsubscribe', { method: 'DELETE' });
+
+    toast(t('notifications.disabled'), 'success');
+    await initNotifications();
+  } catch (err) {
+    console.error('Disable notifications error:', err);
+    toast(t('settings.notificationsError'), 'error');
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return new Uint8Array([...rawData].map(char => char.charCodeAt(0)));
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   await I18N.init();
@@ -852,6 +944,7 @@ async function init() {
     renderStores();
     renderCurrency();
     renderTaxes();
+    await initNotifications();
   } catch (err) {
     console.error(err);
   }

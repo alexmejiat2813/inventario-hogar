@@ -575,7 +575,8 @@
       "stores": "Establecimientos",
       "currency": "Moneda",
       "taxes": "Impuestos",
-      "budget": "Presupuesto"
+      "budget": "Presupuesto",
+      "notifications": "Notificaciones"
     },
     "categories": {
       "title": "Categorías",
@@ -764,7 +765,13 @@
         "exceeds": "Excede en",
         "noBudget": "Sin presupuesto configurado"
       }
-    }
+    },
+    "loading": "Cargando…",
+    "notAvailable": "Las notificaciones no están disponibles en este navegador",
+    "notificationsBlocked": "Las notificaciones están bloqueadas por el navegador",
+    "notificationsDisabled": "Las notificaciones están desactivadas",
+    "notificationsRejected": "Rechazaste las notificaciones. Habilitalas en la configuración del navegador.",
+    "notificationsError": "Error al configurar notificaciones"
   },
   "invTabs": {
     "dashboard": "Dashboard",
@@ -797,6 +804,19 @@
       "today": "Vence hoy",
       "tomorrow": "Mañana",
       "inDays": "En {{n}} días"
+    }
+  },
+  "notifications": {
+    "title": "Recibir alertas",
+    "description": "Recibí notificaciones cuando algo venza, el stock sea crítico o el presupuesto esté alto.",
+    "enable": "Activar notificaciones",
+    "disable": "Desactivar",
+    "enabled": "Notificaciones activadas",
+    "disabled": "Notificaciones desactivadas",
+    "alerts": {
+      "expiry": "Vencimiento: {{product}} vence {{date}}",
+      "critical": "Stock crítico: {{product}} está por debajo del mínimo",
+      "budget": "Presupuesto: {{percentage}}% gastado en {{inventory}}"
     }
   },
   "error": {

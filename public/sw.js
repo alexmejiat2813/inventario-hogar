@@ -138,3 +138,36 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(request))
   );
 });
+
+self.addEventListener('push', e => {
+  if (!e.data) return;
+
+  try {
+    const { title, body, badge, icon, tag } = e.data.json();
+    const options = {
+      body,
+      badge: badge || '/icons/icon.svg',
+      icon: icon || '/icons/icon.svg',
+      tag: tag || 'notification',
+      requireInteraction: true,
+    };
+
+    e.waitUntil(self.registration.showNotification(title, options));
+  } catch (err) {
+    console.error('Push parse error:', err);
+  }
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window' }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url === '/' && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow('/');
+    })
+  );
+});

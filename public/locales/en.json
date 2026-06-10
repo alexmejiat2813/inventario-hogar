@@ -575,7 +575,8 @@
       "stores": "Stores",
       "currency": "Currency",
       "taxes": "Taxes",
-      "budget": "Budget"
+      "budget": "Budget",
+      "notifications": "Notifications"
     },
     "categories": {
       "title": "Categories",
@@ -764,7 +765,13 @@
         "exceeds": "Exceeds by",
         "noBudget": "No budget configured"
       }
-    }
+    },
+    "loading": "Loading…",
+    "notAvailable": "Notifications are not available in this browser",
+    "notificationsBlocked": "Notifications are blocked by the browser",
+    "notificationsDisabled": "Notifications are disabled",
+    "notificationsRejected": "You rejected notifications. Enable them in browser settings.",
+    "notificationsError": "Error configuring notifications"
   },
   "invTabs": {
     "dashboard": "Dashboard",
@@ -797,6 +804,19 @@
       "today": "Expires today",
       "tomorrow": "Tomorrow",
       "inDays": "In {{n}} days"
+    }
+  },
+  "notifications": {
+    "title": "Receive alerts",
+    "description": "Get notified when items expire, stock is critical, or budget is high.",
+    "enable": "Enable notifications",
+    "disable": "Disable",
+    "enabled": "Notifications enabled",
+    "disabled": "Notifications disabled",
+    "alerts": {
+      "expiry": "Expiring: {{product}} expires {{date}}",
+      "critical": "Low stock: {{product}} is below the minimum",
+      "budget": "Budget: {{percentage}}% spent in {{inventory}}"
     }
   },
   "error": {

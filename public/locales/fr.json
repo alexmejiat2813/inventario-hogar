@@ -575,7 +575,8 @@
       "stores": "Établissements",
       "currency": "Devise",
       "taxes": "Taxes",
-      "budget": "Budget"
+      "budget": "Budget",
+      "notifications": "Notifications"
     },
     "categories": {
       "title": "Catégories",
@@ -764,7 +765,13 @@
         "exceeds": "Dépasse de",
         "noBudget": "Aucun budget configuré"
       }
-    }
+    },
+    "loading": "Chargement…",
+    "notAvailable": "Les notifications ne sont pas disponibles dans ce navigateur",
+    "notificationsBlocked": "Les notifications sont bloquées par le navigateur",
+    "notificationsDisabled": "Les notifications sont désactivées",
+    "notificationsRejected": "Vous avez rejeté les notifications. Activez-les dans les paramètres du navigateur.",
+    "notificationsError": "Erreur lors de la configuration des notifications"
   },
   "invTabs": {
     "dashboard": "Dashboard",
@@ -797,6 +804,19 @@
       "today": "Expire aujourd'hui",
       "tomorrow": "Demain",
       "inDays": "Dans {{n}} jours"
+    }
+  },
+  "notifications": {
+    "title": "Recevoir des alertes",
+    "description": "Recevez des notifications lorsque des articles expirent, le stock est critique ou le budget est élevé.",
+    "enable": "Activer les notifications",
+    "disable": "Désactiver",
+    "enabled": "Notifications activées",
+    "disabled": "Notifications désactivées",
+    "alerts": {
+      "expiry": "Expiration : {{product}} expire {{date}}",
+      "critical": "Stock faible : {{product}} est en dessous du minimum",
+      "budget": "Budget : {{percentage}}% dépensé dans {{inventory}}"
     }
   },
   "error": {

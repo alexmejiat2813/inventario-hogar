@@ -193,6 +193,15 @@ db.exec(`
     details       TEXT,
     created_at    TEXT    DEFAULT (datetime('now','localtime'))
   );
+
+  CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    endpoint   TEXT    NOT NULL,
+    auth       TEXT    NOT NULL,
+    p256dh     TEXT    NOT NULL,
+    created_at TEXT    DEFAULT (datetime('now','localtime'))
+  );
 `);
 
 // ── Indexes ───────────────────────────────────────────────────────────────────
@@ -211,6 +220,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_custom_items_inventory   ON shopping_list_custom_items(inventory_id);
   CREATE INDEX IF NOT EXISTS idx_audit_inv_created        ON audit_log(inventory_id, created_at);
   CREATE INDEX IF NOT EXISTS idx_members_user             ON inventory_members(user_id);
+  CREATE INDEX IF NOT EXISTS idx_push_subs_user           ON push_subscriptions(user_id);
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -1571,5 +1581,35 @@ module.exports = {
         FROM users ORDER BY COALESCE(last_login_at, created_at) DESC LIMIT 10
       `).all(),
     };
+  },
+
+  // ── Push notifications ──────────────────────────────────────────────────────────
+  savePushSubscription(userId, subscription) {
+    const { endpoint, keys: { auth, p256dh } } = subscription;
+    return db.prepare(`
+      INSERT INTO push_subscriptions (user_id, endpoint, auth, p256dh)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET
+        endpoint = excluded.endpoint,
+        auth     = excluded.auth,
+        p256dh   = excluded.p256dh
+    `).run(userId, endpoint, auth, p256dh);
+  },
+
+  getPushSubscription(userId) {
+    return db.prepare('SELECT * FROM push_subscriptions WHERE user_id = ?').get(userId);
+  },
+
+  getPushSubscriptionsForAlert() {
+    return db.prepare(`
+      SELECT ps.*, u.name, u.email
+      FROM push_subscriptions ps
+      JOIN users u ON ps.user_id = u.id
+      ORDER BY ps.created_at DESC
+    `).all();
+  },
+
+  deletePushSubscription(userId) {
+    return db.prepare('DELETE FROM push_subscriptions WHERE user_id = ?').run(userId);
   },
 };
