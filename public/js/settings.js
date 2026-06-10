@@ -338,9 +338,6 @@ async function suggestTaxes() {
 }
 
 // ── Budget ────────────────────────────────────────────────────────────────────
-const CURRENCY_SYMBOLS = {
-  USD: '$', CAD: 'C$', EUR: '€', GBP: '£', MXN: '$', COP: '$', BRL: 'R$',
-};
 
 async function loadBudget() {
   const noInvEl  = document.getElementById('budget-no-inventory');

@@ -2,7 +2,6 @@
    Historial de Compras
    ============================================================ */
 
-const CURRENCY_SYMBOLS = { CAD:'C$', USD:'$', COP:'$', EUR:'€', MXN:'$', BRL:'R$', GBP:'£' };
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 

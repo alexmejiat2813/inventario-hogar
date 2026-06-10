@@ -2,8 +2,6 @@
    Purchase Edit Page
    ============================================================ */
 
-const CURRENCY_SYMBOLS = { CAD:'C$', USD:'$', COP:'$', EUR:'€', MXN:'$', BRL:'R$', GBP:'£' };
-
 const state = {
   inventory:      null,
   session:        null,
