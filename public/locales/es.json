@@ -151,18 +151,18 @@
       "auditEmpty": "Sin actividad registrada aún."
     },
     "audit": {
-      "productCreate":    "agregó el producto",
-      "productUpdate":    "actualizó el producto",
-      "productDelete":    "eliminó el producto",
-      "purchaseCreate":   "registró una compra",
-      "purchaseDelete":   "eliminó una compra",
-      "memberRemove":     "removió al colaborador",
+      "productCreate": "agregó el producto",
+      "productUpdate": "actualizó el producto",
+      "productDelete": "eliminó el producto",
+      "purchaseCreate": "registró una compra",
+      "purchaseDelete": "eliminó una compra",
+      "memberRemove": "removió al colaborador",
       "memberRoleChange": "cambió el rol de",
-      "inventoryRename":  "renombró el inventario",
-      "justNow":          "ahora",
-      "minutesAgo":       "hace {{n}} min",
-      "hoursAgo":         "hace {{n}} h",
-      "daysAgo":          "hace {{n}} días"
+      "inventoryRename": "renombró el inventario",
+      "justNow": "ahora",
+      "minutesAgo": "hace {{n}} min",
+      "hoursAgo": "hace {{n}} h",
+      "daysAgo": "hace {{n}} días"
     },
     "confirmDelete": "¿Eliminar \"{{name}}\"?\nEsta acción no se puede deshacer.",
     "addMenu": {
@@ -822,5 +822,8 @@
   "error": {
     "server": "No se pudo conectar con el servidor",
     "load": "Error al cargar datos"
+  },
+  "shortcuts": {
+    "placeholder": "Ir a..."
   }
 }

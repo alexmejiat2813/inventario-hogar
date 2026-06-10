@@ -151,18 +151,18 @@
       "auditEmpty": "No activity recorded yet."
     },
     "audit": {
-      "productCreate":    "added product",
-      "productUpdate":    "updated product",
-      "productDelete":    "deleted product",
-      "purchaseCreate":   "recorded a purchase",
-      "purchaseDelete":   "deleted a purchase",
-      "memberRemove":     "removed collaborator",
+      "productCreate": "added product",
+      "productUpdate": "updated product",
+      "productDelete": "deleted product",
+      "purchaseCreate": "recorded a purchase",
+      "purchaseDelete": "deleted a purchase",
+      "memberRemove": "removed collaborator",
       "memberRoleChange": "changed role of",
-      "inventoryRename":  "renamed the inventory",
-      "justNow":          "just now",
-      "minutesAgo":       "{{n}} min ago",
-      "hoursAgo":         "{{n}} h ago",
-      "daysAgo":          "{{n}} days ago"
+      "inventoryRename": "renamed the inventory",
+      "justNow": "just now",
+      "minutesAgo": "{{n}} min ago",
+      "hoursAgo": "{{n}} h ago",
+      "daysAgo": "{{n}} days ago"
     },
     "confirmDelete": "Delete \"{{name}}\"?\nThis action cannot be undone.",
     "addMenu": {
@@ -822,5 +822,8 @@
   "error": {
     "server": "Could not connect to the server",
     "load": "Error loading data"
+  },
+  "shortcuts": {
+    "placeholder": "Go to..."
   }
 }

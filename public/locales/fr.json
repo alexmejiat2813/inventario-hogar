@@ -151,18 +151,18 @@
       "auditEmpty": "Aucune activité enregistrée pour l'instant."
     },
     "audit": {
-      "productCreate":    "a ajouté le produit",
-      "productUpdate":    "a mis à jour le produit",
-      "productDelete":    "a supprimé le produit",
-      "purchaseCreate":   "a enregistré un achat",
-      "purchaseDelete":   "a supprimé un achat",
-      "memberRemove":     "a retiré le collaborateur",
+      "productCreate": "a ajouté le produit",
+      "productUpdate": "a mis à jour le produit",
+      "productDelete": "a supprimé le produit",
+      "purchaseCreate": "a enregistré un achat",
+      "purchaseDelete": "a supprimé un achat",
+      "memberRemove": "a retiré le collaborateur",
       "memberRoleChange": "a changé le rôle de",
-      "inventoryRename":  "a renommé l'inventaire",
-      "justNow":          "à l'instant",
-      "minutesAgo":       "il y a {{n}} min",
-      "hoursAgo":         "il y a {{n}} h",
-      "daysAgo":          "il y a {{n}} jours"
+      "inventoryRename": "a renommé l'inventaire",
+      "justNow": "à l'instant",
+      "minutesAgo": "il y a {{n}} min",
+      "hoursAgo": "il y a {{n}} h",
+      "daysAgo": "il y a {{n}} jours"
     },
     "confirmDelete": "Supprimer \"{{name}}\" ?\nCette action est irréversible.",
     "addMenu": {
@@ -822,5 +822,8 @@
   "error": {
     "server": "Impossible de se connecter au serveur",
     "load": "Erreur lors du chargement des données"
+  },
+  "shortcuts": {
+    "placeholder": "Aller a..."
   }
 }

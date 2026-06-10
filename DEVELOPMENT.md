@@ -73,6 +73,7 @@ Solo queda 1 tarea sin resolver:
 | # | Tarea | Descripción | Estado |
 |---|-------|-------------|--------|
 | 45 | Bug foto→Dashboard (móvil) | Al dar OK a la foto del producto a veces vuelve al Dashboard (posible eviction PWA Android). PROMPT-PROXIMA-SESION #1 | ⬜ |
+| P2.4 | Keyboard shortcuts | Ctrl+K/Cmd+K command palette para navegación rápida entre páginas | ✅ |
 
 ---
 
