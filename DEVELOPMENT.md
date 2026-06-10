@@ -68,12 +68,11 @@
 
 ## Pendiente
 
-Solo quedan 2 tareas sin resolver:
+Solo queda 1 tarea sin resolver:
 
 | # | Tarea | Descripción | Estado |
 |---|-------|-------------|--------|
 | 45 | Bug foto→Dashboard (móvil) | Al dar OK a la foto del producto a veces vuelve al Dashboard (posible eviction PWA Android). PROMPT-PROXIMA-SESION #1 | ⬜ |
-| 54 | Push notifications al celular | Alertas al teléfono con la app cerrada (vencimientos, stock crítico, presupuesto). Hoy las alertas son solo in-app. Requiere: `web-push` + claves VAPID en secrets, handler `push`/`notificationclick` en sw.js, tabla de suscripciones por usuario, UI de permiso + flujo `pushManager.subscribe()`, y un cron en Fly que revise y dispare (no hay scheduler hoy). iOS solo funciona con la PWA instalada a pantalla de inicio (16.4+). i18n ES/EN/FR | ⬜ |
 
 ---
 
@@ -106,6 +105,7 @@ Solo quedan 2 tareas sin resolver:
 | 51 | Bug catálogo resucitaba productos | Seeds de catálogo/categorías/unidades corrían con INSERT OR IGNORE en cada arranque → productos borrados/renombrados reaparecían tras cada deploy. Fix: seeds solo en primera ejecución (PRAGMA user_version); DBs pobladas solo marcan el flag sin resembrar | ✅ |
 | 52 | Catálogo no se traducía | Los 100 productos sembrados se guardaban en español y se mostraban igual en EN/FR (ej "Frijoles" en vez de "Haricots"). Fix: columna `i18n_key` + 100 keys `catalogSeed.*` en ES/EN/FR; catalog.html muestra traducido; al agregar al inventario guarda el nombre en el idioma activo; renombrar limpia la key. Categorías ya traducían vía tabs | ✅ |
 | 53 | Categorías no se reflejaban en todas las vistas + sin íconos | Tabs de filtro e íconos estaban hardcodeados en Stock/Catálogo; agregar/editar una categoría en settings no se veía. Fix: tabla `categories` unificada como fuente única (columnas `name_en`/`name_fr`), tabs e íconos data-driven en Stock y Catálogo, selects dinámicos, rename con cascade a productos/catálogo, migración auto-crea categorías usadas, delete bloqueado si está en uso, UI de traducción en settings. Eliminado mapeo catálogo→inventario | ✅ |
+| 54 | Push notifications al celular | Alertas al teléfono con la app cerrada (vencimientos, stock crítico, presupuesto). Tabla `push_subscriptions`, ruta `/api/notifications`, handlers `push`/`notificationclick` en sw.js, UI en settings con enable/disable. VAPID keys configurables vía .env. Graceful: sin keys = 503. Cron en Fly para enviar = futuro. iOS requiere PWA instalada. i18n ES/EN/FR | `96fd654` | ✅ |
 
 > **Nota deuda:** `initProfileMenu()` + `loadProfileAvatar()` están duplicados en app.js/history.js/shopping-list.js/inventories.js/catalog.js. Candidato a extraer a un módulo compartido `public/js/header.js` (no hecho aquí para mantener el cambio acotado).
 
