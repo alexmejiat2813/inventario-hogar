@@ -34,3 +34,9 @@ primary_region = 'yyz'
 [[vm]]
   size = 'shared-cpu-1x'
   memory = '256mb'
+
+# Cron job: enviar alertas de notificaciones cada hora
+[[crons]]
+  image = 'curlimages/curl:latest'
+  schedule = '0 * * * *'
+  command = '/bin/sh -c "curl -X POST https://inventario-hogar-alex.fly.dev/api/notifications/send-alerts -H \"Content-Type: application/json\" -d \"{}\" 2>&1 | head -20"'
