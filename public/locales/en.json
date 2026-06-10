@@ -73,6 +73,7 @@
     "stats": {
       "total": "Total products",
       "critical": "Critical stock",
+      "ok": "On track",
       "byCategory": "By category"
     },
     "tabs": {

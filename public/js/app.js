@@ -256,6 +256,7 @@ function renderStats() {
   const { total, critical } = state.stats;
   document.getElementById('stat-total').textContent    = total;
   document.getElementById('stat-critical').textContent = critical;
+  document.getElementById('stat-ok').textContent       = total - critical;
   renderCategoryTabs();
 }
 

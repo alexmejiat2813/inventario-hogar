@@ -73,6 +73,7 @@
     "stats": {
       "total": "Total productos",
       "critical": "Stock crítico",
+      "ok": "En orden",
       "byCategory": "Por categoría"
     },
     "tabs": {

@@ -679,6 +679,12 @@ a { color: inherit; text-decoration: none; }
   border-color: var(--danger-bg);
   background: #FEFBFB;
 }
+.stat-card-ok {
+  border-color: var(--success-bg);
+  background: #FAFFFE;
+}
+@media (max-width: 639px) { .stat-card-ok { grid-column: 1 / -1; } }
+.stat-green { background: var(--success-bg); color: var(--success); }
 
 .stat-icon-wrap {
   width: 40px; height: 40px;
@@ -711,6 +717,12 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   flex-direction: column;
   gap: .625rem;
+}
+@media (min-width: 1024px) {
+  .filters-section { flex-direction: row; align-items: center; gap: .5rem; }
+  .filters-section .search-wrap { flex: 0 0 190px; }
+  .filters-section .tabs-scroll { flex: 1; min-width: 0; }
+  .filters-section .stock-subtabs { flex-shrink: 0; margin-top: 0; }
 }
 
 .tabs-scroll {
