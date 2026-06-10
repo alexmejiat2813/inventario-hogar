@@ -5,7 +5,7 @@ const db      = require('../database');
 const logger   = require('../logger');
 const { requireEditorOrOwner }   = require('../middleware/inventory');
 const { validateProduct }        = require('../middleware/validate');
-const { uploadProductImage, uploadFilePath } = require('../middleware/upload');
+const { uploadProductImage, uploadFilePath, checkMagicBytes, cleanupFiles } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -98,12 +98,15 @@ router.post('/:id/images', requireEditorOrOwner, (req, res) => {
   if (isNaN(productId)) return res.status(400).json({ error: 'ID inválido' });
   uploadProductImage(req, res, async err => {
     if (err) return res.status(400).json({ error: err.message });
+    const files = req.files || [];
+    const invalid = files.find(f => !checkMagicBytes(f.path));
+    if (invalid) { cleanupFiles(files); return res.status(400).json({ error: 'Formato de imagen no válido' }); }
     try {
       const p = db.getById(productId);
       if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
       if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
       const existing = db.getProductImageCount(productId);
-      const incoming = (req.files || []).length;
+      const incoming = files.length;
       if (existing + incoming > 5) {
         (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
         return res.status(400).json({ error: 'Máximo 5 fotos por producto' });

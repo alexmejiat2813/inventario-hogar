@@ -100,9 +100,9 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 |---|-------|-------------|-------------|------------|--------|
 | 63 | ESLint + Prettier + pre-commit hook | Sin linter hoy. Setup `eslint` + `.eslintrc` + `prettier` + hook pre-commit (script git o husky). Evita errores silenciosos y mantiene formato consistente. | Media | Baja | ⬜ |
 | 64 | Ampliar cobertura de tests | Hoy: 53 tests — faltan: budget (cálculo/reset), shopping list (custom items, templates), purchases (createSession/IDOR cross-inventory), autorización IDOR. Meta: ~80 tests. | Alta | Media | ⬜ |
-| 65 | Chart.js self-hosted | Hoy carga desde CDN (`cdn.jsdelivr.net`) — rompe offline real y es dependencia externa. Copiar a `/js/vendor/chart.min.js` + lazy-load solo en `/inventory`. | Media | Baja | ⬜ |
+| 65 | Chart.js self-hosted | Hoy carga desde CDN (`cdn.jsdelivr.net`) — rompe offline real y es dependencia externa. Copiar a `/js/vendor/chart.min.js` + lazy-load solo en `/inventory`. | Media | Baja | ✅ |
 | 66 | Backup automático SQLite en Fly | Si el volumen se corrompe, datos perdidos. Configurar cron en Fly (`fly machine run`) que haga `sqlite3 /data/inventario.db .dump` y suba a un bucket S3/R2. | Alta | Media | ⬜ |
-| 67 | Magic bytes en uploads | `fileFilter` confía en `Content-Type` del cliente (falsificable). Leer primeros bytes del buffer y verificar firma real (JPEG: `FF D8`, PNG: `89 50 4E 47`, WebP: `52 49 46 46`). | Alta | Baja | ⬜ |
+| 67 | Magic bytes en uploads | `fileFilter` confía en `Content-Type` del cliente (falsificable). Leer primeros bytes del buffer y verificar firma real (JPEG: `FF D8`, PNG: `89 50 4E 47`, WebP: `52 49 46 46`). | Alta | Baja | ✅ |
 
 ### P4 — Performance
 

@@ -64,4 +64,32 @@ function uploadFilePath(webPath) {
   return path.join(UPLOADS_DIR, rel);
 }
 
-module.exports = { uploadReceipt, uploadProductImage, uploadFilePath, UPLOADS_DIR };
+// Validate file magic bytes — Content-Type header is client-controlled and
+// can be spoofed. Reading actual bytes defends against disguised payloads.
+function checkMagicBytes(filePath) {
+  const fd  = fs.openSync(filePath, 'r');
+  const buf = Buffer.alloc(12);
+  const n   = fs.readSync(fd, buf, 0, 12, 0);
+  fs.closeSync(fd);
+  if (n < 2) return false;
+  // JPEG
+  if (buf[0] === 0xFF && buf[1] === 0xD8) return true;
+  // PNG
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47) return true;
+  // GIF
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return true;
+  // WebP: RIFF????WEBP
+  if (n >= 12 && buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+      buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50) return true;
+  // HEIC/HEIF: 'ftyp' at offset 4
+  if (n >= 8 && buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70) return true;
+  return false;
+}
+
+function cleanupFiles(files) {
+  for (const f of (files || [])) {
+    try { fs.unlinkSync(f.path); } catch {}
+  }
+}
+
+module.exports = { uploadReceipt, uploadProductImage, uploadFilePath, UPLOADS_DIR, checkMagicBytes, cleanupFiles };

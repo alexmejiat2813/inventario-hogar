@@ -4,7 +4,7 @@ const fs      = require('fs');
 const db      = require('../database');
 const logger   = require('../logger');
 const { requireEditorOrOwner } = require('../middleware/inventory');
-const { uploadReceipt, uploadFilePath } = require('../middleware/upload');
+const { uploadReceipt, uploadFilePath, checkMagicBytes, cleanupFiles } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -101,6 +101,7 @@ router.post('/:sessionId/receipt', requireEditorOrOwner, uploadReceipt.single('r
     const session = db.getPurchaseSession(sessionId);
     if (!session || session.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Sesión no encontrada' });
     if (!req.file) return res.status(400).json({ error: 'No se recibió imagen' });
+    if (!checkMagicBytes(req.file.path)) { cleanupFiles([req.file]); return res.status(400).json({ error: 'Formato de imagen no válido' }); }
     const imagePath = '/uploads/receipts/' + req.file.filename;
     db.updateReceiptImage(sessionId, imagePath);
     res.json({ receipt_image: imagePath });
