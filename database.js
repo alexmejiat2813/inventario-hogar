@@ -235,6 +235,9 @@ if (!sessionCols.includes('subtotal_before_tax')) db.exec('ALTER TABLE purchase_
 if (!sessionCols.includes('total_tax'))           db.exec('ALTER TABLE purchase_sessions ADD COLUMN total_tax REAL');
 if (!sessionCols.includes('tax_breakdown'))       db.exec('ALTER TABLE purchase_sessions ADD COLUMN tax_breakdown TEXT');
 
+const userCols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+if (!userCols.includes('last_login_at')) db.exec('ALTER TABLE users ADD COLUMN last_login_at TEXT');
+
 const itemCols = db.prepare('PRAGMA table_info(purchase_items)').all().map(c => c.name);
 if (!itemCols.includes('tax_id'))     db.exec('ALTER TABLE purchase_items ADD COLUMN tax_id INTEGER REFERENCES tax_types(id) ON DELETE SET NULL');
 if (!itemCols.includes('tax_rate'))   db.exec('ALTER TABLE purchase_items ADD COLUMN tax_rate REAL');
@@ -422,9 +425,11 @@ module.exports = {
   upsertUser({ google_id, name, email, photo }) {
     const existing = db.prepare('SELECT id FROM users WHERE google_id = ?').get(google_id);
     db.prepare(`
-      INSERT INTO users (google_id, name, email, photo) VALUES (?, ?, ?, ?)
+      INSERT INTO users (google_id, name, email, photo, last_login_at)
+      VALUES (?, ?, ?, ?, datetime('now','localtime'))
       ON CONFLICT(google_id) DO UPDATE SET
-        name=excluded.name, email=excluded.email, photo=excluded.photo
+        name=excluded.name, email=excluded.email, photo=excluded.photo,
+        last_login_at=datetime('now','localtime')
     `).run(google_id, name, email, photo);
     const user = db.prepare('SELECT * FROM users WHERE google_id = ?').get(google_id);
     return { ...user, is_new: !existing };
@@ -1463,5 +1468,23 @@ module.exports = {
       .sort((a, b) => b.pct - a.pct)[0] || null;
 
     return { config, spent, available, percentage, activeThreshold, daysLeft };
+  },
+
+  // ── Admin: metricas globales de la aplicacion ────────────────────────────────
+  getAdminStats() {
+    const count = sql => db.prepare(sql).get().n;
+    return {
+      users:        count('SELECT COUNT(*) AS n FROM users'),
+      newUsers30:   count("SELECT COUNT(*) AS n FROM users WHERE created_at >= datetime('now','localtime','-30 days')"),
+      active7:      count("SELECT COUNT(*) AS n FROM users WHERE last_login_at >= datetime('now','localtime','-7 days')"),
+      active30:     count("SELECT COUNT(*) AS n FROM users WHERE last_login_at >= datetime('now','localtime','-30 days')"),
+      inventories:  count('SELECT COUNT(*) AS n FROM inventories'),
+      products:     count('SELECT COUNT(*) AS n FROM products'),
+      purchases:    count('SELECT COUNT(*) AS n FROM purchase_sessions'),
+      recentUsers:  db.prepare(`
+        SELECT name, email, created_at, last_login_at
+        FROM users ORDER BY COALESCE(last_login_at, created_at) DESC LIMIT 10
+      `).all(),
+    };
   },
 };

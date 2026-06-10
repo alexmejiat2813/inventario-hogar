@@ -133,6 +133,12 @@ async function loadUser() {
   } else {
     document.getElementById('dropdown-avatar-ph').textContent = user.name?.[0] ?? '?';
   }
+
+  // Link de metricas: solo super admin (ADMIN_EMAILS)
+  if (user.is_admin) {
+    const adminLink = document.getElementById('menu-admin');
+    if (adminLink) adminLink.hidden = false;
+  }
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────

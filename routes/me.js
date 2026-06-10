@@ -1,9 +1,10 @@
-const express = require('express');
-const db      = require('../database');
+const express     = require('express');
+const db          = require('../database');
+const { isAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/me', (req, res) => res.json(req.user));
+router.get('/me', (req, res) => res.json({ ...req.user, is_admin: isAdmin(req.user) }));
 
 router.get('/active-inventory', (req, res) => {
   const id = req.session.activeInventoryId;

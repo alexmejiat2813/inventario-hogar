@@ -237,7 +237,25 @@
     "language": "Idioma",
     "settings": "Configuración",
     "manage": "Gestionar acceso",
+    "adminMetrics": "Métricas de la app",
     "logout": "Cerrar sesión"
+  },
+  "admin": {
+    "title": "Métricas de la aplicación",
+    "loadError": "No se pudieron cargar las métricas.",
+    "usersSection": "Usuarios",
+    "totalUsers": "Usuarios registrados",
+    "newUsers30": "Nuevos (30 días)",
+    "active7": "Activos (7 días)",
+    "active30": "Activos (30 días)",
+    "contentSection": "Contenido",
+    "inventories": "Inventarios",
+    "products": "Productos",
+    "purchases": "Compras registradas",
+    "recentSection": "Últimos usuarios activos",
+    "colName": "Nombre",
+    "colEmail": "Email",
+    "colLastLogin": "Último acceso"
   },
   "roles": {
     "owner": "Dueño",

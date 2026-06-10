@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Métricas — Inventario Hogar</title>
+  <style>
+    [hidden] { display: none !important; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
+      background: #FBFBFA; color: #082F49; min-height: 100vh;
+      padding-bottom: 3rem;
+    }
+    .header {
+      background: #fff; border-bottom: 1px solid #E2E8F0;
+      position: sticky; top: 0; z-index: 100; height: 56px;
+    }
+    .header-inner {
+      max-width: 960px; margin: 0 auto; height: 100%;
+      padding: 0 1.25rem; display: flex; align-items: center; gap: .75rem;
+    }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: .25rem;
+      color: #64748B; font-size: .8rem; font-weight: 500;
+      text-decoration: none; transition: color .15s;
+    }
+    .btn-back:hover { color: #082F49; }
+    .header-title { font-size: 1rem; font-weight: 600; letter-spacing: -.01em; }
+
+    .wrap { max-width: 960px; margin: 0 auto; padding: 1.25rem; }
+    .section-title {
+      font-size: .72rem; font-weight: 700; color: #94A3B8;
+      text-transform: uppercase; letter-spacing: .07em; margin: 1.25rem 0 .625rem;
+    }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .625rem;
+    }
+    @media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+    .stat-card {
+      background: #fff; border: 1px solid #E2E8F0; border-radius: 10px;
+      padding: 1rem; display: flex; flex-direction: column; gap: .25rem;
+    }
+    .stat-value { font-size: 1.6rem; font-weight: 700; }
+    .stat-label { font-size: .72rem; font-weight: 600; color: #64748B; }
+
+    .users-table {
+      width: 100%; background: #fff; border: 1px solid #E2E8F0;
+      border-radius: 10px; border-collapse: separate; border-spacing: 0; overflow: hidden;
+      font-size: .8rem;
+    }
+    .users-table th {
+      text-align: left; padding: .6rem .75rem; background: #F1F5F9;
+      font-size: .68rem; font-weight: 700; color: #64748B;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .users-table td { padding: .6rem .75rem; border-top: 1px solid #E2E8F0; }
+    .users-table td.muted { color: #64748B; }
+    @media (max-width: 560px) { .hide-sm { display: none; } }
+
+    .load-error { color: #9F2F2D; font-size: .85rem; padding: 1rem 0; }
+  </style>
+  <meta name="theme-color" content="#082F49">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="/inventories" class="btn-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        <span data-i18n="inventory.back">Inventarios</span>
+      </a>
+      <h1 class="header-title" data-i18n="admin.title">Métricas de la aplicación</h1>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <p class="load-error" id="load-error" hidden data-i18n="admin.loadError">No se pudieron cargar las métricas.</p>
+
+    <div class="section-title" data-i18n="admin.usersSection">Usuarios</div>
+    <div class="stats-grid">
+      <div class="stat-card"><span class="stat-value" id="m-users">—</span><span class="stat-label" data-i18n="admin.totalUsers">Usuarios registrados</span></div>
+      <div class="stat-card"><span class="stat-value" id="m-new30">—</span><span class="stat-label" data-i18n="admin.newUsers30">Nuevos (30 días)</span></div>
+      <div class="stat-card"><span class="stat-value" id="m-active7">—</span><span class="stat-label" data-i18n="admin.active7">Activos (7 días)</span></div>
+      <div class="stat-card"><span class="stat-value" id="m-active30">—</span><span class="stat-label" data-i18n="admin.active30">Activos (30 días)</span></div>
+    </div>
+
+    <div class="section-title" data-i18n="admin.contentSection">Contenido</div>
+    <div class="stats-grid">
+      <div class="stat-card"><span class="stat-value" id="m-inventories">—</span><span class="stat-label" data-i18n="admin.inventories">Inventarios</span></div>
+      <div class="stat-card"><span class="stat-value" id="m-products">—</span><span class="stat-label" data-i18n="admin.products">Productos</span></div>
+      <div class="stat-card"><span class="stat-value" id="m-purchases">—</span><span class="stat-label" data-i18n="admin.purchases">Compras registradas</span></div>
+    </div>
+
+    <div class="section-title" data-i18n="admin.recentSection">Últimos usuarios activos</div>
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th data-i18n="admin.colName">Nombre</th>
+          <th class="hide-sm" data-i18n="admin.colEmail">Email</th>
+          <th data-i18n="admin.colLastLogin">Último acceso</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody"></tbody>
+    </table>
+  </div>
+
+  <script src="/js/i18n.js"></script>
+  <script>
+  (async function () {
+    await I18N.init();
+    I18N.apply();
+
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso.replace(' ', 'T'));
+      return isNaN(d) ? iso : d.toLocaleDateString(undefined, { day:'2-digit', month:'short', year:'numeric' }) +
+        ' ' + d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+    }
+
+    try {
+      const res = await fetch('/api/admin/stats');
+      if (!res.ok) { window.location.href = '/'; return; }
+      const s = await res.json();
+
+      const set = (id, v) => { document.getElementById(id).textContent = v; };
+      set('m-users',       s.users);
+      set('m-new30',       s.newUsers30);
+      set('m-active7',     s.active7);
+      set('m-active30',    s.active30);
+      set('m-inventories', s.inventories);
+      set('m-products',    s.products);
+      set('m-purchases',   s.purchases);
+
+      document.getElementById('users-tbody').innerHTML = (s.recentUsers || []).map(u => `
+        <tr>
+          <td>${esc(u.name)}</td>
+          <td class="hide-sm muted">${esc(u.email)}</td>
+          <td class="muted">${fmtDate(u.last_login_at)}</td>
+        </tr>`).join('') || '<tr><td colspan="3" class="muted">—</td></tr>';
+    } catch {
+      document.getElementById('load-error').hidden = false;
+    }
+
+    document.addEventListener('langchange', () => I18N.apply());
+  })();
+  </script>
+</body>
+</html>
