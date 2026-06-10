@@ -236,13 +236,16 @@ function catEmoji(cat) {
 function renderCategoryTabs() {
   const wrap = document.getElementById('category-tabs');
   if (!wrap) return;
+  const countMap = {};
+  (state.stats?.byCategory || []).forEach(({ category, count }) => { countMap[category] = count; });
   const cats = [...(state.categories || [])].sort((a, b) => tCat(a.name).localeCompare(tCat(b.name)));
   const allActive = state.activeCategory === 'all' ? ' active' : '';
   wrap.innerHTML =
     `<button class="tab-btn${allActive}" data-category="all">${esc(t('inventory.tabs.all'))}</button>` +
     cats.map(c => {
       const active = state.activeCategory === c.name ? ' active' : '';
-      return `<button class="tab-btn${active}" data-category="${esc(c.name)}">${c.emoji || ''} ${esc(tCat(c.name))}</button>`;
+      const count  = countMap[c.name] != null ? ` <span class="tab-count">${countMap[c.name]}</span>` : '';
+      return `<button class="tab-btn${active}" data-category="${esc(c.name)}">${c.emoji || ''} ${esc(tCat(c.name))}${count}</button>`;
     }).join('');
 }
 
@@ -250,22 +253,10 @@ function renderCategoryTabs() {
 
 function renderStats() {
   if (!state.stats) return;
-  const { total, critical, byCategory } = state.stats;
-
+  const { total, critical } = state.stats;
   document.getElementById('stat-total').textContent    = total;
   document.getElementById('stat-critical').textContent = critical;
-
-  document.getElementById('stat-categories').innerHTML = byCategory.map(({ category, count }) => `
-    <span class="cat-stat" data-cat="${esc(category)}" data-category="${esc(category)}" role="button" tabindex="0">
-      <span class="cat-icon">${catEmoji(category)}</span>
-      <span class="cat-name">${tCat(category)}</span>
-      <span class="cat-count">${count}</span>
-    </span>
-  `).join('');
-
-  document.getElementById('stat-categories').querySelectorAll('.cat-stat').forEach(pill => {
-    pill.addEventListener('click', () => setCategory(pill.dataset.category));
-  });
+  renderCategoryTabs();
 }
 
 // ── Products ──────────────────────────────────────────────────

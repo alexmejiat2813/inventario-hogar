@@ -122,8 +122,8 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 74 | Escaner de códigos de barras | Cámara ya integrada. Agregar librería de decode (ej. `zxing-js`) para identificar/agregar productos escaneando el código. | Media | Alta | ⬜ |
 | 75 | Sugerencia de reposición inteligente | Predecir cuándo se acaba un producto basándose en historial de compras y consumo promedio. Requiere análisis de `purchase_sessions` + `purchase_items`. | Media | Alta | ⬜ |
 | 76 | Modo oscuro | CSS variables ya están parcialmente preparadas. Agregar `prefers-color-scheme: dark` + toggle manual. | Baja | Media | ⬜ |
-| 78 | Compartir la aplicación | Botón/opción para invitar a otros usuarios a unirse al inventario activo (link con código de invitación) o compartir la URL de la PWA. Posibles puntos de entrada: card del inventario, menú de perfil. | Alta | Media | ⬜ |
-| 79 | Simplificar filtros de categoría en Stock | Actualmente hay dos filtros redundantes: chips horizontales + tarjetas con contador. Eliminar las tarjetas. Agregar el contador de productos al lado del nombre en cada chip (ej. "Alimentos (12)"). Una sola interfaz, más limpia. | Media | Baja | ⬜ |
+| 78 | Compartir la aplicación | Botón que abre el share nativo del SO (`navigator.share`) o copia la URL de la PWA al portapapeles. Punto de entrada: menú de perfil o header. | Alta | Baja | ⬜ |
+| 79 | Simplificar filtros de categoría en Stock | Actualmente hay dos filtros redundantes: chips horizontales + tarjetas con contador. Eliminar las tarjetas. Agregar el contador de productos al lado del nombre en cada chip (ej. "Alimentos (12)"). Una sola interfaz, más limpia. | Media | Baja | ✅ |
 
 ---
 
