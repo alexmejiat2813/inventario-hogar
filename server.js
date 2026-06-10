@@ -15,6 +15,10 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
+// Cache version: package.json or FLY_COMMIT_SHA or timestamp
+const pkg = require('./package.json');
+const CACHE_VERSION = process.env.FLY_COMMIT_SHA?.slice(0, 7) || pkg.version;
+
 // En produccion el SESSION_SECRET es obligatorio: nunca arrancar con el
 // fallback debil 'dev-secret' (sesiones falsificables).
 if (IS_PROD && !process.env.SESSION_SECRET) {
@@ -87,6 +91,12 @@ app.get('/manifest.json', (req, res) => res.sendFile(path.join(__dirname, 'publi
 app.get('/sw.js', (req, res) => {
   res.set('Cache-Control', 'no-cache');
   res.sendFile(path.join(__dirname, 'public/sw.js'));
+});
+
+// Cache version endpoint — SW la obtiene para versionar el CACHE
+app.get('/cache-version', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.type('text/plain').send(`ih-v${CACHE_VERSION}`);
 });
 
 // ── Rate limiting ──────────────────────────────────────────────────────────────

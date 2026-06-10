@@ -1,5 +1,5 @@
 /* Inventario Hogar — Service Worker */
-const CACHE = 'ih-v29';
+let CACHE = 'ih-v1'; // Default; actualizado en install event
 
 const PRECACHE = [
   '/css/styles.css',
@@ -34,7 +34,11 @@ function isCacheableApi(pathname) {
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE)
+    fetch('/cache-version', { cache: 'no-store' })
+      .then(r => r.text())
+      .then(version => { CACHE = version; return version; })
+      .catch(() => CACHE) // Fallback si el endpoint falla
+      .then(cache => caches.open(cache))
       .then(c => c.addAll(PRECACHE))
       .then(() => self.skipWaiting())
   );
