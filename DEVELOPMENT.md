@@ -91,8 +91,6 @@
 | 43 | Orientación móvil | manifest `orientation` portrait→any, la app rota con la pantalla | ✅ |
 | 44 | Auditoría técnica | Revisión completa en `AUDIT.md` (seguridad, deuda, roadmap) | ✅ |
 | 17 | P0 ruta `/api/shopping/custom` | 404 con servidor viejo sin reiniciar — verificar que SW v8 no sirve respuestas cacheadas de rutas inexistentes | ⬜ |
-| 18 | Historial de precios — locale hardcodeado | `expiryInfo()` en app.js usa strings en español hardcodeados, no responde a cambio de idioma | ⬜ |
-| 19 | Export lista de compras — custom items | `buildExportText()` en shopping-list.html no incluye `state.customItems` en PDF/WhatsApp/clipboard | ⬜ |
 | 20 | Sesión activa al eliminar inventario | Solo limpia `activeInventoryId` del request actual. Otros dispositivos/sesiones del mismo user no se limpian hasta el próximo request | ⬜ |
 | 45 | Bug foto→Dashboard (móvil) | Al dar OK a la foto del producto a veces vuelve al Dashboard (posible eviction PWA Android). PROMPT-PROXIMA-SESION #1 | ⬜ |
 | 54 | Push notifications al celular | Alertas al teléfono con la app cerrada (vencimientos, stock crítico, presupuesto). Hoy las alertas son solo in-app. Requiere: `web-push` + claves VAPID en secrets, handler `push`/`notificationclick` en sw.js, tabla de suscripciones por usuario, UI de permiso + flujo `pushManager.subscribe()`, y un cron en Fly que revise y dispare (no hay scheduler hoy). iOS solo funciona con la PWA instalada a pantalla de inicio (16.4+). i18n ES/EN/FR | ⬜ |
@@ -100,6 +98,8 @@
 | 47 | Pestañas En/Fuera de stock | Sub-tabs En/Fuera de stock en vista Stock (contador por pestaña). Incluye grid 2-col en móvil, botón volver-arriba, menú kebab Editar/Eliminar y fix overflow. PROMPT-PROXIMA-SESION #4 — `e496c54` | ✅ |
 | 48 | Botón Ver separado de Editar | Vista read-only del producto en Stock (reusa modal en modo readonly). Incluye modal 2-col, quita botón Lista, campos obligatorios con * rojo. PROMPT-PROXIMA-SESION #7 — `be28869` | ✅ |
 
+| 18 | Historial de precios — locale hardcodeado | `expiryInfo()` en app.js usa strings en español hardcodeados, no responde a cambio de idioma | `515f6bb` | ✅ |
+| 19 | Export lista de compras — custom items | `buildExportText()` en shopping-list.html no incluye `state.customItems` en PDF/WhatsApp/clipboard | `515f6bb` | ✅ |
 | 49 | Bug plantillas no guardaban | `createTemplate` usaba `db.transaction()` (API de better-sqlite3) inexistente en `node:sqlite` → POST /api/templates devolvía 500 siempre. Fix: BEGIN/COMMIT/ROLLBACK manual + 3 tests de regresión | ✅ |
 | 53 | Categorías no se reflejaban en todas las vistas + sin íconos | Tabs de filtro e íconos estaban hardcodeados en Stock/Catálogo; agregar/editar una categoría en settings no se veía. Fix: tabla `categories` unificada como fuente única (columnas `name_en`/`name_fr`), tabs e íconos data-driven en Stock y Catálogo, selects dinámicos, rename con cascade a productos/catálogo, migración auto-crea categorías usadas, delete bloqueado si está en uso, UI de traducción en settings. Eliminado mapeo catálogo→inventario | ✅ |
 | 52 | Catálogo no se traducía | Los 100 productos sembrados se guardaban en español y se mostraban igual en EN/FR (ej "Frijoles" en vez de "Haricots"). Fix: columna `i18n_key` + 100 keys `catalogSeed.*` en ES/EN/FR; catalog.html muestra traducido; al agregar al inventario guarda el nombre en el idioma activo; renombrar limpia la key. Categorías ya traducían vía tabs | ✅ |
