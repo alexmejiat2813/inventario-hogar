@@ -88,6 +88,13 @@
       "title": "Aucun produit",
       "sub": "Il n'y a aucun produit dans cette catégorie.\nAjoutez-en un avec le bouton ci-dessus."
     },
+    "expiry": {
+      "expired": "Expiré",
+      "today": "Expire aujourd'hui",
+      "urgent": "Expire dans {days}j",
+      "soon": "Expire dans {days}j",
+      "ok": "Expire"
+    },
     "stockTabs": {
       "in": "En stock",
       "out": "En rupture"
@@ -185,6 +192,10 @@
       "whatsapp": "Partager sur WhatsApp",
       "copy": "Copier (Notes / Keep)"
     },
+    "list": {
+      "title": "Liste de courses"
+    },
+    "emptyList": "Liste de courses vide.",
     "empty": {
       "title": "Tout est bien approvisionné !",
       "sub": "Aucun produit n'est en dessous du minimum.\nL'inventaire est complet."

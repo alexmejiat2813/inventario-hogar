@@ -88,6 +88,13 @@
       "title": "No products",
       "sub": "There are no products in this category.\nAdd one with the button above."
     },
+    "expiry": {
+      "expired": "Expired",
+      "today": "Expires today",
+      "urgent": "Expires in {days}d",
+      "soon": "Expires in {days}d",
+      "ok": "Expires"
+    },
     "stockTabs": {
       "in": "In stock",
       "out": "Out of stock"
@@ -185,6 +192,10 @@
       "whatsapp": "Share on WhatsApp",
       "copy": "Copy (Notes / Keep)"
     },
+    "list": {
+      "title": "Shopping list"
+    },
+    "emptyList": "Empty shopping list.",
     "empty": {
       "title": "Everything is well stocked!",
       "sub": "No product is below the minimum.\nThe inventory is complete."

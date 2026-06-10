@@ -88,6 +88,13 @@
       "title": "Sin productos",
       "sub": "No hay productos en esta categoría.\nAgregá uno con el botón de arriba."
     },
+    "expiry": {
+      "expired": "Vencido",
+      "today": "Vence hoy",
+      "urgent": "Vence en {days}d",
+      "soon": "Vence en {days}d",
+      "ok": "Vence"
+    },
     "stockTabs": {
       "in": "En stock",
       "out": "Fuera de stock"
@@ -185,6 +192,10 @@
       "whatsapp": "Compartir por WhatsApp",
       "copy": "Copiar (Notes / Keep)"
     },
+    "list": {
+      "title": "Lista de compras"
+    },
+    "emptyList": "Lista de compras vacía.",
     "empty": {
       "title": "¡Todo está bien abastecido!",
       "sub": "Ningún producto está por debajo del mínimo.\nEl inventario está completo."

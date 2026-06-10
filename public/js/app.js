@@ -24,11 +24,11 @@ function expiryInfo(expiry_date) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const exp   = new Date(expiry_date + 'T00:00:00');
   const days  = Math.round((exp - today) / 86400000);
-  if (days < 0)   return { days, label: 'Vencido',            cls: 'expiry--expired' };
-  if (days === 0) return { days, label: 'Vence hoy',          cls: 'expiry--urgent'  };
-  if (days <= 7)  return { days, label: `Vence en ${days}d`,  cls: 'expiry--urgent'  };
-  if (days <= 30) return { days, label: `Vence en ${days}d`,  cls: 'expiry--soon'    };
-  return { days, label: `Vence ${new Date(expiry_date + 'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}`, cls: 'expiry--ok' };
+  if (days < 0)   return { days, label: t('inventory.expiry.expired'),      cls: 'expiry--expired' };
+  if (days === 0) return { days, label: t('inventory.expiry.today'),        cls: 'expiry--urgent'  };
+  if (days <= 7)  return { days, label: t('inventory.expiry.urgent', {days}), cls: 'expiry--urgent'  };
+  if (days <= 30) return { days, label: t('inventory.expiry.soon', {days}),   cls: 'expiry--soon'    };
+  return { days, label: `${t('inventory.expiry.ok')} ${new Date(expiry_date + 'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short'})}`, cls: 'expiry--ok' };
 }
 
 const state = {
