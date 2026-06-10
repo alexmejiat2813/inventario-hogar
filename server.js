@@ -4,7 +4,7 @@ const path     = require('path');
 const session  = require('express-session');
 const passport = require('./auth');
 
-const { requireAuthApi }    = require('./middleware/auth');
+const { requireAuthApi, requireAdmin } = require('./middleware/auth');
 const { requireInventory }  = require('./middleware/inventory');
 const SQLiteStore           = require('./middleware/session-store');
 const { createRateLimiter } = require('./middleware/rate-limit');
@@ -114,6 +114,7 @@ app.use(require('./routes/pages'));
 app.use('/api', requireAuthApi);
 
 app.use('/api',              require('./routes/me'));
+app.use('/api/admin',        requireAdmin, require('./routes/admin'));
 app.use('/api/inventories',  require('./routes/inventories'));
 app.use('/api/catalog',      require('./routes/catalog'));
 

@@ -237,7 +237,25 @@
     "language": "Langue",
     "settings": "Paramètres",
     "manage": "Gérer l'accès",
+    "adminMetrics": "Métriques de l'app",
     "logout": "Se déconnecter"
+  },
+  "admin": {
+    "title": "Métriques de l'application",
+    "loadError": "Impossible de charger les métriques.",
+    "usersSection": "Utilisateurs",
+    "totalUsers": "Utilisateurs inscrits",
+    "newUsers30": "Nouveaux (30 jours)",
+    "active7": "Actifs (7 jours)",
+    "active30": "Actifs (30 jours)",
+    "contentSection": "Contenu",
+    "inventories": "Inventaires",
+    "products": "Produits",
+    "purchases": "Achats enregistrés",
+    "recentSection": "Derniers utilisateurs actifs",
+    "colName": "Nom",
+    "colEmail": "Email",
+    "colLastLogin": "Dernière connexion"
   },
   "roles": {
     "owner": "Propriétaire",

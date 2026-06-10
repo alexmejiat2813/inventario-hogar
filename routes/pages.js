@@ -1,6 +1,6 @@
 const express = require('express');
 const path    = require('path');
-const { requireAuthPage } = require('../middleware/auth');
+const { requireAuthPage, isAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -38,6 +38,11 @@ router.get('/settings', requireAuthPage, (req, res) =>
 router.get('/history', requireAuthPage, (req, res) => {
   if (!req.session.activeInventoryId) return res.redirect('/inventories');
   res.sendFile(path.join(__dirname, '..', 'public', 'history.html'));
+});
+
+router.get('/admin', requireAuthPage, (req, res) => {
+  if (!isAdmin(req.user)) return res.redirect('/');
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
 });
 
 router.get('/purchase/:purchaseId/edit', requireAuthPage, (req, res) => {

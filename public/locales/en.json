@@ -237,7 +237,25 @@
     "language": "Language",
     "settings": "Settings",
     "manage": "Manage access",
+    "adminMetrics": "App metrics",
     "logout": "Sign out"
+  },
+  "admin": {
+    "title": "Application metrics",
+    "loadError": "Could not load metrics.",
+    "usersSection": "Users",
+    "totalUsers": "Registered users",
+    "newUsers30": "New (30 days)",
+    "active7": "Active (7 days)",
+    "active30": "Active (30 days)",
+    "contentSection": "Content",
+    "inventories": "Inventories",
+    "products": "Products",
+    "purchases": "Recorded purchases",
+    "recentSection": "Latest active users",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colLastLogin": "Last login"
   },
   "roles": {
     "owner": "Owner",

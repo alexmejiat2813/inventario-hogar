@@ -352,6 +352,43 @@ describe('list templates (regression: node:sqlite no tiene db.transaction)', () 
   });
 });
 
+describe('admin metrics', () => {
+  test('upsertUser registra last_login_at', () => {
+    const u = makeUser();
+    assert.ok(u.last_login_at, 'last_login_at debe setearse al hacer login');
+  });
+
+  test('getAdminStats devuelve conteos coherentes', () => {
+    const before = db.getAdminStats();
+    const { inv } = makeInventory();
+    db.create({ name: 'Cafe', category: 'Alimentos', current_qty: 1, min_qty: 1, unit: 'unidades', inventoryId: inv.id });
+    const after = db.getAdminStats();
+    assert.equal(after.users, before.users + 1);
+    assert.equal(after.inventories, before.inventories + 1);
+    assert.equal(after.products, before.products + 1);
+    assert.ok(after.active7 >= 1, 'usuario recien logueado cuenta como activo');
+    assert.ok(Array.isArray(after.recentUsers));
+    assert.ok(after.recentUsers.length >= 1);
+  });
+
+  test('isAdmin respeta ADMIN_EMAILS (case-insensitive, lista)', () => {
+    const { isAdmin } = require('../middleware/auth');
+    const prev = process.env.ADMIN_EMAILS;
+    try {
+      process.env.ADMIN_EMAILS = 'Admin@Example.com, otro@example.com';
+      assert.equal(isAdmin({ email: 'admin@example.com' }), true);
+      assert.equal(isAdmin({ email: 'otro@example.com' }), true);
+      assert.equal(isAdmin({ email: 'nadie@example.com' }), false);
+      process.env.ADMIN_EMAILS = '';
+      assert.equal(isAdmin({ email: 'admin@example.com' }), false);
+      assert.equal(isAdmin(null), false);
+    } finally {
+      if (prev === undefined) delete process.env.ADMIN_EMAILS;
+      else process.env.ADMIN_EMAILS = prev;
+    }
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {

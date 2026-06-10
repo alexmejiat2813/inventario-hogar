@@ -116,6 +116,7 @@ describe('API routes require authentication', () => {
     '/api/me',
     '/api/inventories',
     '/api/active-inventory',
+    '/api/admin/stats',
   ];
 
   for (const route of protectedRoutes) {
