@@ -1,8 +1,9 @@
 require('dotenv').config({ override: true });
-const express  = require('express');
-const path     = require('path');
-const session  = require('express-session');
-const passport = require('./auth');
+const express     = require('express');
+const path        = require('path');
+const session     = require('express-session');
+const passport    = require('./auth');
+const compression = require('compression');
 
 const { requireAuthApi, requireAdmin } = require('./middleware/auth');
 const { requireInventory }  = require('./middleware/inventory');
@@ -32,6 +33,8 @@ const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, 'public', 'u
 // Behind a reverse proxy (Fly.io, Render, nginx): trust X-Forwarded-* headers
 // so secure cookies and req.ip (rate limiter) work correctly.
 app.set('trust proxy', 1);
+
+app.use(compression());
 
 // ── Request logging ────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
