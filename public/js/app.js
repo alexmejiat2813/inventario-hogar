@@ -1399,6 +1399,9 @@ function initEvents() {
     await fetch('/auth/logout', { method: 'POST' });
     window.location.href = '/login';
   });
+  document.querySelectorAll('.dropdown-item[href="/settings"]').forEach(link => {
+    link.addEventListener('click', () => sessionStorage.setItem('settings_referrer', window.location.href));
+  });
 
   // Catalog select change — switch between catalog/custom mode
   document.getElementById('f-catalog-product').addEventListener('change', e => {

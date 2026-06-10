@@ -67,14 +67,7 @@
   </div>
 
   <script src="/js/i18n.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      I18N.init();
-      if (new URLSearchParams(location.search).get('error')) {
-        document.getElementById('error-banner').classList.add('visible');
-      }
-    });
-  </script>
-  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
+  <script src="/js/login.js"></script>
+  <script src="/js/sw-register.js"></script>
 </body>
 </html>

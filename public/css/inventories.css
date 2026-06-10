@@ -474,3 +474,19 @@
       text-align: left; cursor: pointer; text-decoration: none; transition: background .12s;
     }
     .mob-ditem:hover { background: #F8F8F7; }
+
+    /* inline-style replacements */
+    .header-actions-group { display: flex; align-items: center; gap: .625rem; }
+    .field-hint { color: #787774; font-size: .73rem; margin-top: .2rem; display: block; }
+    .modal-title--danger { color: #9F2F2D; }
+    .modal-delete-body { padding: 1.25rem 1.5rem; }
+    .modal-warning-text { font-size: .875rem; color: #787774; line-height: 1.55; margin-bottom: .875rem; }
+    .modal-confirm-name { font-size: .875rem; font-weight: 600; color: #082F49; margin-bottom: 1.25rem; }
+    .modal-actions-row { display: flex; gap: .5rem; }
+    .btn-flex { flex: 1; }
+    .btn-delete-confirm {
+      flex: 1; background: #9F2F2D; color: white;
+      border: none; border-radius: 4px; padding: .55rem;
+      font-size: .875rem; font-weight: 600; transition: opacity .15s;
+    }
+    .btn-delete-confirm:hover { opacity: .85; }

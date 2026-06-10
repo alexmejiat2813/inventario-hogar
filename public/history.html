@@ -79,7 +79,7 @@
               </div>
             </div>
             <div class="dropdown-divider"></div>
-            <a href="/settings" class="dropdown-item" onclick="sessionStorage.setItem('settings_referrer', window.location.href)">
+            <a href="/settings" class="dropdown-item">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               <span data-i18n="profile.settings">Configuración</span>
             </a>
@@ -118,7 +118,7 @@
 
   <!-- Drawer móvil -->
   <div class="mob-overlay" id="mob-overlay"></div>
-  <aside class="mob-drawer" id="mob-drawer" aria-hidden="true">
+  <aside class="mob-drawer" id="mob-drawer" aria-hidden="true" data-mob-acts='{"export-pdf":"export-pdf","export-csv":"export-csv"}'>
     <div class="mob-dhead">
       <span class="mob-dhead-title" data-i18n="history.title">Historial de compras</span>
       <button class="mob-dclose" id="mob-dclose" aria-label="Cerrar menú">✕</button>
@@ -246,44 +246,13 @@
   <script src="/js/utils.js"></script>
   <script src="/js/shortcuts.js"></script>
   <script src="/js/history.js"></script>
-  <script>
-  /* ── Mobile drawer ── */
-  (function () {
-    var ham     = document.getElementById('mob-ham');
-    var overlay = document.getElementById('mob-overlay');
-    var drawer  = document.getElementById('mob-drawer');
-    var dclose  = document.getElementById('mob-dclose');
-    if (!ham || !overlay || !drawer) return;
-    function openDrawer()  { overlay.classList.add('mob-open'); drawer.classList.add('mob-open'); drawer.setAttribute('aria-hidden','false'); }
-    function closeDrawer() { overlay.classList.remove('mob-open'); drawer.classList.remove('mob-open'); drawer.setAttribute('aria-hidden','true'); }
-    ham.addEventListener('click', openDrawer);
-    overlay.addEventListener('click', closeDrawer);
-    if (dclose) dclose.addEventListener('click', closeDrawer);
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
-    var ACT = { 'export-pdf': 'export-pdf', 'export-csv': 'export-csv' };
-    drawer.querySelectorAll('[data-mob-act]').forEach(function (item) {
-      item.addEventListener('click', function () {
-        var real = document.getElementById(ACT[item.dataset.mobAct]);
-        closeDrawer();
-        if (real) real.click();
-      });
-    });
-  })();
-  </script>
+  <script src="/js/mob-drawer.js"></script>
   <script src="/js/header.js"></script>
   <!-- Volver arriba -->
   <button class="back-to-top" id="back-to-top" aria-label="Subir" title="Subir">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
-  <script>
-  (function(){
-    var b = document.getElementById('back-to-top'); if (!b) return;
-    var t = function(){ b.classList.toggle('show', window.scrollY > 400); };
-    window.addEventListener('scroll', t, { passive: true });
-    b.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
-    t();
-  })();
-  </script>
-  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
+  <script src="/js/back-to-top.js"></script>
+  <script src="/js/sw-register.js"></script>
 </body>
 </html>

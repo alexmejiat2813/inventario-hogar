@@ -61,4 +61,10 @@ function initProfileMenu() {
     await fetch('/auth/logout', { method: 'POST' });
     window.location.href = '/login';
   });
+
+  document.querySelectorAll('.dropdown-item[href="/settings"]').forEach(function (link) {
+    link.addEventListener('click', function () {
+      sessionStorage.setItem('settings_referrer', window.location.href);
+    });
+  });
 }

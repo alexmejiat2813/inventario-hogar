@@ -136,7 +136,7 @@
       <h2 class="section-title" data-i18n="settings.currency.title">Moneda</h2>
     </div>
     <p class="section-note currency-no-inv" hidden data-i18n="settings.currency.noInventory">Abrí un inventario para configurar la moneda.</p>
-    <div class="currency-card" style="max-width:400px;">
+    <div class="currency-card">
       <div class="form-group">
         <label class="form-label" for="currency-select" data-i18n="settings.currency.label">Moneda del inventario activo</label>
         <select class="form-select" id="currency-select">
@@ -149,7 +149,7 @@
           <option value="BRL">BRL — R$ (Real Brasileño)</option>
         </select>
       </div>
-      <button class="btn btn-primary btn-sm" id="btn-save-currency" style="margin-top:.25rem" data-i18n="settings.currency.save">Guardar</button>
+      <button class="btn btn-primary btn-sm btn--mt-xs" id="btn-save-currency" data-i18n="settings.currency.save">Guardar</button>
     </div>
   </div>
 
@@ -157,7 +157,7 @@
   <div class="content" id="tab-taxes" hidden>
     <div class="section-head">
       <h2 class="section-title" data-i18n="settings.taxes.title">Impuestos</h2>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <div class="section-head-actions">
         <button class="btn btn-sm btn-edit" id="btn-suggest-taxes">
           <span data-i18n="settings.taxes.suggest">Sugerir según moneda</span>
         </button>
@@ -186,7 +186,7 @@
 
   <!-- Modal: Impuesto -->
   <div class="modal-overlay" id="tax-modal-overlay" hidden>
-    <div class="modal" style="max-width:480px;">
+    <div class="modal modal--md">
       <div class="modal-header">
         <h2 class="modal-title" id="tax-modal-title" data-i18n="settings.taxes.modal.addTitle">Agregar impuesto</h2>
         <button class="modal-close" id="tax-modal-close">
@@ -196,7 +196,7 @@
       <form id="tax-form" novalidate>
         <input type="hidden" id="tax-id">
         <div class="form-row">
-          <div class="form-group" style="grid-column:1/span 2">
+          <div class="form-group form-group--full">
             <label class="form-label" for="tax-name-input" data-i18n="settings.taxes.modal.name">Nombre</label>
             <input class="form-input" type="text" id="tax-name-input"
                    data-i18n-ph="settings.taxes.modal.namePlaceholder"
@@ -210,15 +210,15 @@
                    data-i18n-ph="settings.taxes.modal.ratePlaceholder"
                    placeholder="Ej: 19" required>
           </div>
-          <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:.5rem;padding-top:1.4rem;">
-            <label class="form-label" for="tax-active-toggle" style="margin:0" data-i18n="settings.taxes.modal.active">Activo</label>
-            <input type="checkbox" id="tax-active-toggle" style="width:18px;height:18px;cursor:pointer;accent-color:#082F49" checked>
+          <div class="form-group form-group--inline">
+            <label class="form-label form-label--no-margin" for="tax-active-toggle" data-i18n="settings.taxes.modal.active">Activo</label>
+            <input type="checkbox" id="tax-active-toggle" class="form-toggle" checked>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label" data-i18n="settings.taxes.modal.categories">Aplica a categorías</label>
-          <p class="section-note" style="margin-bottom:.5rem;font-size:.78rem;" data-i18n="settings.taxes.modal.categoriesHint">Dejá vacío para aplicar a todos los productos</p>
-          <div id="tax-categories-checkboxes" style="display:flex;flex-wrap:wrap;gap:.5rem .75rem;"></div>
+          <p class="section-note section-note--compact" data-i18n="settings.taxes.modal.categoriesHint">Dejá vacío para aplicar a todos los productos</p>
+          <div id="tax-categories-checkboxes" class="checkboxes-wrap"></div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-cancel" id="tax-modal-cancel" data-i18n="settings.taxes.modal.cancel">Cancelar</button>
@@ -240,7 +240,7 @@
       <form id="store-form" novalidate>
         <input type="hidden" id="store-id">
         <div class="form-row">
-          <div class="form-group" style="grid-column:1/span 2">
+          <div class="form-group form-group--full">
             <label class="form-label" for="store-name-input" data-i18n="settings.stores.modal.name">Nombre</label>
             <input class="form-input" type="text" id="store-name-input"
                    data-i18n-ph="settings.stores.modal.namePlaceholder"
@@ -273,7 +273,7 @@
       <form id="cat-form" novalidate>
         <input type="hidden" id="cat-id">
         <div class="form-row">
-          <div class="form-group" style="grid-column:1/span 2">
+          <div class="form-group form-group--full">
             <label class="form-label" for="cat-name-input" data-i18n="settings.categories.modal.name">Nombre (ES)</label>
             <input class="form-input" type="text" id="cat-name-input"
                    data-i18n-ph="settings.categories.modal.namePlaceholder"
@@ -406,9 +406,8 @@
           Serás alertado cuando el gasto alcance estos porcentajes del presupuesto
         </p>
         <div id="alert-list" class="alert-list"></div>
-        <div style="display:flex;align-items:center;gap:.5rem;">
-          <input type="number" id="new-alert-pct" min="1" max="200" step="1" class="form-input"
-                 style="max-width:100px;"
+        <div class="form-inline-row">
+          <input type="number" id="new-alert-pct" min="1" max="200" step="1" class="form-input input--xs"
                  placeholder="75" data-i18n-ph="settings.budget.alertPctPlaceholder">
           <button class="btn btn-primary btn-sm" id="btn-add-alert" data-i18n="settings.budget.addAlert">
             + Agregar porcentaje
@@ -422,14 +421,14 @@
       </button>
 
       <!-- Reset -->
-      <div class="budget-form-card" style="margin-top:1.5rem;">
-        <div class="budget-card-title" style="margin-bottom:.75rem;">Reset</div>
+      <div class="budget-form-card budget-form-card--spaced">
+        <div class="budget-card-title budget-card-title--sm-mb">Reset</div>
         <button class="btn-danger-outline" id="btn-reset-budget" data-i18n="settings.budget.resetBtn">
           Resetear presupuesto del mes
         </button>
 
-        <div style="margin-top:1.5rem;">
-          <div class="budget-card-title" style="margin-bottom:.75rem;" data-i18n="settings.budget.resetHistory">
+        <div class="mt-lg">
+          <div class="budget-card-title budget-card-title--sm-mb" data-i18n="settings.budget.resetHistory">
             Historial de resets
           </div>
           <div class="table-wrap">
@@ -460,7 +459,7 @@
         Recibí notificaciones cuando algo venza, el stock sea crítico o el presupuesto esté alto.
       </p>
 
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+      <div class="notifications-actions">
         <button class="btn btn-primary" id="btn-enable-notifications" data-i18n="notifications.enable">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           Activar notificaciones
@@ -470,7 +469,7 @@
         </button>
       </div>
 
-      <div id="notification-status" style="font-size: .875rem; color: #787774; margin-bottom: 1rem;">
+      <div id="notification-status">
         <span id="notification-status-text" data-i18n="settings.loading">Cargando...</span>
       </div>
     </div>
@@ -482,6 +481,6 @@
   <script src="/js/utils.js"></script>
   <script src="/js/shortcuts.js"></script>
   <script src="/js/settings.js"></script>
-  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
+  <script src="/js/sw-register.js"></script>
 </body>
 </html>

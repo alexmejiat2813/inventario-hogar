@@ -91,7 +91,7 @@
             <div class="dropdown-divider"></div>
 
             <!-- Configuración -->
-            <a href="/settings" class="dropdown-item" onclick="sessionStorage.setItem('settings_referrer', window.location.href)">
+            <a href="/settings" class="dropdown-item">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               <span data-i18n="profile.settings">Configuración</span>
             </a>
@@ -184,8 +184,7 @@
   </main>
 
   <!-- Modal: advertencia de presupuesto -->
-  <div class="modal-overlay" id="budget-warning-overlay" hidden
-       style="align-items:center;padding:1rem;">
+  <div class="modal-overlay modal-overlay--center" id="budget-warning-overlay" hidden>
     <div class="warning-modal">
       <div class="warning-modal-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -218,8 +217,8 @@
         <div id="confirm-tax-section"></div>
         <div class="receipt-section">
           <p class="receipt-title" data-i18n="shopping.register.receipt">Foto del recibo (opcional)</p>
-          <input type="file" id="receipt-input" accept="image/*" style="display:none">
-          <input type="file" id="receipt-camera-input" accept="image/*" capture="environment" style="display:none">
+          <input type="file" id="receipt-input" accept="image/*" hidden>
+          <input type="file" id="receipt-camera-input" accept="image/*" capture="environment" hidden>
           <div id="receipt-pick-wrap">
             <div class="receipt-pick-row">
               <button type="button" class="receipt-pick-btn" id="btn-receipt-camera">
@@ -341,245 +340,12 @@
   <script src="/js/shortcuts.js"></script>
   <script src="/js/cropper.js"></script>
   <script src="/js/shopping-list.js"></script>
-  <script>
-  /* ── Mobile drawer ── */
-  (function () {
-    var ham     = document.getElementById('mob-ham');
-    var overlay = document.getElementById('mob-overlay');
-    var drawer  = document.getElementById('mob-drawer');
-    var dclose  = document.getElementById('mob-dclose');
-    if (!ham || !overlay || !drawer) return;
-
-    function openDrawer() {
-      // Sync action state from the real buttons
-      var realReg   = document.getElementById('btn-register');
-      var realClear = document.getElementById('btn-clear');
-      var mobReg    = document.getElementById('mob-register');
-      var mobClear  = document.getElementById('mob-clear');
-      if (realReg && mobReg)     mobReg.disabled = realReg.disabled;
-      if (realClear && mobClear) mobClear.hidden = realClear.hidden;
-      overlay.classList.add('mob-show');
-      drawer.classList.add('mob-open');
-      drawer.setAttribute('aria-hidden', 'false');
-    }
-    function closeDrawer() {
-      overlay.classList.remove('mob-show');
-      drawer.classList.remove('mob-open');
-      drawer.setAttribute('aria-hidden', 'true');
-    }
-
-    ham.addEventListener('click', openDrawer);
-    overlay.addEventListener('click', closeDrawer);
-    if (dclose) dclose.addEventListener('click', closeDrawer);
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeDrawer();
-    });
-
-    var ACT = {
-      'templates':       'btn-templates',
-      'export-pdf':      'export-pdf',
-      'export-whatsapp': 'export-whatsapp',
-      'export-copy':     'export-copy',
-      'register':        'btn-register',
-      'clear':           'btn-clear',
-    };
-    drawer.querySelectorAll('[data-mob-act]').forEach(function (item) {
-      item.addEventListener('click', function () {
-        if (item.disabled) return;
-        var realId = ACT[item.dataset.mobAct];
-        var real   = document.getElementById(realId);
-        closeDrawer();
-        if (real) real.click();
-      });
-    });
-  })();
-
-  (function () {
-    var exportWrap = document.getElementById('export-wrap');
-    var btnExport  = document.getElementById('btn-export');
-    var exportMenu = document.getElementById('export-menu');
-
-    /* ── dropdown toggle ── */
-    btnExport.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var isOpen = !exportMenu.hidden;
-      exportMenu.hidden = isOpen;
-      btnExport.setAttribute('aria-expanded', String(!isOpen));
-    });
-
-    document.addEventListener('click', function (e) {
-      if (!exportWrap.contains(e.target)) closeMenu();
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeMenu();
-    });
-
-    function closeMenu() {
-      exportMenu.hidden = true;
-      btnExport.setAttribute('aria-expanded', 'false');
-    }
-
-    /* ── helpers ── */
-    function getItems() {
-      var items = (typeof state !== 'undefined' && Array.isArray(state.items)) ? state.items : [];
-      var custom = (typeof state !== 'undefined' && Array.isArray(state.customItems)) ? state.customItems : [];
-      return items.concat(custom);
-    }
-
-    function groupByCategory(items) {
-      var groups = {};
-      items.forEach(function (item) {
-        var cat = item.category || 'Sin categoría';
-        if (!groups[cat]) groups[cat] = [];
-        groups[cat].push(item);
-      });
-      return groups;
-    }
-
-    function formatDate() {
-      var lang = (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
-      return new Date().toLocaleDateString(lang === 'en' ? 'en-US' : lang === 'fr' ? 'fr-FR' : 'es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-    }
-
-    function buildExportText() {
-      var items = getItems();
-      if (!items.length) return t('shopping.emptyList');
-
-      var groups = groupByCategory(items);
-      var lines  = [t('shopping.list.title') + ' — ' + formatDate(), ''];
-
-      Object.keys(groups).forEach(function (cat) {
-        lines.push('[ ' + cat.toUpperCase() + ' ]');
-        groups[cat].forEach(function (item) {
-          var check  = item.checked ? '[x]' : '[ ]';
-          var needed = item.needed
-            ? ' — necesito ' + item.needed + (item.unit ? ' ' + item.unit : '')
-            : '';
-          lines.push('  ' + check + ' ' + item.name + needed.trimRight());
-        });
-        lines.push('');
-      });
-
-      return lines.join('\n').trimRight();
-    }
-
-    /* ── toast ── */
-    function showExportToast(msg, isError) {
-      var container = document.getElementById('toast-container');
-      if (!container) return;
-      var toast = document.createElement('div');
-      toast.className = 'toast ' + (isError ? 'toast-error' : 'toast-success');
-      toast.textContent = msg;
-      container.appendChild(toast);
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () { toast.classList.add('toast--show'); });
-      });
-      setTimeout(function () {
-        toast.classList.remove('toast--show');
-        setTimeout(function () { toast.remove(); }, 300);
-      }, 2800);
-    }
-
-    /* ── PDF ── */
-    document.getElementById('export-pdf').addEventListener('click', function () {
-      closeMenu();
-      var items  = getItems();
-      var groups = groupByCategory(items);
-      var date   = formatDate();
-
-      var rows = '';
-      Object.keys(groups).forEach(function (cat) {
-        rows += '<tr class="cat-row"><td colspan="3">' + cat + '</td></tr>';
-        groups[cat].forEach(function (item) {
-          var check  = item.checked ? '&#10003;' : '';
-          var needed = item.needed
-            ? (item.needed + (item.unit ? ' ' + item.unit : '')).trim()
-            : '—';
-          rows += '<tr class="' + (item.checked ? 'done' : '') + '">'
-            + '<td class="chk">' + check + '</td>'
-            + '<td>' + item.name + '</td>'
-            + '<td class="qty">' + needed + '</td>'
-            + '</tr>';
-        });
-      });
-
-      var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
-        + '<title>' + t('shopping.list.title') + '</title><style>'
-        + 'body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#111;margin:0;padding:2cm}'
-        + 'h1{font-size:18px;font-weight:700;margin-bottom:4px}'
-        + '.date{font-size:12px;color:#787774;margin-bottom:24px}'
-        + 'table{width:100%;border-collapse:collapse;font-size:13px}'
-        + 'th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#787774;font-weight:600;border-bottom:1px solid #E2E8F0;padding:6px 8px}'
-        + 'td{padding:7px 8px;border-bottom:1px solid #F4F4F3;vertical-align:top}'
-        + 'tr.cat-row td{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#787774;background:#F8F8F7;padding:5px 8px;border-bottom:1px solid #E2E8F0}'
-        + 'tr.done td{color:#B2B0AD;text-decoration:line-through}'
-        + 'td.chk{width:24px;font-size:14px;text-decoration:none!important}'
-        + 'td.qty{width:80px;color:#787774;text-align:right;white-space:nowrap}'
-        + '@media print{body{padding:1cm}}'
-        + '</style></head><body>'
-        + '<h1>' + t('shopping.list.title') + '</h1><p class="date">' + date + '</p>'
-        + '<table><thead><tr><th></th><th>Producto</th><th style="text-align:right">Cantidad</th></tr></thead>'
-        + '<tbody>' + rows + '</tbody></table>'
-        + '<script>window.onload=function(){window.print();}<\/script>'
-        + '<\/body><\/html>';
-
-      var win = window.open('', '_blank');
-      if (!win) { showExportToast('Permitir ventanas emergentes para exportar a PDF.', true); return; }
-      win.document.write(html);
-      win.document.close();
-    });
-
-    /* ── WhatsApp ── */
-    document.getElementById('export-whatsapp').addEventListener('click', function () {
-      closeMenu();
-      var text = buildExportText();
-      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
-    });
-
-    /* ── Copy (Notes / Keep) ── */
-    document.getElementById('export-copy').addEventListener('click', function () {
-      closeMenu();
-      var text = buildExportText();
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function () {
-          showExportToast('Lista copiada al portapapeles');
-        }).catch(function () {
-          showExportToast('No se pudo copiar. Intentá de nuevo.', true);
-        });
-      } else {
-        /* fallback for http / older browsers */
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.cssText = 'position:fixed;opacity:0';
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand('copy');
-          showExportToast('Lista copiada al portapapeles');
-        } catch (err) {
-          showExportToast('No se pudo copiar. Intentá de nuevo.', true);
-        }
-        document.body.removeChild(ta);
-      }
-    });
-
-  })();
-  </script>
   <script src="/js/header.js"></script>
   <!-- Volver arriba -->
   <button class="back-to-top" id="back-to-top" aria-label="Subir" title="Subir">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
-  <script>
-  (function(){
-    var b = document.getElementById('back-to-top'); if (!b) return;
-    var t = function(){ b.classList.toggle('show', window.scrollY > 400); };
-    window.addEventListener('scroll', t, { passive: true });
-    b.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
-    t();
-  })();
-  </script>
-  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
+  <script src="/js/back-to-top.js"></script>
+  <script src="/js/sw-register.js"></script>
 </body>
 </html>

@@ -217,6 +217,28 @@
       border-radius: 4px; padding: .45rem .75rem;
     }
     .alert-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #082F49; }
+
+    /* inline-style replacements */
+    .currency-card { max-width: 400px; }
+    .btn--mt-xs { margin-top: .25rem; }
+    .section-head-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .modal--md { max-width: 480px; }
+    .form-group--full { grid-column: 1 / span 2; }
+    .form-group--inline {
+      justify-content: flex-end; flex-direction: row;
+      align-items: center; gap: .5rem; padding-top: 1.4rem;
+    }
+    .form-label--no-margin { margin: 0; }
+    .form-toggle { width: 18px; height: 18px; cursor: pointer; accent-color: #082F49; }
+    .section-note--compact { margin-bottom: .5rem; font-size: .78rem; }
+    .checkboxes-wrap { display: flex; flex-wrap: wrap; gap: .5rem .75rem; }
+    .form-inline-row { display: flex; align-items: center; gap: .5rem; }
+    .input--xs { max-width: 100px; }
+    .budget-form-card--spaced { margin-top: 1.5rem; }
+    .budget-card-title--sm-mb { margin-bottom: .75rem; }
+    .mt-lg { margin-top: 1.5rem; }
+    .notifications-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    #notification-status { font-size: .875rem; color: #787774; margin-bottom: 1rem; }
     .alert-pct-badge { font-size: .875rem; font-weight: 700; color: #082F49; flex: 1; }
     .alert-row .btn-delete { padding: .2rem .55rem; font-size: .72rem; }
     .budget-hint { font-size: .8rem; color: #787774; margin-bottom: .875rem; line-height: 1.5; }

@@ -1,10 +1,5 @@
 // Security headers sin dependencias (equivalente a un subset de helmet).
 // Regla del proyecto: preferir node built-ins / soluciones propias antes que npm.
-//
-// CSP pragmatica: el frontend tiene CSS y <script> inline + atributos onclick,
-// asi que 'unsafe-inline' es necesario hasta migrar el CSS a archivos y quitar
-// los handlers inline (ver AUDIT.md). Aun asi restringe origenes de script/img,
-// bloquea framing (clickjacking) y object/base-uri.
 
 const CSP = [
   "default-src 'self'",
@@ -13,8 +8,8 @@ const CSP = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   "img-src 'self' data: blob: https:",
-  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "script-src 'self' https://cdn.jsdelivr.net",
+  "style-src 'self' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "connect-src 'self'",
 ].join('; ');

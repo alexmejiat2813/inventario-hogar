@@ -899,3 +899,6 @@
     }
     .pp-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.5); }
     .pp-dot.active { background: #fff; }
+
+    /* inline-style replacements */
+    .modal-overlay--center { align-items: center; padding: 1rem; }

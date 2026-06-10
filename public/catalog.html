@@ -89,7 +89,7 @@
             <div class="dropdown-divider"></div>
 
             <!-- Configuración -->
-            <a href="/settings" class="dropdown-item" onclick="sessionStorage.setItem('settings_referrer', window.location.href)">
+            <a href="/settings" class="dropdown-item">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               <span data-i18n="profile.settings">Configuración</span>
             </a>
@@ -168,7 +168,7 @@
                    min="0" step="0.01" placeholder="0" autocomplete="off">
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:.75rem">
+        <div class="form-group form-group--sm-mb">
           <label class="form-label" for="add-inv-unit" data-i18n="catalog.modalAdd.unit">Unidad de medida</label>
           <select class="form-select" id="add-inv-unit"></select>
         </div>
@@ -179,7 +179,7 @@
           <button type="button" class="btn-photos-add" id="btn-add-inv-photos" data-i18n="catalog.modalAdd.photosBtn">Agregar fotos</button>
           <input type="file" id="add-inv-file-input" accept="image/*,.heic" multiple hidden>
         </div>
-        <div class="modal-footer" style="margin-top:.5rem">
+        <div class="modal-footer modal-footer--sm-mt">
           <button type="button" class="btn-cancel" id="add-inv-cancel" data-i18n="catalog.modalAdd.cancel">Cancelar</button>
           <button type="submit" class="btn-save" id="add-inv-save" data-i18n="catalog.modalAdd.save">Agregar</button>
         </div>
@@ -249,29 +249,28 @@
 
   <!-- Modal: Confirmar eliminación -->
   <div class="modal-overlay" id="delete-product-overlay" hidden>
-    <div class="modal" style="max-width:360px;">
+    <div class="modal modal--sm">
       <div class="modal-header">
         <div class="modal-header-info">
-          <h2 class="modal-title" style="color:#9F2F2D;" data-i18n="catalog.deleteTitle">Eliminar producto</h2>
+          <h2 class="modal-title modal-title--danger" data-i18n="catalog.deleteTitle">Eliminar producto</h2>
         </div>
         <button class="modal-close" id="delete-product-close">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <p id="delete-product-msg" style="font-size:.875rem;color:#787774;margin-bottom:.875rem;line-height:1.55;"></p>
-      <p id="delete-product-warn" data-i18n="catalog.deleteWarning"
-         style="font-size:.78rem;color:#956400;background:#FBF3DB;border:1px solid #E8D5A0;padding:.5rem .75rem;border-radius:4px;margin-bottom:.875rem;" hidden></p>
+      <p id="delete-product-msg" class="delete-msg"></p>
+      <p id="delete-product-warn" class="delete-warn" data-i18n="catalog.deleteWarning" hidden></p>
       <div class="modal-footer">
         <button type="button" class="btn-cancel" id="btn-delete-product-cancel" data-i18n="catalog.modalEdit.cancel">Cancelar</button>
-        <button type="button" class="btn-save" id="btn-delete-product-confirm"
-                style="background:#9F2F2D;" data-i18n="catalog.deleteBtn">Eliminar</button>
+        <button type="button" class="btn-save btn-save--danger" id="btn-delete-product-confirm"
+                data-i18n="catalog.deleteBtn">Eliminar</button>
       </div>
     </div>
   </div>
 
   <!-- ===== DRAWER MÓVIL ===== -->
   <div class="mob-overlay" id="mob-overlay"></div>
-  <aside class="mob-drawer" id="mob-drawer" aria-hidden="true">
+  <aside class="mob-drawer" id="mob-drawer" aria-hidden="true" data-mob-acts='{"add-catalog":"btn-add-catalog"}'>
     <div class="mob-dhead">
       <span class="mob-dhead-title" data-i18n="invTabs.catalog">Catálogo</span>
       <button class="mob-dclose" id="mob-dclose" aria-label="Cerrar menú">✕</button>
@@ -313,58 +312,13 @@
   <script src="/js/utils.js"></script>
   <script src="/js/shortcuts.js"></script>
   <script src="/js/catalog.js"></script>
-  <script>
-  /* ── Mobile drawer ── */
-  (function () {
-    var ham     = document.getElementById('mob-ham');
-    var overlay = document.getElementById('mob-overlay');
-    var drawer  = document.getElementById('mob-drawer');
-    var dclose  = document.getElementById('mob-dclose');
-    if (!ham || !overlay || !drawer) return;
-
-    function openDrawer() {
-      overlay.classList.add('mob-open');
-      drawer.classList.add('mob-open');
-      drawer.setAttribute('aria-hidden', 'false');
-    }
-    function closeDrawer() {
-      overlay.classList.remove('mob-open');
-      drawer.classList.remove('mob-open');
-      drawer.setAttribute('aria-hidden', 'true');
-    }
-
-    ham.addEventListener('click', openDrawer);
-    overlay.addEventListener('click', closeDrawer);
-    if (dclose) dclose.addEventListener('click', closeDrawer);
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeDrawer();
-    });
-
-    var ACT = { 'add-catalog': 'btn-add-catalog' };
-    drawer.querySelectorAll('[data-mob-act]').forEach(function (item) {
-      item.addEventListener('click', function () {
-        if (item.disabled) return;
-        var real = document.getElementById(ACT[item.dataset.mobAct]);
-        closeDrawer();
-        if (real) real.click();
-      });
-    });
-  })();
-  </script>
+  <script src="/js/mob-drawer.js"></script>
   <script src="/js/header.js"></script>
   <!-- Volver arriba -->
   <button class="back-to-top" id="back-to-top" aria-label="Subir" title="Subir">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
-  <script>
-  (function(){
-    var b = document.getElementById('back-to-top'); if (!b) return;
-    var t = function(){ b.classList.toggle('show', window.scrollY > 400); };
-    window.addEventListener('scroll', t, { passive: true });
-    b.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
-    t();
-  })();
-  </script>
-  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
+  <script src="/js/back-to-top.js"></script>
+  <script src="/js/sw-register.js"></script>
 </body>
 </html>
