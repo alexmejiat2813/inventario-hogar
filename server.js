@@ -26,7 +26,7 @@ const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, 'public', 'u
 
 // Behind a reverse proxy (Fly.io, Render, nginx): trust X-Forwarded-* headers
 // so secure cookies and req.ip (rate limiter) work correctly.
-if (IS_PROD) app.set('trust proxy', 1);
+app.set('trust proxy', 1);
 
 // ── Core middleware ────────────────────────────────────────────────────────────
 app.use(securityHeaders(IS_PROD));
