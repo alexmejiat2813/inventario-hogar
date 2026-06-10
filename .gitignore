@@ -35,3 +35,6 @@ Thumbs.db
 
 # Uploaded content
 public/uploads/
+
+# Coverage reports
+coverage/
