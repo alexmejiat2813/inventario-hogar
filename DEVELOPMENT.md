@@ -73,7 +73,7 @@
 | # | Tarea | Descripción | Estado |
 |---|-------|-------------|--------|
 | 15 | Tests | 37 tests con node:test — 25 unit (DB layer) + 12 smoke (HTTP). Regresión P0 incluida. | `7609244` | ✅ |
-| 16 | Trust proxy | `app.set('trust proxy', 1)` para que rate limiter funcione detrás de nginx/Caddy | ⬜ |
+| 16 | Trust proxy | `app.set('trust proxy', 1)` habilitado en todos los ambientes para rate limiter detrás de nginx/Caddy | `45fbc3f` | ✅ |
 
 ### Mejoras detectadas durante el desarrollo
 
