@@ -243,6 +243,47 @@ if (!itemCols.includes('tax_id'))     db.exec('ALTER TABLE purchase_items ADD CO
 if (!itemCols.includes('tax_rate'))   db.exec('ALTER TABLE purchase_items ADD COLUMN tax_rate REAL');
 if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD COLUMN tax_amount REAL');
 
+// ── Categorías: una sola tabla manda en todas las vistas ──────────────────────
+// [name ES (canónico/almacenado en productos), name EN, name FR, emoji].
+const BASE_CATEGORIES = [
+  ['Alimentos',      'Food',              'Alimentation',     '🍎'],
+  ['Bebidas',        'Drinks',            'Boissons',         '🥤'],
+  ['Aseo Personal',  'Personal care',     'Soins personnels', '🧴'],
+  ['Aseo del Hogar', 'Household cleaning', 'Entretien maison', '🧹'],
+  ['Alacena',        'Pantry',            'Garde-manger',     '🫙'],
+  ['Aseo',           'Cleaning',          'Nettoyage',        '🧼'],
+  ['Otros',          'Other',             'Autres',           '📦'],
+];
+
+// Migración: traducciones (name_en/name_fr) + integridad. Asegura que TODA
+// categoría usada por productos o catálogo exista como fila, para que aparezca
+// como filtro con su ícono en cada vista (no se "pierde" ni queda sin emoji).
+{
+  const catCols = db.prepare('PRAGMA table_info(categories)').all().map(c => c.name);
+  if (!catCols.includes('name_en')) db.exec('ALTER TABLE categories ADD COLUMN name_en TEXT');
+  if (!catCols.includes('name_fr')) db.exec('ALTER TABLE categories ADD COLUMN name_fr TEXT');
+
+  // Backfill de las 7 base (idempotente, respeta lo que el usuario ya editó).
+  const upBase = db.prepare(`
+    UPDATE categories SET
+      name_en = COALESCE(name_en, ?),
+      name_fr = COALESCE(name_fr, ?),
+      emoji   = CASE WHEN emoji IS NULL OR emoji = '' OR emoji = '📦' THEN ? ELSE emoji END
+    WHERE name = ?
+  `);
+  BASE_CATEGORIES.forEach(([es, en, fr, emoji]) => upBase.run(en, fr, emoji, es));
+
+  // Auto-crear categorías usadas por productos/catálogo que falten en la tabla.
+  const used = db.prepare(`
+    SELECT DISTINCT category AS name FROM products        WHERE category IS NOT NULL AND category <> ''
+    UNION
+    SELECT DISTINCT category AS name FROM catalog_products WHERE category IS NOT NULL AND category <> ''
+  `).all();
+  const hasCat = db.prepare('SELECT 1 AS x FROM categories WHERE LOWER(name) = LOWER(?)');
+  const insCat = db.prepare('INSERT INTO categories (name, emoji) VALUES (?, ?)');
+  used.forEach(({ name }) => { if (!hasCat.get(name)) insCat.run(name, '📦'); });
+}
+
 // ── Catalog seed (100 products) — ver bloque "Seeds de primera ejecución" ─────
 // [i18n_key, nombre ES (canónico en DB), categoría]. El frontend muestra
 // locales catalogSeed.<i18n_key>; si el usuario renombra, la key se limpia.
@@ -380,16 +421,8 @@ const CATALOG_SEED = [
     const isEmpty = table => db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get().n === 0;
 
     if (isEmpty('categories')) {
-      const ins = db.prepare('INSERT OR IGNORE INTO categories (name, emoji) VALUES (?, ?)');
-      [
-        ['Alimentos',     '🍎'],
-        ['Bebidas',       '🥤'],
-        ['Aseo Personal', '🧴'],
-        ['Aseo del Hogar','🧹'],
-        ['Alacena',       '🫙'],
-        ['Aseo',          '🧼'],
-        ['Otros',         '📦'],
-      ].forEach(([name, emoji]) => ins.run(name, emoji));
+      const ins = db.prepare('INSERT OR IGNORE INTO categories (name, name_en, name_fr, emoji) VALUES (?, ?, ?, ?)');
+      BASE_CATEGORIES.forEach(([es, en, fr, emoji]) => ins.run(es, en, fr, emoji));
     }
 
     if (isEmpty('units')) {
@@ -419,15 +452,6 @@ const CATALOG_SEED = [
     db.exec('PRAGMA user_version = 1');
   }
 }
-
-// ── Category mapping: catalog → inventory (for legacy products) ───────────────
-const CATALOG_TO_INV_CATEGORY = {
-  'Alimentos':    'Alimentos',
-  'Bebidas':      'Bebidas',
-  'Aseo Personal':'Aseo',
-  'Aseo del Hogar':'Aseo',
-  'Alacena':      'Alacena',
-};
 
 // ── Default seed products (applied when a new user registers) ─────────────────
 const SEED = [
@@ -634,26 +658,51 @@ module.exports = {
     return db.prepare('SELECT * FROM categories WHERE LOWER(name) = LOWER(?)').get(name);
   },
 
-  createCategory({ name, emoji }) {
+  createCategory({ name, name_en = null, name_fr = null, emoji }) {
     const existing = this.getCategoryByName(name);
     if (existing) return { error: 'Ya existe una categoría con ese nombre' };
     const { lastInsertRowid } = db.prepare(
-      'INSERT INTO categories (name, emoji) VALUES (?, ?)'
-    ).run(name.trim(), emoji || '📦');
+      'INSERT INTO categories (name, name_en, name_fr, emoji) VALUES (?, ?, ?, ?)'
+    ).run(name.trim(), name_en?.trim() || null, name_fr?.trim() || null, emoji || '📦');
     return { category: this.getCategory(lastInsertRowid) };
   },
 
-  updateCategory(id, { name, emoji }) {
+  updateCategory(id, { name, name_en = null, name_fr = null, emoji }) {
     const existing = db.prepare(
       'SELECT id FROM categories WHERE LOWER(name) = LOWER(?) AND id != ?'
     ).get(name, id);
     if (existing) return { error: 'Ya existe una categoría con ese nombre' };
-    db.prepare('UPDATE categories SET name=?, emoji=? WHERE id=?').run(name.trim(), emoji || '📦', id);
+    const current = this.getCategory(id);
+    const newName = name.trim();
+    db.exec('BEGIN');
+    try {
+      db.prepare('UPDATE categories SET name=?, name_en=?, name_fr=?, emoji=? WHERE id=?')
+        .run(newName, name_en?.trim() || null, name_fr?.trim() || null, emoji || '📦', id);
+      // Cascade rename: los productos y el catálogo guardan la categoría como
+      // texto. Si cambia el nombre, propagar para no orfanar registros.
+      if (current && current.name !== newName) {
+        db.prepare('UPDATE products SET category = ? WHERE category = ?').run(newName, current.name);
+        db.prepare('UPDATE catalog_products SET category = ? WHERE category = ?').run(newName, current.name);
+      }
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
     return { category: this.getCategory(id) };
   },
 
   deleteCategory(id) {
-    return db.prepare('DELETE FROM categories WHERE id = ?').run(id).changes > 0;
+    const cat = this.getCategory(id);
+    if (!cat) return { error: 'not_found' };
+    // En uso por productos o catálogo: no borrar (la migración la recrearía en
+    // el próximo arranque). Para fusionar/limpiar, renombrar es el camino.
+    const used =
+      db.prepare('SELECT 1 AS x FROM products        WHERE category = ? LIMIT 1').get(cat.name) ||
+      db.prepare('SELECT 1 AS x FROM catalog_products WHERE category = ? LIMIT 1').get(cat.name);
+    if (used) return { error: 'in_use' };
+    db.prepare('DELETE FROM categories WHERE id = ?').run(id);
+    return { ok: true };
   },
 
   // ── Units ──────────────────────────────────────────────────────────────────
@@ -753,12 +802,13 @@ module.exports = {
     ).get(inventoryId, catalogProductId);
     if (existing) return { error: 'Este producto ya está en el inventario' };
 
-    const invCategory = CATALOG_TO_INV_CATEGORY[catalogProduct.category] || catalogProduct.category;
     const product = this.create({
       // displayName: nombre traducido al idioma del usuario al momento de
       // agregar (el catálogo guarda el canónico ES como dato).
       name:             (displayName && displayName.trim()) || catalogProduct.name,
-      category:         invCategory,
+      // Categoría unificada: se preserva la del catálogo (la tabla categories
+      // garantiza que exista como filtro en todas las vistas).
+      category:         catalogProduct.category,
       current_qty:      currentQty,
       min_qty:          minQty,
       unit:             unit || 'unidades',

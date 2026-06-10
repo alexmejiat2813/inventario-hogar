@@ -15,6 +15,7 @@ const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
 const state = {
   catalog: [],
+  categories: [],
   units: [],
   inventoryId: null,
   activeCategory: 'all',
@@ -23,6 +24,21 @@ const state = {
   editingProductId: null,
   pendingPhotos: [],
 };
+
+// ── Categorías (tabla unificada `categories`) ─────────────────────────────────
+function catLang() {
+  return (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
+}
+function catLabel(name) {
+  const row = state.categories.find(c => c.name === name);
+  if (!row) return name;
+  const lang = catLang();
+  return (lang === 'en' ? row.name_en : lang === 'fr' ? row.name_fr : row.name) || row.name;
+}
+function catEmoji(name) {
+  const row = state.categories.find(c => c.name === name);
+  return (row && row.emoji) || CATEGORY_ICONS[name] || '📦';
+}
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const grid        = document.getElementById('catalog-grid');
@@ -74,7 +90,21 @@ function filtered() {
   });
 }
 
+// Render dinámico de los tabs de categoría desde la tabla `categories`.
+function renderCategoryTabs() {
+  if (!tabsWrap) return;
+  const cats = [...state.categories].sort((a, b) => catLabel(a.name).localeCompare(catLabel(b.name)));
+  const allActive = state.activeCategory === 'all' ? ' active' : '';
+  tabsWrap.innerHTML =
+    `<button class="tab-btn${allActive}" data-category="all">${esc(t('catalog.tabs.all'))}</button>` +
+    cats.map(c => {
+      const active = state.activeCategory === c.name ? ' active' : '';
+      return `<button class="tab-btn${active}" data-category="${esc(c.name)}">${c.emoji || ''} ${esc(catLabel(c.name))}</button>`;
+    }).join('');
+}
+
 function renderCatalog() {
+  renderCategoryTabs();
   const list = filtered();
 
   countEl.textContent = t('catalog.count', { count: list.length });
@@ -90,7 +120,7 @@ function renderCatalog() {
 }
 
 function renderCard(p) {
-  const icon  = CATEGORY_ICONS[p.category] || '📦';
+  const icon  = catEmoji(p.category);
   const name  = catalogName(p);
   const footer = p.in_inventory
     ? `<div class="badge-in-inventory">✓ <span data-i18n="catalog.inInventory">${t('catalog.inInventory')}</span></div>`
@@ -211,6 +241,28 @@ async function loadUnits() {
     state.units = await res.json();
     populateUnitSelect();
   } catch { /* keep empty */ }
+}
+
+async function loadCategories() {
+  try {
+    const res = await fetch('/api/settings/categories');
+    if (!res.ok) return;
+    state.categories = await res.json();
+    populateCategorySelects();
+  } catch { /* keep empty */ }
+}
+
+// Llena los <select> de categoría de los modales (agregar/editar al catálogo).
+function populateCategorySelects() {
+  ['cat-category', 'edit-cat-category'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = state.categories.map(c =>
+      `<option value="${esc(c.name)}">${c.emoji || ''} ${esc(catLabel(c.name))}</option>`
+    ).join('');
+    if (prev) sel.value = prev;
+  });
 }
 
 function populateUnitSelect() {
@@ -591,9 +643,10 @@ function initEvents() {
     if (!document.getElementById('delete-product-overlay').hidden) closeDeleteConfirmModal();
   });
 
-  // Language change: re-render cards
+  // Language change: re-render cards, tabs y selects de categoría
   document.addEventListener('langchange', () => {
     I18N.apply();
+    populateCategorySelects();
     renderCatalog();
   });
 }
@@ -601,7 +654,7 @@ function initEvents() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   await I18N.init();
-  await Promise.all([loadInventoryId(), loadUnits(), loadProfileAvatar()]);
+  await Promise.all([loadInventoryId(), loadUnits(), loadCategories(), loadProfileAvatar()]);
   try {
     await loadCatalog();
   } catch {

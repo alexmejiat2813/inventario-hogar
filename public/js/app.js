@@ -99,7 +99,7 @@ function populateCatalogSelect() {
   });
   Object.keys(groups).sort().forEach(cat => {
     const og = document.createElement('optgroup');
-    og.label = `${CAT_ICONS[cat] || '📦'} ${cat}`;
+    og.label = `${catEmoji(cat)} ${tCat(cat)}`;
     groups[cat].forEach(p => {
       const opt = document.createElement('option');
       opt.value           = p.id;
@@ -223,10 +223,41 @@ function catClass(category) {
   return 'cat-' + (category || '').toLowerCase().replace(/\s+/g, '-');
 }
 
+function catLang() {
+  return (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
+}
+
+// Nombre de la categoría traducido desde la tabla `categories`
+// (name/name_en/name_fr). Fallback: i18n cat.* (legado) y texto crudo.
 function tCat(cat) {
+  const row = (state.categories || []).find(c => c.name === cat);
+  if (row) {
+    const lang = catLang();
+    return (lang === 'en' ? row.name_en : lang === 'fr' ? row.name_fr : row.name) || row.name;
+  }
   const key = 'cat.' + cat;
   const val = t(key);
   return (val && val !== key) ? val : cat;
+}
+
+// Emoji de la categoría desde la tabla; fallback a constante base y 📦.
+function catEmoji(cat) {
+  const row = (state.categories || []).find(c => c.name === cat);
+  return (row && row.emoji) || CAT_ICONS[cat] || '📦';
+}
+
+// Render dinámico de los tabs de filtro de Stock desde la tabla `categories`.
+function renderCategoryTabs() {
+  const wrap = document.getElementById('category-tabs');
+  if (!wrap) return;
+  const cats = [...(state.categories || [])].sort((a, b) => tCat(a.name).localeCompare(tCat(b.name)));
+  const allActive = state.activeCategory === 'all' ? ' active' : '';
+  wrap.innerHTML =
+    `<button class="tab-btn${allActive}" data-category="all">${esc(t('inventory.tabs.all'))}</button>` +
+    cats.map(c => {
+      const active = state.activeCategory === c.name ? ' active' : '';
+      return `<button class="tab-btn${active}" data-category="${esc(c.name)}">${c.emoji || ''} ${esc(tCat(c.name))}</button>`;
+    }).join('');
 }
 
 // ── Stats ─────────────────────────────────────────────────────
@@ -240,7 +271,7 @@ function renderStats() {
 
   document.getElementById('stat-categories').innerHTML = byCategory.map(({ category, count }) => `
     <span class="cat-stat" data-cat="${esc(category)}" data-category="${esc(category)}" role="button" tabindex="0">
-      <span class="cat-icon">${CAT_ICONS[category] || '📦'}</span>
+      <span class="cat-icon">${catEmoji(category)}</span>
       <span class="cat-name">${tCat(category)}</span>
       <span class="cat-count">${count}</span>
     </span>
@@ -374,7 +405,7 @@ function renderProductCard(p) {
       </div>`}
 
       <div class="card-top">
-        <span class="category-badge ${catClass(p.category)}">${CAT_ICONS[p.category] || ''} ${tCat(p.category)}</span>
+        <span class="category-badge ${catClass(p.category)}">${catEmoji(p.category)} ${tCat(p.category)}</span>
         ${expiry ? `<span class="expiry-badge ${expiry.cls}">${expiry.label}</span>` : ''}
       </div>
 
@@ -484,6 +515,7 @@ function renderExpirySection() {
 }
 
 function render() {
+  renderCategoryTabs();
   renderStats();
   renderLowStockPanel();
   renderExpirySection();

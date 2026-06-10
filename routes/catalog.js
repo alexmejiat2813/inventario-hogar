@@ -3,8 +3,6 @@ const db      = require('../database');
 
 const router = express.Router();
 
-const CATALOG_CATEGORIES = ['Alimentos', 'Bebidas', 'Aseo Personal', 'Aseo del Hogar', 'Alacena'];
-
 router.get('/', (req, res) => {
   try {
     const inventoryId = req.session.activeInventoryId || null;
@@ -16,7 +14,8 @@ router.post('/', (req, res) => {
   try {
     const { name, category } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
-    if (!CATALOG_CATEGORIES.includes(category)) return res.status(400).json({ error: 'Categoría inválida' });
+    // Categoría válida = cualquiera de la tabla unificada `categories`.
+    if (!db.getCategoryByName(category)) return res.status(400).json({ error: 'Categoría inválida' });
     const result = db.addCatalogProduct({ name, category, userId: req.user.id });
     if (result.error) return res.status(409).json({ error: result.error });
     res.status(201).json(result.product);

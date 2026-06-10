@@ -315,6 +315,32 @@ describe('custom shopping items', () => {
   });
 });
 
+describe('categorias unificadas + i18n', () => {
+  test('categorias base traen traducciones EN/FR', () => {
+    const cats = db.getCategories();
+    const ali = cats.find(c => c.name === 'Alimentos');
+    assert.ok(ali, 'existe Alimentos');
+    assert.equal(ali.name_en, 'Food');
+    assert.equal(ali.name_fr, 'Alimentation');
+  });
+
+  test('createCategory guarda traducciones', () => {
+    const r = db.createCategory({ name: 'Frutas', name_en: 'Fruits', name_fr: 'Fruits', emoji: '🍓' });
+    assert.ok(!r.error, r.error);
+    assert.equal(r.category.name_en, 'Fruits');
+    assert.equal(r.category.emoji, '🍓');
+  });
+
+  test('updateCategory renombra y hace cascade a productos', () => {
+    const { inv } = makeInventory();
+    const r = db.createCategory({ name: 'Snacks', name_en: 'Snacks', name_fr: 'Snacks', emoji: '🍿' });
+    const p = db.create({ name: 'Papas', category: 'Snacks', current_qty: 1, min_qty: 1, unit: 'unidades', inventoryId: inv.id });
+    const u = db.updateCategory(r.category.id, { name: 'Picoteo', name_en: 'Snacks', name_fr: 'Snacks', emoji: '🍿' });
+    assert.ok(!u.error, u.error);
+    assert.equal(db.getById(p.id).category, 'Picoteo', 'el producto sigue la categoria renombrada');
+  });
+});
+
 describe('catalogo i18n (productos sembrados traducibles)', () => {
   test('productos sembrados llevan i18n_key', () => {
     const cat = db.getCatalogProducts();

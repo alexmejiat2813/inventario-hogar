@@ -1,5 +1,5 @@
 /* Inventario Hogar — Service Worker */
-const CACHE = 'ih-v28';
+const CACHE = 'ih-v29';
 
 const PRECACHE = [
   '/css/styles.css',

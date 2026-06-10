@@ -500,8 +500,10 @@ function toast(msg, type = 'success') {
 function openCatModal(item = null) {
   const overlay = document.getElementById('cat-modal-overlay');
   document.getElementById('cat-id').value = item?.id ?? '';
-  document.getElementById('cat-name-input').value  = item?.name  ?? '';
-  document.getElementById('cat-emoji-input').value = item?.emoji ?? '';
+  document.getElementById('cat-name-input').value     = item?.name    ?? '';
+  document.getElementById('cat-name-en-input').value  = item?.name_en ?? '';
+  document.getElementById('cat-name-fr-input').value  = item?.name_fr ?? '';
+  document.getElementById('cat-emoji-input').value    = item?.emoji   ?? '';
   document.getElementById('cat-modal-title').textContent =
     item ? t('settings.categories.modal.editTitle') : t('settings.categories.modal.addTitle');
   const saveBtn = document.getElementById('cat-modal-save');
@@ -514,18 +516,20 @@ function closeCatModal() { document.getElementById('cat-modal-overlay').hidden =
 
 async function saveCat(e) {
   e.preventDefault();
-  const id    = document.getElementById('cat-id').value;
-  const name  = document.getElementById('cat-name-input').value.trim();
-  const emoji = document.getElementById('cat-emoji-input').value.trim() || '📦';
+  const id      = document.getElementById('cat-id').value;
+  const name    = document.getElementById('cat-name-input').value.trim();
+  const name_en = document.getElementById('cat-name-en-input').value.trim();
+  const name_fr = document.getElementById('cat-name-fr-input').value.trim();
+  const emoji   = document.getElementById('cat-emoji-input').value.trim() || '📦';
   if (!name) { document.getElementById('cat-name-input').classList.add('invalid'); return; }
   const saveBtn = document.getElementById('cat-modal-save');
   saveBtn.disabled = true; saveBtn.textContent = t('settings.categories.modal.saving');
   try {
     if (id) {
-      await api('PUT', `/api/settings/categories/${id}`, { name, emoji });
+      await api('PUT', `/api/settings/categories/${id}`, { name, name_en, name_fr, emoji });
       toast(t('settings.categories.modal.updated'));
     } else {
-      await api('POST', '/api/settings/categories', { name, emoji });
+      await api('POST', '/api/settings/categories', { name, name_en, name_fr, emoji });
       toast(t('settings.categories.modal.added'));
     }
     closeCatModal();
@@ -544,7 +548,12 @@ async function deleteCategory(id, name) {
     toast(t('settings.categories.modal.deleted'), 'info');
     state.categories = await api('GET', '/api/settings/categories');
     renderCategories();
-  } catch (err) { toast(err.message, 'error'); }
+  } catch (err) {
+    const msg = err.message === 'category_in_use'
+      ? t('settings.categories.inUse')
+      : err.message;
+    toast(msg, 'error');
+  }
 }
 
 // ── Unit modal ────────────────────────────────────────────────────────────────
@@ -810,7 +819,7 @@ function handleTableClick(e) {
   const { action, id, name, emoji, abbr, type, category } = btn.dataset;
   const numId = parseInt(id);
 
-  if (action === 'edit-cat')  openCatModal({ id: numId, name, emoji });
+  if (action === 'edit-cat')  openCatModal(state.categories.find(c => c.id === numId) || { id: numId, name, emoji });
   if (action === 'del-cat')   deleteCategory(numId, name);
   if (action === 'edit-unit') openUnitModal({ id: numId, name, abbreviation: abbr, type });
   if (action === 'del-unit')  deleteUnit(numId, name);
