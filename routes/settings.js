@@ -1,5 +1,6 @@
-const express = require('express');
+﻿const express = require('express');
 const db      = require('../database');
+const logger   = require('../logger');
 const { requireEditorOrOwner } = require('../middleware/inventory');
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const router = express.Router();
 
 router.get('/categories', (req, res) => {
   try { res.json(db.getCategories()); }
-  catch { res.status(500).json({ error: 'Error al obtener categorías' }); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener categorías' }); }
 });
 
 router.post('/categories', (req, res) => {
@@ -18,7 +19,7 @@ router.post('/categories', (req, res) => {
     const result = db.createCategory({ name, name_en, name_fr, emoji });
     if (result.error) return res.status(409).json({ error: result.error });
     res.status(201).json(result.category);
-  } catch { res.status(500).json({ error: 'Error al crear la categoría' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al crear la categoría' }); }
 });
 
 router.put('/categories/:id', (req, res) => {
@@ -30,7 +31,7 @@ router.put('/categories/:id', (req, res) => {
     const result = db.updateCategory(id, { name, name_en, name_fr, emoji });
     if (result.error) return res.status(409).json({ error: result.error });
     res.json(result.category);
-  } catch { res.status(500).json({ error: 'Error al actualizar la categoría' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al actualizar la categoría' }); }
 });
 
 router.delete('/categories/:id', (req, res) => {
@@ -41,14 +42,14 @@ router.delete('/categories/:id', (req, res) => {
     if (result.error === 'not_found') return res.status(404).json({ error: 'Categoría no encontrada' });
     if (result.error === 'in_use')    return res.status(409).json({ error: 'category_in_use' });
     res.json({ message: 'Categoría eliminada' });
-  } catch { res.status(500).json({ error: 'Error al eliminar la categoría' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar la categoría' }); }
 });
 
 // ── Units ──────────────────────────────────────────────────────────────────────
 
 router.get('/units', (req, res) => {
   try { res.json(db.getUnits()); }
-  catch { res.status(500).json({ error: 'Error al obtener unidades' }); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener unidades' }); }
 });
 
 router.post('/units', (req, res) => {
@@ -59,7 +60,7 @@ router.post('/units', (req, res) => {
     const result = db.createUnit({ name, abbreviation, type });
     if (result.error) return res.status(409).json({ error: result.error });
     res.status(201).json(result.unit);
-  } catch { res.status(500).json({ error: 'Error al crear la unidad' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al crear la unidad' }); }
 });
 
 router.put('/units/:id', (req, res) => {
@@ -72,7 +73,7 @@ router.put('/units/:id', (req, res) => {
     const result = db.updateUnit(id, { name, abbreviation, type });
     if (result.error) return res.status(409).json({ error: result.error });
     res.json(result.unit);
-  } catch { res.status(500).json({ error: 'Error al actualizar la unidad' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al actualizar la unidad' }); }
 });
 
 router.delete('/units/:id', (req, res) => {
@@ -82,7 +83,7 @@ router.delete('/units/:id', (req, res) => {
     const ok = db.deleteUnit(id);
     if (!ok) return res.status(404).json({ error: 'Unidad no encontrada' });
     res.json({ message: 'Unidad eliminada' });
-  } catch { res.status(500).json({ error: 'Error al eliminar la unidad' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar la unidad' }); }
 });
 
 // ── Catalog products ───────────────────────────────────────────────────────────
@@ -97,7 +98,7 @@ router.put('/catalog/:id', (req, res) => {
     const result = db.updateCatalogProduct(id, { name, category });
     if (result.error) return res.status(409).json({ error: result.error });
     res.json(result.product);
-  } catch { res.status(500).json({ error: 'Error al actualizar el producto' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al actualizar el producto' }); }
 });
 
 router.delete('/catalog/:id', (req, res) => {
@@ -107,14 +108,14 @@ router.delete('/catalog/:id', (req, res) => {
     const ok = db.deleteCatalogProduct(id);
     if (!ok) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json({ message: 'Producto eliminado' });
-  } catch { res.status(500).json({ error: 'Error al eliminar el producto del catálogo' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar el producto del catálogo' }); }
 });
 
 // ── Taxes (require requireInventory applied upstream in server.js) ─────────────
 
 router.get('/taxes', (req, res) => {
   try { res.json(db.getTaxTypes(req.inventoryId)); }
-  catch { res.status(500).json({ error: 'Error al obtener impuestos' }); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener impuestos' }); }
 });
 
 router.post('/taxes', requireEditorOrOwner, (req, res) => {
@@ -128,7 +129,7 @@ router.post('/taxes', requireEditorOrOwner, (req, res) => {
       categories: categories || [], active: active !== false,
     });
     res.status(201).json(tax);
-  } catch { res.status(500).json({ error: 'Error al crear el impuesto' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al crear el impuesto' }); }
 });
 
 router.put('/taxes/:id', requireEditorOrOwner, (req, res) => {
@@ -142,7 +143,7 @@ router.put('/taxes/:id', requireEditorOrOwner, (req, res) => {
     if (rate == null || isNaN(+rate) || +rate < 0 || +rate > 100)
       return res.status(400).json({ error: 'Porcentaje inválido (0–100)' });
     res.json(db.updateTaxType(id, { name, rate, categories: categories || [], active: active !== false }));
-  } catch { res.status(500).json({ error: 'Error al actualizar el impuesto' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al actualizar el impuesto' }); }
 });
 
 router.delete('/taxes/:id', requireEditorOrOwner, (req, res) => {
@@ -153,7 +154,7 @@ router.delete('/taxes/:id', requireEditorOrOwner, (req, res) => {
     if (!existing || existing.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Impuesto no encontrado' });
     db.deleteTaxType(id);
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'Error al eliminar el impuesto' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar el impuesto' }); }
 });
 
 module.exports = router;

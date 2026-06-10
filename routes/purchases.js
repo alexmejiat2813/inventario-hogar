@@ -1,7 +1,8 @@
-const express = require('express');
+﻿const express = require('express');
 const path    = require('path');
 const fs      = require('fs');
 const db      = require('../database');
+const logger   = require('../logger');
 const { requireEditorOrOwner } = require('../middleware/inventory');
 const { uploadReceipt, uploadFilePath } = require('../middleware/upload');
 
@@ -9,7 +10,7 @@ const router = express.Router();
 
 router.get('/summary', (req, res) => {
   try { res.json(db.getMonthlySummary(req.inventoryId)); }
-  catch { res.status(500).json({ error: 'Error al obtener resumen' }); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener resumen' }); }
 });
 
 router.get('/', (req, res) => {
@@ -19,7 +20,7 @@ router.get('/', (req, res) => {
       month:   month    || null,
       storeId: store_id ? parseInt(store_id) : null,
     }));
-  } catch { res.status(500).json({ error: 'Error al obtener historial' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener historial' }); }
 });
 
 router.post('/', requireEditorOrOwner, (req, res) => {
@@ -38,7 +39,7 @@ router.post('/', requireEditorOrOwner, (req, res) => {
     db.audit(req.inventoryId, req.user.id, req.user.name, 'purchase.create', 'purchase', session.id,
       { total_amount: session.total_amount, currency: session.currency, item_count: items.length });
     res.status(201).json(session);
-  } catch { res.status(500).json({ error: 'Error al registrar la compra' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al registrar la compra' }); }
 });
 
 router.get('/:sessionId', (req, res) => {
@@ -48,7 +49,7 @@ router.get('/:sessionId', (req, res) => {
     const session = db.getPurchaseSession(sessionId);
     if (!session || session.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Sesión no encontrada' });
     res.json(session);
-  } catch { res.status(500).json({ error: 'Error al obtener la sesión' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener la sesión' }); }
 });
 
 router.put('/:sessionId', requireEditorOrOwner, (req, res) => {
@@ -78,7 +79,7 @@ router.delete('/:sessionId', requireEditorOrOwner, (req, res) => {
     db.audit(req.inventoryId, req.user.id, req.user.name, 'purchase.delete', 'purchase', sessionId,
       { revert: !!revert_inventory });
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'Error al eliminar la compra' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar la compra' }); }
 });
 
 router.delete('/:sessionId/receipt', requireEditorOrOwner, (req, res) => {
@@ -90,7 +91,7 @@ router.delete('/:sessionId/receipt', requireEditorOrOwner, (req, res) => {
     if (session.receipt_image) fs.unlink(uploadFilePath(session.receipt_image), () => {});
     db.updateReceiptImage(sessionId, null);
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'Error al eliminar el recibo' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar el recibo' }); }
 });
 
 router.post('/:sessionId/receipt', requireEditorOrOwner, uploadReceipt.single('receipt'), (req, res) => {

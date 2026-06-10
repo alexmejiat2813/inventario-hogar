@@ -87,11 +87,11 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 
 | # | Tarea | Descripción | Estado |
 |---|-------|-------------|--------|
-| 57 | `CURRENCY_SYMBOLS` duplicado | Definido en `app.js`, `shopping-list.js`, `inventories.js`. Mover a `utils.js` (ya existe y se carga en todas las páginas). | ⬜ |
-| 58 | `catch {}` traga errores sin loguear | Varias rutas backend hacen `catch { res.status(500) }` perdiendo el detalle. Agregar `logger.error(err)` antes de responder. | ⬜ |
-| 59 | SW versionado manual | `ih-vNN` en `sw.js` se bump a mano — se olvida. Generar en CI con `Date.now()` o hash del commit para que sea automático. | ⬜ |
-| 60 | Strings hardcodeados en español | Algunos `<th>` de la lista de compras están en español fijo, no usan i18n. Agregar keys ES/EN/FR faltantes. | ⬜ |
-| 61 | Números mágicos sin constante | `5` (fotos máx) y `5MB` repetidos en frontend y backend sin constante compartida. Declarar en un lugar, referenciar desde ambos lados. | ⬜ |
+| 57 | `CURRENCY_SYMBOLS` duplicado | Definido en `app.js`, `shopping-list.js`, `inventories.js`. Mover a `utils.js` (ya existe y se carga en todas las páginas). | ✅ |
+| 58 | `catch {}` traga errores sin loguear | Varias rutas backend hacen `catch { res.status(500) }` perdiendo el detalle. Agregar `logger.error(err)` antes de responder. | ✅ |
+| 59 | SW versionado manual | `ih-vNN` en `sw.js` se bump a mano — se olvida. Generar en CI con `Date.now()` o hash del commit para que sea automático. | ✅ |
+| 60 | Strings hardcodeados en español | Algunos `<th>` de la lista de compras están en español fijo, no usan i18n. Agregar keys ES/EN/FR faltantes. | ✅ |
+| 61 | Números mágicos sin constante | `5` (fotos máx) y `5MB` repetidos en frontend y backend sin constante compartida. Declarar en un lugar, referenciar desde ambos lados. | ✅ |
 | 62 | `express.json()` sin `limit` explícito | Default 100kb implícito. Declarar `express.json({ limit: '100kb' })` para que sea intencional y auditable. | ✅ |
 
 ### P3 — Calidad e infraestructura
@@ -156,6 +156,11 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 53 | Categorías no se reflejaban en todas las vistas + sin íconos | Tabs de filtro e íconos estaban hardcodeados en Stock/Catálogo; agregar/editar una categoría en settings no se veía. Fix: tabla `categories` unificada como fuente única (columnas `name_en`/`name_fr`), tabs e íconos data-driven en Stock y Catálogo, selects dinámicos, rename con cascade a productos/catálogo, migración auto-crea categorías usadas, delete bloqueado si está en uso, UI de traducción en settings. Eliminado mapeo catálogo→inventario | ✅ |
 | 54 | Push notifications al celular | Alertas al teléfono con la app cerrada (vencimientos, stock crítico, presupuesto). Tabla `push_subscriptions`, ruta `/api/notifications`, handlers `push`/`notificationclick` en sw.js, UI en settings con enable/disable. VAPID keys configurables vía .env. Graceful: sin keys = 503. Cron en Fly para enviar = futuro. iOS requiere PWA instalada. i18n ES/EN/FR | `96fd654` | ✅ |
 | 77 | Bug plantillas no guardaban establecimiento/precio | `list_template_items` sin columnas `store_id`/`unit_price`. Migration + fix en `createTemplate`, save y applyTemplate. | `b8eaf36` | ✅ |
+| 57 | `CURRENCY_SYMBOLS` duplicado | Movido de shopping-list.js + inventories.js a utils.js. | — | ✅ |
+| 58 | `catch {}` traga errores | 11 route files: logger require + `catch (err) { logger.error(...)` en todos los catch bare. | — | ✅ |
+| 59 | SW versionado manual | Ya automatizado: `sw.js` fetch `/cache-version` devuelve `FLY_COMMIT_SHA` en prod. `ih-v1` es default pre-fetch. | — | ✅ |
+| 60 | Strings hardcodeados en `<th>` | `shopping.cols.*` keys en ES/EN/FR; `renderTable`/`renderTableRow` usan `tSafe()`. | — | ✅ |
+| 61 | Números mágicos | `MAX_PHOTOS=5` y `MAX_PHOTO_SIZE` en utils.js (frontend) + upload.js (backend). Eliminados de app.js y catalog.js. | — | ✅ |
 
 > **Nota deuda:** `initProfileMenu()` + `loadProfileAvatar()` están duplicados en app.js/history.js/shopping-list.js/inventories.js/catalog.js. Candidato a extraer a un módulo compartido `public/js/header.js` (no hecho aquí para mantener el cambio acotado).
 

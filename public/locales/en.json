@@ -242,7 +242,17 @@
       "noTax": "No tax"
     },
     "reset": "List reset",
-    "loadError": "Could not load the list"
+    "loadError": "Could not load the list",
+    "cols": {
+      "category": "Category",
+      "product": "Product",
+      "have": "Have",
+      "min": "Min",
+      "store": "Store",
+      "qty": "Qty",
+      "price": "Price/unit",
+      "subtotal": "Subtotal"
+    }
   },
   "profile": {
     "language": "Language",

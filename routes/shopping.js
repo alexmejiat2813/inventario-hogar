@@ -1,5 +1,6 @@
-const express = require('express');
+﻿const express = require('express');
 const db      = require('../database');
+const logger   = require('../logger');
 const { requireEditorOrOwner } = require('../middleware/inventory');
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const router = express.Router();
 
 router.get('/custom', (req, res) => {
   try { res.json(db.getCustomShoppingItems(req.inventoryId)); }
-  catch { res.status(500).json({ error: 'Error al obtener items personalizados' }); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener items personalizados' }); }
 });
 
 router.post('/custom', requireEditorOrOwner, (req, res) => {
@@ -16,7 +17,7 @@ router.post('/custom', requireEditorOrOwner, (req, res) => {
     const { name } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
     res.status(201).json(db.addCustomShoppingItem(req.inventoryId, name));
-  } catch { res.status(500).json({ error: 'Error al agregar item' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al agregar item' }); }
 });
 
 router.put('/custom/:id', (req, res) => {
@@ -25,7 +26,7 @@ router.put('/custom/:id', (req, res) => {
     if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
     db.setCustomShoppingItem(req.inventoryId, id, !!req.body.checked);
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'Error al actualizar item' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al actualizar item' }); }
 });
 
 router.delete('/custom/:id', requireEditorOrOwner, (req, res) => {
@@ -34,14 +35,14 @@ router.delete('/custom/:id', requireEditorOrOwner, (req, res) => {
     if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
     db.deleteCustomShoppingItem(req.inventoryId, id);
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'Error al eliminar item' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar item' }); }
 });
 
 // ── Auto items ─────────────────────────────────────────────────
 
 router.get('/', (req, res) => {
   try { res.json(db.getShoppingList(req.inventoryId)); }
-  catch { res.status(500).json({ error: 'Error al obtener la lista de compras' }); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener la lista de compras' }); }
 });
 
 router.put('/:productId', (req, res) => {
@@ -50,14 +51,14 @@ router.put('/:productId', (req, res) => {
     if (isNaN(productId)) return res.status(400).json({ error: 'ID inválido' });
     db.setShoppingItem(req.inventoryId, productId, !!req.body.checked);
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'Error al actualizar el item' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al actualizar el item' }); }
 });
 
 router.delete('/', (req, res) => {
   try {
     db.clearShoppingList(req.inventoryId);
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'Error al limpiar la lista' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al limpiar la lista' }); }
 });
 
 module.exports = router;

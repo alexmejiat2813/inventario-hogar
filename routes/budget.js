@@ -1,5 +1,6 @@
-const express = require('express');
+﻿const express = require('express');
 const db      = require('../database');
+const logger   = require('../logger');
 const { requireEditorOrOwner } = require('../middleware/inventory');
 
 const router = express.Router();
@@ -23,7 +24,7 @@ router.put('/', requireEditorOrOwner, (req, res) => {
 
 router.get('/resets', (req, res) => {
   try { res.json(db.getBudgetResets(req.inventoryId)); }
-  catch { res.status(500).json({ error: 'Error al obtener historial de resets' }); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener historial de resets' }); }
 });
 
 router.post('/reset', requireEditorOrOwner, (req, res) => {

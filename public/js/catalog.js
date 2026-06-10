@@ -10,9 +10,6 @@ const CATEGORY_ICONS = {
   'Otros':        '📦',
 };
 
-const MAX_PHOTOS     = 5;
-const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
-
 const state = {
   catalog: [],
   categories: [],

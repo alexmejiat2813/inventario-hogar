@@ -242,7 +242,17 @@
       "noTax": "Sin impuesto"
     },
     "reset": "Lista reiniciada",
-    "loadError": "No se pudo cargar la lista"
+    "loadError": "No se pudo cargar la lista",
+    "cols": {
+      "category": "Categoría",
+      "product": "Producto",
+      "have": "Tenés",
+      "min": "Mín",
+      "store": "Establecimiento",
+      "qty": "Cantidad",
+      "price": "Precio/u",
+      "subtotal": "Subtotal"
+    }
   },
   "profile": {
     "language": "Idioma",

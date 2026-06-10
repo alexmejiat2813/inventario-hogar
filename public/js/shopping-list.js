@@ -2,7 +2,6 @@
    Lista de Compras — con registro de compras
    ============================================================ */
 
-const CURRENCY_SYMBOLS = { CAD: 'C$', USD: '$', COP: '$', EUR: '€', MXN: '$', BRL: 'R$', GBP: '£' };
 const CAT_ICONS = { Alimentos:'🍎', Aseo:'🧼', Alacena:'🫙', Bebidas:'🥤', Otros:'📦' };
 const CAT_ORDER = ['Alimentos','Aseo','Alacena','Bebidas','Otros'];
 
@@ -227,14 +226,14 @@ function renderTable(container, items) {
       <table class="sl-table">
         <thead><tr>
           <th class="sl-th"></th>
-          <th class="sl-th">Categoría</th>
-          <th class="sl-th">Producto</th>
-          <th class="sl-th sl-th--r">Tenés</th>
-          <th class="sl-th sl-th--r">Mín</th>
-          <th class="sl-th">Establecimiento</th>
-          <th class="sl-th sl-th--r">Cantidad</th>
-          <th class="sl-th sl-th--r">Precio/u</th>
-          <th class="sl-th sl-th--r">Subtotal</th>
+          <th class="sl-th">${tSafe('shopping.cols.category','Categoría')}</th>
+          <th class="sl-th">${tSafe('shopping.cols.product','Producto')}</th>
+          <th class="sl-th sl-th--r">${tSafe('shopping.cols.have','Tenés')}</th>
+          <th class="sl-th sl-th--r">${tSafe('shopping.cols.min','Mín')}</th>
+          <th class="sl-th">${tSafe('shopping.cols.store','Establecimiento')}</th>
+          <th class="sl-th sl-th--r">${tSafe('shopping.cols.qty','Cantidad')}</th>
+          <th class="sl-th sl-th--r">${tSafe('shopping.cols.price','Precio/u')}</th>
+          <th class="sl-th sl-th--r">${tSafe('shopping.cols.subtotal','Subtotal')}</th>
         </tr></thead>
         <tbody>${autoRows}${customRows}${addRow}</tbody>
       </table>
@@ -277,20 +276,20 @@ function renderTableRow(item) {
       </td>
       <td class="sl-td sl-td--r">${fmtQty(item.current_qty)} <span class="sl-unit">${unit}</span></td>
       <td class="sl-td sl-td--r">${fmtQty(item.min_qty)} <span class="sl-unit">${unit}</span></td>
-      <td class="sl-td sl-field" data-label="Establecimiento">
+      <td class="sl-td sl-field" data-label="${tSafe('shopping.cols.store','Establecimiento')}">
         <select class="sl-sel" data-field="store" data-id="${item.id}">${storeOptions}</select>
       </td>
-      <td class="sl-td sl-td--r sl-field" data-label="Cantidad">
+      <td class="sl-td sl-td--r sl-field" data-label="${tSafe('shopping.cols.qty','Cantidad')}">
         <input class="sl-inp sl-inp--qty" type="number" min="0" step="0.01"
                data-field="qty" data-id="${item.id}"
                value="${pd.quantityBought != null ? pd.quantityBought : ''}">
       </td>
-      <td class="sl-td sl-td--r sl-field" data-label="Precio/u">
+      <td class="sl-td sl-td--r sl-field" data-label="${tSafe('shopping.cols.price','Precio/u')}">
         <input class="sl-inp sl-inp--price" type="number" min="0" step="0.01"
                data-field="price" data-id="${item.id}"
                value="${pd.unitPrice != null ? pd.unitPrice : ''}">
       </td>
-      <td class="sl-td sl-td--r sl-field" data-label="Subtotal">
+      <td class="sl-td sl-td--r sl-field" data-label="${tSafe('shopping.cols.subtotal','Subtotal')}">
         <span class="sl-sub${sub != null ? ' sl-sub--pos' : ''}" data-subtotal="${item.id}">${getSubtotalStr(pd)}</span>
       </td>
     </tr>`;
@@ -792,7 +791,7 @@ async function handleReceiptPick(file) {
     file = cropped;
   }
 
-  if (file.size > 5 * 1024 * 1024) {
+  if (file.size > MAX_PHOTO_SIZE) {
     showToast(tSafe('shopping.register.fileTooLarge', 'Imagen demasiado grande (máx 5 MB)'), 'error');
     return;
   }

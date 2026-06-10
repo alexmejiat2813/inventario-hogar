@@ -2,6 +2,9 @@ const path   = require('path');
 const fs     = require('fs');
 const multer = require('multer');
 
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+const MAX_PHOTOS     = 5;
+
 // Persistent uploads root — overridable so it can point to a volume in production
 const UPLOADS_DIR  = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'public', 'uploads');
 
@@ -18,7 +21,7 @@ const receiptStorage = multer.diskStorage({
 
 const uploadReceipt = multer({
   storage: receiptStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_PHOTO_SIZE },
   fileFilter(req, file, cb) {
     if (/^image\/(jpeg|jpg|png|webp|heic|heif)/.test(file.mimetype)) cb(null, true);
     else cb(new Error('Formato de imagen no válido'));
@@ -44,14 +47,14 @@ const SVG_RE = /svg/i;
 
 const uploadProductImage = multer({
   storage: productImageStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_PHOTO_SIZE },
   fileFilter(req, file, cb) {
     const isSvg = SVG_RE.test(file.mimetype) || /\.svgz?$/i.test(file.originalname);
     const ok    = RASTER_RE.test(file.mimetype) || RASTER_EXT_RE.test(file.originalname);
     if (!isSvg && ok) cb(null, true);
     else cb(new Error('Formato de imagen no válido'));
   },
-}).array('photos', 5);
+}).array('photos', MAX_PHOTOS);
 
 // Resolve a stored web path ('/uploads/products/x.jpg') to its physical file
 // path inside UPLOADS_DIR (which may be a persistent volume in production).

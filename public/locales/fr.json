@@ -242,7 +242,17 @@
       "noTax": "Sans taxe"
     },
     "reset": "Liste réinitialisée",
-    "loadError": "Impossible de charger la liste"
+    "loadError": "Impossible de charger la liste",
+    "cols": {
+      "category": "Catégorie",
+      "product": "Produit",
+      "have": "Avez",
+      "min": "Min",
+      "store": "Établissement",
+      "qty": "Qté",
+      "price": "Prix/unit",
+      "subtotal": "Sous-total"
+    }
   },
   "profile": {
     "language": "Langue",

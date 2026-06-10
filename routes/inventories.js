@@ -1,5 +1,6 @@
-const express = require('express');
+﻿const express = require('express');
 const db      = require('../database');
+const logger   = require('../logger');
 const { requireMember, requireOwner, requireEditorOrOwner } = require('../middleware/inventory');
 
 const router = express.Router();
@@ -19,7 +20,7 @@ router.get('/', (req, res) => {
       };
     });
     res.json(list);
-  } catch { res.status(500).json({ error: 'Error al obtener inventarios' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener inventarios' }); }
 });
 
 router.post('/', (req, res) => {
@@ -28,7 +29,7 @@ router.post('/', (req, res) => {
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
     const inv = db.createInventory(name.trim(), req.user.id);
     res.status(201).json({ ...inv, role: 'owner' });
-  } catch { res.status(500).json({ error: 'Error al crear el inventario' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al crear el inventario' }); }
 });
 
 router.post('/join', (req, res) => {
@@ -38,7 +39,7 @@ router.post('/join', (req, res) => {
     const result = db.joinByCode(code.trim(), req.user.id);
     if (result.error) return res.status(400).json({ error: result.error });
     res.json(result);
-  } catch { res.status(500).json({ error: 'Error al unirse al inventario' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al unirse al inventario' }); }
 });
 
 router.post('/:id/enter', (req, res) => {
@@ -50,7 +51,7 @@ router.post('/:id/enter', (req, res) => {
     if (!inv) return res.status(404).json({ error: 'Inventario no encontrado' });
     req.session.activeInventoryId = id;
     res.json({ ...inv, role: member.role });
-  } catch { res.status(500).json({ error: 'Error al acceder al inventario' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al acceder al inventario' }); }
 });
 
 router.get('/:id/members', requireMember, (req, res) => {
@@ -61,7 +62,7 @@ router.get('/:id/members', requireMember, (req, res) => {
       codes:   canManage ? db.getActiveInviteCodes(req.inventoryId) : [],
       role:    req.userRole,
     });
-  } catch { res.status(500).json({ error: 'Error al obtener colaboradores' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener colaboradores' }); }
 });
 
 router.post('/:id/invite', requireMember, (req, res) => {
@@ -73,7 +74,7 @@ router.post('/:id/invite', requireMember, (req, res) => {
       return res.status(403).json({ error: 'Los editores solo pueden invitar lectores' });
     }
     res.status(201).json(db.generateInviteCode(req.inventoryId, role, req.user.id));
-  } catch { res.status(500).json({ error: 'Error al generar código' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al generar código' }); }
 });
 
 router.delete('/:id/invite/:code', requireMember, requireOwner, (req, res) => {
@@ -81,7 +82,7 @@ router.delete('/:id/invite/:code', requireMember, requireOwner, (req, res) => {
     const ok = db.revokeCode(req.inventoryId, req.params.code);
     if (!ok) return res.status(404).json({ error: 'Código no encontrado' });
     res.json({ message: 'Código revocado' });
-  } catch { res.status(500).json({ error: 'Error al revocar código' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al revocar código' }); }
 });
 
 router.put('/:id/members/:userId/role', requireMember, requireOwner, (req, res) => {
@@ -101,7 +102,7 @@ router.put('/:id/members/:userId/role', requireMember, requireOwner, (req, res) 
     db.audit(req.inventoryId, req.user.id, req.user.name, 'member.role_change', 'member', targetId,
       { user_name: targetName, from: target.role, to: role });
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'Error al cambiar el rol' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al cambiar el rol' }); }
 });
 
 router.delete('/:id/members/:userId', requireMember, requireOwner, (req, res) => {
@@ -115,12 +116,12 @@ router.delete('/:id/members/:userId', requireMember, requireOwner, (req, res) =>
     db.audit(req.inventoryId, req.user.id, req.user.name, 'member.remove', 'member', targetId,
       { user_name: targetName });
     res.json({ message: 'Miembro removido' });
-  } catch { res.status(500).json({ error: 'Error al remover miembro' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al remover miembro' }); }
 });
 
 router.get('/:id/audit', requireMember, (req, res) => {
   try { res.json(db.getAuditLog(req.inventoryId)); }
-  catch { res.status(500).json({ error: 'Error al obtener el registro de actividad' }); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener el registro de actividad' }); }
 });
 
 router.put('/:id/name', requireMember, requireOwner, (req, res) => {
@@ -132,7 +133,7 @@ router.put('/:id/name', requireMember, requireOwner, (req, res) => {
     db.audit(req.inventoryId, req.user.id, req.user.name, 'inventory.rename', 'inventory', req.inventoryId,
       { old_name: old?.name, new_name: name.trim() });
     res.json(inv);
-  } catch { res.status(500).json({ error: 'Error al renombrar el inventario' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al renombrar el inventario' }); }
 });
 
 router.delete('/:id', requireMember, requireOwner, (req, res) => {
@@ -144,7 +145,7 @@ router.delete('/:id', requireMember, requireOwner, (req, res) => {
       req.session.activeInventoryId = null;
     }
     res.json({ ok: true });
-  } catch { res.status(500).json({ error: 'Error al eliminar el inventario' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar el inventario' }); }
 });
 
 router.put('/:id/currency', requireMember, requireOwner, (req, res) => {
@@ -153,7 +154,7 @@ router.put('/:id/currency', requireMember, requireOwner, (req, res) => {
     if (!VALID_CURRENCIES.includes(currency)) return res.status(400).json({ error: 'Moneda inválida' });
     const inv = db.updateInventoryCurrency(req.inventoryId, currency);
     res.json({ currency: inv.currency });
-  } catch { res.status(500).json({ error: 'Error al actualizar la moneda' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al actualizar la moneda' }); }
 });
 
 router.get('/:id/budget', requireMember, (req, res) => {
@@ -175,7 +176,7 @@ router.post('/:id/budget', requireMember, requireEditorOrOwner, (req, res) => {
 
 router.get('/:id/budget/resets', requireMember, (req, res) => {
   try { res.json(db.getBudgetResets(req.inventoryId)); }
-  catch { res.status(500).json({ error: 'Error al obtener historial de resets' }); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener historial de resets' }); }
 });
 
 router.post('/:id/budget/reset', requireMember, requireEditorOrOwner, (req, res) => {

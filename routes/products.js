@@ -1,7 +1,8 @@
-const express = require('express');
+﻿const express = require('express');
 const path    = require('path');
 const fs      = require('fs');
 const db      = require('../database');
+const logger   = require('../logger');
 const { requireEditorOrOwner }   = require('../middleware/inventory');
 const { validateProduct }        = require('../middleware/validate');
 const { uploadProductImage, uploadFilePath } = require('../middleware/upload');
@@ -12,14 +13,14 @@ router.get('/', (req, res) => {
   try {
     const { category } = req.query;
     res.json(category ? db.getByCategory(req.inventoryId, category) : db.getAll(req.inventoryId));
-  } catch { res.status(500).json({ error: 'Error al obtener productos' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener productos' }); }
 });
 
 router.get('/expiring', (req, res) => {
   try {
     const days = Math.min(Math.max(parseInt(req.query.days) || 7, 0), 90);
     res.json(db.getExpiringProducts(req.inventoryId, days));
-  } catch { res.status(500).json({ error: 'Error al obtener productos por vencer' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener productos por vencer' }); }
 });
 
 router.get('/:id', (req, res) => {
@@ -28,7 +29,7 @@ router.get('/:id', (req, res) => {
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     res.json(p);
-  } catch { res.status(500).json({ error: 'Error al obtener el producto' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener el producto' }); }
 });
 
 router.post('/', requireEditorOrOwner, (req, res) => {
@@ -45,7 +46,7 @@ router.post('/', requireEditorOrOwner, (req, res) => {
     db.audit(req.inventoryId, req.user.id, req.user.name, 'product.create', 'product', product.id,
       { name: product.name, category });
     res.status(201).json(product);
-  } catch { res.status(500).json({ error: 'Error al crear el producto' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al crear el producto' }); }
 });
 
 router.put('/:id', requireEditorOrOwner, (req, res) => {
@@ -64,7 +65,7 @@ router.put('/:id', requireEditorOrOwner, (req, res) => {
     db.audit(req.inventoryId, req.user.id, req.user.name, 'product.update', 'product', p.id,
       { name: name.trim() });
     res.json(updated);
-  } catch { res.status(500).json({ error: 'Error al actualizar el producto' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al actualizar el producto' }); }
 });
 
 router.delete('/:id', requireEditorOrOwner, (req, res) => {
@@ -76,7 +77,7 @@ router.delete('/:id', requireEditorOrOwner, (req, res) => {
     db.audit(req.inventoryId, req.user.id, req.user.name, 'product.delete', 'product', p.id,
       { name: p.name });
     res.json({ message: 'Producto eliminado' });
-  } catch { res.status(500).json({ error: 'Error al eliminar el producto' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar el producto' }); }
 });
 
 // ── Images ─────────────────────────────────────────────────────────────────────
@@ -89,7 +90,7 @@ router.get('/:id/images', (req, res) => {
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     res.json(db.getProductImages(productId));
-  } catch { res.status(500).json({ error: 'Error al obtener imágenes' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener imágenes' }); }
 });
 
 router.post('/:id/images', requireEditorOrOwner, (req, res) => {
@@ -111,7 +112,7 @@ router.post('/:id/images', requireEditorOrOwner, (req, res) => {
         db.addProductImage(productId, '/uploads/products/' + f.filename)
       );
       res.status(201).json(saved);
-    } catch { res.status(500).json({ error: 'Error al guardar imágenes' }); }
+    } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al guardar imágenes' }); }
   });
 });
 
@@ -127,7 +128,7 @@ router.delete('/:id/images/:imageId', requireEditorOrOwner, (req, res) => {
     if (!deleted) return res.status(404).json({ error: 'Imagen no encontrada' });
     if (image_path) fs.unlink(uploadFilePath(image_path), () => {});
     res.json({ message: 'Imagen eliminada' });
-  } catch { res.status(500).json({ error: 'Error al eliminar imagen' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar imagen' }); }
 });
 
 router.get('/:id/price-history', (req, res) => {
@@ -138,7 +139,7 @@ router.get('/:id/price-history', (req, res) => {
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     res.json(db.getProductPriceHistory(productId, req.inventoryId));
-  } catch { res.status(500).json({ error: 'Error al obtener historial de precios' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener historial de precios' }); }
 });
 
 router.get('/:id/store-prices', (req, res) => {
@@ -149,7 +150,7 @@ router.get('/:id/store-prices', (req, res) => {
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     res.json(db.getProductStorePrices(productId, req.inventoryId));
-  } catch { res.status(500).json({ error: 'Error al obtener precios por tienda' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener precios por tienda' }); }
 });
 
 module.exports = router;

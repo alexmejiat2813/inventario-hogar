@@ -3,8 +3,6 @@
    ============================================================ */
 
 const ROLE_CLASS = { owner: 'role-owner', editor: 'role-editor', reader: 'role-reader' };
-const CURRENCY_SYMBOLS = { CAD: 'C$', USD: '$', COP: '$', EUR: '€', MXN: '$', BRL: 'R$', GBP: '£' };
-function curSym(c) { return CURRENCY_SYMBOLS[c] || '$'; }
 function fmtMoney(n) {
   return (Math.round((+n || 0) * 100) / 100)
     .toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });

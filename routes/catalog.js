@@ -1,5 +1,6 @@
-const express = require('express');
+﻿const express = require('express');
 const db      = require('../database');
+const logger   = require('../logger');
 
 const router = express.Router();
 
@@ -7,7 +8,7 @@ router.get('/', (req, res) => {
   try {
     const inventoryId = req.session.activeInventoryId || null;
     res.json(db.getCatalogProducts(inventoryId));
-  } catch { res.status(500).json({ error: 'Error al obtener el catálogo' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener el catálogo' }); }
 });
 
 router.post('/', (req, res) => {
@@ -19,7 +20,7 @@ router.post('/', (req, res) => {
     const result = db.addCatalogProduct({ name, category, userId: req.user.id });
     if (result.error) return res.status(409).json({ error: result.error });
     res.status(201).json(result.product);
-  } catch { res.status(500).json({ error: 'Error al agregar el producto al catálogo' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al agregar el producto al catálogo' }); }
 });
 
 router.post('/:id/add', (req, res) => {
@@ -45,7 +46,7 @@ router.post('/:id/add', (req, res) => {
     });
     if (result.error) return res.status(409).json({ error: result.error });
     res.status(201).json(result.product);
-  } catch { res.status(500).json({ error: 'Error al agregar al inventario' }); }
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al agregar al inventario' }); }
 });
 
 module.exports = router;

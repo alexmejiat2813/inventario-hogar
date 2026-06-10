@@ -14,9 +14,6 @@ const CAT_ICONS = {
 
 const ROLE_CLASS = { owner: 'role-owner', editor: 'role-editor', reader: 'role-reader' };
 
-const MAX_PHOTOS     = 5;
-const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
-
 let _priceChart = null;
 
 function expiryInfo(expiry_date) {

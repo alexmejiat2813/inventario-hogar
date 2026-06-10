@@ -15,3 +15,9 @@ async function apiFetch(method, url, body) {
 function catLang() {
   return (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
 }
+
+const CURRENCY_SYMBOLS = { CAD: 'C$', USD: '$', COP: '$', EUR: '€', MXN: '$', BRL: 'R$', GBP: '£' };
+function curSym(c) { return CURRENCY_SYMBOLS[c] || '$'; }
+
+const MAX_PHOTOS     = 5;
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
