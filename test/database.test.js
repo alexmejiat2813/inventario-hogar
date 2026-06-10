@@ -315,6 +315,35 @@ describe('custom shopping items', () => {
   });
 });
 
+describe('catalogo i18n (productos sembrados traducibles)', () => {
+  test('productos sembrados llevan i18n_key', () => {
+    const cat = db.getCatalogProducts();
+    const arroz = cat.find(p => p.name === 'Arroz');
+    assert.ok(arroz, 'el seed incluye Arroz');
+    assert.equal(arroz.i18n_key, 'arroz');
+  });
+
+  test('renombrar un producto sembrado limpia i18n_key', () => {
+    const arroz = db.getCatalogProducts().find(p => p.name === 'Arroz');
+    const res = db.updateCatalogProduct(arroz.id, { name: 'Riz basmati', category: 'Alimentos' });
+    assert.ok(!res.error, res.error);
+    assert.equal(res.product.i18n_key, null, 'al renombrar deja de traducirse');
+    // restaurar para no afectar otros tests
+    db.updateCatalogProduct(arroz.id, { name: 'Arroz', category: 'Alimentos' });
+  });
+
+  test('addCatalogProductToInventory usa displayName si se pasa', () => {
+    const { inv } = makeInventory();
+    const frijoles = db.getCatalogProducts().find(p => p.name === 'Frijoles');
+    const r = db.addCatalogProductToInventory({
+      catalogProductId: frijoles.id, inventoryId: inv.id,
+      currentQty: 1, minQty: 1, unit: 'unidades', displayName: 'Haricots',
+    });
+    assert.ok(!r.error, r.error);
+    assert.equal(r.product.name, 'Haricots', 'guarda el nombre en el idioma del usuario');
+  });
+});
+
 describe('list templates (regression: node:sqlite no tiene db.transaction)', () => {
   test('createTemplate persiste plantilla e items', () => {
     const { inv, userId } = makeInventory();

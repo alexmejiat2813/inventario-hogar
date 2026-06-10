@@ -244,113 +244,129 @@ if (!itemCols.includes('tax_rate'))   db.exec('ALTER TABLE purchase_items ADD CO
 if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD COLUMN tax_amount REAL');
 
 // ── Catalog seed (100 products) — ver bloque "Seeds de primera ejecución" ─────
+// [i18n_key, nombre ES (canónico en DB), categoría]. El frontend muestra
+// locales catalogSeed.<i18n_key>; si el usuario renombra, la key se limpia.
 const CATALOG_SEED = [
   // Alimentos (30)
-  ['Arroz',                'Alimentos'],
-  ['Harina de trigo',      'Alimentos'],
-  ['Harina de maíz',       'Alimentos'],
-  ['Pasta',                'Alimentos'],
-  ['Avena',                'Alimentos'],
-  ['Lentejas',             'Alimentos'],
-  ['Frijoles',             'Alimentos'],
-  ['Garbanzos',            'Alimentos'],
-  ['Azúcar',               'Alimentos'],
-  ['Sal',                  'Alimentos'],
-  ['Aceite vegetal',       'Alimentos'],
-  ['Aceite de oliva',      'Alimentos'],
-  ['Vinagre',              'Alimentos'],
-  ['Salsa de tomate',      'Alimentos'],
-  ['Mayonesa',             'Alimentos'],
-  ['Mostaza',              'Alimentos'],
-  ['Atún en lata',         'Alimentos'],
-  ['Sardinas',             'Alimentos'],
-  ['Leche',                'Alimentos'],
-  ['Leche en polvo',       'Alimentos'],
-  ['Huevos',               'Alimentos'],
-  ['Mantequilla',          'Alimentos'],
-  ['Queso',                'Alimentos'],
-  ['Yogur',                'Alimentos'],
-  ['Pan',                  'Alimentos'],
-  ['Galletas',             'Alimentos'],
-  ['Cereal',               'Alimentos'],
-  ['Café',                 'Alimentos'],
-  ['Té',                   'Alimentos'],
-  ['Chocolate en polvo',   'Alimentos'],
+  ['arroz',               'Arroz',                'Alimentos'],
+  ['harina_de_trigo',     'Harina de trigo',      'Alimentos'],
+  ['harina_de_maiz',      'Harina de maíz',       'Alimentos'],
+  ['pasta',               'Pasta',                'Alimentos'],
+  ['avena',               'Avena',                'Alimentos'],
+  ['lentejas',            'Lentejas',             'Alimentos'],
+  ['frijoles',            'Frijoles',             'Alimentos'],
+  ['garbanzos',           'Garbanzos',            'Alimentos'],
+  ['azucar',              'Azúcar',               'Alimentos'],
+  ['sal',                 'Sal',                  'Alimentos'],
+  ['aceite_vegetal',      'Aceite vegetal',       'Alimentos'],
+  ['aceite_de_oliva',     'Aceite de oliva',      'Alimentos'],
+  ['vinagre',             'Vinagre',              'Alimentos'],
+  ['salsa_de_tomate',     'Salsa de tomate',      'Alimentos'],
+  ['mayonesa',            'Mayonesa',             'Alimentos'],
+  ['mostaza',             'Mostaza',              'Alimentos'],
+  ['atun_en_lata',        'Atún en lata',         'Alimentos'],
+  ['sardinas',            'Sardinas',             'Alimentos'],
+  ['leche',               'Leche',                'Alimentos'],
+  ['leche_en_polvo',      'Leche en polvo',       'Alimentos'],
+  ['huevos',              'Huevos',               'Alimentos'],
+  ['mantequilla',         'Mantequilla',          'Alimentos'],
+  ['queso',               'Queso',                'Alimentos'],
+  ['yogur',               'Yogur',                'Alimentos'],
+  ['pan',                 'Pan',                  'Alimentos'],
+  ['galletas',            'Galletas',             'Alimentos'],
+  ['cereal',              'Cereal',               'Alimentos'],
+  ['cafe',                'Café',                 'Alimentos'],
+  ['te',                  'Té',                   'Alimentos'],
+  ['chocolate_en_polvo',  'Chocolate en polvo',   'Alimentos'],
   // Bebidas (10)
-  ['Agua embotellada',     'Bebidas'],
-  ['Jugo de naranja',      'Bebidas'],
-  ['Jugo de manzana',      'Bebidas'],
-  ['Refresco cola',        'Bebidas'],
-  ['Refresco lima',        'Bebidas'],
-  ['Agua saborizada',      'Bebidas'],
-  ['Bebida energética',    'Bebidas'],
-  ['Leche de almendra',    'Bebidas'],
-  ['Leche de soya',        'Bebidas'],
-  ['Agua con gas',         'Bebidas'],
+  ['agua_embotellada',    'Agua embotellada',     'Bebidas'],
+  ['jugo_de_naranja',     'Jugo de naranja',      'Bebidas'],
+  ['jugo_de_manzana',     'Jugo de manzana',      'Bebidas'],
+  ['refresco_cola',       'Refresco cola',        'Bebidas'],
+  ['refresco_lima',       'Refresco lima',        'Bebidas'],
+  ['agua_saborizada',     'Agua saborizada',      'Bebidas'],
+  ['bebida_energetica',   'Bebida energética',    'Bebidas'],
+  ['leche_de_almendra',   'Leche de almendra',    'Bebidas'],
+  ['leche_de_soya',       'Leche de soya',        'Bebidas'],
+  ['agua_con_gas',        'Agua con gas',         'Bebidas'],
   // Aseo Personal (20)
-  ['Jabón de baño',        'Aseo Personal'],
-  ['Shampoo',              'Aseo Personal'],
-  ['Acondicionador',       'Aseo Personal'],
-  ['Pasta dental',         'Aseo Personal'],
-  ['Cepillo de dientes',   'Aseo Personal'],
-  ['Hilo dental',          'Aseo Personal'],
-  ['Desodorante',          'Aseo Personal'],
-  ['Papel higiénico',      'Aseo Personal'],
-  ['Toallas húmedas',      'Aseo Personal'],
-  ['Algodón',              'Aseo Personal'],
-  ['Crema corporal',       'Aseo Personal'],
-  ['Crema facial',         'Aseo Personal'],
-  ['Protector solar',      'Aseo Personal'],
-  ['Rastrillos',           'Aseo Personal'],
-  ['Espuma de afeitar',    'Aseo Personal'],
-  ['Perfume',              'Aseo Personal'],
-  ['Maquillaje base',      'Aseo Personal'],
-  ['Labial',               'Aseo Personal'],
-  ['Tampones',             'Aseo Personal'],
-  ['Toallas sanitarias',   'Aseo Personal'],
+  ['jabon_de_bano',       'Jabón de baño',        'Aseo Personal'],
+  ['shampoo',             'Shampoo',              'Aseo Personal'],
+  ['acondicionador',      'Acondicionador',       'Aseo Personal'],
+  ['pasta_dental',        'Pasta dental',         'Aseo Personal'],
+  ['cepillo_de_dientes',  'Cepillo de dientes',   'Aseo Personal'],
+  ['hilo_dental',         'Hilo dental',          'Aseo Personal'],
+  ['desodorante',         'Desodorante',          'Aseo Personal'],
+  ['papel_higienico',     'Papel higiénico',      'Aseo Personal'],
+  ['toallas_humedas',     'Toallas húmedas',      'Aseo Personal'],
+  ['algodon',             'Algodón',              'Aseo Personal'],
+  ['crema_corporal',      'Crema corporal',       'Aseo Personal'],
+  ['crema_facial',        'Crema facial',         'Aseo Personal'],
+  ['protector_solar',     'Protector solar',      'Aseo Personal'],
+  ['rastrillos',          'Rastrillos',           'Aseo Personal'],
+  ['espuma_de_afeitar',   'Espuma de afeitar',    'Aseo Personal'],
+  ['perfume',             'Perfume',              'Aseo Personal'],
+  ['maquillaje_base',     'Maquillaje base',      'Aseo Personal'],
+  ['labial',              'Labial',               'Aseo Personal'],
+  ['tampones',            'Tampones',             'Aseo Personal'],
+  ['toallas_sanitarias',  'Toallas sanitarias',   'Aseo Personal'],
   // Aseo del Hogar (20)
-  ['Detergente ropa',      'Aseo del Hogar'],
-  ['Suavizante ropa',      'Aseo del Hogar'],
-  ['Jabón lavar platos',   'Aseo del Hogar'],
-  ['Esponja',              'Aseo del Hogar'],
-  ['Cloro',                'Aseo del Hogar'],
-  ['Desinfectante piso',   'Aseo del Hogar'],
-  ['Limpiavidrios',        'Aseo del Hogar'],
-  ['Limpiador multiusos',  'Aseo del Hogar'],
-  ['Quitamanchas',         'Aseo del Hogar'],
-  ['Bolsas de basura',     'Aseo del Hogar'],
-  ['Papel cocina',         'Aseo del Hogar'],
-  ['Servilletas',          'Aseo del Hogar'],
-  ['Guantes de caucho',    'Aseo del Hogar'],
-  ['Escoba',               'Aseo del Hogar'],
-  ['Trapeador',            'Aseo del Hogar'],
-  ['Recogedor',            'Aseo del Hogar'],
-  ['Ambientador spray',    'Aseo del Hogar'],
-  ['Velas',                'Aseo del Hogar'],
-  ['Fósforos',             'Aseo del Hogar'],
-  ['Insecticida',          'Aseo del Hogar'],
+  ['detergente_ropa',     'Detergente ropa',      'Aseo del Hogar'],
+  ['suavizante_ropa',     'Suavizante ropa',      'Aseo del Hogar'],
+  ['jabon_lavar_platos',  'Jabón lavar platos',   'Aseo del Hogar'],
+  ['esponja',             'Esponja',              'Aseo del Hogar'],
+  ['cloro',               'Cloro',                'Aseo del Hogar'],
+  ['desinfectante_piso',  'Desinfectante piso',   'Aseo del Hogar'],
+  ['limpiavidrios',       'Limpiavidrios',        'Aseo del Hogar'],
+  ['limpiador_multiusos', 'Limpiador multiusos',  'Aseo del Hogar'],
+  ['quitamanchas',        'Quitamanchas',         'Aseo del Hogar'],
+  ['bolsas_de_basura',    'Bolsas de basura',     'Aseo del Hogar'],
+  ['papel_cocina',        'Papel cocina',         'Aseo del Hogar'],
+  ['servilletas',         'Servilletas',          'Aseo del Hogar'],
+  ['guantes_de_caucho',   'Guantes de caucho',    'Aseo del Hogar'],
+  ['escoba',              'Escoba',               'Aseo del Hogar'],
+  ['trapeador',           'Trapeador',            'Aseo del Hogar'],
+  ['recogedor',           'Recogedor',            'Aseo del Hogar'],
+  ['ambientador_spray',   'Ambientador spray',    'Aseo del Hogar'],
+  ['velas',               'Velas',                'Aseo del Hogar'],
+  ['fosforos',            'Fósforos',             'Aseo del Hogar'],
+  ['insecticida',         'Insecticida',          'Aseo del Hogar'],
   // Alacena (20)
-  ['Pimienta negra',       'Alacena'],
-  ['Comino',               'Alacena'],
-  ['Orégano',              'Alacena'],
-  ['Ajo en polvo',         'Alacena'],
-  ['Cebolla en polvo',     'Alacena'],
-  ['Curry',                'Alacena'],
-  ['Canela',               'Alacena'],
-  ['Vainilla',             'Alacena'],
-  ['Polvo de hornear',     'Alacena'],
-  ['Bicarbonato',          'Alacena'],
-  ['Maicena',              'Alacena'],
-  ['Gelatina',             'Alacena'],
-  ['Miel',                 'Alacena'],
-  ['Mermelada',            'Alacena'],
-  ['Mantequilla de maní',  'Alacena'],
-  ['Chocolate negro',      'Alacena'],
-  ['Caldo de pollo',       'Alacena'],
-  ['Sazonador',            'Alacena'],
-  ['Laurel',               'Alacena'],
-  ['Tomillo',              'Alacena'],
+  ['pimienta_negra',      'Pimienta negra',       'Alacena'],
+  ['comino',              'Comino',               'Alacena'],
+  ['oregano',             'Orégano',              'Alacena'],
+  ['ajo_en_polvo',        'Ajo en polvo',         'Alacena'],
+  ['cebolla_en_polvo',    'Cebolla en polvo',     'Alacena'],
+  ['curry',               'Curry',                'Alacena'],
+  ['canela',              'Canela',               'Alacena'],
+  ['vainilla',            'Vainilla',             'Alacena'],
+  ['polvo_de_hornear',    'Polvo de hornear',     'Alacena'],
+  ['bicarbonato',         'Bicarbonato',          'Alacena'],
+  ['maicena',             'Maicena',              'Alacena'],
+  ['gelatina',            'Gelatina',             'Alacena'],
+  ['miel',                'Miel',                 'Alacena'],
+  ['mermelada',           'Mermelada',            'Alacena'],
+  ['mantequilla_de_mani', 'Mantequilla de maní',  'Alacena'],
+  ['chocolate_negro',     'Chocolate negro',      'Alacena'],
+  ['caldo_de_pollo',      'Caldo de pollo',       'Alacena'],
+  ['sazonador',           'Sazonador',            'Alacena'],
+  ['laurel',              'Laurel',               'Alacena'],
+  ['tomillo',             'Tomillo',              'Alacena'],
 ];
+
+// ── Migración: i18n_key en catalog_products ───────────────────────────────────
+// Identifica productos sembrados para mostrarlos traducidos en el frontend
+// (locales catalogSeed.<key>). Backfill por nombre exacto del seed original:
+// los renombrados por el usuario no coinciden y quedan sin key (se muestran
+// con su nombre tal cual, que es lo correcto).
+{
+  const catCols = db.prepare('PRAGMA table_info(catalog_products)').all().map(c => c.name);
+  if (!catCols.includes('i18n_key')) {
+    db.exec('ALTER TABLE catalog_products ADD COLUMN i18n_key TEXT');
+    const upd = db.prepare('UPDATE catalog_products SET i18n_key = ? WHERE name = ? AND i18n_key IS NULL');
+    CATALOG_SEED.forEach(([key, name]) => upd.run(key, name));
+  }
+}
 
 // ── Seeds de primera ejecución ────────────────────────────────────────────────
 // PRAGMA user_version marca si los seeds ya corrieron (v1). Antes corrían con
@@ -396,8 +412,8 @@ const CATALOG_SEED = [
     }
 
     if (isEmpty('catalog_products')) {
-      const ins = db.prepare('INSERT OR IGNORE INTO catalog_products (name, category) VALUES (?, ?)');
-      CATALOG_SEED.forEach(([name, category]) => ins.run(name, category));
+      const ins = db.prepare('INSERT OR IGNORE INTO catalog_products (i18n_key, name, category) VALUES (?, ?, ?)');
+      CATALOG_SEED.forEach(([key, name, category]) => ins.run(key, name, category));
     }
 
     db.exec('PRAGMA user_version = 1');
@@ -680,7 +696,7 @@ module.exports = {
   getCatalogProducts(inventoryId = null) {
     if (inventoryId) {
       return db.prepare(`
-        SELECT cp.id, cp.name, cp.category, cp.created_at,
+        SELECT cp.id, cp.name, cp.i18n_key, cp.category, cp.created_at,
           CASE WHEN p.id IS NOT NULL THEN 1 ELSE 0 END AS in_inventory
         FROM catalog_products cp
         LEFT JOIN products p
@@ -689,7 +705,7 @@ module.exports = {
       `).all(inventoryId);
     }
     return db.prepare(`
-      SELECT id, name, category, created_at, 0 AS in_inventory
+      SELECT id, name, i18n_key, category, created_at, 0 AS in_inventory
       FROM catalog_products
       ORDER BY category, name
     `).all();
@@ -715,8 +731,12 @@ module.exports = {
       'SELECT id FROM catalog_products WHERE LOWER(name) = LOWER(?) AND id != ?'
     ).get(name, id);
     if (existing) return { error: 'Ya existe un producto con ese nombre' };
-    db.prepare('UPDATE catalog_products SET name=?, category=? WHERE id=?')
-      .run(name.trim(), category, id);
+    // Si el usuario renombra un producto sembrado, deja de traducirse:
+    // se limpia i18n_key y se muestra el nombre que el usuario escribió.
+    const current = this.getCatalogProduct(id);
+    const renamed = current && current.name !== name.trim();
+    db.prepare('UPDATE catalog_products SET name=?, category=?, i18n_key = CASE WHEN ? THEN NULL ELSE i18n_key END WHERE id=?')
+      .run(name.trim(), category, renamed ? 1 : 0, id);
     return { product: this.getCatalogProduct(id) };
   },
 
@@ -724,7 +744,7 @@ module.exports = {
     return db.prepare('DELETE FROM catalog_products WHERE id = ?').run(id).changes > 0;
   },
 
-  addCatalogProductToInventory({ catalogProductId, inventoryId, currentQty, minQty, unit }) {
+  addCatalogProductToInventory({ catalogProductId, inventoryId, currentQty, minQty, unit, displayName = null }) {
     const catalogProduct = this.getCatalogProduct(catalogProductId);
     if (!catalogProduct) return { error: 'Producto no encontrado en el catálogo' };
 
@@ -735,7 +755,9 @@ module.exports = {
 
     const invCategory = CATALOG_TO_INV_CATEGORY[catalogProduct.category] || catalogProduct.category;
     const product = this.create({
-      name:             catalogProduct.name,
+      // displayName: nombre traducido al idioma del usuario al momento de
+      // agregar (el catálogo guarda el canónico ES como dato).
+      name:             (displayName && displayName.trim()) || catalogProduct.name,
       category:         invCategory,
       current_qty:      currentQty,
       min_qty:          minQty,

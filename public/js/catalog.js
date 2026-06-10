@@ -55,11 +55,21 @@ const addCatClose   = document.getElementById('add-cat-close');
 const btnAddCatalog = document.getElementById('btn-add-catalog');
 
 // ── Render ────────────────────────────────────────────────────────────────────
+// Productos sembrados llevan i18n_key: se muestran traducidos al idioma
+// activo (locales catalogSeed.*). Los creados/renombrados por usuarios no
+// tienen key y se muestran con su nombre tal cual.
+function catalogName(p) {
+  if (!p.i18n_key) return p.name;
+  const key = 'catalogSeed.' + p.i18n_key;
+  const val = t(key);
+  return (val && val !== key) ? val : p.name;
+}
+
 function filtered() {
   return state.catalog.filter(p => {
     const matchCat    = state.activeCategory === 'all' || p.category === state.activeCategory;
     const q           = state.searchQuery.toLowerCase();
-    const matchSearch = !q || p.name.toLowerCase().includes(q);
+    const matchSearch = !q || catalogName(p).toLowerCase().includes(q) || p.name.toLowerCase().includes(q);
     return matchCat && matchSearch;
   });
 }
@@ -80,11 +90,12 @@ function renderCatalog() {
 }
 
 function renderCard(p) {
-  const icon   = CATEGORY_ICONS[p.category] || '📦';
+  const icon  = CATEGORY_ICONS[p.category] || '📦';
+  const name  = catalogName(p);
   const footer = p.in_inventory
     ? `<div class="badge-in-inventory">✓ <span data-i18n="catalog.inInventory">${t('catalog.inInventory')}</span></div>`
     : (state.inventoryId
-        ? `<button class="btn-add-inv" data-id="${p.id}" aria-label="${p.name}">${t('catalog.addToInventory')}</button>`
+        ? `<button class="btn-add-inv" data-id="${p.id}" aria-label="${esc(name)}">${t('catalog.addToInventory')}</button>`
         : `<div class="badge-in-inventory" style="background:#f1f5f9;color:#64748b">${t('catalog.addToInventory')}</div>`
       );
 
@@ -101,7 +112,7 @@ function renderCard(p) {
         </button>
       </div>
       <div class="card-icon">${icon}</div>
-      <div class="card-name">${esc(p.name)}</div>
+      <div class="card-name">${esc(name)}</div>
       <div class="card-footer">${footer}</div>
     </div>`;
 }
@@ -225,7 +236,7 @@ function openAddToInventoryModal(productId) {
 
   state.addingProductId  = productId;
   state.pendingPhotos    = [];
-  addInvName.textContent = product.name;
+  addInvName.textContent = catalogName(product);
   addInvCurrent.value    = '';
   addInvMin.value        = '';
   addInvSave.textContent = t('catalog.modalAdd.save');
@@ -251,6 +262,7 @@ async function handleAddToInventory(e) {
   addInvSave.textContent = t('catalog.modalAdd.saving');
 
   try {
+    const adding       = state.catalog.find(p => p.id === state.addingProductId);
     const res          = await fetch(`/api/catalog/${state.addingProductId}/add`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -258,6 +270,8 @@ async function handleAddToInventory(e) {
         current_qty: parseFloat(addInvCurrent.value) || 0,
         min_qty:     parseFloat(addInvMin.value)     || 0,
         unit:        addInvUnit.value || 'unidades',
+        // El inventario guarda el nombre en el idioma activo del usuario
+        name:        adding ? catalogName(adding) : undefined,
       }),
     });
     const responseData = await res.json().catch(() => ({}));

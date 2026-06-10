@@ -32,15 +32,17 @@ router.post('/:id/add', (req, res) => {
     const member = db.getMember(inventoryId, req.user.id);
     if (!member) return res.status(403).json({ error: 'Sin acceso al inventario' });
     if (member.role === 'reader') return res.status(403).json({ error: 'Se requiere rol de editor o dueño' });
-    const { current_qty, min_qty, unit } = req.body;
+    const { current_qty, min_qty, unit, name } = req.body;
     if (current_qty == null || isNaN(+current_qty) || +current_qty < 0) return res.status(400).json({ error: 'Cantidad actual inválida' });
     if (min_qty    == null || isNaN(+min_qty)    || +min_qty    < 0) return res.status(400).json({ error: 'Cantidad mínima inválida' });
     const result = db.addCatalogProductToInventory({
       catalogProductId,
       inventoryId,
-      currentQty: +current_qty,
-      minQty:     +min_qty,
-      unit:       unit || 'unidades',
+      currentQty:  +current_qty,
+      minQty:      +min_qty,
+      unit:        unit || 'unidades',
+      // Nombre traducido al idioma del usuario (opcional, max 100 como el resto)
+      displayName: typeof name === 'string' ? name.slice(0, 100) : null,
     });
     if (result.error) return res.status(409).json({ error: result.error });
     res.status(201).json(result.product);
