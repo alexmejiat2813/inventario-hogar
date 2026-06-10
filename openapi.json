@@ -1,0 +1,429 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Inventario Hogar API",
+    "version": "1.0.0",
+    "description": "API de gestión de inventario doméstico con autenticación Google OAuth",
+    "contact": {
+      "name": "Alex Mejia",
+      "url": "https://github.com/alexmejiat2813/inventario-hogar"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://inventario-hogar-alex.fly.dev",
+      "description": "Producción"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Desarrollo"
+    }
+  ],
+  "paths": {
+    "/api/me": {
+      "get": {
+        "summary": "Obtener usuario actual",
+        "tags": ["Auth"],
+        "security": [{"session": []}],
+        "responses": {
+          "200": {
+            "description": "Usuario autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer"},
+                    "google_id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "email": {"type": "string"},
+                    "photo": {"type": "string", "nullable": true}
+                  }
+                }
+              }
+            }
+          },
+          "401": {"description": "No autenticado"}
+        }
+      }
+    },
+    "/api/inventories": {
+      "get": {
+        "summary": "Listar inventarios del usuario",
+        "tags": ["Inventories"],
+        "security": [{"session": []}],
+        "responses": {
+          "200": {
+            "description": "Lista de inventarios",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {"type": "integer"},
+                      "name": {"type": "string"},
+                      "owner_id": {"type": "integer"},
+                      "currency": {"type": "string"},
+                      "created_at": {"type": "string", "format": "date-time"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {"description": "No autenticado"}
+        }
+      },
+      "post": {
+        "summary": "Crear inventario",
+        "tags": ["Inventories"],
+        "security": [{"session": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {"type": "string"},
+                  "currency": {"type": "string", "default": "USD"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Inventario creado"},
+          "400": {"description": "Datos inválidos"},
+          "401": {"description": "No autenticado"}
+        }
+      }
+    },
+    "/api/active-inventory": {
+      "get": {
+        "summary": "Obtener inventario activo de la sesión",
+        "tags": ["Inventories"],
+        "security": [{"session": []}],
+        "responses": {
+          "200": {
+            "description": "Inventario activo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer"},
+                    "name": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "404": {"description": "No hay inventario activo"},
+          "401": {"description": "No autenticado"}
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "summary": "Listar productos del inventario activo",
+        "tags": ["Products"],
+        "security": [{"session": []}],
+        "responses": {
+          "200": {
+            "description": "Lista de productos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {"type": "integer"},
+                      "name": {"type": "string"},
+                      "category": {"type": "string"},
+                      "current_qty": {"type": "number"},
+                      "min_qty": {"type": "number"},
+                      "unit": {"type": "string"},
+                      "expiry_date": {"type": "string", "format": "date", "nullable": true}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {"description": "No autenticado"}
+        }
+      }
+    },
+    "/api/shopping": {
+      "get": {
+        "summary": "Obtener lista de compras",
+        "tags": ["Shopping"],
+        "security": [{"session": []}],
+        "responses": {
+          "200": {
+            "description": "Lista de compras con items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {"type": "array"},
+                    "customItems": {"type": "array"}
+                  }
+                }
+              }
+            }
+          },
+          "401": {"description": "No autenticado"}
+        }
+      }
+    },
+    "/api/purchases": {
+      "get": {
+        "summary": "Listar historial de compras",
+        "tags": ["Purchases"],
+        "security": [{"session": []}],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "schema": {"type": "string", "format": "date"},
+            "description": "Filtrar por mes (YYYY-MM)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historial de compras",
+            "content": {
+              "application/json": {
+                "schema": {"type": "array"}
+              }
+            }
+          },
+          "401": {"description": "No autenticado"}
+        }
+      },
+      "post": {
+        "summary": "Registrar compra",
+        "tags": ["Purchases"],
+        "security": [{"session": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["total_amount", "purchase_date"],
+                "properties": {
+                  "total_amount": {"type": "number"},
+                  "purchase_date": {"type": "string", "format": "date"},
+                  "items": {"type": "array"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Compra registrada"},
+          "400": {"description": "Datos inválidos"},
+          "401": {"description": "No autenticado"}
+        }
+      }
+    },
+    "/api/notifications/vapid-key": {
+      "get": {
+        "summary": "Obtener clave VAPID pública",
+        "tags": ["Notifications"],
+        "responses": {
+          "200": {
+            "description": "Clave VAPID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "vapidPublicKey": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "503": {"description": "Push notifications no configuradas"}
+        }
+      }
+    },
+    "/api/notifications/subscribe": {
+      "post": {
+        "summary": "Suscribirse a push notifications",
+        "tags": ["Notifications"],
+        "security": [{"session": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["subscription"],
+                "properties": {
+                  "subscription": {
+                    "type": "object",
+                    "properties": {
+                      "endpoint": {"type": "string"},
+                      "keys": {
+                        "type": "object",
+                        "properties": {
+                          "auth": {"type": "string"},
+                          "p256dh": {"type": "string"}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Suscripción guardada"},
+          "401": {"description": "No autenticado"},
+          "503": {"description": "Push notifications no configuradas"}
+        }
+      }
+    },
+    "/api/notifications/unsubscribe": {
+      "delete": {
+        "summary": "Desuscribirse de push notifications",
+        "tags": ["Notifications"],
+        "security": [{"session": []}],
+        "responses": {
+          "200": {"description": "Suscripción eliminada"},
+          "401": {"description": "No autenticado"}
+        }
+      }
+    },
+    "/api/notifications/send-alerts": {
+      "post": {
+        "summary": "Enviar alertas de notificaciones (uso interno - Fly cron)",
+        "tags": ["Notifications"],
+        "description": "Solo accesible desde Fly.io cron job con header X-Fly-Request-ID",
+        "responses": {
+          "200": {
+            "description": "Alertas enviadas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {"type": "boolean"},
+                    "sent": {"type": "integer"},
+                    "total": {"type": "integer"}
+                  }
+                }
+              }
+            }
+          },
+          "401": {"description": "Request no autorizado"},
+          "503": {"description": "Push notifications no configuradas"}
+        }
+      }
+    },
+    "/auth/google": {
+      "get": {
+        "summary": "Iniciar autenticación Google OAuth",
+        "tags": ["Auth"],
+        "responses": {
+          "302": {"description": "Redirige a Google OAuth"}
+        }
+      }
+    },
+    "/auth/google/callback": {
+      "get": {
+        "summary": "Callback de Google OAuth",
+        "tags": ["Auth"],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {"type": "string"},
+            "description": "Código de autorización de Google"
+          }
+        ],
+        "responses": {
+          "302": {"description": "Redirige a /inventories después de autenticarse"}
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Cerrar sesión",
+        "tags": ["Auth"],
+        "security": [{"session": []}],
+        "responses": {
+          "200": {"description": "Sesión cerrada"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "connect.sid",
+        "description": "Express session cookie (configurado vía Google OAuth)"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "google_id": {"type": "string"},
+          "name": {"type": "string"},
+          "email": {"type": "string"},
+          "photo": {"type": "string", "nullable": true},
+          "created_at": {"type": "string", "format": "date-time"},
+          "last_login_at": {"type": "string", "format": "date-time", "nullable": true}
+        }
+      },
+      "Inventory": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "name": {"type": "string"},
+          "owner_id": {"type": "integer"},
+          "currency": {"type": "string"},
+          "created_at": {"type": "string", "format": "date-time"}
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "name": {"type": "string"},
+          "category": {"type": "string"},
+          "current_qty": {"type": "number"},
+          "min_qty": {"type": "number"},
+          "unit": {"type": "string"},
+          "inventory_id": {"type": "integer"},
+          "expiry_date": {"type": "string", "format": "date", "nullable": true},
+          "created_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  },
+  "tags": [
+    {"name": "Auth", "description": "Autenticación y sesiones"},
+    {"name": "Inventories", "description": "Gestión de inventarios"},
+    {"name": "Products", "description": "Gestión de productos"},
+    {"name": "Shopping", "description": "Lista de compras"},
+    {"name": "Purchases", "description": "Historial y registro de compras"},
+    {"name": "Notifications", "description": "Push notifications"}
+  ]
+}

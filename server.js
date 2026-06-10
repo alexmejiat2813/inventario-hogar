@@ -99,6 +99,11 @@ app.get('/cache-version', (req, res) => {
   res.type('text/plain').send(`ih-v${CACHE_VERSION}`);
 });
 
+// OpenAPI spec endpoint
+app.get('/openapi.json', (req, res) => {
+  res.sendFile(path.join(__dirname, 'openapi.json'));
+});
+
 // ── Rate limiting ──────────────────────────────────────────────────────────────
 // Auth: 20 req / 15 min / IP  — prevents OAuth abuse
 app.use('/auth', createRateLimiter({
