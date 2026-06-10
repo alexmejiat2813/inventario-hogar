@@ -389,6 +389,27 @@ describe('admin metrics', () => {
   });
 });
 
+describe('seeds de primera ejecucion (regression: catalogo resucitaba)', () => {
+  test('producto del catalogo borrado NO reaparece al reiniciar el server', () => {
+    const { execFileSync } = require('child_process');
+
+    const arroz = db.getCatalogProducts().find(p => p.name === 'Arroz');
+    assert.ok(arroz, 'el seed inicial debe incluir Arroz');
+    assert.equal(db.deleteCatalogProduct(arroz.id), true);
+
+    // Re-inicializar database.js en un proceso nuevo = restart del server.
+    // Antes del fix, el seed con INSERT OR IGNORE corria en cada arranque
+    // y resucitaba los productos borrados.
+    const out = execFileSync(process.execPath, ['-e', `
+      const d = require('./database.js');
+      const back = d.getCatalogProducts().find(p => p.name === 'Arroz');
+      process.stdout.write(back ? 'RESUCITADO' : 'OK');
+    `], { env: { ...process.env, DB_PATH: TEST_DB }, cwd: path.join(__dirname, '..') }).toString();
+
+    assert.equal(out, 'OK', 'el producto borrado no debe resembrarse al reiniciar');
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {

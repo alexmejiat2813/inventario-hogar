@@ -243,41 +243,7 @@ if (!itemCols.includes('tax_id'))     db.exec('ALTER TABLE purchase_items ADD CO
 if (!itemCols.includes('tax_rate'))   db.exec('ALTER TABLE purchase_items ADD COLUMN tax_rate REAL');
 if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD COLUMN tax_amount REAL');
 
-// ── Seed: categories ──────────────────────────────────────────────────────────
-{
-  const ins = db.prepare('INSERT OR IGNORE INTO categories (name, emoji) VALUES (?, ?)');
-  [
-    ['Alimentos',     '🍎'],
-    ['Bebidas',       '🥤'],
-    ['Aseo Personal', '🧴'],
-    ['Aseo del Hogar','🧹'],
-    ['Alacena',       '🫙'],
-    ['Aseo',          '🧼'],
-    ['Otros',         '📦'],
-  ].forEach(([name, emoji]) => ins.run(name, emoji));
-}
-
-// ── Seed: units ───────────────────────────────────────────────────────────────
-{
-  const ins = db.prepare('INSERT OR IGNORE INTO units (name, abbreviation, type) VALUES (?, ?, ?)');
-  [
-    ['unidades', '',     'cantidad'],
-    ['kg',       'kg',  'peso'],
-    ['g',        'g',   'peso'],
-    ['lt',       'lt',  'volumen'],
-    ['ml',       'ml',  'volumen'],
-    ['tsp',      'tsp', 'volumen'],
-    ['tbsp',     'tbsp','volumen'],
-    ['cup',      'cup', 'volumen'],
-    ['paquetes', '',    'cantidad'],
-    ['cajas',    '',    'cantidad'],
-    ['bolsas',   '',    'cantidad'],
-    ['latas',    '',    'cantidad'],
-    ['botellas', '',    'cantidad'],
-  ].forEach(([name, abbr, type]) => ins.run(name, abbr, type));
-}
-
-// ── Catalog seed (100 products, INSERT OR IGNORE so reruns are safe) ──────────
+// ── Catalog seed (100 products) — ver bloque "Seeds de primera ejecución" ─────
 const CATALOG_SEED = [
   // Alimentos (30)
   ['Arroz',                'Alimentos'],
@@ -386,9 +352,56 @@ const CATALOG_SEED = [
   ['Tomillo',              'Alacena'],
 ];
 
+// ── Seeds de primera ejecución ────────────────────────────────────────────────
+// PRAGMA user_version marca si los seeds ya corrieron (v1). Antes corrían con
+// INSERT OR IGNORE en CADA arranque: un producto del catálogo borrado o
+// renombrado por el usuario "resucitaba" tras cada deploy/restart.
+// En DBs ya pobladas (pre-fix) solo se marca el flag SIN resembrar, para
+// respetar lo que el usuario haya borrado.
 {
-  const ins = db.prepare('INSERT OR IGNORE INTO catalog_products (name, category) VALUES (?, ?)');
-  CATALOG_SEED.forEach(([name, category]) => ins.run(name, category));
+  const version = db.prepare('PRAGMA user_version').get().user_version;
+  if (version < 1) {
+    const isEmpty = table => db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get().n === 0;
+
+    if (isEmpty('categories')) {
+      const ins = db.prepare('INSERT OR IGNORE INTO categories (name, emoji) VALUES (?, ?)');
+      [
+        ['Alimentos',     '🍎'],
+        ['Bebidas',       '🥤'],
+        ['Aseo Personal', '🧴'],
+        ['Aseo del Hogar','🧹'],
+        ['Alacena',       '🫙'],
+        ['Aseo',          '🧼'],
+        ['Otros',         '📦'],
+      ].forEach(([name, emoji]) => ins.run(name, emoji));
+    }
+
+    if (isEmpty('units')) {
+      const ins = db.prepare('INSERT OR IGNORE INTO units (name, abbreviation, type) VALUES (?, ?, ?)');
+      [
+        ['unidades', '',     'cantidad'],
+        ['kg',       'kg',  'peso'],
+        ['g',        'g',   'peso'],
+        ['lt',       'lt',  'volumen'],
+        ['ml',       'ml',  'volumen'],
+        ['tsp',      'tsp', 'volumen'],
+        ['tbsp',     'tbsp','volumen'],
+        ['cup',      'cup', 'volumen'],
+        ['paquetes', '',    'cantidad'],
+        ['cajas',    '',    'cantidad'],
+        ['bolsas',   '',    'cantidad'],
+        ['latas',    '',    'cantidad'],
+        ['botellas', '',    'cantidad'],
+      ].forEach(([name, abbr, type]) => ins.run(name, abbr, type));
+    }
+
+    if (isEmpty('catalog_products')) {
+      const ins = db.prepare('INSERT OR IGNORE INTO catalog_products (name, category) VALUES (?, ?)');
+      CATALOG_SEED.forEach(([name, category]) => ins.run(name, category));
+    }
+
+    db.exec('PRAGMA user_version = 1');
+  }
 }
 
 // ── Category mapping: catalog → inventory (for legacy products) ───────────────
