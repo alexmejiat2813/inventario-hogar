@@ -79,9 +79,9 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 
 ### P1 — Bugs conocidos
 
-| # | Tarea | Descripción | Estado |
-|---|-------|-------------|--------|
-| 45 | Bug foto→Dashboard (móvil) | Al abrir cámara en Android, el SO puede descartar la PWA de memoria; al volver recarga en Dashboard perdiendo el modal. Fix: persistir `{productoActivo, tabActiva}` en `sessionStorage` + restaurar en `init()`. Requiere dispositivo para reproducir. | ⬜ |
+| # | Tarea | Descripción | Importancia | Dificultad | Estado |
+|---|-------|-------------|-------------|------------|--------|
+| 45 | Bug foto→Dashboard (móvil) | Al abrir cámara en Android, el SO puede descartar la PWA de memoria; al volver recarga en Dashboard perdiendo el modal. Fix: persistir `{productoActivo, tabActiva}` en `sessionStorage` + restaurar en `init()`. Requiere dispositivo para reproducir. | Alta | Media | ⬜ |
 
 ### P2 — Deuda técnica
 
@@ -96,32 +96,32 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 
 ### P3 — Calidad e infraestructura
 
-| # | Tarea | Descripción | Estado |
-|---|-------|-------------|--------|
-| 63 | ESLint + Prettier + pre-commit hook | Sin linter hoy. Setup `eslint` + `.eslintrc` + `prettier` + hook pre-commit (script git o husky). Evita errores silenciosos y mantiene formato consistente. | ⬜ |
-| 64 | Ampliar cobertura de tests | Hoy: 53 tests — faltan: budget (cálculo/reset), shopping list (custom items, templates), purchases (createSession/IDOR cross-inventory), autorización IDOR. Meta: ~80 tests. | ⬜ |
-| 65 | Chart.js self-hosted | Hoy carga desde CDN (`cdn.jsdelivr.net`) — rompe offline real y es dependencia externa. Copiar a `/js/vendor/chart.min.js` + lazy-load solo en `/inventory`. | ⬜ |
-| 66 | Backup automático SQLite en Fly | Si el volumen se corrompe, datos perdidos. Configurar cron en Fly (`fly machine run`) que haga `sqlite3 /data/inventario.db .dump` y suba a un bucket S3/R2. | ⬜ |
-| 67 | Magic bytes en uploads | `fileFilter` confía en `Content-Type` del cliente (falsificable). Leer primeros bytes del buffer y verificar firma real (JPEG: `FF D8`, PNG: `89 50 4E 47`, WebP: `52 49 46 46`). | ⬜ |
+| # | Tarea | Descripción | Importancia | Dificultad | Estado |
+|---|-------|-------------|-------------|------------|--------|
+| 63 | ESLint + Prettier + pre-commit hook | Sin linter hoy. Setup `eslint` + `.eslintrc` + `prettier` + hook pre-commit (script git o husky). Evita errores silenciosos y mantiene formato consistente. | Media | Baja | ⬜ |
+| 64 | Ampliar cobertura de tests | Hoy: 53 tests — faltan: budget (cálculo/reset), shopping list (custom items, templates), purchases (createSession/IDOR cross-inventory), autorización IDOR. Meta: ~80 tests. | Alta | Media | ⬜ |
+| 65 | Chart.js self-hosted | Hoy carga desde CDN (`cdn.jsdelivr.net`) — rompe offline real y es dependencia externa. Copiar a `/js/vendor/chart.min.js` + lazy-load solo en `/inventory`. | Media | Baja | ⬜ |
+| 66 | Backup automático SQLite en Fly | Si el volumen se corrompe, datos perdidos. Configurar cron en Fly (`fly machine run`) que haga `sqlite3 /data/inventario.db .dump` y suba a un bucket S3/R2. | Alta | Media | ⬜ |
+| 67 | Magic bytes en uploads | `fileFilter` confía en `Content-Type` del cliente (falsificable). Leer primeros bytes del buffer y verificar firma real (JPEG: `FF D8`, PNG: `89 50 4E 47`, WebP: `52 49 46 46`). | Alta | Baja | ⬜ |
 
 ### P4 — Performance
 
-| # | Tarea | Descripción | Estado |
-|---|-------|-------------|--------|
-| 68 | Lazy loading de imágenes | Agregar `loading="lazy"` a todos los `<img>` de cards de productos. 1 atributo, mejora TTI en inventarios grandes. | ⬜ |
-| 69 | Chart.js lazy load (depende de #65) | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a import dinámico o script condicional. | ⬜ |
-| 70 | Minificación JS/CSS | Build step con `esbuild` para minificar antes del deploy. ~20-30% adicional sobre gzip. Requiere ajustar CI y rutas de assets. | ⬜ |
+| # | Tarea | Descripción | Importancia | Dificultad | Estado |
+|---|-------|-------------|-------------|------------|--------|
+| 68 | Lazy loading de imágenes | Agregar `loading="lazy"` a todos los `<img>` de cards de productos. 1 atributo, mejora TTI en inventarios grandes. | Media | Baja | ⬜ |
+| 69 | Chart.js lazy load (depende de #65) | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a import dinámico o script condicional. | Baja | Baja | ⬜ |
+| 70 | Minificación JS/CSS | Build step con `esbuild` para minificar antes del deploy. ~20-30% adicional sobre gzip. Requiere ajustar CI y rutas de assets. | Media | Media | ⬜ |
 
 ### P5 — Features nuevas
 
-| # | Tarea | Descripción | Estado |
-|---|-------|-------------|--------|
-| 71 | Cron push notifications | Endpoint ya existe (`/api/notifications/send-alerts`). Falta dispararlo desde Fly con `fly machine run` en un cron diario. | ⬜ |
-| 72 | Export/import inventario | Exportar productos + stock a CSV/JSON para backup manual del usuario. Importar desde CSV para onboarding. | ⬜ |
-| 73 | Comparador de precios por tienda | Datos ya existen (`getProductStorePrices`). Falta UI: tabla/chart de precio por tienda en el modal de producto, con recomendación de dónde comprar más barato. | ⬜ |
-| 74 | Escaner de códigos de barras | Cámara ya integrada. Agregar librería de decode (ej. `zxing-js`) para identificar/agregar productos escaneando el código. | ⬜ |
-| 75 | Sugerencia de reposición inteligente | Predecir cuándo se acaba un producto basándose en historial de compras y consumo promedio. Requiere análisis de `purchase_sessions` + `purchase_items`. | ⬜ |
-| 76 | Modo oscuro | CSS variables ya están parcialmente preparadas. Agregar `prefers-color-scheme: dark` + toggle manual. | ⬜ |
+| # | Tarea | Descripción | Importancia | Dificultad | Estado |
+|---|-------|-------------|-------------|------------|--------|
+| 71 | Cron push notifications | Endpoint ya existe (`/api/notifications/send-alerts`). Falta dispararlo desde Fly con `fly machine run` en un cron diario. | Media | Baja | ⬜ |
+| 72 | Export/import inventario | Exportar productos + stock a CSV/JSON para backup manual del usuario. Importar desde CSV para onboarding. | Alta | Media | ⬜ |
+| 73 | Comparador de precios por tienda | Datos ya existen (`getProductStorePrices`). Falta UI: tabla/chart de precio por tienda en el modal de producto, con recomendación de dónde comprar más barato. | Media | Baja | ⬜ |
+| 74 | Escaner de códigos de barras | Cámara ya integrada. Agregar librería de decode (ej. `zxing-js`) para identificar/agregar productos escaneando el código. | Media | Alta | ⬜ |
+| 75 | Sugerencia de reposición inteligente | Predecir cuándo se acaba un producto basándose en historial de compras y consumo promedio. Requiere análisis de `purchase_sessions` + `purchase_items`. | Media | Alta | ⬜ |
+| 76 | Modo oscuro | CSS variables ya están parcialmente preparadas. Agregar `prefers-color-scheme: dark` + toggle manual. | Baja | Media | ⬜ |
 
 ---
 
