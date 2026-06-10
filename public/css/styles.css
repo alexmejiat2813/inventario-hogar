@@ -712,7 +712,6 @@ a { color: inherit; text-decoration: none; }
   flex-direction: column;
   gap: .625rem;
 }
-@media (min-width: 700px) { .filters-section { flex-direction: row; align-items: center; } }
 
 .tabs-scroll {
   overflow-x: auto;
