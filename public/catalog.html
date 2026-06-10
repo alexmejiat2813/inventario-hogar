@@ -407,14 +407,8 @@
              placeholder="Buscar en el catálogo..." autocomplete="off">
     </div>
     <div class="tabs-scroll">
-      <div class="tabs-wrap" id="category-tabs">
-        <button class="tab-btn active" data-category="all" data-i18n="catalog.tabs.all">Todos</button>
-        <button class="tab-btn" data-category="Alimentos"      data-i18n="catalog.tabs.Alimentos">Alimentos</button>
-        <button class="tab-btn" data-category="Bebidas"        data-i18n="catalog.tabs.Bebidas">Bebidas</button>
-        <button class="tab-btn" data-category="Aseo Personal"  data-i18n="catalog.tabs.Aseo Personal">Aseo Personal</button>
-        <button class="tab-btn" data-category="Aseo del Hogar" data-i18n="catalog.tabs.Aseo del Hogar">Aseo del Hogar</button>
-        <button class="tab-btn" data-category="Alacena"        data-i18n="catalog.tabs.Alacena">Alacena</button>
-      </div>
+      <!-- Tabs de categoría: render dinámico desde la tabla categories (catalog.js) -->
+      <div class="tabs-wrap" id="category-tabs"></div>
     </div>
   </div>
 
@@ -494,13 +488,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="cat-category" data-i18n="catalog.modalNew.category">Categoría</label>
-          <select class="form-select" id="cat-category" required>
-            <option value="Alimentos"      data-i18n="catalog.tabs.Alimentos">Alimentos</option>
-            <option value="Bebidas"        data-i18n="catalog.tabs.Bebidas">Bebidas</option>
-            <option value="Aseo Personal"  data-i18n="catalog.tabs.Aseo Personal">Aseo Personal</option>
-            <option value="Aseo del Hogar" data-i18n="catalog.tabs.Aseo del Hogar">Aseo del Hogar</option>
-            <option value="Alacena"        data-i18n="catalog.tabs.Alacena">Alacena</option>
-          </select>
+          <select class="form-select" id="cat-category" required></select>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-cancel" id="add-cat-cancel" data-i18n="catalog.modalNew.cancel">Cancelar</button>
@@ -530,13 +518,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="edit-cat-category" data-i18n="catalog.modalEdit.category">Categoría</label>
-          <select class="form-select" id="edit-cat-category" required>
-            <option value="Alimentos"      data-i18n="catalog.tabs.Alimentos">Alimentos</option>
-            <option value="Bebidas"        data-i18n="catalog.tabs.Bebidas">Bebidas</option>
-            <option value="Aseo Personal"  data-i18n="catalog.tabs.Aseo Personal">Aseo Personal</option>
-            <option value="Aseo del Hogar" data-i18n="catalog.tabs.Aseo del Hogar">Aseo del Hogar</option>
-            <option value="Alacena"        data-i18n="catalog.tabs.Alacena">Alacena</option>
-          </select>
+          <select class="form-select" id="edit-cat-category" required></select>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-cancel" id="edit-cat-cancel" data-i18n="catalog.modalEdit.cancel">Cancelar</button>

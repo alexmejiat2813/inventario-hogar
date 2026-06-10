@@ -4,8 +4,6 @@ const { requireEditorOrOwner } = require('../middleware/inventory');
 
 const router = express.Router();
 
-const CATALOG_CATEGORIES = ['Alimentos', 'Bebidas', 'Aseo Personal', 'Aseo del Hogar', 'Alacena'];
-
 // ── Categories ─────────────────────────────────────────────────────────────────
 
 router.get('/categories', (req, res) => {
@@ -15,9 +13,9 @@ router.get('/categories', (req, res) => {
 
 router.post('/categories', (req, res) => {
   try {
-    const { name, emoji } = req.body;
+    const { name, name_en, name_fr, emoji } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
-    const result = db.createCategory({ name, emoji });
+    const result = db.createCategory({ name, name_en, name_fr, emoji });
     if (result.error) return res.status(409).json({ error: result.error });
     res.status(201).json(result.category);
   } catch { res.status(500).json({ error: 'Error al crear la categoría' }); }
@@ -27,9 +25,9 @@ router.put('/categories/:id', (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
-    const { name, emoji } = req.body;
+    const { name, name_en, name_fr, emoji } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
-    const result = db.updateCategory(id, { name, emoji });
+    const result = db.updateCategory(id, { name, name_en, name_fr, emoji });
     if (result.error) return res.status(409).json({ error: result.error });
     res.json(result.category);
   } catch { res.status(500).json({ error: 'Error al actualizar la categoría' }); }
@@ -39,8 +37,9 @@ router.delete('/categories/:id', (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
-    const ok = db.deleteCategory(id);
-    if (!ok) return res.status(404).json({ error: 'Categoría no encontrada' });
+    const result = db.deleteCategory(id);
+    if (result.error === 'not_found') return res.status(404).json({ error: 'Categoría no encontrada' });
+    if (result.error === 'in_use')    return res.status(409).json({ error: 'category_in_use' });
     res.json({ message: 'Categoría eliminada' });
   } catch { res.status(500).json({ error: 'Error al eliminar la categoría' }); }
 });
@@ -94,7 +93,7 @@ router.put('/catalog/:id', (req, res) => {
     if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
     const { name, category } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
-    if (!CATALOG_CATEGORIES.includes(category)) return res.status(400).json({ error: 'Categoría inválida' });
+    if (!db.getCategoryByName(category)) return res.status(400).json({ error: 'Categoría inválida' });
     const result = db.updateCatalogProduct(id, { name, category });
     if (result.error) return res.status(409).json({ error: result.error });
     res.json(result.product);

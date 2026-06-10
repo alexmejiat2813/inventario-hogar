@@ -15,6 +15,7 @@ const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
 const state = {
   catalog: [],
+  categories: [],
   units: [],
   inventoryId: null,
   activeCategory: 'all',
@@ -23,6 +24,21 @@ const state = {
   editingProductId: null,
   pendingPhotos: [],
 };
+
+// ── Categorías (tabla unificada `categories`) ─────────────────────────────────
+function catLang() {
+  return (typeof I18N !== 'undefined' && I18N.current) ? I18N.current() : 'es';
+}
+function catLabel(name) {
+  const row = state.categories.find(c => c.name === name);
+  if (!row) return name;
+  const lang = catLang();
+  return (lang === 'en' ? row.name_en : lang === 'fr' ? row.name_fr : row.name) || row.name;
+}
+function catEmoji(name) {
+  const row = state.categories.find(c => c.name === name);
+  return (row && row.emoji) || CATEGORY_ICONS[name] || '📦';
+}
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const grid        = document.getElementById('catalog-grid');
@@ -55,16 +71,40 @@ const addCatClose   = document.getElementById('add-cat-close');
 const btnAddCatalog = document.getElementById('btn-add-catalog');
 
 // ── Render ────────────────────────────────────────────────────────────────────
+// Productos sembrados llevan i18n_key: se muestran traducidos al idioma
+// activo (locales catalogSeed.*). Los creados/renombrados por usuarios no
+// tienen key y se muestran con su nombre tal cual.
+function catalogName(p) {
+  if (!p.i18n_key) return p.name;
+  const key = 'catalogSeed.' + p.i18n_key;
+  const val = t(key);
+  return (val && val !== key) ? val : p.name;
+}
+
 function filtered() {
   return state.catalog.filter(p => {
     const matchCat    = state.activeCategory === 'all' || p.category === state.activeCategory;
     const q           = state.searchQuery.toLowerCase();
-    const matchSearch = !q || p.name.toLowerCase().includes(q);
+    const matchSearch = !q || catalogName(p).toLowerCase().includes(q) || p.name.toLowerCase().includes(q);
     return matchCat && matchSearch;
   });
 }
 
+// Render dinámico de los tabs de categoría desde la tabla `categories`.
+function renderCategoryTabs() {
+  if (!tabsWrap) return;
+  const cats = [...state.categories].sort((a, b) => catLabel(a.name).localeCompare(catLabel(b.name)));
+  const allActive = state.activeCategory === 'all' ? ' active' : '';
+  tabsWrap.innerHTML =
+    `<button class="tab-btn${allActive}" data-category="all">${esc(t('catalog.tabs.all'))}</button>` +
+    cats.map(c => {
+      const active = state.activeCategory === c.name ? ' active' : '';
+      return `<button class="tab-btn${active}" data-category="${esc(c.name)}">${c.emoji || ''} ${esc(catLabel(c.name))}</button>`;
+    }).join('');
+}
+
 function renderCatalog() {
+  renderCategoryTabs();
   const list = filtered();
 
   countEl.textContent = t('catalog.count', { count: list.length });
@@ -80,11 +120,12 @@ function renderCatalog() {
 }
 
 function renderCard(p) {
-  const icon   = CATEGORY_ICONS[p.category] || '📦';
+  const icon  = catEmoji(p.category);
+  const name  = catalogName(p);
   const footer = p.in_inventory
     ? `<div class="badge-in-inventory">✓ <span data-i18n="catalog.inInventory">${t('catalog.inInventory')}</span></div>`
     : (state.inventoryId
-        ? `<button class="btn-add-inv" data-id="${p.id}" aria-label="${p.name}">${t('catalog.addToInventory')}</button>`
+        ? `<button class="btn-add-inv" data-id="${p.id}" aria-label="${esc(name)}">${t('catalog.addToInventory')}</button>`
         : `<div class="badge-in-inventory" style="background:#f1f5f9;color:#64748b">${t('catalog.addToInventory')}</div>`
       );
 
@@ -101,7 +142,7 @@ function renderCard(p) {
         </button>
       </div>
       <div class="card-icon">${icon}</div>
-      <div class="card-name">${esc(p.name)}</div>
+      <div class="card-name">${esc(name)}</div>
       <div class="card-footer">${footer}</div>
     </div>`;
 }
@@ -202,6 +243,28 @@ async function loadUnits() {
   } catch { /* keep empty */ }
 }
 
+async function loadCategories() {
+  try {
+    const res = await fetch('/api/settings/categories');
+    if (!res.ok) return;
+    state.categories = await res.json();
+    populateCategorySelects();
+  } catch { /* keep empty */ }
+}
+
+// Llena los <select> de categoría de los modales (agregar/editar al catálogo).
+function populateCategorySelects() {
+  ['cat-category', 'edit-cat-category'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = state.categories.map(c =>
+      `<option value="${esc(c.name)}">${c.emoji || ''} ${esc(catLabel(c.name))}</option>`
+    ).join('');
+    if (prev) sel.value = prev;
+  });
+}
+
 function populateUnitSelect() {
   addInvUnit.innerHTML = '';
   state.units.forEach(u => {
@@ -225,7 +288,7 @@ function openAddToInventoryModal(productId) {
 
   state.addingProductId  = productId;
   state.pendingPhotos    = [];
-  addInvName.textContent = product.name;
+  addInvName.textContent = catalogName(product);
   addInvCurrent.value    = '';
   addInvMin.value        = '';
   addInvSave.textContent = t('catalog.modalAdd.save');
@@ -251,6 +314,7 @@ async function handleAddToInventory(e) {
   addInvSave.textContent = t('catalog.modalAdd.saving');
 
   try {
+    const adding       = state.catalog.find(p => p.id === state.addingProductId);
     const res          = await fetch(`/api/catalog/${state.addingProductId}/add`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -258,6 +322,8 @@ async function handleAddToInventory(e) {
         current_qty: parseFloat(addInvCurrent.value) || 0,
         min_qty:     parseFloat(addInvMin.value)     || 0,
         unit:        addInvUnit.value || 'unidades',
+        // El inventario guarda el nombre en el idioma activo del usuario
+        name:        adding ? catalogName(adding) : undefined,
       }),
     });
     const responseData = await res.json().catch(() => ({}));
@@ -577,9 +643,10 @@ function initEvents() {
     if (!document.getElementById('delete-product-overlay').hidden) closeDeleteConfirmModal();
   });
 
-  // Language change: re-render cards
+  // Language change: re-render cards, tabs y selects de categoría
   document.addEventListener('langchange', () => {
     I18N.apply();
+    populateCategorySelects();
     renderCatalog();
   });
 }
@@ -587,7 +654,7 @@ function initEvents() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   await I18N.init();
-  await Promise.all([loadInventoryId(), loadUnits(), loadProfileAvatar()]);
+  await Promise.all([loadInventoryId(), loadUnits(), loadCategories(), loadProfileAvatar()]);
   try {
     await loadCatalog();
   } catch {

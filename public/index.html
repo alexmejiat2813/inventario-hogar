@@ -249,14 +249,8 @@
     <!-- ===== FILTROS ===== -->
     <section class="filters-section">
       <div class="tabs-scroll">
-        <div class="tabs-wrap" id="category-tabs">
-          <button class="tab-btn active" data-category="all" data-i18n="inventory.tabs.all">Todos</button>
-          <button class="tab-btn" data-category="Alimentos" data-i18n="inventory.tabs.Alimentos">Alimentos</button>
-          <button class="tab-btn" data-category="Aseo"      data-i18n="inventory.tabs.Aseo">Aseo</button>
-          <button class="tab-btn" data-category="Alacena"   data-i18n="inventory.tabs.Alacena">Alacena</button>
-          <button class="tab-btn" data-category="Bebidas"   data-i18n="inventory.tabs.Bebidas">Bebidas</button>
-          <button class="tab-btn" data-category="Otros"     data-i18n="inventory.tabs.Otros">Otros</button>
-        </div>
+        <!-- Tabs de categoría: render dinámico desde la tabla categories (app.js renderCategoryTabs) -->
+        <div class="tabs-wrap" id="category-tabs"></div>
       </div>
       <div class="search-wrap">
         <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>

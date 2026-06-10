@@ -315,6 +315,61 @@ describe('custom shopping items', () => {
   });
 });
 
+describe('categorias unificadas + i18n', () => {
+  test('categorias base traen traducciones EN/FR', () => {
+    const cats = db.getCategories();
+    const ali = cats.find(c => c.name === 'Alimentos');
+    assert.ok(ali, 'existe Alimentos');
+    assert.equal(ali.name_en, 'Food');
+    assert.equal(ali.name_fr, 'Alimentation');
+  });
+
+  test('createCategory guarda traducciones', () => {
+    const r = db.createCategory({ name: 'Frutas', name_en: 'Fruits', name_fr: 'Fruits', emoji: '🍓' });
+    assert.ok(!r.error, r.error);
+    assert.equal(r.category.name_en, 'Fruits');
+    assert.equal(r.category.emoji, '🍓');
+  });
+
+  test('updateCategory renombra y hace cascade a productos', () => {
+    const { inv } = makeInventory();
+    const r = db.createCategory({ name: 'Snacks', name_en: 'Snacks', name_fr: 'Snacks', emoji: '🍿' });
+    const p = db.create({ name: 'Papas', category: 'Snacks', current_qty: 1, min_qty: 1, unit: 'unidades', inventoryId: inv.id });
+    const u = db.updateCategory(r.category.id, { name: 'Picoteo', name_en: 'Snacks', name_fr: 'Snacks', emoji: '🍿' });
+    assert.ok(!u.error, u.error);
+    assert.equal(db.getById(p.id).category, 'Picoteo', 'el producto sigue la categoria renombrada');
+  });
+});
+
+describe('catalogo i18n (productos sembrados traducibles)', () => {
+  test('productos sembrados llevan i18n_key', () => {
+    const cat = db.getCatalogProducts();
+    const arroz = cat.find(p => p.name === 'Arroz');
+    assert.ok(arroz, 'el seed incluye Arroz');
+    assert.equal(arroz.i18n_key, 'arroz');
+  });
+
+  test('renombrar un producto sembrado limpia i18n_key', () => {
+    const arroz = db.getCatalogProducts().find(p => p.name === 'Arroz');
+    const res = db.updateCatalogProduct(arroz.id, { name: 'Riz basmati', category: 'Alimentos' });
+    assert.ok(!res.error, res.error);
+    assert.equal(res.product.i18n_key, null, 'al renombrar deja de traducirse');
+    // restaurar para no afectar otros tests
+    db.updateCatalogProduct(arroz.id, { name: 'Arroz', category: 'Alimentos' });
+  });
+
+  test('addCatalogProductToInventory usa displayName si se pasa', () => {
+    const { inv } = makeInventory();
+    const frijoles = db.getCatalogProducts().find(p => p.name === 'Frijoles');
+    const r = db.addCatalogProductToInventory({
+      catalogProductId: frijoles.id, inventoryId: inv.id,
+      currentQty: 1, minQty: 1, unit: 'unidades', displayName: 'Haricots',
+    });
+    assert.ok(!r.error, r.error);
+    assert.equal(r.product.name, 'Haricots', 'guarda el nombre en el idioma del usuario');
+  });
+});
+
 describe('list templates (regression: node:sqlite no tiene db.transaction)', () => {
   test('createTemplate persiste plantilla e items', () => {
     const { inv, userId } = makeInventory();
@@ -386,6 +441,27 @@ describe('admin metrics', () => {
       if (prev === undefined) delete process.env.ADMIN_EMAILS;
       else process.env.ADMIN_EMAILS = prev;
     }
+  });
+});
+
+describe('seeds de primera ejecucion (regression: catalogo resucitaba)', () => {
+  test('producto del catalogo borrado NO reaparece al reiniciar el server', () => {
+    const { execFileSync } = require('child_process');
+
+    const arroz = db.getCatalogProducts().find(p => p.name === 'Arroz');
+    assert.ok(arroz, 'el seed inicial debe incluir Arroz');
+    assert.equal(db.deleteCatalogProduct(arroz.id), true);
+
+    // Re-inicializar database.js en un proceso nuevo = restart del server.
+    // Antes del fix, el seed con INSERT OR IGNORE corria en cada arranque
+    // y resucitaba los productos borrados.
+    const out = execFileSync(process.execPath, ['-e', `
+      const d = require('./database.js');
+      const back = d.getCatalogProducts().find(p => p.name === 'Arroz');
+      process.stdout.write(back ? 'RESUCITADO' : 'OK');
+    `], { env: { ...process.env, DB_PATH: TEST_DB }, cwd: path.join(__dirname, '..') }).toString();
+
+    assert.equal(out, 'OK', 'el producto borrado no debe resembrarse al reiniciar');
   });
 });
 
