@@ -19,20 +19,11 @@ function esc(str) {
   return d.innerHTML;
 }
 
-let _lastList = [];
+let _lastList  = [];
+let _lastPlans = [];
 
-function renderInventories(list) {
-  _lastList = list;
-  const grid  = document.getElementById('inv-grid');
-  const empty = document.getElementById('empty-state');
-
-  if (!list.length) {
-    grid.innerHTML = '';
-    empty.hidden = false;
-    return;
-  }
-  empty.hidden = true;
-  grid.innerHTML = list.map(inv => `
+function renderInvCard(inv) {
+  return `
     <div class="inv-card" data-id="${inv.id}">
       <div class="inv-card-top">
         <span class="role-badge ${ROLE_CLASS[inv.role]}">${t('roles.' + inv.role)}</span>
@@ -86,7 +77,91 @@ function renderInventories(list) {
         <button class="btn-enter" data-id="${inv.id}">${t('inventories.card.enter')}</button>
       </div>
     </div>
-  `).join('');
+  `;
+}
+
+function renderBudgetPlanCard(plan) {
+  return `
+    <div class="inv-budget-plan-card" data-plan-id="${plan.id}">
+      <div class="inv-bp-header">
+        <span class="inv-bp-badge">${t('personalBudget.plan.badge')}</span>
+        <div class="inv-bp-menu-wrap">
+          <button class="inv-bp-menu-btn" data-action="bp-menu" data-plan-id="${plan.id}" aria-label="Opciones">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+          <div class="inv-bp-dropdown" id="bp-menu-${plan.id}" hidden>
+            <button class="inv-bp-dropdown-item" data-action="bp-delete" data-plan-id="${plan.id}" data-plan-name="${esc(plan.name)}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+              ${t('inventories.delete.action')}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="inv-bp-name">${esc(plan.name)}</div>
+      <div class="inv-bp-stats">
+        <div class="inv-bp-stat">
+          <span class="inv-bp-stat-num inv-bp-stat-num--income">${fmtMoney(plan.income_real ?? 0)}</span>
+          <span class="inv-bp-stat-lbl">${t('personalBudget.plan.income')}</span>
+        </div>
+        <div class="inv-bp-stat">
+          <span class="inv-bp-stat-num">${fmtMoney(plan.total_budgeted ?? 0)}</span>
+          <span class="inv-bp-stat-lbl">${t('personalBudget.plan.totalBudgeted')}</span>
+        </div>
+      </div>
+      <div class="inv-bp-footer">
+        <a class="btn-enter-budget" href="/personal-budget">${t('personalBudget.plan.enterBtn')}</a>
+      </div>
+    </div>
+  `;
+}
+
+function renderCompositeBlock(inv, plan) {
+  return `
+    <div class="inv-composite-block">
+      <div class="inv-composite-label">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        ${esc(inv.name)} + ${esc(plan.name)}
+      </div>
+      ${renderInvCard(inv)}
+      ${renderBudgetPlanCard(plan)}
+    </div>
+  `;
+}
+
+function renderInventories(list, plans) {
+  _lastList  = list;
+  _lastPlans = plans || [];
+  const grid  = document.getElementById('inv-grid');
+  const empty = document.getElementById('empty-state');
+
+  const linkedPlanByInv = {};
+  _lastPlans.forEach(p => { if (p.inventory_id) linkedPlanByInv[p.inventory_id] = p; });
+
+  if (!list.length && !_lastPlans.length) {
+    grid.innerHTML = '';
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+
+  const items = [];
+  const usedPlanIds = new Set();
+
+  list.forEach(inv => {
+    const plan = linkedPlanByInv[inv.id];
+    if (plan) {
+      usedPlanIds.add(plan.id);
+      items.push(renderCompositeBlock(inv, plan));
+    } else {
+      items.push(renderInvCard(inv));
+    }
+  });
+
+  _lastPlans.forEach(p => {
+    if (!usedPlanIds.has(p.id)) items.push(renderBudgetPlanCard(p));
+  });
+
+  grid.innerHTML = items.join('');
 }
 
 function closeAllCardMenus(exceptId) {
@@ -95,9 +170,18 @@ function closeAllCardMenus(exceptId) {
   });
 }
 
+function closeAllBpMenus(exceptId) {
+  document.querySelectorAll('.inv-bp-dropdown').forEach(d => {
+    if (d.id !== `bp-menu-${exceptId}`) d.hidden = true;
+  });
+}
+
 async function loadInventories() {
-  const list = await apiFetch('GET', '/api/inventories');
-  if (list) renderInventories(list);
+  const [list, plans] = await Promise.all([
+    apiFetch('GET', '/api/inventories'),
+    apiFetch('GET', '/api/personal-budget/plans'),
+  ]);
+  if (list) renderInventories(list, plans || []);
 }
 
 async function loadUser() {
@@ -349,7 +433,7 @@ function initEvents() {
   });
 
   // Close menus on outside click
-  document.addEventListener('click', () => closeAllCardMenus(null));
+  document.addEventListener('click', () => { closeAllCardMenus(null); closeAllBpMenus(null); });
 
   document.getElementById('rename-form').addEventListener('submit', handleRename);
   document.getElementById('btn-delete-confirm').addEventListener('click', handleDelete);
@@ -388,8 +472,73 @@ function initEvents() {
     }
   });
 
+  // ── Budget plan: open modal ─────────────────────────────────────────────────
+  document.getElementById('btn-create-budget').addEventListener('click', async () => {
+    document.getElementById('budget-plan-form').reset();
+    openModal('budget-overlay');
+    requestAnimationFrame(() => document.getElementById('bp-name').focus());
+    // Populate inventory select
+    const sel = document.getElementById('bp-inventory');
+    sel.innerHTML = `<option value="">${t('personalBudget.plan.noInventory')}</option>`;
+    const invs = await apiFetch('GET', '/api/inventories');
+    if (invs) {
+      invs.forEach(inv => {
+        const opt = document.createElement('option');
+        opt.value = inv.id;
+        opt.textContent = inv.name;
+        sel.appendChild(opt);
+      });
+    }
+  });
+
+  // Submit budget plan
+  document.getElementById('budget-plan-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = document.getElementById('bp-name').value.trim();
+    if (!name) return;
+    const btn = e.submitter;
+    btn.disabled = true;
+    const inventoryId = document.getElementById('bp-inventory').value || null;
+    try {
+      await apiFetch('POST', '/api/personal-budget/plans', { name, inventoryId });
+      closeModal('budget-overlay');
+      showToast(t('personalBudget.plan.created'));
+      loadInventories();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Grid: budget plan menu + delete (event delegation)
+  document.getElementById('inv-grid').addEventListener('click', e => {
+    const bpMenu = e.target.closest('[data-action="bp-menu"]');
+    const bpDel  = e.target.closest('[data-action="bp-delete"]');
+
+    if (bpMenu) {
+      e.stopPropagation();
+      const id      = bpMenu.dataset.planId;
+      const dropdown = document.getElementById(`bp-menu-${id}`);
+      const isOpen  = !dropdown.hidden;
+      closeAllBpMenus(null);
+      dropdown.hidden = isOpen;
+      return;
+    }
+
+    if (bpDel) {
+      e.stopPropagation();
+      closeAllBpMenus(null);
+      if (!confirm(t('personalBudget.plan.deleteConfirm'))) return;
+      apiFetch('DELETE', `/api/personal-budget/plans/${bpDel.dataset.planId}`)
+        .then(() => { showToast(t('personalBudget.plan.deleted')); loadInventories(); })
+        .catch(err => showToast(err.message, 'error'));
+      return;
+    }
+  });
+
   // Language changes: re-render dynamic content
-  document.addEventListener('langchange', () => renderInventories(_lastList));
+  document.addEventListener('langchange', () => renderInventories(_lastList, _lastPlans));
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

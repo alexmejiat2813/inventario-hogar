@@ -202,6 +202,44 @@ db.exec(`
     p256dh     TEXT    NOT NULL,
     created_at TEXT    DEFAULT (datetime('now','localtime'))
   );
+
+  CREATE TABLE IF NOT EXISTS personal_budgets (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    category   TEXT    NOT NULL,
+    amount     REAL    NOT NULL DEFAULT 0,
+    month      TEXT    NOT NULL,
+    created_at TEXT    DEFAULT (datetime('now','localtime')),
+    UNIQUE(user_id, category, month)
+  );
+
+  CREATE TABLE IF NOT EXISTS personal_transactions (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    inventory_id INTEGER REFERENCES inventories(id) ON DELETE SET NULL,
+    type         TEXT    NOT NULL CHECK(type IN ('income','expense')),
+    category     TEXT    NOT NULL,
+    amount       REAL    NOT NULL,
+    description  TEXT,
+    date         TEXT    NOT NULL,
+    created_at   TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS personal_budget_plans (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name             TEXT    NOT NULL,
+    inventory_id     INTEGER REFERENCES inventories(id) ON DELETE SET NULL,
+    estimated_income REAL    NOT NULL DEFAULT 0,
+    created_at       TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS personal_budget_plan_categories (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_id  INTEGER NOT NULL REFERENCES personal_budget_plans(id) ON DELETE CASCADE,
+    category TEXT    NOT NULL,
+    amount   REAL    NOT NULL DEFAULT 0
+  );
 `);
 
 // ── Indexes ───────────────────────────────────────────────────────────────────
@@ -220,7 +258,11 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_custom_items_inventory   ON shopping_list_custom_items(inventory_id);
   CREATE INDEX IF NOT EXISTS idx_audit_inv_created        ON audit_log(inventory_id, created_at);
   CREATE INDEX IF NOT EXISTS idx_members_user             ON inventory_members(user_id);
-  CREATE INDEX IF NOT EXISTS idx_push_subs_user           ON push_subscriptions(user_id);
+  CREATE INDEX IF NOT EXISTS idx_push_subs_user             ON push_subscriptions(user_id);
+  CREATE INDEX IF NOT EXISTS idx_personal_budgets_user_month  ON personal_budgets(user_id, month);
+  CREATE INDEX IF NOT EXISTS idx_personal_tx_user_date        ON personal_transactions(user_id, date);
+  CREATE INDEX IF NOT EXISTS idx_pb_plans_user               ON personal_budget_plans(user_id);
+  CREATE INDEX IF NOT EXISTS idx_pb_plan_cats_plan           ON personal_budget_plan_categories(plan_id);
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -256,6 +298,10 @@ if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD CO
 const tplItemCols = db.prepare('PRAGMA table_info(list_template_items)').all().map(c => c.name);
 if (!tplItemCols.includes('store_id'))   db.exec('ALTER TABLE list_template_items ADD COLUMN store_id INTEGER REFERENCES stores(id) ON DELETE SET NULL');
 if (!tplItemCols.includes('unit_price')) db.exec('ALTER TABLE list_template_items ADD COLUMN unit_price REAL');
+
+const pbCols = db.prepare('PRAGMA table_info(personal_budgets)').all().map(c => c.name);
+if (!pbCols.includes('frequency')) db.exec("ALTER TABLE personal_budgets ADD COLUMN frequency TEXT NOT NULL DEFAULT 'Mensual'");
+if (!pbCols.includes('due_date'))  db.exec('ALTER TABLE personal_budgets ADD COLUMN due_date TEXT');
 
 // ── Categorías: una sola tabla manda en todas las vistas ──────────────────────
 // [name ES (canónico/almacenado en productos), name EN, name FR, emoji].
@@ -1615,5 +1661,108 @@ module.exports = {
 
   deletePushSubscription(userId) {
     return db.prepare('DELETE FROM push_subscriptions WHERE user_id = ?').run(userId);
+  },
+
+  // ── Personal Budget ────────────────────────────────────────────────────────
+  getPersonalBudgets(userId, month) {
+    return db.prepare(
+      'SELECT * FROM personal_budgets WHERE user_id = ? AND month = ? ORDER BY category'
+    ).all(userId, month);
+  },
+
+  upsertPersonalBudget(userId, { category, amount, month, frequency = 'Mensual', due_date = null }) {
+    db.prepare(`
+      INSERT INTO personal_budgets (user_id, category, amount, month, frequency, due_date)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(user_id, category, month) DO UPDATE SET
+        amount    = excluded.amount,
+        frequency = excluded.frequency,
+        due_date  = excluded.due_date
+    `).run(userId, category, +amount, month, frequency, due_date);
+    return db.prepare(
+      'SELECT * FROM personal_budgets WHERE user_id = ? AND category = ? AND month = ?'
+    ).get(userId, category, month);
+  },
+
+  getWeeklyFixedCosts(userId) {
+    const FACTOR = { 'Mensual': 12 / 52, 'Semestral': 2 / 52, 'Anual': 1 / 52, 'Bianual': 1 / 104 };
+    const rows = db.prepare(
+      'SELECT * FROM personal_budgets WHERE user_id = ? ORDER BY category'
+    ).all(userId);
+    let total_weekly = 0;
+    const items = rows.map(row => {
+      const weekly = row.amount * (FACTOR[row.frequency] ?? (12 / 52));
+      total_weekly += weekly;
+      return { ...row, weekly_equivalent: weekly };
+    });
+    return { total_weekly, items };
+  },
+
+  deletePersonalBudget(userId, id) {
+    return db.prepare(
+      'DELETE FROM personal_budgets WHERE id = ? AND user_id = ?'
+    ).run(id, userId).changes > 0;
+  },
+
+  getPersonalTransactions(userId, month) {
+    return db.prepare(`
+      SELECT t.*, i.name AS inventory_name
+      FROM personal_transactions t
+      LEFT JOIN inventories i ON i.id = t.inventory_id
+      WHERE t.user_id = ? AND strftime('%Y-%m', t.date) = ?
+      ORDER BY t.date DESC, t.created_at DESC
+    `).all(userId, month);
+  },
+
+  addPersonalTransaction(userId, { inventoryId, type, category, amount, description, date }) {
+    const { lastInsertRowid } = db.prepare(`
+      INSERT INTO personal_transactions
+        (user_id, inventory_id, type, category, amount, description, date)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, inventoryId || null, type, category, +amount, description || null, date);
+    return db.prepare('SELECT * FROM personal_transactions WHERE id = ?').get(lastInsertRowid);
+  },
+
+  deletePersonalTransaction(userId, id) {
+    return db.prepare(
+      'DELETE FROM personal_transactions WHERE id = ? AND user_id = ?'
+    ).run(id, userId).changes > 0;
+  },
+
+  // ── Personal Budget Plans ──────────────────────────────────────────────────
+  getPersonalBudgetPlans(userId) {
+    return db.prepare(
+      'SELECT * FROM personal_budget_plans WHERE user_id = ? ORDER BY created_at DESC'
+    ).all(userId);
+  },
+
+  getPersonalBudgetDynamicStats(userId, month) {
+    const incomeRow = db.prepare(`
+      SELECT COALESCE(SUM(amount), 0) AS total
+      FROM personal_transactions
+      WHERE user_id = ? AND type = 'income' AND strftime('%Y-%m', date) = ?
+    `).get(userId, month);
+    const budgetRow = db.prepare(`
+      SELECT COALESCE(SUM(amount), 0) AS total
+      FROM personal_budgets
+      WHERE user_id = ?
+    `).get(userId);
+    return { income_real: incomeRow.total, total_budgeted: budgetRow.total };
+  },
+
+  createPersonalBudgetPlan(userId, { name, inventoryId }) {
+    const { lastInsertRowid } = db.prepare(`
+        INSERT INTO personal_budget_plans (user_id, name, inventory_id, estimated_income)
+        VALUES (?, ?, ?, 0)
+      `).run(userId, name.trim(), inventoryId || null);
+
+      const plan = db.prepare('SELECT * FROM personal_budget_plans WHERE id = ?').get(lastInsertRowid);
+      return plan;
+  },
+
+  deletePersonalBudgetPlan(userId, id) {
+    return db.prepare(
+      'DELETE FROM personal_budget_plans WHERE id = ? AND user_id = ?'
+    ).run(id, userId).changes > 0;
   },
 };

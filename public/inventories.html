@@ -89,6 +89,10 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span data-i18n="inventories.create">Crear inventario</span>
         </button>
+        <button class="btn btn-secondary" id="btn-create-budget">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          <span data-i18n="personalBudget.plan.createBtn">+ Crear Presupuesto</span>
+        </button>
       </div>
     </div>
 
@@ -188,6 +192,34 @@
                   data-i18n="inventories.delete.confirm">Eliminar</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: Crear presupuesto personal -->
+  <div class="modal-overlay" id="budget-overlay" hidden>
+    <div class="modal modal-budget-plan">
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="personalBudget.plan.modalTitle">Nuevo Plan Presupuestario</h2>
+        <button class="modal-close" data-close="budget-overlay">&#215;</button>
+      </div>
+      <form class="modal-form" id="budget-plan-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="bp-name" data-i18n="personalBudget.plan.name">Nombre del plan</label>
+          <input class="form-input" type="text" id="bp-name"
+                 data-i18n-ph="personalBudget.plan.namePh"
+                 placeholder="Ej: Presupuesto enero…" maxlength="80" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bp-inventory" data-i18n="personalBudget.plan.linkInventory">Ligar a inventario (opcional)</label>
+          <select class="form-select" id="bp-inventory">
+            <option value="" data-i18n="personalBudget.plan.noInventory">Sin inventario</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="budget-overlay" data-i18n="inventories.modalCreate.cancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary" data-i18n="personalBudget.plan.save">Guardar plan</button>
+        </div>
+      </form>
     </div>
   </div>
 

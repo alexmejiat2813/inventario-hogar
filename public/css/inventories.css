@@ -490,3 +490,241 @@
       font-size: .875rem; font-weight: 600; transition: opacity .15s;
     }
     .btn-delete-confirm:hover { opacity: .85; }
+
+    /* ── Composite block (inventory + linked budget side by side) ── */
+    .inv-composite-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid #EAEAEA;
+      border-radius: 12px;
+      overflow: hidden;
+      background: white;
+      transition: box-shadow 200ms;
+    }
+    .inv-composite-block:hover { box-shadow: 0 2px 12px rgba(8,47,73,.07); }
+
+    .inv-composite-block .inv-card {
+      border: none;
+      border-radius: 0;
+      border-right: 1px solid #EAEAEA;
+      box-shadow: none !important;
+    }
+    .inv-composite-block .inv-card:hover { box-shadow: none !important; }
+
+    .inv-composite-label {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .45rem 1rem;
+      background: #F1F5F9;
+      border-bottom: 1px solid #EAEAEA;
+      font-size: .65rem;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    /* ── Budget plan card (standalone + inside composite) ── */
+    .inv-budget-plan-card {
+      background: white;
+      border: 1px solid #EAEAEA;
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: .875rem;
+      transition: box-shadow 200ms;
+      position: relative;
+    }
+    .inv-budget-plan-card:hover { box-shadow: 0 2px 8px rgba(8,47,73,.05); }
+
+    .inv-composite-block .inv-budget-plan-card {
+      border: none;
+      border-radius: 0;
+      box-shadow: none !important;
+    }
+
+    .inv-bp-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: .5rem;
+    }
+    .inv-bp-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: .18rem .55rem;
+      border-radius: 999px;
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      background: #CCFBF1;
+      color: #0F766E;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .inv-bp-menu-wrap { position: relative; }
+    .inv-bp-menu-btn {
+      width: 26px; height: 26px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid #EAEAEA; border-radius: 6px;
+      background: white; color: #082F49; cursor: pointer;
+      transition: background .12s, border-color .12s;
+    }
+    .inv-bp-menu-btn:hover { background: #F1F5F9; border-color: #082F49; }
+    .inv-bp-dropdown {
+      position: absolute; top: calc(100% + 4px); right: 0; z-index: 20;
+      min-width: 148px; padding: .25rem;
+      background: white; border: 1px solid #EAEAEA;
+      border-radius: 8px; box-shadow: 0 6px 20px rgba(8,47,73,.12);
+    }
+    .inv-bp-dropdown-item {
+      display: flex; align-items: center; gap: .5rem; width: 100%;
+      padding: .5rem .6rem; border: none; background: none; border-radius: 6px;
+      font-size: .8rem; font-weight: 600; color: #9F2F2D;
+      text-align: left; cursor: pointer; transition: background .12s;
+    }
+    .inv-bp-dropdown-item:hover { background: #FEECEC; }
+
+    .inv-bp-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #082F49;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .inv-bp-stats {
+      display: flex;
+      gap: 1rem;
+    }
+    .inv-bp-stat { display: flex; flex-direction: column; gap: .125rem; }
+    .inv-bp-stat-num {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #082F49;
+      font-variant-numeric: tabular-nums;
+    }
+    .inv-bp-stat-num--income { color: #14B8A6; }
+    .inv-bp-stat-lbl {
+      font-size: .62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #64748B;
+    }
+
+    .inv-bp-cats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+    }
+    .inv-bp-cat-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      padding: .18rem .5rem;
+      background: #F1F5F9;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 500;
+      color: #64748B;
+      white-space: nowrap;
+    }
+    .inv-bp-cat-chip strong { color: #082F49; font-weight: 700; }
+
+    .inv-bp-footer {
+      margin-top: auto;
+      padding-top: .25rem;
+    }
+    .btn-enter-budget {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .45rem 1rem;
+      background: #CCFBF1;
+      color: #0F766E;
+      border: none;
+      border-radius: 6px;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s;
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-enter-budget:hover { background: #99F6E4; }
+
+    /* Modal: budget plan — wider to fit categories */
+    .modal-budget-plan { max-width: 500px; max-height: 92vh; overflow-y: auto; }
+
+    .bp-cats-list { display: flex; flex-direction: column; gap: .5rem; margin-top: .375rem; }
+    .bp-cat-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: .5rem;
+      align-items: center;
+    }
+    .bp-cat-row input { min-width: 0; }
+    .bp-cat-remove {
+      padding: .35rem .5rem;
+      border: 1px solid #FEECEC;
+      background: #FEECEC;
+      color: #9F2F2D;
+      border-radius: 4px;
+      font-size: .75rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .12s;
+    }
+    .bp-cat-remove:hover { background: #FADBDB; }
+
+    .bp-add-cat-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .35rem .75rem;
+      border: 1px dashed #CBD5E1;
+      background: #F8FAFC;
+      color: #64748B;
+      border-radius: 4px;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .12s, color .12s;
+      width: 100%;
+      justify-content: center;
+      margin-top: .25rem;
+    }
+    .bp-add-cat-btn:hover { border-color: #082F49; color: #082F49; }
+
+    /* form-select inline in inventories.css */
+    .form-select {
+      padding: .5rem .75rem;
+      border: 1px solid #EAEAEA; border-radius: 4px;
+      font-size: .9rem; color: #082F49; background: white;
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23787774' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .75rem center;
+      padding-right: 2.25rem;
+      width: 100%;
+      transition: border-color .15s;
+    }
+    .form-select:focus { outline: none; border-color: #082F49; }
+
+    @media (max-width: 600px) {
+      .inv-composite-block {
+        grid-template-columns: 1fr;
+      }
+      .inv-composite-block .inv-card {
+        border-right: none;
+        border-bottom: 1px solid #EAEAEA;
+      }
+    }

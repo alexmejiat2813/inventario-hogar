@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presupuesto Personal</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/personal-budget.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icons/icon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#082F49">
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <a href="/inventories" class="btn-back" title="Inventarios">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          <span class="btn-back-label" data-i18n="personalBudget.back">Inventarios</span>
+        </a>
+        <div class="header-brand">
+          <div class="header-wordmark">IH</div>
+          <h1 class="header-title" data-i18n="personalBudget.title">Presupuesto Personal</h1>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="profile-menu-wrap" id="profile-menu-wrap">
+          <button class="profile-btn" id="profile-btn" aria-label="Menú de usuario" aria-expanded="false">
+            <img class="user-avatar" id="user-avatar" src="" alt="" hidden>
+            <div class="avatar-placeholder" id="avatar-placeholder"></div>
+          </button>
+          <div class="profile-dropdown" id="profile-dropdown" hidden>
+            <div class="dropdown-header">
+              <img class="dropdown-avatar" id="dropdown-avatar" src="" alt="" hidden>
+              <div class="dropdown-avatar-ph" id="dropdown-avatar-ph"></div>
+              <div class="dropdown-user-info">
+                <span class="dropdown-name"  id="dropdown-name"></span>
+                <span class="dropdown-email" id="dropdown-email"></span>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-lang">
+              <span class="dropdown-lang-label" data-i18n="profile.language">Idioma</span>
+              <div class="lang-btns">
+                <button class="lang-btn" data-lang="es">ES <span class="lang-check">✓</span></button>
+                <button class="lang-btn" data-lang="en">EN <span class="lang-check">✓</span></button>
+                <button class="lang-btn" data-lang="fr">FR <span class="lang-check">✓</span></button>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-item-danger" id="btn-logout">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span data-i18n="profile.logout">Cerrar sesión</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+    <div class="inv-panel">
+
+      <!-- Month selector -->
+      <div class="pb-month-bar">
+        <span class="pb-month-title" data-i18n="personalBudget.title">Presupuesto Personal</span>
+        <input type="month" id="pb-month" class="pb-month-input" aria-label="Mes">
+      </div>
+
+      <!-- Summary cards -->
+      <div class="pb-summary-grid">
+        <div class="pb-stat-card pb-stat-income">
+          <div class="pb-stat-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          </div>
+          <span class="pb-stat-label" data-i18n="personalBudget.summary.income">Ingresos</span>
+          <span class="pb-stat-value pb-stat-value--income" id="pb-income">—</span>
+        </div>
+        <div class="pb-stat-card pb-stat-expense">
+          <div class="pb-stat-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+          </div>
+          <span class="pb-stat-label" data-i18n="personalBudget.summary.expense">Gastos</span>
+          <span class="pb-stat-value pb-stat-value--expense" id="pb-expense">—</span>
+        </div>
+        <div class="pb-stat-card pb-stat-balance">
+          <div class="pb-stat-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span class="pb-stat-label" data-i18n="personalBudget.summary.balance">Balance</span>
+          <span class="pb-stat-value" id="pb-balance">—</span>
+        </div>
+      </div>
+
+      <!-- Cashflow Widget -->
+      <div class="dash-card" id="pb-cashflow-card">
+        <div class="pb-cashflow-header">
+          <h2 class="dash-card-title" data-i18n="personalBudget.cashflow.title">Retención Semanal</h2>
+          <span class="pb-cashflow-badge" data-i18n="personalBudget.cashflow.badge">por semana</span>
+        </div>
+        <div class="pb-cashflow-weekly">
+          <span class="pb-cashflow-amount pb-cashflow-amount--empty" id="pb-weekly-amount">—</span>
+          <span class="pb-cashflow-subtitle" data-i18n="personalBudget.cashflow.subtitle">debes retener cada semana para cubrir todos tus gastos fijos</span>
+        </div>
+        <p class="pb-cashflow-alerts-title" data-i18n="personalBudget.cashflow.alertsTitle">Próximos vencimientos (30 días)</p>
+        <div id="pb-cashflow-alerts"><!-- rendered by JS --></div>
+      </div>
+
+      <!-- Form -->
+      <div class="dash-card">
+        <h2 class="dash-card-title" data-i18n="personalBudget.form.title">Registrar transacción</h2>
+        <form id="pb-form" novalidate>
+          <div class="pb-form-grid">
+
+            <!-- Type toggle -->
+            <div class="form-group pb-form-full">
+              <label class="form-label" data-i18n="personalBudget.form.type">Tipo</label>
+              <div class="pb-type-toggle" role="group">
+                <button type="button" class="pb-type-btn active" data-type="income">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                  <span data-i18n="personalBudget.form.typeIncome">Ingreso</span>
+                </button>
+                <button type="button" class="pb-type-btn" data-type="expense">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg>
+                  <span data-i18n="personalBudget.form.typeExpense">Gasto</span>
+                </button>
+                <button type="button" class="pb-type-btn" data-type="fixed">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                  <span data-i18n="personalBudget.form.typeFixed">Gasto Fijo</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+              <label class="form-label" for="pb-category">
+                <span data-i18n="personalBudget.form.category">Categoría</span>
+                <span class="req">*</span>
+              </label>
+              <input class="form-input" type="text" id="pb-category" maxlength="80"
+                     data-i18n-ph="personalBudget.form.categoryPlaceholder"
+                     placeholder="Ej: Salario, Alquiler..." autocomplete="off" required>
+            </div>
+
+            <!-- Amount -->
+            <div class="form-group">
+              <label class="form-label" for="pb-amount">
+                <span data-i18n="personalBudget.form.amount">Monto</span>
+                <span class="req">*</span>
+              </label>
+              <input class="form-input" type="number" id="pb-amount" min="0.01" step="0.01"
+                     data-i18n-ph="personalBudget.form.amountPlaceholder"
+                     placeholder="0.00" required>
+            </div>
+
+            <!-- Date -->
+            <div class="form-group">
+              <label class="form-label" for="pb-date">
+                <span data-i18n="personalBudget.form.date">Fecha</span>
+                <span class="req">*</span>
+              </label>
+              <input class="form-input" type="date" id="pb-date" required>
+            </div>
+
+            <!-- Inventory (optional) -->
+            <div class="form-group" id="pb-inventory-group">
+              <label class="form-label" for="pb-inventory" data-i18n="personalBudget.form.inventory">Inventario (opcional)</label>
+              <select class="form-select" id="pb-inventory">
+                <option value="" data-i18n="personalBudget.form.inventoryNone">Ninguno</option>
+              </select>
+            </div>
+
+            <!-- Fixed-cost fields (shown only when type=fixed) -->
+            <div class="form-group" id="pb-freq-group" hidden>
+              <label class="form-label" for="pb-freq" data-i18n="personalBudget.fixed.frequency">Frecuencia</label>
+              <select class="pb-fixed-freq-select" id="pb-freq">
+                <option value="Mensual"   data-i18n="personalBudget.fixed.freqMonthly">Mensual</option>
+                <option value="Semestral" data-i18n="personalBudget.fixed.freqSemestral">Semestral</option>
+                <option value="Anual"     data-i18n="personalBudget.fixed.freqAnnual">Anual</option>
+                <option value="Bianual"   data-i18n="personalBudget.fixed.freqBiannual">Bianual</option>
+              </select>
+            </div>
+            <div class="form-group" id="pb-due-group" hidden>
+              <label class="form-label" for="pb-due-date">
+                <span data-i18n="personalBudget.fixed.dueDate">Día / Fecha de vencimiento</span>
+              </label>
+              <input class="form-input" type="text" id="pb-due-date"
+                     data-i18n-ph="personalBudget.fixed.dueDatePh"
+                     placeholder="05 o 2026-11-15" maxlength="10" autocomplete="off">
+              <small class="field-hint" data-i18n="personalBudget.fixed.dueDateHint">Día del mes "05" o fecha exacta YYYY-MM-DD</small>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group pb-form-full">
+              <label class="form-label" for="pb-description" data-i18n="personalBudget.form.description">Descripción</label>
+              <input class="form-input" type="text" id="pb-description" maxlength="200"
+                     data-i18n-ph="personalBudget.form.descriptionPlaceholder"
+                     placeholder="Opcional" autocomplete="off">
+            </div>
+
+            <!-- Submit -->
+            <div class="modal-footer pb-form-full" style="padding-top:.25rem">
+              <button type="submit" class="btn btn-primary" id="pb-submit" data-i18n="personalBudget.form.submit">Guardar</button>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <!-- Fixed costs list -->
+      <div class="dash-card" id="pb-fixed-costs-card" hidden>
+        <h2 class="dash-card-title" data-i18n="personalBudget.fixedList.title">Gastos Fijos Programados</h2>
+        <div class="pb-table-scroll">
+          <table class="pb-tx-table pb-fc-table">
+            <thead>
+              <tr>
+                <th data-i18n="personalBudget.fixedList.colCategory">Categoría</th>
+                <th data-i18n="personalBudget.fixedList.colAmount">Monto</th>
+                <th data-i18n="personalBudget.fixedList.colFrequency">Frecuencia</th>
+                <th data-i18n="personalBudget.fixedList.colDue">Vence</th>
+                <th data-i18n="personalBudget.fixedList.colWeekly">Semanal</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="pb-fixed-costs-list"><!-- rendered by JS --></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Transactions table -->
+      <div class="dash-card">
+        <h2 class="dash-card-title" data-i18n="personalBudget.table.title">Transacciones</h2>
+        <div id="pb-table-wrap">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/header.js"></script>
+  <script src="/js/personal-budget.js"></script>
+  <script src="/js/sw-register.js"></script>
+</body>
+</html>

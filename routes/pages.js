@@ -50,4 +50,8 @@ router.get('/purchase/:purchaseId/edit', requireAuthPage, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'purchase-edit.html'));
 });
 
+router.get('/personal-budget', requireAuthPage, (req, res) =>
+  res.sendFile(path.join(__dirname, '..', 'public', 'personal-budget.html'))
+);
+
 module.exports = router;

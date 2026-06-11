@@ -148,7 +148,8 @@ app.use('/api',              require('./routes/me'));
 app.use('/api/admin',        requireAdmin, require('./routes/admin'));
 app.use('/api/inventories',  require('./routes/inventories'));
 app.use('/api/catalog',      require('./routes/catalog'));
-app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/notifications',    require('./routes/notifications'));
+app.use('/api/personal-budget',  require('./routes/personal-budget'));
 
 // Routes below require an active inventory in session
 app.use(
