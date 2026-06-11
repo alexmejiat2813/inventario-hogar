@@ -7,6 +7,7 @@
   let _month          = new Date().toISOString().slice(0, 7);
   let _inventories    = [];
   let _editingFixedId = null;
+  let _editingTxId    = null;
   let _currentPeriod  = 'biweekly';
   let _lastFixedCosts = null;
   let _selectedRow    = null; // { id, tab, flow_type, data:{category,amount,frequency,due_date} }
@@ -152,7 +153,16 @@
   document.getElementById('pb-panel-transactions').addEventListener('change', e => {
     const radio = e.target.closest('.pb-row-radio');
     if (!radio) return;
-    _selectedRow = { id: +radio.dataset.id, tab: 'transactions', flow_type: radio.dataset.flow };
+    _selectedRow = {
+      id: +radio.dataset.id, tab: 'transactions', flow_type: radio.dataset.flow,
+      data: {
+        category:     radio.dataset.category,
+        amount:       +radio.dataset.amount,
+        date:         radio.dataset.date,
+        description:  radio.dataset.desc,
+        inventory_id: radio.dataset.inv ? +radio.dataset.inv : null,
+      },
+    };
     document.querySelectorAll('tr.pb-row--selected').forEach(r => r.classList.remove('pb-row--selected'));
     radio.closest('tr').classList.add('pb-row--selected');
     updateToolbar();
@@ -222,8 +232,16 @@
       elDueDate.value  = d.due_date || '';
       elSubmit.textContent = t('personalBudget.fixedList.saveEdit');
     } else {
-      // transactions are not editable (immutable records); open blank for now
-      resetForm();
+      _editingTxId = _selectedRow.id;
+      const d = _selectedRow.data;
+      elRecordType.value = _selectedRow.flow_type + '_real';
+      applyTypeVisibility();
+      elCategory.value = d.category;
+      elAmount.value   = d.amount;
+      elDate.value     = d.date;
+      elDesc.value     = d.description || '';
+      if (elInventory && d.inventory_id) elInventory.value = d.inventory_id;
+      elSubmit.textContent = t('personalBudget.fixedList.saveEdit');
     }
     openModal('personalBudget.form.title');
   });
@@ -326,7 +344,10 @@
         <tr>
           <td class="pb-col-radio">
             <input type="radio" name="pb-row-select" class="pb-row-radio"
-              data-id="${tx.id}" data-tab="transactions" data-flow="${tx.type}">
+              data-id="${tx.id}" data-tab="transactions" data-flow="${tx.type}"
+              data-category="${escHtml(tx.category)}" data-amount="${tx.amount}"
+              data-date="${tx.date}" data-desc="${escHtml(tx.description || '')}"
+              data-inv="${tx.inventory_id || ''}">
           </td>
           <td class="pb-tx-date">${tx.date}</td>
           <td><span class="pb-type-badge pb-type-badge--${tx.type}">${typeLabel}</span></td>
@@ -550,6 +571,7 @@
   function resetForm() {
     elForm.reset();
     _editingFixedId    = null;
+    _editingTxId       = null;
     elRecordType.value = 'income_real';
     applyTypeVisibility();
     elCategory.classList.remove('invalid');
@@ -595,15 +617,21 @@
       } else {
         const date = elDate.value;
         if (!date) { elDate.classList.add('invalid'); elDate.focus(); return; }
-        await apiFetch('POST', '/api/personal-budget/transaction', {
+        const txPayload = {
           type:        flow,
           category,
           amount:      +amount,
           description: elDesc.value.trim() || null,
           date,
           inventoryId: elInventory.value ? +elInventory.value : null,
-        });
-        showToast(t('personalBudget.saved'));
+        };
+        if (_editingTxId) {
+          await apiFetch('PUT', `/api/personal-budget/transaction/${_editingTxId}`, txPayload);
+          showToast(t('personalBudget.fixedList.updated'));
+        } else {
+          await apiFetch('POST', '/api/personal-budget/transaction', txPayload);
+          showToast(t('personalBudget.saved'));
+        }
         await load();
       }
       closeModal();

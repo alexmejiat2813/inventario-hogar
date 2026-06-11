@@ -237,6 +237,40 @@ router.delete('/plans/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// PUT /api/personal-budget/transaction/:id
+router.put('/transaction/:id', (req, res) => {
+  const userId = req.user.id;
+  const id     = +req.params.id;
+  const { inventoryId, type, category, amount, description, date } = req.body;
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'ID inválido.' });
+  }
+  if (!['income', 'expense'].includes(type)) {
+    return res.status(400).json({ error: 'type debe ser "income" o "expense".' });
+  }
+  if (!category || typeof category !== 'string' || !category.trim()) {
+    return res.status(400).json({ error: 'category es requerida.' });
+  }
+  if (!amount || isNaN(+amount) || +amount <= 0) {
+    return res.status(400).json({ error: 'amount debe ser un número positivo.' });
+  }
+  if (!date || !DATE_RE.test(date)) {
+    return res.status(400).json({ error: 'date inválida. Usar YYYY-MM-DD.' });
+  }
+
+  const updated = db.updatePersonalTransaction(userId, id, {
+    type,
+    category: category.trim(),
+    amount,
+    description,
+    date,
+    inventoryId: inventoryId || null,
+  });
+  if (!updated) return res.status(404).json({ error: 'Transacción no encontrada.' });
+  res.json(updated);
+});
+
 // DELETE /api/personal-budget/transaction/:id
 router.delete('/transaction/:id', (req, res) => {
   const userId = req.user.id;

@@ -1730,6 +1730,16 @@ module.exports = {
     return db.prepare('SELECT * FROM personal_transactions WHERE id = ?').get(lastInsertRowid);
   },
 
+  updatePersonalTransaction(userId, id, { type, category, amount, description, date, inventoryId }) {
+    const { changes } = db.prepare(`
+      UPDATE personal_transactions
+         SET type = ?, category = ?, amount = ?, description = ?, date = ?, inventory_id = ?
+       WHERE id = ? AND user_id = ?
+    `).run(type, category, +amount, description || null, date, inventoryId || null, id, userId);
+    if (!changes) return null;
+    return db.prepare('SELECT * FROM personal_transactions WHERE id = ?').get(id);
+  },
+
   deletePersonalTransaction(userId, id) {
     return db.prepare(
       'DELETE FROM personal_transactions WHERE id = ? AND user_id = ?'
