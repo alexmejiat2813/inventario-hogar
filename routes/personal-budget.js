@@ -6,7 +6,7 @@ const router = express.Router();
 const MONTH_RE    = /^\d{4}-\d{2}$/;
 const DATE_RE     = /^\d{4}-\d{2}-\d{2}$/;
 const DUE_DATE_RE = /^(\d{1,2}|\d{4}-\d{2}-\d{2})$/;
-const VALID_FREQ  = ['Mensual', 'Semestral', 'Anual', 'Bianual'];
+const VALID_FREQ  = ['Mensual', 'Quincenal', 'Semestral', 'Anual', 'Bianual'];
 
 // GET /api/personal-budget?month=YYYY-MM
 router.get('/', (req, res) => {

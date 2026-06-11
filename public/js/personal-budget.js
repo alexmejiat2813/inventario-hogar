@@ -4,14 +4,12 @@
   await I18N.init();
 
   // ── State ──────────────────────────────────────────────────────────────────
-  let _month           = new Date().toISOString().slice(0, 7);
-  let _selectedNature  = 'real';       // 'real' | 'projected'
-  let _selectedFlow    = 'income';     // 'income' | 'expense'
-  let _inventories     = [];
-  let _editingFixedId  = null;
-  let _currentPeriod   = 'weekly';
-  let _lastCashflow    = null;
-  let _lastFixedCosts  = null;
+  let _month          = new Date().toISOString().slice(0, 7);
+  let _inventories    = [];
+  let _editingFixedId = null;
+  let _currentPeriod  = 'biweekly';  // 'biweekly' | 'monthly'
+  let _lastCashflow   = null;
+  let _lastFixedCosts = null;
 
   // ── DOM refs ───────────────────────────────────────────────────────────────
   const elMonth        = document.getElementById('pb-month');
@@ -22,13 +20,14 @@
   const elExpenseProj  = document.getElementById('pb-expense-proj');
   const elBalanceProj  = document.getElementById('pb-balance-proj');
   const elTableWrap    = document.getElementById('pb-table-wrap');
-  const elForm       = document.getElementById('pb-form');
-  const elCategory   = document.getElementById('pb-category');
-  const elAmount     = document.getElementById('pb-amount');
-  const elDate       = document.getElementById('pb-date');
-  const elInventory  = document.getElementById('pb-inventory');
-  const elDesc       = document.getElementById('pb-description');
-  const elSubmit     = document.getElementById('pb-submit');
+  const elForm         = document.getElementById('pb-form');
+  const elRecordType   = document.getElementById('pb-record-type');
+  const elCategory     = document.getElementById('pb-category');
+  const elAmount       = document.getElementById('pb-amount');
+  const elDate         = document.getElementById('pb-date');
+  const elInventory    = document.getElementById('pb-inventory');
+  const elDesc         = document.getElementById('pb-description');
+  const elSubmit       = document.getElementById('pb-submit');
 
   // cashflow widget
   const elWeeklyAmount    = document.getElementById('pb-weekly-amount');
@@ -36,7 +35,6 @@
   const elCashflowTitle   = document.getElementById('pb-cashflow-title');
   const elCashflowSubtitle= document.getElementById('pb-cashflow-subtitle');
   const elPeriodSelector  = document.getElementById('pb-period-selector');
-  const elColWeekly       = document.getElementById('pb-col-weekly');
 
   // fixed costs list
   const elFixedCostsList = document.getElementById('pb-fixed-costs-list');
@@ -49,7 +47,15 @@
   const elFreq           = document.getElementById('pb-freq');
   const elDueDate        = document.getElementById('pb-due-date');
 
-  // ── Toast (local copy — same impl as all other pages) ─────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function getNatureFlow() {
+    const val = elRecordType.value; // 'income_real' | 'expense_real' | 'income_projected' | 'expense_projected'
+    return {
+      nature: val.endsWith('_real') ? 'real' : 'projected',
+      flow:   val.startsWith('income') ? 'income' : 'expense',
+    };
+  }
+
   function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const el = document.createElement('div');
@@ -63,12 +69,19 @@
     }, 3200);
   }
 
-  // ── Format currency (no symbol — personal module is currency-agnostic) ────
   function fmt(amount) {
     return new Intl.NumberFormat(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   // ── Render summary cards ───────────────────────────────────────────────────
@@ -97,7 +110,7 @@
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
           </div>
-          <h3 data-i18n="personalBudget.empty.title">${t('personalBudget.empty.title')}</h3>
+          <h3>${t('personalBudget.empty.title')}</h3>
           <p>${t('personalBudget.empty.sub')}</p>
         </div>`;
       return;
@@ -116,8 +129,7 @@
           <td class="pb-col-inv" style="color:var(--text-muted);font-size:.8rem">${escHtml(invName)}</td>
           <td class="pb-tx-amount pb-tx-amount--${tx.type}">${sign}${fmt(tx.amount)}</td>
           <td>
-            <button class="pb-btn-del" data-id="${tx.id}" aria-label="Eliminar"
-              title="${t('personalBudget.table.deleteConfirm')}">
+            <button class="pb-btn-del" data-id="${tx.id}" aria-label="Eliminar">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="3 6 5 6 21 6"/>
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -163,34 +175,33 @@
       </div>`;
   }
 
-  // ── Escape HTML ────────────────────────────────────────────────────────────
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+  // ── Period helpers ─────────────────────────────────────────────────────────
+  // Converts weekly amount to selected period
+  function weeklyToPeriod(weeklyAmt) {
+    return _currentPeriod === 'monthly' ? weeklyAmt * (52 / 12) : weeklyAmt * 2;
   }
-
-  // ── Period helpers ────────────────────────────────────────────────────────
-  function getPeriodFactor() { return _currentPeriod === 'biweekly' ? 2 : 1; }
 
   function applyPeriodLabels() {
-    const bw = _currentPeriod === 'biweekly';
-    elCashflowTitle.textContent    = t(bw ? 'personalBudget.cashflow.titleBiweekly'    : 'personalBudget.cashflow.title');
-    elCashflowSubtitle.textContent = t(bw ? 'personalBudget.cashflow.subtitleBiweekly' : 'personalBudget.cashflow.subtitle');
-    elColWeekly.textContent        = t(bw ? 'personalBudget.fixedList.colBiweekly'     : 'personalBudget.fixedList.colWeekly');
+    const isMonthly = _currentPeriod === 'monthly';
+    elCashflowTitle.textContent    = t(isMonthly ? 'personalBudget.cashflow.titleMonthly'    : 'personalBudget.cashflow.titleBiweekly');
+    elCashflowSubtitle.textContent = t(isMonthly ? 'personalBudget.cashflow.subtitleMonthly' : 'personalBudget.cashflow.subtitleBiweekly');
   }
 
-  // ── Render cashflow widget ────────────────────────────────────────────────
+  // ── Render cashflow widget ─────────────────────────────────────────────────
   function renderCashflow(data) {
     if (data) _lastCashflow = data;
-    const { total_weekly_needed, calendar_alerts } = _lastCashflow || { total_weekly_needed: 0, calendar_alerts: [] };
-    const factor  = getPeriodFactor();
-    const display = total_weekly_needed * factor;
+    const { income_weekly = 0, expense_weekly = 0, calendar_alerts = [] } = _lastCashflow || {};
 
-    elWeeklyAmount.textContent = fmt(display);
-    elWeeklyAmount.classList.toggle('pb-cashflow-amount--empty', display === 0);
+    // Net projected adapted to period (positive = surplus, negative = deficit)
+    const netWeekly = income_weekly - expense_weekly;
+    const display   = weeklyToPeriod(netWeekly);
+    const isPositive = display >= 0;
+
+    elWeeklyAmount.textContent = (isPositive ? '+' : '') + fmt(display);
+    elWeeklyAmount.style.color = display === 0
+      ? 'var(--text-muted)'
+      : isPositive ? 'var(--success)' : 'var(--danger)';
+    elWeeklyAmount.classList.remove('pb-cashflow-amount--empty');
 
     if (!calendar_alerts.length) {
       elCashflowAlerts.innerHTML =
@@ -198,7 +209,7 @@
       return;
     }
 
-    const suffix = t(_currentPeriod === 'biweekly' ? 'personalBudget.cashflow.biweekSuffix' : 'personalBudget.cashflow.weekSuffix');
+    const periodSuffix = t(_currentPeriod === 'monthly' ? 'personalBudget.cashflow.periodMonthly' : 'personalBudget.cashflow.periodBiweekly');
     const items = calendar_alerts.map(a => {
       const isIncome = (a.flow_type || 'expense') === 'income';
       const urgency  = isIncome ? 'ok' : (a.days_until <= 7 ? 'urgent' : a.days_until <= 14 ? 'warning' : 'ok');
@@ -216,7 +227,7 @@
           <div class="pb-cashflow-right">
             <span class="pb-cashflow-due">${a.next_due}</span>
             <span class="pb-cashflow-weekly-eq" style="color:${isIncome ? 'var(--success)' : 'var(--accent)'}">
-              ${sign}${fmt(a.weekly_equivalent * factor)}/${suffix}
+              ${sign}${fmt(weeklyToPeriod(a.weekly_equivalent))}/${periodSuffix}
             </span>
           </div>
         </div>`;
@@ -225,15 +236,15 @@
     elCashflowAlerts.innerHTML = `<div class="pb-cashflow-list">${items}</div>`;
   }
 
-  // ── Render + load fixed costs ─────────────────────────────────────────────
+  // ── Render fixed costs (3 columns: biweekly / monthly / annual) ───────────
   function renderFixedCosts(items) {
     if (items) _lastFixedCosts = items;
-    const list   = _lastFixedCosts || [];
-    const factor = getPeriodFactor();
-    items = list;  // shadow param with resolved cache
+    const list = _lastFixedCosts || [];
+    items = list;
+
     if (!items.length) {
       elFixedCostsList.innerHTML = `
-        <tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.84rem">
+        <tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.84rem">
           ${t('personalBudget.fixedList.empty')}
         </td></tr>`;
       elFixedCostsFoot.hidden = true;
@@ -244,16 +255,22 @@
       const ft      = fc.flow_type || 'expense';
       const ftLabel = t(ft === 'income' ? 'personalBudget.form.typeIncome' : 'personalBudget.form.typeExpense');
       const ftClass = ft === 'income' ? 'pb-type-badge--income' : 'pb-type-badge--expense';
+      const wkly    = fc.weekly_equivalent;
+      const biwkly  = wkly * 2;
+      const monthly = wkly * (52 / 12);
+      const annual  = wkly * 52;
+      const color   = ft === 'income' ? 'var(--success)' : 'var(--accent)';
       return `
       <tr>
         <td>
           ${escHtml(fc.category)}
           <span class="pb-type-badge ${ftClass}" style="margin-left:.35rem;vertical-align:middle">${ftLabel}</span>
         </td>
-        <td class="pb-tx-amount">${fmt(fc.amount)}</td>
         <td>${escHtml(fc.frequency)}</td>
         <td class="pb-tx-date">${fc.due_date || '—'}</td>
-        <td class="pb-tx-amount" style="color:${ft === 'income' ? 'var(--success)' : 'var(--accent)'}">${fmt(fc.weekly_equivalent * factor)}</td>
+        <td class="pb-tx-amount" style="color:${color}">${fmt(biwkly)}</td>
+        <td class="pb-tx-amount" style="color:${color}">${fmt(monthly)}</td>
+        <td class="pb-tx-amount" style="color:${color}">${fmt(annual)}</td>
         <td style="display:flex;gap:.35rem;justify-content:flex-end">
           <button class="pb-btn-edit pb-fc-edit"
             data-id="${fc.id}" data-category="${escHtml(fc.category)}"
@@ -284,21 +301,26 @@
       </tr>`;
     }).join('');
 
-    const totalExpenseAmt = items.filter(fc => (fc.flow_type||'expense') === 'expense').reduce((s, fc) => s + fc.amount, 0);
-    const totalIncomeAmt  = items.filter(fc => (fc.flow_type||'expense') === 'income') .reduce((s, fc) => s + fc.amount, 0);
-    const totalExpWkly    = items.filter(fc => (fc.flow_type||'expense') === 'expense').reduce((s, fc) => s + fc.weekly_equivalent * factor, 0);
-    const totalIncWkly    = items.filter(fc => (fc.flow_type||'expense') === 'income') .reduce((s, fc) => s + fc.weekly_equivalent * factor, 0);
-    const netWkly = Math.max(0, totalExpWkly - totalIncWkly);
+    // tfoot: net subtotals for each column
+    const expItems = items.filter(fc => (fc.flow_type || 'expense') === 'expense');
+    const incItems = items.filter(fc => (fc.flow_type || 'expense') === 'income');
+    const netBiwkly  = expItems.reduce((s, fc) => s + fc.weekly_equivalent * 2, 0)
+                     - incItems.reduce((s, fc) => s + fc.weekly_equivalent * 2, 0);
+    const netMonthly = expItems.reduce((s, fc) => s + fc.weekly_equivalent * (52 / 12), 0)
+                     - incItems.reduce((s, fc) => s + fc.weekly_equivalent * (52 / 12), 0);
+    const netAnnual  = expItems.reduce((s, fc) => s + fc.weekly_equivalent * 52, 0)
+                     - incItems.reduce((s, fc) => s + fc.weekly_equivalent * 52, 0);
+
+    function netColor(v) { return v > 0 ? 'var(--danger)' : 'var(--success)'; }
+
     elFixedCostsFoot.hidden = false;
     elFixedCostsFoot.innerHTML = `
       <tr class="pb-tfoot">
         <td class="pb-tfoot-label">${t('personalBudget.tabs.subtotal')}</td>
-        <td class="pb-tfoot-balance" style="text-align:right">
-          <span style="color:var(--danger)">-${fmt(totalExpenseAmt)}</span>
-          <span style="color:var(--success);margin-left:.35rem">+${fmt(totalIncomeAmt)}</span>
-        </td>
         <td colspan="2"></td>
-        <td class="pb-tfoot-balance" style="text-align:right;color:${netWkly > 0 ? 'var(--danger)' : 'var(--success)'}">${fmt(netWkly)} neto</td>
+        <td class="pb-tfoot-balance" style="color:${netColor(netBiwkly)}">${fmt(netBiwkly)}</td>
+        <td class="pb-tfoot-balance" style="color:${netColor(netMonthly)}">${fmt(netMonthly)}</td>
+        <td class="pb-tfoot-balance" style="color:${netColor(netAnnual)}">${fmt(netAnnual)}</td>
         <td></td>
       </tr>`;
   }
@@ -310,19 +332,13 @@
     } catch { /* non-fatal */ }
   }
 
-  // Edit projected flow: prefill form as "projected"
+  // ── Edit projected flow ────────────────────────────────────────────────────
   elFixedCostsList.addEventListener('click', e => {
     const btn = e.target.closest('.pb-fc-edit');
     if (!btn) return;
     _editingFixedId = +btn.dataset.id;
-    _selectedNature = 'projected';
-    _selectedFlow   = btn.dataset.flow || 'expense';
-    document.querySelectorAll('.pb-nature-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.nature === 'projected');
-    });
-    document.querySelectorAll('.pb-flow-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.flow === _selectedFlow);
-    });
+    const flow = btn.dataset.flow || 'expense';
+    elRecordType.value = flow + '_projected';
     applyTypeVisibility();
     elCategory.value = btn.dataset.category;
     elAmount.value   = btn.dataset.amount;
@@ -335,18 +351,11 @@
     elCategory.focus();
   });
 
-  // Pay projected flow: prefill form as real expense
+  // ── Pay projected flow ─────────────────────────────────────────────────────
   elFixedCostsList.addEventListener('click', e => {
     const btn = e.target.closest('.pb-fc-pay');
     if (!btn) return;
-    _selectedNature = 'real';
-    _selectedFlow   = 'expense';
-    document.querySelectorAll('.pb-nature-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.nature === 'real');
-    });
-    document.querySelectorAll('.pb-flow-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.flow === 'expense');
-    });
+    elRecordType.value = 'expense_real';
     applyTypeVisibility();
     elCategory.value = btn.dataset.category;
     elAmount.value   = btn.dataset.amount;
@@ -356,7 +365,7 @@
     elDate.focus();
   });
 
-  // Delete fixed cost via event delegation
+  // ── Delete fixed cost ──────────────────────────────────────────────────────
   elFixedCostsList.addEventListener('click', async e => {
     const btn = e.target.closest('.pb-fc-del');
     if (!btn) return;
@@ -370,12 +379,12 @@
     }
   });
 
-  // ── Load cashflow analysis ────────────────────────────────────────────────
+  // ── Load cashflow analysis ─────────────────────────────────────────────────
   async function loadCashflow() {
     try {
       const data = await apiFetch('GET', '/api/personal-budget/cashflow-analysis');
       if (data) renderCashflow(data);
-    } catch { /* non-fatal — widget stays showing "—" */ }
+    } catch { /* non-fatal */ }
   }
 
   // ── Load data for current month ────────────────────────────────────────────
@@ -400,35 +409,19 @@
         opt.textContent = inv.name;
         elInventory.appendChild(opt);
       });
-    } catch { /* non-fatal — inventory field stays with "Ninguno" only */ }
+    } catch { /* non-fatal */ }
   }
 
-  // ── Toggle visibility ─────────────────────────────────────────────────────
+  // ── Toggle field visibility based on record type ───────────────────────────
   function applyTypeVisibility() {
-    const isProjected = _selectedNature === 'projected';
-    elFreqGroup.hidden      = !isProjected;
-    elDueGroup.hidden       = !isProjected;
-    elInventoryGroup.hidden = isProjected || _selectedFlow !== 'expense';
-    elDate.closest('.form-group').hidden = isProjected;
+    const { nature, flow } = getNatureFlow();
+    elFreqGroup.hidden      = nature !== 'projected';
+    elDueGroup.hidden       = nature !== 'projected';
+    elInventoryGroup.hidden = nature !== 'real' || flow !== 'expense';
+    elDate.closest('.form-group').hidden = nature !== 'real';
   }
 
-  document.querySelectorAll('.pb-nature-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      _selectedNature = btn.dataset.nature;
-      document.querySelectorAll('.pb-nature-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      applyTypeVisibility();
-    });
-  });
-
-  document.querySelectorAll('.pb-flow-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      _selectedFlow = btn.dataset.flow;
-      document.querySelectorAll('.pb-flow-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      applyTypeVisibility();
-    });
-  });
+  elRecordType.addEventListener('change', applyTypeVisibility);
 
   // ── Period selector ───────────────────────────────────────────────────────
   elPeriodSelector.addEventListener('change', () => {
@@ -472,15 +465,17 @@
     elForm.classList.add('pb-form-submitting');
     elSubmit.textContent = t('personalBudget.form.submitting');
 
+    const { nature, flow } = getNatureFlow();
+
     try {
-      if (_selectedNature === 'projected') {
+      if (nature === 'projected') {
         const payload = {
           category,
           amount:    +amount,
           month:     _month,
           frequency: elFreq.value,
           due_date:  elDueDate.value.trim() || null,
-          flow_type: _selectedFlow,
+          flow_type: flow,
         };
         if (_editingFixedId) {
           await apiFetch('PUT', `/api/personal-budget/budget/${_editingFixedId}`, payload);
@@ -495,7 +490,7 @@
         const date = elDate.value;
         if (!date) { elDate.classList.add('invalid'); elDate.focus(); return; }
         await apiFetch('POST', '/api/personal-budget/transaction', {
-          type:        _selectedFlow,
+          type:        flow,
           category,
           amount:      +amount,
           description: elDesc.value.trim() || null,
@@ -507,13 +502,8 @@
       }
 
       elForm.reset();
-      _editingFixedId = null;
-      document.querySelectorAll('.pb-nature-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector('.pb-nature-btn[data-nature="real"]').classList.add('active');
-      document.querySelectorAll('.pb-flow-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector('.pb-flow-btn[data-flow="income"]').classList.add('active');
-      _selectedNature = 'real';
-      _selectedFlow   = 'income';
+      _editingFixedId    = null;
+      elRecordType.value = 'income_real';
       applyTypeVisibility();
       elCategory.classList.remove('invalid');
       elAmount.classList.remove('invalid');
@@ -532,7 +522,7 @@
     el.addEventListener('input', () => el.classList.remove('invalid'));
   });
 
-  // ── Delete transaction ────────────────────────────────────────────────────
+  // ── Delete transaction ─────────────────────────────────────────────────────
   elTableWrap.addEventListener('click', async e => {
     const btn = e.target.closest('.pb-btn-del');
     if (!btn) return;
@@ -552,9 +542,11 @@
   document.addEventListener('langchange', () => { load(); loadCashflow(); loadFixedCosts(); applyPeriodLabels(); });
 
   // ── Init ──────────────────────────────────────────────────────────────────
-  elMonth.value = _month;
-  elDate.value  = new Date().toISOString().slice(0, 10);
+  elMonth.value          = _month;
+  elDate.value           = new Date().toISOString().slice(0, 10);
+  elPeriodSelector.value = _currentPeriod;
   applyTypeVisibility();
+  applyPeriodLabels();
 
   initProfileMenu();
   await Promise.all([loadProfileAvatar(), loadInventories(), load(), loadCashflow(), loadFixedCosts()]);

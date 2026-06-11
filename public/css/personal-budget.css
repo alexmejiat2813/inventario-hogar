@@ -513,11 +513,13 @@
 }
 .pb-fixed-freq-select:focus { outline: none; border-color: var(--text); }
 
-/* ── Fixed costs table (compact variant) ── */
+/* ── Fixed costs table (compact variant) — 7 cols: cat / freq / due / biwkly / monthly / annual / actions ── */
 .pb-fc-table th,
 .pb-fc-table td { padding: .45rem .65rem; }
-.pb-fc-table th:nth-child(2),
+.pb-fc-table th:nth-child(4),
 .pb-fc-table th:nth-child(5),
-.pb-fc-table td:nth-child(2),
-.pb-fc-table td:nth-child(5) { text-align: right; }
+.pb-fc-table th:nth-child(6),
+.pb-fc-table td:nth-child(4),
+.pb-fc-table td:nth-child(5),
+.pb-fc-table td:nth-child(6) { text-align: right; }
 

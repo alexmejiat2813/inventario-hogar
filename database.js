@@ -1680,7 +1680,7 @@ module.exports = {
   },
 
   getWeeklyFixedCosts(userId) {
-    const FACTOR = { 'Mensual': 12 / 52, 'Semestral': 2 / 52, 'Anual': 1 / 52, 'Bianual': 1 / 104 };
+    const FACTOR = { 'Mensual': 12 / 52, 'Quincenal': 24 / 52, 'Semestral': 2 / 52, 'Anual': 1 / 52, 'Bianual': 1 / 104 };
     const rows = db.prepare(
       'SELECT * FROM personal_budgets WHERE user_id = ? ORDER BY flow_type DESC, category'
     ).all(userId);

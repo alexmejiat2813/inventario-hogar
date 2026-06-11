@@ -136,8 +136,8 @@
         <div class="pb-cashflow-header">
           <h2 class="dash-card-title" id="pb-cashflow-title" data-i18n="personalBudget.cashflow.title">Retención Semanal</h2>
           <select id="pb-period-selector" class="pb-period-selector" aria-label="Periodo">
-            <option value="weekly"   data-i18n="personalBudget.cashflow.periodWeekly">Semanal</option>
-            <option value="biweekly" data-i18n="personalBudget.cashflow.periodBiweekly">Quincenal (2 sem.)</option>
+            <option value="biweekly" data-i18n="personalBudget.cashflow.periodBiweekly">Quincenal</option>
+            <option value="monthly"  data-i18n="personalBudget.cashflow.periodMonthly">Mensual</option>
           </select>
         </div>
         <div class="pb-cashflow-weekly">
@@ -154,34 +154,15 @@
         <form id="pb-form" novalidate>
           <div class="pb-form-grid">
 
-            <!-- Nature toggle (Real / Proyectado) -->
+            <!-- Record type select -->
             <div class="form-group pb-form-full">
-              <label class="form-label" data-i18n="personalBudget.form.nature">Naturaleza</label>
-              <div class="pb-type-toggle" role="group">
-                <button type="button" class="pb-nature-btn pb-type-btn active" data-nature="real">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  <span data-i18n="personalBudget.form.natureReal">Real</span>
-                </button>
-                <button type="button" class="pb-nature-btn pb-type-btn" data-nature="projected">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                  <span data-i18n="personalBudget.form.natureProjected">Proyectado</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Flow type toggle (Ingreso / Gasto) -->
-            <div class="form-group pb-form-full">
-              <label class="form-label" data-i18n="personalBudget.form.flowType">Tipo de flujo</label>
-              <div class="pb-type-toggle" role="group">
-                <button type="button" class="pb-flow-btn pb-type-btn active" data-flow="income">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
-                  <span data-i18n="personalBudget.form.typeIncome">Ingreso</span>
-                </button>
-                <button type="button" class="pb-flow-btn pb-type-btn" data-flow="expense">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg>
-                  <span data-i18n="personalBudget.form.typeExpense">Gasto</span>
-                </button>
-              </div>
+              <label class="form-label" for="pb-record-type" data-i18n="personalBudget.form.recordType">Tipo de registro</label>
+              <select class="form-select" id="pb-record-type">
+                <option value="income_real"       data-i18n="personalBudget.form.rt.incomeReal">Ingreso Real</option>
+                <option value="expense_real"      data-i18n="personalBudget.form.rt.expenseReal">Gasto Real</option>
+                <option value="income_projected"  data-i18n="personalBudget.form.rt.incomeProjected">Ingreso Proyectado</option>
+                <option value="expense_projected" data-i18n="personalBudget.form.rt.expenseProjected">Gasto Proyectado</option>
+              </select>
             </div>
 
             <!-- Category -->
@@ -228,6 +209,7 @@
               <label class="form-label" for="pb-freq" data-i18n="personalBudget.fixed.frequency">Frecuencia</label>
               <select class="pb-fixed-freq-select" id="pb-freq">
                 <option value="Mensual"   data-i18n="personalBudget.fixed.freqMonthly">Mensual</option>
+                <option value="Quincenal" data-i18n="personalBudget.fixed.freqBiweekly">Quincenal</option>
                 <option value="Semestral" data-i18n="personalBudget.fixed.freqSemestral">Semestral</option>
                 <option value="Anual"     data-i18n="personalBudget.fixed.freqAnnual">Anual</option>
                 <option value="Bianual"   data-i18n="personalBudget.fixed.freqBiannual">Bianual</option>
@@ -286,10 +268,11 @@
               <thead>
                 <tr>
                   <th data-i18n="personalBudget.fixedList.colCategory">Categoría</th>
-                  <th data-i18n="personalBudget.fixedList.colAmount">Monto</th>
                   <th data-i18n="personalBudget.fixedList.colFrequency">Frecuencia</th>
                   <th data-i18n="personalBudget.fixedList.colDue">Vence</th>
-                  <th id="pb-col-weekly" data-i18n="personalBudget.fixedList.colWeekly">Semanal</th>
+                  <th data-i18n="personalBudget.fixedList.colBiweekly">Quincena</th>
+                  <th data-i18n="personalBudget.fixedList.colMonthly">Mensual</th>
+                  <th data-i18n="personalBudget.fixedList.colAnnual">Anual</th>
                   <th></th>
                 </tr>
               </thead>
