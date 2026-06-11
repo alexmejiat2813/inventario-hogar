@@ -1,0 +1,35 @@
+.cropper-ov{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+  background:rgba(8,15,25,.92);padding:env(safe-area-inset-top) 0 0;}
+.cropper-ov[hidden]{display:none;}
+.cropper-head{display:flex;align-items:center;justify-content:space-between;
+  padding:.85rem 1rem;color:#fff;font-size:.95rem;font-weight:600;}
+.cropper-stage{flex:1;position:relative;overflow:hidden;margin:0 .5rem;
+  touch-action:none;user-select:none;-webkit-user-select:none;}
+.cropper-img{position:absolute;top:0;left:0;transform-origin:top left;
+  pointer-events:none;image-orientation:from-image;}
+.cropper-box{position:absolute;border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 0 0 9999px rgba(0,0,0,.5);box-sizing:border-box;cursor:move;}
+.cropper-grid::before,.cropper-grid::after{content:"";position:absolute;
+  background:rgba(255,255,255,.35);pointer-events:none;}
+.cropper-grid::before{left:33.33%;right:33.33%;top:0;bottom:0;
+  border-left:1px solid rgba(255,255,255,.35);border-right:1px solid rgba(255,255,255,.35);background:none;}
+.cropper-grid::after{top:33.33%;bottom:33.33%;left:0;right:0;
+  border-top:1px solid rgba(255,255,255,.35);border-bottom:1px solid rgba(255,255,255,.35);background:none;}
+.cropper-h{position:absolute;width:22px;height:22px;background:transparent;}
+.cropper-h::after{content:"";position:absolute;width:14px;height:14px;
+  border:2px solid #fff;border-radius:2px;background:rgba(8,15,25,.6);}
+.cropper-h-nw{top:-11px;left:-11px;cursor:nwse-resize;}
+.cropper-h-ne{top:-11px;right:-11px;cursor:nesw-resize;}
+.cropper-h-sw{bottom:-11px;left:-11px;cursor:nesw-resize;}
+.cropper-h-se{bottom:-11px;right:-11px;cursor:nwse-resize;}
+.cropper-h-nw::after{top:0;left:0;} .cropper-h-ne::after{top:0;right:0;}
+.cropper-h-sw::after{bottom:0;left:0;} .cropper-h-se::after{bottom:0;right:0;}
+.cropper-foot{display:flex;gap:.6rem;justify-content:flex-end;padding:.85rem 1rem
+  calc(.85rem + env(safe-area-inset-bottom));}
+.cropper-btn{border:none;border-radius:.55rem;padding:.6rem 1.25rem;font-size:.9rem;
+  font-weight:600;cursor:pointer;}
+.cropper-btn--cancel{background:rgba(255,255,255,.12);color:#fff;}
+.cropper-btn--ok{background:#0EA5E9;color:#fff;}
+.cropper-btn--ghost{background:rgba(255,255,255,.12);color:#fff;}
+.cropper-hint{color:rgba(255,255,255,.6);font-size:.78rem;text-align:center;
+  padding:0 1rem .5rem;}
