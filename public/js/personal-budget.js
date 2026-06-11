@@ -288,7 +288,6 @@
     const totalIncomeAmt  = items.filter(fc => (fc.flow_type||'expense') === 'income') .reduce((s, fc) => s + fc.amount, 0);
     const totalExpWkly    = items.filter(fc => (fc.flow_type||'expense') === 'expense').reduce((s, fc) => s + fc.weekly_equivalent * factor, 0);
     const totalIncWkly    = items.filter(fc => (fc.flow_type||'expense') === 'income') .reduce((s, fc) => s + fc.weekly_equivalent * factor, 0);
-    const netAmt  = totalExpenseAmt - totalIncomeAmt;
     const netWkly = Math.max(0, totalExpWkly - totalIncWkly);
     elFixedCostsFoot.hidden = false;
     elFixedCostsFoot.innerHTML = `
