@@ -939,6 +939,7 @@
       "filterAll": "Type (Tous)",
       "filterIncome": "Revenus",
       "filterExpense": "Dépenses",
+      "filterFreqAll": "Fréquence",
       "colWeekly": "Équiv. hebdo.",
       "colBiweekly": "Quinzaine",
       "colMonthly": "Mensuel",

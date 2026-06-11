@@ -8,7 +8,6 @@
   let _inventories    = [];
   let _editingFixedId = null;
   let _currentPeriod  = 'biweekly';
-  let _lastCashflow   = null;
   let _lastFixedCosts = null;
   let _selectedRow    = null; // { id, tab, flow_type, data:{category,amount,frequency,due_date} }
 
@@ -39,6 +38,8 @@
   const elSubmit       = document.getElementById('pb-submit');
 
   // toolbar
+  const elDropdown     = document.getElementById('pb-dropdown');
+  const elDropdownMenu = document.getElementById('pb-dropdown-menu');
   const elBtnNewRecord = document.getElementById('pb-btn-new-record');
   const elBtnEdit      = document.getElementById('pb-btn-edit');
   const elBtnPay       = document.getElementById('pb-btn-pay');
@@ -52,6 +53,7 @@
   const elFixedCostsList  = document.getElementById('pb-fixed-costs-list');
   const elFixedCostsFoot  = document.getElementById('pb-fixed-costs-foot');
   const elFcFilterType    = document.getElementById('pb-fc-filter-type');
+  const elFcFilterFreq    = document.getElementById('pb-fc-filter-freq');
 
   // fixed-cost inline fields
   const elInventoryGroup = document.getElementById('pb-inventory-group');
@@ -176,9 +178,34 @@
   });
 
   // ── Toolbar button handlers ────────────────────────────────────────────────
-  elBtnNewRecord.addEventListener('click', () => {
+  function closeDropdown() {
+    elDropdownMenu.hidden = true;
+    elDropdown.classList.remove('pb-dropdown--open');
+  }
+
+  elBtnNewRecord.addEventListener('click', e => {
+    e.stopPropagation();
+    const opening = elDropdownMenu.hidden;
+    elDropdownMenu.hidden = !opening;
+    elDropdown.classList.toggle('pb-dropdown--open', opening);
+  });
+
+  document.addEventListener('click', e => {
+    if (!elDropdown.contains(e.target)) closeDropdown();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeDropdown();
+  });
+
+  elDropdownMenu.addEventListener('click', e => {
+    const item = e.target.closest('.pb-dropdown-item[data-record-type]');
+    if (!item) return;
+    closeDropdown();
     resetForm();
     clearSelection();
+    elRecordType.value = item.dataset.recordType;
+    applyTypeVisibility();
     openModal('personalBudget.form.title');
   });
 
@@ -221,7 +248,7 @@
       if (_selectedRow.tab === 'fixed') {
         await apiFetch('DELETE', `/api/personal-budget/budget/${_selectedRow.id}`);
         showToast(t('personalBudget.fixedList.deleted'));
-        await Promise.all([loadFixedCosts(), loadCashflow()]);
+        await loadFixedCosts();
       } else {
         await apiFetch('DELETE', `/api/personal-budget/transaction/${_selectedRow.id}`);
         showToast(t('personalBudget.table.deleted'));
@@ -233,20 +260,45 @@
     }
   });
 
+  const MONTHLY_FACTOR = { Mensual: 1, Quincenal: 2, Semestral: 1 / 6, Anual: 1 / 12, Bianual: 1 / 24 };
+
   // ── Render summary cards ───────────────────────────────────────────────────
-  function renderSummary({ income_real, expense_real, balance_real, income_projected, expense_projected, balance_projected }) {
+  function renderSummary({ income_real, expense_real, balance_real }) {
     elIncomeReal.textContent  = fmt(income_real);
     elExpenseReal.textContent = fmt(expense_real);
-    elIncomeProj.textContent  = fmt(income_projected);
-    elExpenseProj.textContent = fmt(expense_projected);
 
     elBalanceReal.textContent = fmt(balance_real);
     elBalanceReal.className   = 'pb-kpi-real ' +
       (balance_real > 0 ? 'pb-kpi-real--positive' : balance_real < 0 ? 'pb-kpi-real--negative' : '');
 
-    elBalanceProj.textContent = fmt(balance_projected);
+    computeAndRenderProj();
+  }
+
+  // ── Projected KPIs + badge — single source of truth (no weekly intermediary) ──
+  function computeAndRenderProj() {
+    const items = _lastFixedCosts || [];
+    let incomeM = 0, expenseM = 0;
+    items.forEach(fc => {
+      const mf = MONTHLY_FACTOR[fc.frequency] ?? 1;
+      const monthly = fc.amount * mf;
+      if ((fc.flow_type || 'expense') === 'income') incomeM  += monthly;
+      else                                           expenseM += monthly;
+    });
+    const balanceM = incomeM - expenseM;
+
+    // Sub-text projected values (always monthly)
+    elIncomeProj.textContent  = fmt(incomeM);
+    elExpenseProj.textContent = fmt(expenseM);
+    elBalanceProj.textContent = fmt(balanceM);
     elBalanceProj.className   =
-      (balance_projected > 0 ? 'pb-kpi-proj--positive' : balance_projected < 0 ? 'pb-kpi-proj--negative' : '');
+      balanceM > 0 ? 'pb-kpi-proj--positive' : balanceM < 0 ? 'pb-kpi-proj--negative' : '';
+
+    // Badge: period-adjusted projection
+    const net        = _currentPeriod === 'monthly' ? balanceM : balanceM / 2;
+    const isPositive = net >= 0;
+    elWeeklyAmount.textContent = (isPositive ? '+' : '') + fmt(net);
+    elWeeklyAmount.className   = 'pb-kpi-net-amount ' +
+      (net === 0 ? 'pb-kpi-net--zero' : isPositive ? 'pb-kpi-net--positive' : 'pb-kpi-net--negative');
   }
 
   // ── Render transactions table ──────────────────────────────────────────────
@@ -317,27 +369,9 @@
       </div>`;
   }
 
-  // ── Period helpers ─────────────────────────────────────────────────────────
-  function weeklyToPeriod(weeklyAmt) {
-    return _currentPeriod === 'monthly' ? weeklyAmt * (52 / 12) : weeklyAmt * 2;
-  }
-
   function applyPeriodLabels() { /* net label lives inline in balance card */ }
 
-  // ── Render cashflow net (inline in Balance card) ───────────────────────────
-  function renderCashflow(data) {
-    if (data) _lastCashflow = data;
-    const { income_weekly = 0, expense_weekly = 0 } = _lastCashflow || {};
-    const net        = weeklyToPeriod(income_weekly - expense_weekly);
-    const isPositive = net >= 0;
-    elWeeklyAmount.textContent = (isPositive ? '+' : '') + fmt(net);
-    elWeeklyAmount.className   = 'pb-kpi-net-amount ' +
-      (net === 0 ? 'pb-kpi-net--zero' : isPositive ? 'pb-kpi-net--positive' : 'pb-kpi-net--negative');
-  }
-
   // ── Render fixed costs ─────────────────────────────────────────────────────
-  const MONTHLY_FACTOR = { Mensual: 1, Quincenal: 2, Semestral: 1 / 6, Anual: 1 / 12, Bianual: 1 / 24 };
-
   function itemPeriodValues(fc) {
     const mf      = MONTHLY_FACTOR[fc.frequency] ?? 1;
     const monthly = fc.amount * mf;
@@ -365,7 +399,7 @@
       const { valQ, valM, valA } = itemPeriodValues(fc);
       const color = ft === 'income' ? 'var(--success)' : 'var(--accent)';
       return `
-      <tr data-flow="${ft}">
+      <tr data-flow="${ft}" data-freq="${escHtml(fc.frequency)}">
         <td class="pb-col-radio">
           <input type="radio" name="pb-row-select" class="pb-row-radio"
             data-id="${fc.id}" data-tab="fixed" data-flow="${ft}"
@@ -386,16 +420,19 @@
   }
 
   function applyFcFilter() {
-    const filterVal = elFcFilterType ? elFcFilterType.value : 'all';
-    const rows      = elFixedCostsList.querySelectorAll('tr[data-flow]');
+    const typeVal = elFcFilterType ? elFcFilterType.value : 'all';
+    const freqVal = elFcFilterFreq ? elFcFilterFreq.value : 'all';
+    const rows    = elFixedCostsList.querySelectorAll('tr[data-flow]');
     rows.forEach(row => {
-      const match = filterVal === 'all' || row.dataset.flow === filterVal;
-      row.classList.toggle('pb-row-hidden', !match);
+      const matchType = typeVal === 'all' || row.dataset.flow === typeVal;
+      const matchFreq = freqVal === 'all' || row.dataset.freq === freqVal;
+      row.classList.toggle('pb-row-hidden', !(matchType && matchFreq));
     });
 
     // Recalculate tfoot only on visible (matching) items
     const visibleItems = (_lastFixedCosts || []).filter(fc =>
-      filterVal === 'all' || (fc.flow_type || 'expense') === filterVal
+      (typeVal === 'all' || (fc.flow_type || 'expense') === typeVal) &&
+      (freqVal === 'all' || fc.frequency === freqVal)
     );
 
     if (!visibleItems.length) {
@@ -427,20 +464,14 @@
         <td class="pb-tfoot-balance" style="color:${netColor(netMensual)}">${fmt(netMensual)}</td>
         <td class="pb-tfoot-balance" style="color:${netColor(netAnual)}">${fmt(netAnual)}</td>
       </tr>`;
+
+    computeAndRenderProj();
   }
 
   async function loadFixedCosts() {
     try {
       const items = await apiFetch('GET', '/api/personal-budget/fixed-costs');
       if (items) renderFixedCosts(items);
-    } catch { /* non-fatal */ }
-  }
-
-  // ── Load cashflow analysis ─────────────────────────────────────────────────
-  async function loadCashflow() {
-    try {
-      const data = await apiFetch('GET', '/api/personal-budget/cashflow-analysis');
-      if (data) renderCashflow(data);
     } catch { /* non-fatal */ }
   }
 
@@ -484,12 +515,13 @@
   elPeriodSelector.addEventListener('change', () => {
     _currentPeriod = elPeriodSelector.value;
     applyPeriodLabels();
-    renderCashflow(null);
+    computeAndRenderProj();
     renderFixedCosts(null);
   });
 
-  // ── Projected flows type filter ───────────────────────────────────────────
+  // ── Projected flows filters ───────────────────────────────────────────────
   elFcFilterType.addEventListener('change', applyFcFilter);
+  elFcFilterFreq.addEventListener('change', applyFcFilter);
 
   // ── Tab switching ─────────────────────────────────────────────────────────
   document.querySelectorAll('.pb-tab').forEach(tab => {
@@ -559,7 +591,7 @@
           await apiFetch('POST', '/api/personal-budget/budget', payload);
           showToast(t('personalBudget.fixed.saved'));
         }
-        await Promise.all([loadCashflow(), loadFixedCosts(), load()]);
+        await Promise.all([loadFixedCosts(), load()]);
       } else {
         const date = elDate.value;
         if (!date) { elDate.classList.add('invalid'); elDate.focus(); return; }
@@ -589,7 +621,7 @@
   });
 
   // ── Re-render on lang change ───────────────────────────────────────────────
-  document.addEventListener('langchange', () => { load(); loadCashflow(); loadFixedCosts(); applyPeriodLabels(); });
+  document.addEventListener('langchange', () => { load(); loadFixedCosts(); applyPeriodLabels(); });
 
   // ── Init ──────────────────────────────────────────────────────────────────
   elMonth.value          = _month;
@@ -600,6 +632,6 @@
   updateToolbar();
 
   initProfileMenu();
-  await Promise.all([loadProfileAvatar(), loadInventories(), load(), loadCashflow(), loadFixedCosts()]);
+  await Promise.all([loadProfileAvatar(), loadInventories(), load(), loadFixedCosts()]);
 
 })();

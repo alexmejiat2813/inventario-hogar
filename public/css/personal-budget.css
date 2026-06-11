@@ -591,6 +591,9 @@ tr.pb-row--selected td { background: var(--accent-bg); }
   gap: .5rem;
   flex-wrap: wrap;
 }
+.pb-dropdown {
+  position: relative;
+}
 .pb-btn-new-record {
   display: flex;
   align-items: center;
@@ -598,6 +601,78 @@ tr.pb-row--selected td { background: var(--accent-bg); }
   padding: .4rem .8rem;
   font-size: .8rem;
   white-space: nowrap;
+}
+.pb-dropdown-chevron {
+  opacity: .7;
+  transition: transform .15s ease;
+}
+.pb-dropdown--open .pb-dropdown-chevron {
+  transform: rotate(180deg);
+}
+.pb-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  min-width: 210px;
+  background: var(--surface);
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.10);
+  padding: 4px 0;
+  z-index: 200;
+  animation: pb-dropdown-in .12s ease;
+}
+@keyframes pb-dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pb-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: .825rem;
+  font-weight: 500;
+  color: var(--text);
+  text-align: left;
+  transition: background .1s;
+}
+.pb-dropdown-item:hover {
+  background: var(--bg);
+}
+.pb-dropdown-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.pb-dropdown-icon--income {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.pb-dropdown-icon--expense {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.pb-dropdown-icon--projected-income {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+.pb-dropdown-icon--projected-expense {
+  background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+  color: var(--text-muted);
+}
+.pb-dropdown-divider {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--border);
 }
 
 /* ── Toolbar ── */
