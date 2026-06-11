@@ -280,7 +280,7 @@
     try {
       const items = await apiFetch('GET', '/api/personal-budget/fixed-costs');
       if (items) renderFixedCosts(items);
-    } catch (_) {}
+    } catch { /* non-fatal */ }
   }
 
   // Edit fixed cost: prefill form as "fixed" with existing data
@@ -340,9 +340,7 @@
     try {
       const data = await apiFetch('GET', '/api/personal-budget/cashflow-analysis');
       if (data) renderCashflow(data);
-    } catch (_) {
-      // non-fatal — widget stays showing "—"
-    }
+    } catch { /* non-fatal — widget stays showing "—" */ }
   }
 
   // ── Load data for current month ────────────────────────────────────────────
@@ -352,7 +350,7 @@
       if (!data) return;
       renderSummary(data.summary);
       renderTable(data.transactions);
-    } catch (err) {
+    } catch {
       showToast(t('personalBudget.errorLoad'), 'error');
     }
   }
@@ -367,9 +365,7 @@
         opt.textContent = inv.name;
         elInventory.appendChild(opt);
       });
-    } catch (_) {
-      // non-fatal — inventory field stays with "Ninguno" only
-    }
+    } catch { /* non-fatal — inventory field stays with "Ninguno" only */ }
   }
 
   // ── Type toggle ───────────────────────────────────────────────────────────
