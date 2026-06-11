@@ -859,17 +859,26 @@
     "tabs": {
       "title": "Historial y Planificación",
       "transactions": "Transacciones del Mes",
-      "fixed": "Gastos Fijos",
+      "fixed": "Flujos Proyectados",
       "subtotal": "Subtotal"
     },
     "summary": {
+      "labelReal": "Real",
+      "labelProjected": "Proyectado",
       "income": "Ingresos",
       "expense": "Gastos",
-      "balance": "Balance"
+      "balance": "Balance",
+      "incomeProj": "Ingresos",
+      "expenseProj": "Gastos",
+      "balanceProj": "Balance"
     },
     "form": {
       "title": "Registrar transacción",
       "type": "Tipo",
+      "nature": "Naturaleza",
+      "natureReal": "Real",
+      "natureProjected": "Proyectado",
+      "flowType": "Tipo de flujo",
       "typeIncome": "Ingreso",
       "typeExpense": "Gasto",
       "typeFixed": "Gasto Fijo",

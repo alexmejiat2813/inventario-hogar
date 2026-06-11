@@ -859,17 +859,26 @@
     "tabs": {
       "title": "Historique et Planification",
       "transactions": "Transactions du Mois",
-      "fixed": "Charges Fixes",
+      "fixed": "Flux Projetés",
       "subtotal": "Sous-total"
     },
     "summary": {
+      "labelReal": "Réel",
+      "labelProjected": "Projeté",
       "income": "Revenus",
       "expense": "Dépenses",
-      "balance": "Solde"
+      "balance": "Solde",
+      "incomeProj": "Revenus",
+      "expenseProj": "Dépenses",
+      "balanceProj": "Solde"
     },
     "form": {
       "title": "Enregistrer une transaction",
       "type": "Type",
+      "nature": "Nature",
+      "natureReal": "Réel",
+      "natureProjected": "Projeté",
+      "flowType": "Type de flux",
       "typeIncome": "Revenu",
       "typeExpense": "Dépense",
       "typeFixed": "Charge Fixe",

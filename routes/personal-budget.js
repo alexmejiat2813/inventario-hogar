@@ -20,18 +20,24 @@ router.get('/', (req, res) => {
   const budgets      = db.getPersonalBudgets(userId, month);
   const transactions = db.getPersonalTransactions(userId, month);
 
-  const income       = transactions.filter(t => t.type === 'income') .reduce((s, t) => s + t.amount, 0);
-  const expenseReal  = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const fixedTotal   = budgets.reduce((s, b) => s + b.amount, 0);
-  const expense      = expenseReal + fixedTotal;
+  const income_real       = transactions.filter(t => t.type === 'income') .reduce((s, t) => s + t.amount, 0);
+  const expense_real      = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const income_projected  = budgets.filter(b => (b.flow_type || 'expense') === 'income') .reduce((s, b) => s + b.amount, 0);
+  const expense_projected = budgets.filter(b => (b.flow_type || 'expense') === 'expense').reduce((s, b) => s + b.amount, 0);
 
-  res.json({ month, budgets, transactions, summary: { income, expense, balance: income - expense } });
+  res.json({
+    month, budgets, transactions,
+    summary: {
+      income_real, expense_real, balance_real: income_real - expense_real,
+      income_projected, expense_projected, balance_projected: income_projected - expense_projected,
+    },
+  });
 });
 
-// POST /api/personal-budget/budget  — crear/actualizar presupuesto de categoría
+// POST /api/personal-budget/budget  — crear flujo proyectado (ingreso o gasto)
 router.post('/budget', (req, res) => {
   const userId = req.user.id;
-  const { category, amount, month, frequency, due_date } = req.body;
+  const { category, amount, month, frequency, due_date, flow_type } = req.body;
 
   if (!category || typeof category !== 'string' || !category.trim()) {
     return res.status(400).json({ error: 'category es requerida.' });
@@ -50,9 +56,13 @@ router.post('/budget', (req, res) => {
   if (due_date && !DUE_DATE_RE.test(due_date)) {
     return res.status(400).json({ error: 'due_date debe ser "DD" (día del mes) o "YYYY-MM-DD".' });
   }
+  const ft = flow_type || 'expense';
+  if (!['income', 'expense'].includes(ft)) {
+    return res.status(400).json({ error: 'flow_type debe ser "income" o "expense".' });
+  }
 
-  const budget = db.upsertPersonalBudget(userId, {
-    category: category.trim(), amount, month: m, frequency: freq, due_date: due_date || null,
+  const budget = db.addPersonalBudget(userId, {
+    category: category.trim(), amount, month: m, frequency: freq, due_date: due_date || null, flow_type: ft,
   });
   res.status(201).json(budget);
 });
@@ -110,7 +120,7 @@ router.put('/budget/:id', (req, res) => {
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ error: 'ID inválido.' });
   }
-  const { category, amount, month, frequency, due_date } = req.body;
+  const { category, amount, month, frequency, due_date, flow_type } = req.body;
   if (!category || typeof category !== 'string' || !category.trim()) {
     return res.status(400).json({ error: 'category es requerida.' });
   }
@@ -126,10 +136,14 @@ router.put('/budget/:id', (req, res) => {
   if (due_date && !DUE_DATE_RE.test(due_date)) {
     return res.status(400).json({ error: 'due_date debe ser "DD" o "YYYY-MM-DD".' });
   }
+  const ft = flow_type || 'expense';
+  if (!['income', 'expense'].includes(ft)) {
+    return res.status(400).json({ error: 'flow_type debe ser "income" o "expense".' });
+  }
   const updated = db.updatePersonalBudget(req.user.id, id, {
-    category: category.trim(), amount, month: m, frequency: freq, due_date: due_date || null,
+    category: category.trim(), amount, month: m, frequency: freq, due_date: due_date || null, flow_type: ft,
   });
-  if (!updated) return res.status(404).json({ error: 'Gasto fijo no encontrado.' });
+  if (!updated) return res.status(404).json({ error: 'Flujo proyectado no encontrado.' });
   res.json(updated);
 });
 
@@ -144,7 +158,7 @@ router.get('/plans', (req, res) => {
 
 // GET /api/personal-budget/cashflow-analysis
 router.get('/cashflow-analysis', (req, res) => {
-  const { total_weekly, items } = db.getWeeklyFixedCosts(req.user.id);
+  const { total_weekly, expense_weekly, income_weekly, items } = db.getWeeklyFixedCosts(req.user.id);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -177,6 +191,7 @@ router.get('/cashflow-analysis', (req, res) => {
       category:          item.category,
       amount:            item.amount,
       frequency:         item.frequency,
+      flow_type:         item.flow_type || 'expense',
       due_date:          item.due_date,
       next_due:          next.toISOString().slice(0, 10),
       days_until:        daysUntil,
@@ -187,7 +202,12 @@ router.get('/cashflow-analysis', (req, res) => {
 
   calendar_alerts.sort((a, b) => a.days_until - b.days_until);
 
-  res.json({ total_weekly_needed: +total_weekly.toFixed(4), calendar_alerts });
+  res.json({
+    total_weekly_needed: +total_weekly.toFixed(4),
+    expense_weekly:      +expense_weekly.toFixed(4),
+    income_weekly:       +income_weekly.toFixed(4),
+    calendar_alerts,
+  });
 });
 
 // POST /api/personal-budget/plans

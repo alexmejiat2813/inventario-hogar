@@ -72,29 +72,63 @@
         <input type="month" id="pb-month" class="pb-month-input" aria-label="Mes">
       </div>
 
-      <!-- Summary cards -->
-      <div class="pb-summary-grid">
-        <div class="pb-stat-card pb-stat-income">
-          <div class="pb-stat-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      <!-- Summary: 6 KPIs (Real vs Proyectado) -->
+      <div class="pb-summary-sections">
+
+        <div class="pb-summary-section">
+          <span class="pb-summary-section-label" data-i18n="personalBudget.summary.labelReal">Real</span>
+          <div class="pb-summary-row">
+            <div class="pb-stat-card pb-stat-income">
+              <div class="pb-stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+              <span class="pb-stat-label" data-i18n="personalBudget.summary.income">Ingresos</span>
+              <span class="pb-stat-value pb-stat-value--income" id="pb-income-real">—</span>
+            </div>
+            <div class="pb-stat-card pb-stat-expense">
+              <div class="pb-stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+              </div>
+              <span class="pb-stat-label" data-i18n="personalBudget.summary.expense">Gastos</span>
+              <span class="pb-stat-value pb-stat-value--expense" id="pb-expense-real">—</span>
+            </div>
+            <div class="pb-stat-card pb-stat-balance">
+              <div class="pb-stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <span class="pb-stat-label" data-i18n="personalBudget.summary.balance">Balance</span>
+              <span class="pb-stat-value" id="pb-balance-real">—</span>
+            </div>
           </div>
-          <span class="pb-stat-label" data-i18n="personalBudget.summary.income">Ingresos</span>
-          <span class="pb-stat-value pb-stat-value--income" id="pb-income">—</span>
         </div>
-        <div class="pb-stat-card pb-stat-expense">
-          <div class="pb-stat-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+
+        <div class="pb-summary-section">
+          <span class="pb-summary-section-label pb-summary-section-label--proj" data-i18n="personalBudget.summary.labelProjected">Proyectado</span>
+          <div class="pb-summary-row">
+            <div class="pb-stat-card pb-stat-income pb-stat-card--proj">
+              <div class="pb-stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+              <span class="pb-stat-label" data-i18n="personalBudget.summary.incomeProj">Ingresos</span>
+              <span class="pb-stat-value pb-stat-value--income" id="pb-income-proj">—</span>
+            </div>
+            <div class="pb-stat-card pb-stat-expense pb-stat-card--proj">
+              <div class="pb-stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+              </div>
+              <span class="pb-stat-label" data-i18n="personalBudget.summary.expenseProj">Gastos</span>
+              <span class="pb-stat-value pb-stat-value--expense" id="pb-expense-proj">—</span>
+            </div>
+            <div class="pb-stat-card pb-stat-balance pb-stat-card--proj">
+              <div class="pb-stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <span class="pb-stat-label" data-i18n="personalBudget.summary.balanceProj">Balance</span>
+              <span class="pb-stat-value" id="pb-balance-proj">—</span>
+            </div>
           </div>
-          <span class="pb-stat-label" data-i18n="personalBudget.summary.expense">Gastos</span>
-          <span class="pb-stat-value pb-stat-value--expense" id="pb-expense">—</span>
         </div>
-        <div class="pb-stat-card pb-stat-balance">
-          <div class="pb-stat-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
-          <span class="pb-stat-label" data-i18n="personalBudget.summary.balance">Balance</span>
-          <span class="pb-stat-value" id="pb-balance">—</span>
-        </div>
+
       </div>
 
       <!-- Cashflow Widget -->
@@ -120,21 +154,32 @@
         <form id="pb-form" novalidate>
           <div class="pb-form-grid">
 
-            <!-- Type toggle -->
+            <!-- Nature toggle (Real / Proyectado) -->
             <div class="form-group pb-form-full">
-              <label class="form-label" data-i18n="personalBudget.form.type">Tipo</label>
+              <label class="form-label" data-i18n="personalBudget.form.nature">Naturaleza</label>
               <div class="pb-type-toggle" role="group">
-                <button type="button" class="pb-type-btn active" data-type="income">
+                <button type="button" class="pb-nature-btn pb-type-btn active" data-nature="real">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span data-i18n="personalBudget.form.natureReal">Real</span>
+                </button>
+                <button type="button" class="pb-nature-btn pb-type-btn" data-nature="projected">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                  <span data-i18n="personalBudget.form.natureProjected">Proyectado</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Flow type toggle (Ingreso / Gasto) -->
+            <div class="form-group pb-form-full">
+              <label class="form-label" data-i18n="personalBudget.form.flowType">Tipo de flujo</label>
+              <div class="pb-type-toggle" role="group">
+                <button type="button" class="pb-flow-btn pb-type-btn active" data-flow="income">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
                   <span data-i18n="personalBudget.form.typeIncome">Ingreso</span>
                 </button>
-                <button type="button" class="pb-type-btn" data-type="expense">
+                <button type="button" class="pb-flow-btn pb-type-btn" data-flow="expense">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg>
                   <span data-i18n="personalBudget.form.typeExpense">Gasto</span>
-                </button>
-                <button type="button" class="pb-type-btn" data-type="fixed">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                  <span data-i18n="personalBudget.form.typeFixed">Gasto Fijo</span>
                 </button>
               </div>
             </div>

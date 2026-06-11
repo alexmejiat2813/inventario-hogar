@@ -300,8 +300,9 @@ if (!tplItemCols.includes('store_id'))   db.exec('ALTER TABLE list_template_item
 if (!tplItemCols.includes('unit_price')) db.exec('ALTER TABLE list_template_items ADD COLUMN unit_price REAL');
 
 const pbCols = db.prepare('PRAGMA table_info(personal_budgets)').all().map(c => c.name);
-if (!pbCols.includes('frequency')) db.exec("ALTER TABLE personal_budgets ADD COLUMN frequency TEXT NOT NULL DEFAULT 'Mensual'");
-if (!pbCols.includes('due_date'))  db.exec('ALTER TABLE personal_budgets ADD COLUMN due_date TEXT');
+if (!pbCols.includes('frequency'))  db.exec("ALTER TABLE personal_budgets ADD COLUMN frequency TEXT NOT NULL DEFAULT 'Mensual'");
+if (!pbCols.includes('due_date'))   db.exec('ALTER TABLE personal_budgets ADD COLUMN due_date TEXT');
+if (!pbCols.includes('flow_type'))  db.exec("ALTER TABLE personal_budgets ADD COLUMN flow_type TEXT NOT NULL DEFAULT 'expense'");
 
 // ── Categorías: una sola tabla manda en todas las vistas ──────────────────────
 // [name ES (canónico/almacenado en productos), name EN, name FR, emoji].
@@ -1670,32 +1671,28 @@ module.exports = {
     ).all(userId, month);
   },
 
-  upsertPersonalBudget(userId, { category, amount, month, frequency = 'Mensual', due_date = null }) {
-    db.prepare(`
-      INSERT INTO personal_budgets (user_id, category, amount, month, frequency, due_date)
-      VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(user_id, category, month) DO UPDATE SET
-        amount    = excluded.amount,
-        frequency = excluded.frequency,
-        due_date  = excluded.due_date
-    `).run(userId, category, +amount, month, frequency, due_date);
-    return db.prepare(
-      'SELECT * FROM personal_budgets WHERE user_id = ? AND category = ? AND month = ?'
-    ).get(userId, category, month);
+  addPersonalBudget(userId, { category, amount, month, frequency = 'Mensual', due_date = null, flow_type = 'expense' }) {
+    const { lastInsertRowid } = db.prepare(`
+      INSERT INTO personal_budgets (user_id, category, amount, month, frequency, due_date, flow_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, category, +amount, month, frequency, due_date, flow_type);
+    return db.prepare('SELECT * FROM personal_budgets WHERE id = ?').get(lastInsertRowid);
   },
 
   getWeeklyFixedCosts(userId) {
     const FACTOR = { 'Mensual': 12 / 52, 'Semestral': 2 / 52, 'Anual': 1 / 52, 'Bianual': 1 / 104 };
     const rows = db.prepare(
-      'SELECT * FROM personal_budgets WHERE user_id = ? ORDER BY category'
+      'SELECT * FROM personal_budgets WHERE user_id = ? ORDER BY flow_type DESC, category'
     ).all(userId);
-    let total_weekly = 0;
+    let expense_weekly = 0, income_weekly = 0;
     const items = rows.map(row => {
       const weekly = row.amount * (FACTOR[row.frequency] ?? (12 / 52));
-      total_weekly += weekly;
+      if ((row.flow_type || 'expense') === 'income') income_weekly += weekly;
+      else                                            expense_weekly += weekly;
       return { ...row, weekly_equivalent: weekly };
     });
-    return { total_weekly, items };
+    const net_weekly = Math.max(0, expense_weekly - income_weekly);
+    return { total_weekly: net_weekly, expense_weekly, income_weekly, items };
   },
 
   deletePersonalBudget(userId, id) {
@@ -1704,12 +1701,12 @@ module.exports = {
     ).run(id, userId).changes > 0;
   },
 
-  updatePersonalBudget(userId, id, { category, amount, month, frequency = 'Mensual', due_date = null }) {
+  updatePersonalBudget(userId, id, { category, amount, month, frequency = 'Mensual', due_date = null, flow_type = 'expense' }) {
     const changed = db.prepare(`
       UPDATE personal_budgets
-      SET category = ?, amount = ?, month = ?, frequency = ?, due_date = ?
+      SET category = ?, amount = ?, month = ?, frequency = ?, due_date = ?, flow_type = ?
       WHERE id = ? AND user_id = ?
-    `).run(category, +amount, month, frequency, due_date, id, userId).changes;
+    `).run(category, +amount, month, frequency, due_date, flow_type, id, userId).changes;
     if (!changed) return null;
     return db.prepare('SELECT * FROM personal_budgets WHERE id = ?').get(id);
   },

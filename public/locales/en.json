@@ -859,17 +859,26 @@
     "tabs": {
       "title": "History & Planning",
       "transactions": "Month Transactions",
-      "fixed": "Fixed Expenses",
+      "fixed": "Projected Flows",
       "subtotal": "Subtotal"
     },
     "summary": {
+      "labelReal": "Actual",
+      "labelProjected": "Projected",
       "income": "Income",
       "expense": "Expenses",
-      "balance": "Balance"
+      "balance": "Balance",
+      "incomeProj": "Income",
+      "expenseProj": "Expenses",
+      "balanceProj": "Balance"
     },
     "form": {
       "title": "Record transaction",
       "type": "Type",
+      "nature": "Nature",
+      "natureReal": "Actual",
+      "natureProjected": "Projected",
+      "flowType": "Flow type",
       "typeIncome": "Income",
       "typeExpense": "Expense",
       "typeFixed": "Fixed Cost",

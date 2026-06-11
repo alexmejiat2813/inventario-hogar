@@ -35,14 +35,40 @@
   border-color: var(--text);
 }
 
-/* ── Summary grid (3 cards) ── */
-.pb-summary-grid {
+/* ── Summary: 6 KPIs (Real vs Proyectado) ── */
+.pb-summary-sections {
+  display: flex;
+  flex-direction: column;
+  gap: .625rem;
+}
+.pb-summary-section {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+}
+.pb-summary-section-label {
+  font-size: .6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+  padding-left: .125rem;
+}
+.pb-summary-section-label--proj {
+  color: #7C3AED;
+}
+.pb-summary-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: .75rem;
+  gap: .5rem;
 }
 @media (max-width: 400px) {
-  .pb-summary-grid { grid-template-columns: repeat(3, 1fr); gap: .375rem; }
+  .pb-summary-row { gap: .3rem; }
+}
+
+.pb-stat-card--proj {
+  border-style: dashed;
+  opacity: .92;
 }
 
 .pb-stat-income  { --pb-accent: var(--success); --pb-accent-bg: var(--success-bg); }
@@ -131,9 +157,13 @@
   white-space: nowrap;
 }
 .pb-type-btn:hover { color: var(--text); }
-.pb-type-btn.active[data-type="income"]  { background: var(--success); color: white; }
-.pb-type-btn.active[data-type="expense"] { background: var(--danger);  color: white; }
-.pb-type-btn.active[data-type="fixed"]   { background: #1E40AF;        color: white; }
+.pb-type-btn.active[data-type="income"]    { background: var(--success); color: white; }
+.pb-type-btn.active[data-type="expense"]   { background: var(--danger);  color: white; }
+.pb-type-btn.active[data-type="fixed"]     { background: #1E40AF;        color: white; }
+.pb-nature-btn.active[data-nature="real"]       { background: var(--accent);  color: white; }
+.pb-nature-btn.active[data-nature="projected"]  { background: #7C3AED;        color: white; }
+.pb-flow-btn.active[data-flow="income"]  { background: var(--success); color: white; }
+.pb-flow-btn.active[data-flow="expense"] { background: var(--danger);  color: white; }
 
 /* ── Transaction table ── */
 .pb-tx-table {
