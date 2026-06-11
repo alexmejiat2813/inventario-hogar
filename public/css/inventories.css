@@ -174,7 +174,7 @@
       letter-spacing: -.02em;
       line-height: 1.1;
     }
-    .page-actions { display: flex; gap: .5rem; }
+    .page-actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: flex-start; }
 
     /* Buttons */
     .btn {
@@ -509,6 +509,7 @@
       border-radius: 0;
       border-right: 1px solid #EAEAEA;
       box-shadow: none !important;
+      min-width: 0;
     }
     .inv-composite-block .inv-card:hover { box-shadow: none !important; }
 
@@ -545,6 +546,7 @@
       border: none;
       border-radius: 0;
       box-shadow: none !important;
+      min-width: 0;
     }
 
     .inv-bp-header {
@@ -719,7 +721,14 @@
     }
     .form-select:focus { outline: none; border-color: #082F49; }
 
-    @media (max-width: 600px) {
+    /* Medium screens: stack composite block and reflow action buttons */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .page-header { align-items: flex-start; }
+      .page-actions { flex-direction: column; align-items: flex-end; }
+      .page-actions .btn { width: max-content; }
+    }
+
+    @media (max-width: 860px) {
       .inv-composite-block {
         grid-template-columns: 1fr;
       }
