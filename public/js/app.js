@@ -1687,8 +1687,8 @@ function syncMobDrawerActive() {
 async function init() {
   await I18N.init();
   initEvents();
-  initProfileMenu();
   try {
+    if (typeof initProfileMenu === 'function') initProfileMenu();
     await loadUser();
     const ok = await loadActiveInventory();
     if (!ok) return;
