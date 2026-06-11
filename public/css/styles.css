@@ -663,9 +663,11 @@ a { color: inherit; text-decoration: none; }
 }
 @media (max-width: 480px) {
   .stats-section { gap: .4rem; }
-  .stat-card { padding: .6rem .5rem; gap: .4rem; }
+  .stat-card { padding: .6rem .5rem; gap: .4rem; min-width: 0; }
   .stat-value { font-size: 1.25rem; }
   .stat-icon-wrap { width: 30px; height: 30px; }
+  .stat-icon-wrap svg { width: 16px; height: 16px; }
+  .stat-label { font-size: .6rem; word-break: break-word; }
 }
 
 .stat-card {
