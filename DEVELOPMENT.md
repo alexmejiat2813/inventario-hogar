@@ -70,60 +70,26 @@
 
 Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo explícito para saltarse.
 
-### P0 — Seguridad (arreglar antes del próximo deploy público)
-
-| # | Tarea | Descripción | Estado |
-|---|-------|-------------|--------|
-| 55 | Error handler expone `err.message` | `server.js` manda detalles internos al cliente en prod. Fix: mensaje genérico en prod + `logger.error(err)` completo en servidor. | ✅ |
-| 56 | Endurecer CSP — quitar `unsafe-inline` | 40 style="" convertidos a clases CSS, 5 inline scripts extraídos a archivos externos, onclick delegados a header.js/app.js. CSP limpio. | `6eae06f` | ✅ |
-
 ### P1 — Bugs conocidos
 
 | # | Tarea | Descripción | Importancia | Dificultad | Estado |
 |---|-------|-------------|-------------|------------|--------|
 | 45 | Bug foto→Dashboard (móvil) | Al abrir cámara en Android, el SO puede descartar la PWA de memoria; al volver recarga en Dashboard perdiendo el modal. Fix: persistir `{productoActivo, tabActiva}` en `sessionStorage` + restaurar en `init()`. Requiere dispositivo para reproducir. | Alta | Media | ⬜ |
 
-### P2 — Deuda técnica
-
-| # | Tarea | Descripción | Estado |
-|---|-------|-------------|--------|
-| 57 | `CURRENCY_SYMBOLS` duplicado | Definido en `app.js`, `shopping-list.js`, `inventories.js`. Mover a `utils.js` (ya existe y se carga en todas las páginas). | ✅ |
-| 58 | `catch {}` traga errores sin loguear | Varias rutas backend hacen `catch { res.status(500) }` perdiendo el detalle. Agregar `logger.error(err)` antes de responder. | ✅ |
-| 59 | SW versionado manual | `ih-vNN` en `sw.js` se bump a mano — se olvida. Generar en CI con `Date.now()` o hash del commit para que sea automático. | ✅ |
-| 60 | Strings hardcodeados en español | Algunos `<th>` de la lista de compras están en español fijo, no usan i18n. Agregar keys ES/EN/FR faltantes. | ✅ |
-| 61 | Números mágicos sin constante | `5` (fotos máx) y `5MB` repetidos en frontend y backend sin constante compartida. Declarar en un lugar, referenciar desde ambos lados. | ✅ |
-| 62 | `express.json()` sin `limit` explícito | Default 100kb implícito. Declarar `express.json({ limit: '100kb' })` para que sea intencional y auditable. | ✅ |
-
-### P3 — Calidad e infraestructura
-
-| # | Tarea | Descripción | Importancia | Dificultad | Estado |
-|---|-------|-------------|-------------|------------|--------|
-| 63 | ESLint + Prettier + pre-commit hook | Sin linter hoy. Setup `eslint` + `.eslintrc` + `prettier` + hook pre-commit (script git o husky). Evita errores silenciosos y mantiene formato consistente. | Media | Baja | ✅ |
-| 64 | Ampliar cobertura de tests | 53 → 85 tests. Budget, stores, stats, IDOR, store prices, templates #77 guard, category constraints, más smoke tests HTTP. | Alta | Media | ✅ |
-| 65 | Chart.js self-hosted | Hoy carga desde CDN (`cdn.jsdelivr.net`) — rompe offline real y es dependencia externa. Copiar a `/js/vendor/chart.min.js` + lazy-load solo en `/inventory`. | Media | Baja | ✅ |
-| 66 | Backup automático SQLite en Fly | Si el volumen se corrompe, datos perdidos. Configurar cron en Fly (`fly machine run`) que haga `sqlite3 /data/inventario.db .dump` y suba a un bucket S3/R2. | Alta | Media | ✅ |
-| 67 | Magic bytes en uploads | `fileFilter` confía en `Content-Type` del cliente (falsificable). Leer primeros bytes del buffer y verificar firma real (JPEG: `FF D8`, PNG: `89 50 4E 47`, WebP: `52 49 46 46`). | Alta | Baja | ✅ |
-
 ### P4 — Performance
 
 | # | Tarea | Descripción | Importancia | Dificultad | Estado |
 |---|-------|-------------|-------------|------------|--------|
-| 68 | Lazy loading de imágenes | Agregar `loading="lazy"` a todos los `<img>` de cards de productos. 1 atributo, mejora TTI en inventarios grandes. | Media | Baja | ✅ |
-| 69 | Chart.js lazy load (depende de #65) | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a import dinámico o script condicional. | Baja | Baja | ⬜ |
+| 69 | Chart.js lazy load | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a script condicional. | Baja | Baja | ⬜ |
 | 70 | Minificación JS/CSS | Build step con `esbuild` para minificar antes del deploy. ~20-30% adicional sobre gzip. Requiere ajustar CI y rutas de assets. | Media | Media | ⬜ |
 
 ### P5 — Features nuevas
 
 | # | Tarea | Descripción | Importancia | Dificultad | Estado |
 |---|-------|-------------|-------------|------------|--------|
-| 71 | Cron push notifications | Endpoint ya existe (`/api/notifications/send-alerts`). Falta dispararlo desde Fly con `fly machine run` en un cron diario. | Media | Baja | ✅ |
-| 72 | Export/import inventario | Exportar productos + stock a CSV/JSON para backup manual del usuario. Importar desde CSV para onboarding. | Alta | Media | ✅ |
-| 73 | Comparador de precios por tienda | Datos ya existen (`getProductStorePrices`). Falta UI: tabla/chart de precio por tienda en el modal de producto, con recomendación de dónde comprar más barato. | Media | Baja | ✅ |
-| 74 | Escaner de códigos de barras | Cámara ya integrada. Agregar librería de decode (ej. `zxing-js`) para identificar/agregar productos escaneando el código. | Media | Alta | ⬜ |
+| 74 | Escáner de códigos de barras | Cámara ya integrada. Agregar librería de decode (ej. `zxing-js`) para identificar/agregar productos escaneando el código. | Media | Alta | ⬜ |
 | 75 | Sugerencia de reposición inteligente | Predecir cuándo se acaba un producto basándose en historial de compras y consumo promedio. Requiere análisis de `purchase_sessions` + `purchase_items`. | Media | Alta | ⬜ |
 | 76 | Modo oscuro | CSS variables ya están parcialmente preparadas. Agregar `prefers-color-scheme: dark` + toggle manual. | Baja | Media | ⬜ |
-| 78 | Compartir la aplicación | Botón que abre el share nativo del SO (`navigator.share`) o copia la URL de la PWA al portapapeles. Punto de entrada: menú de perfil o header. | Alta | Baja | ✅ |
-| 79 | Simplificar filtros de categoría en Stock | Tarjetas eliminadas. Contador en chips horizontales. Reorden: buscar → categorías → en/fuera stock. | Media | Baja | ✅ |
 
 ---
 
