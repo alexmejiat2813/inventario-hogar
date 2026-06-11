@@ -164,8 +164,11 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 59 | SW versionado manual | Ya automatizado: `sw.js` fetch `/cache-version` devuelve `FLY_COMMIT_SHA` en prod. `ih-v1` es default pre-fetch. | `d35b450` | ✅ |
 | 60 | Strings hardcodeados en `<th>` | `shopping.cols.*` keys en ES/EN/FR; `renderTable`/`renderTableRow` usan `tSafe()`. | `d35b450` | ✅ |
 | 61 | Números mágicos | `MAX_PHOTOS=5` y `MAX_PHOTO_SIZE` en utils.js (frontend) + upload.js (backend). Eliminados de app.js y catalog.js. | `d35b450` | ✅ |
-
-> **Nota deuda:** `initProfileMenu()` + `loadProfileAvatar()` están duplicados en app.js/history.js/shopping-list.js/inventories.js/catalog.js. Candidato a extraer a un módulo compartido `public/js/header.js` (no hecho aquí para mantener el cambio acotado).
+| 80 | Stat cards móvil — overflow + layout columna | Tercer card se cortaba en ≤412px. Fix: `min-width:0` en grid children, `flex-direction:column` en ≤480px (ícono arriba, texto abajo), `word-break:break-word`. | `4515d53` | ✅ |
+| 81 | Dashboard empty state | El estado vacío mostraba skeletons persistentes. Reemplazado con UI limpia: ícono 3D, título/subtítulo i18n, botón "Ir a Stock". Charts area se oculta cuando no hay datos. | `4515d53` | ✅ |
+| 82 | Favicon + ícono PWA | Creado `public/favicon.svg` (32×32, colores sólidos) + actualizado `public/icons/icon.svg` (512×512). Ruta explícita en server.js (`app.get('/favicon.svg',...)`). Solid hex — rgba no fiable en favicons cross-browser. | `4515d53` | ✅ |
+| 78 | Compartir la aplicación | `header.js` no cargaba en index.html → TypeError antes del try → init() fallaba silenciosamente. Fix: agregar `<script src="/js/header.js">` en index.html + manejador `btn-share` en `initEvents()` de app.js e inventories.js. | `4515d53` | ✅ |
+| 83 | Bug dropdown perfil dashboard/stock | `initProfileMenu()` registraba segundo listener sobre `profile-btn` → doble-toggle (abrir+cerrar en un clic). Fix: eliminar llamada de `app.js` e `inventories.js`; ambos ya tienen lógica completa de dropdown en su propio `initEvents()`. Manejador `btn-share` agregado inline en cada uno. | `1ce3c29` | ✅ |
 
 ---
 
