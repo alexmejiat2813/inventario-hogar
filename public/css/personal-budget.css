@@ -35,93 +35,108 @@
   border-color: var(--text);
 }
 
-/* ── Summary: 6 KPIs (Real vs Proyectado) ── */
-.pb-summary-sections {
-  display: flex;
-  flex-direction: column;
-  gap: .625rem;
-}
-.pb-summary-section {
-  display: flex;
-  flex-direction: column;
-  gap: .375rem;
-}
-.pb-summary-section-label {
-  font-size: .6rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--text-muted);
-  padding-left: .125rem;
-}
-.pb-summary-section-label--proj {
-  color: #7C3AED;
-}
-.pb-summary-row {
+/* ── KPI Row: 3 tarjetas compactas dual-nivel ── */
+.pb-kpi-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: .5rem;
+  gap: .625rem;
 }
-@media (max-width: 400px) {
-  .pb-summary-row { gap: .3rem; }
-}
-
-.pb-stat-card--proj {
-  border-style: dashed;
-  opacity: .92;
+@media (max-width: 520px) {
+  .pb-kpi-row { grid-template-columns: 1fr; gap: .4rem; }
 }
 
-.pb-stat-income  { --pb-accent: var(--success); --pb-accent-bg: var(--success-bg); }
-.pb-stat-expense { --pb-accent: var(--danger);  --pb-accent-bg: var(--danger-bg);  }
-.pb-stat-balance { --pb-accent: var(--accent);  --pb-accent-bg: var(--accent-bg);  }
-
-.pb-stat-card {
+.pb-kpi-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 1rem;
+  padding: .875rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: .375rem;
-  min-height: 80px;
-  transition: box-shadow 200ms;
+  gap: .2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,.02);
+  transition: box-shadow 180ms;
 }
-.pb-stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+.pb-kpi-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,.05); }
 
-.pb-stat-icon {
-  width: 32px; height: 32px;
-  border-radius: var(--r-sm);
-  background: var(--pb-accent-bg);
-  color: var(--pb-accent);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.pb-stat-label {
-  font-size: .62rem;
+.pb-kpi-label {
+  font-size: .6rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: .08em;
   color: var(--text-muted);
 }
-.pb-stat-value {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -.02em;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-}
-.pb-stat-value--income  { color: var(--success); }
-.pb-stat-value--expense { color: var(--danger);  }
-.pb-stat-value--positive { color: var(--success); }
-.pb-stat-value--negative { color: var(--danger);  }
 
-@media (max-width: 480px) {
-  .pb-stat-value { font-size: 1rem; }
-  .pb-stat-card  { padding: .75rem .625rem; min-height: auto; }
-  .pb-stat-icon  { width: 26px; height: 26px; }
-  .pb-stat-icon svg { width: 13px; height: 13px; }
+.pb-kpi-real {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
 }
+.pb-kpi-real--income   { color: var(--success); }
+.pb-kpi-real--expense  { color: var(--danger);  }
+.pb-kpi-real--positive { color: var(--success); }
+.pb-kpi-real--negative { color: var(--danger);  }
+
+.pb-kpi-sub {
+  font-size: .75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.pb-kpi-proj--positive { color: var(--success); }
+.pb-kpi-proj--negative { color: var(--danger);  }
+
+/* Balance card header (label + net badge inline) */
+.pb-kpi-balance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .1rem;
+}
+
+/* Net projected badge inline */
+.pb-kpi-net-badge {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .15rem .5rem .15rem .45rem;
+}
+.pb-kpi-net-amount {
+  font-size: .72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.pb-kpi-net--positive { color: var(--success); }
+.pb-kpi-net--negative { color: var(--danger);  }
+.pb-kpi-net--zero     { color: var(--text-muted); }
+
+/* Period mini-select inside net badge */
+.pb-period-mini {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: .6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  padding: 0 .8rem 0 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7' viewBox='0 0 24 24' fill='none' stroke='%23a0a09e' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0 center;
+}
+.pb-period-mini:hover { color: var(--text); }
 
 /* ── Form card ── */
 .pb-form-grid {

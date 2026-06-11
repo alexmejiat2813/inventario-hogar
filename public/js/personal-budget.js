@@ -44,12 +44,9 @@
   const elBtnPay       = document.getElementById('pb-btn-pay');
   const elBtnDelete    = document.getElementById('pb-btn-delete');
 
-  // cashflow widget
-  const elWeeklyAmount    = document.getElementById('pb-weekly-amount');
-  const elCashflowAlerts  = document.getElementById('pb-cashflow-alerts');
-  const elCashflowTitle   = document.getElementById('pb-cashflow-title');
-  const elCashflowSubtitle= document.getElementById('pb-cashflow-subtitle');
-  const elPeriodSelector  = document.getElementById('pb-period-selector');
+  // cashflow net inline (Balance card)
+  const elWeeklyAmount   = document.getElementById('pb-weekly-amount');
+  const elPeriodSelector = document.getElementById('pb-period-selector');
 
   // fixed costs list
   const elFixedCostsList  = document.getElementById('pb-fixed-costs-list');
@@ -240,15 +237,16 @@
   function renderSummary({ income_real, expense_real, balance_real, income_projected, expense_projected, balance_projected }) {
     elIncomeReal.textContent  = fmt(income_real);
     elExpenseReal.textContent = fmt(expense_real);
-    elBalanceReal.textContent = fmt(balance_real);
-    elBalanceReal.className   = 'pb-stat-value ' +
-      (balance_real > 0 ? 'pb-stat-value--positive' : balance_real < 0 ? 'pb-stat-value--negative' : '');
-
     elIncomeProj.textContent  = fmt(income_projected);
     elExpenseProj.textContent = fmt(expense_projected);
+
+    elBalanceReal.textContent = fmt(balance_real);
+    elBalanceReal.className   = 'pb-kpi-real ' +
+      (balance_real > 0 ? 'pb-kpi-real--positive' : balance_real < 0 ? 'pb-kpi-real--negative' : '');
+
     elBalanceProj.textContent = fmt(balance_projected);
-    elBalanceProj.className   = 'pb-stat-value ' +
-      (balance_projected > 0 ? 'pb-stat-value--positive' : balance_projected < 0 ? 'pb-stat-value--negative' : '');
+    elBalanceProj.className   =
+      (balance_projected > 0 ? 'pb-kpi-proj--positive' : balance_projected < 0 ? 'pb-kpi-proj--negative' : '');
   }
 
   // ── Render transactions table ──────────────────────────────────────────────
@@ -324,58 +322,17 @@
     return _currentPeriod === 'monthly' ? weeklyAmt * (52 / 12) : weeklyAmt * 2;
   }
 
-  function applyPeriodLabels() {
-    const isMonthly = _currentPeriod === 'monthly';
-    elCashflowTitle.textContent    = t(isMonthly ? 'personalBudget.cashflow.titleMonthly'    : 'personalBudget.cashflow.titleBiweekly');
-    elCashflowSubtitle.textContent = t(isMonthly ? 'personalBudget.cashflow.subtitleMonthly' : 'personalBudget.cashflow.subtitleBiweekly');
-  }
+  function applyPeriodLabels() { /* net label lives inline in balance card */ }
 
-  // ── Render cashflow widget ─────────────────────────────────────────────────
+  // ── Render cashflow net (inline in Balance card) ───────────────────────────
   function renderCashflow(data) {
     if (data) _lastCashflow = data;
-    const { income_weekly = 0, expense_weekly = 0, calendar_alerts = [] } = _lastCashflow || {};
-
-    const netWeekly  = income_weekly - expense_weekly;
-    const display    = weeklyToPeriod(netWeekly);
-    const isPositive = display >= 0;
-
-    elWeeklyAmount.textContent = (isPositive ? '+' : '') + fmt(display);
-    elWeeklyAmount.style.color = display === 0
-      ? 'var(--text-muted)'
-      : isPositive ? 'var(--success)' : 'var(--danger)';
-    elWeeklyAmount.classList.remove('pb-cashflow-amount--empty');
-
-    if (!calendar_alerts.length) {
-      elCashflowAlerts.innerHTML =
-        `<p class="pb-cashflow-empty">${t('personalBudget.cashflow.noAlerts')}</p>`;
-      return;
-    }
-
-    const periodSuffix = t(_currentPeriod === 'monthly' ? 'personalBudget.cashflow.periodMonthly' : 'personalBudget.cashflow.periodBiweekly');
-    const items = calendar_alerts.map(a => {
-      const isIncome = (a.flow_type || 'expense') === 'income';
-      const urgency  = isIncome ? 'ok' : (a.days_until <= 7 ? 'urgent' : a.days_until <= 14 ? 'warning' : 'ok');
-      const sign     = isIncome ? '+' : '-';
-      return `
-        <div class="pb-cashflow-item">
-          <div class="pb-cashflow-days pb-cashflow-days--${urgency}">
-            <span class="pb-cashflow-days-num">${a.days_until}</span>
-            <span class="pb-cashflow-days-lbl">${t('personalBudget.cashflow.days')}</span>
-          </div>
-          <div class="pb-cashflow-info">
-            <span class="pb-cashflow-cat">${escHtml(a.category)}</span>
-            <span class="pb-cashflow-meta">${escHtml(a.frequency)} · ${sign}${fmt(a.amount)}</span>
-          </div>
-          <div class="pb-cashflow-right">
-            <span class="pb-cashflow-due">${a.next_due}</span>
-            <span class="pb-cashflow-weekly-eq" style="color:${isIncome ? 'var(--success)' : 'var(--accent)'}">
-              ${sign}${fmt(weeklyToPeriod(a.weekly_equivalent))}/${periodSuffix}
-            </span>
-          </div>
-        </div>`;
-    }).join('');
-
-    elCashflowAlerts.innerHTML = `<div class="pb-cashflow-list">${items}</div>`;
+    const { income_weekly = 0, expense_weekly = 0 } = _lastCashflow || {};
+    const net        = weeklyToPeriod(income_weekly - expense_weekly);
+    const isPositive = net >= 0;
+    elWeeklyAmount.textContent = (isPositive ? '+' : '') + fmt(net);
+    elWeeklyAmount.className   = 'pb-kpi-net-amount ' +
+      (net === 0 ? 'pb-kpi-net--zero' : isPositive ? 'pb-kpi-net--positive' : 'pb-kpi-net--negative');
   }
 
   // ── Render fixed costs ─────────────────────────────────────────────────────

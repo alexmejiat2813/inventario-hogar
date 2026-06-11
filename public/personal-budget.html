@@ -78,80 +78,48 @@
         </div>
       </div>
 
-      <!-- Summary: 6 KPIs (Real vs Proyectado) -->
-      <div class="pb-summary-sections">
+      <!-- KPIs: 3 tarjetas compactas dual-nivel (Real + Proyectado) -->
+      <div class="pb-kpi-row">
 
-        <div class="pb-summary-section">
-          <span class="pb-summary-section-label" data-i18n="personalBudget.summary.labelReal">Real</span>
-          <div class="pb-summary-row">
-            <div class="pb-stat-card pb-stat-income">
-              <div class="pb-stat-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              </div>
-              <span class="pb-stat-label" data-i18n="personalBudget.summary.income">Ingresos</span>
-              <span class="pb-stat-value pb-stat-value--income" id="pb-income-real">—</span>
-            </div>
-            <div class="pb-stat-card pb-stat-expense">
-              <div class="pb-stat-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
-              </div>
-              <span class="pb-stat-label" data-i18n="personalBudget.summary.expense">Gastos</span>
-              <span class="pb-stat-value pb-stat-value--expense" id="pb-expense-real">—</span>
-            </div>
-            <div class="pb-stat-card pb-stat-balance">
-              <div class="pb-stat-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              </div>
-              <span class="pb-stat-label" data-i18n="personalBudget.summary.balance">Balance</span>
-              <span class="pb-stat-value" id="pb-balance-real">—</span>
+        <!-- Ingresos -->
+        <div class="pb-kpi-card pb-kpi-income">
+          <span class="pb-kpi-label" data-i18n="personalBudget.summary.income">Ingresos</span>
+          <span class="pb-kpi-real pb-kpi-real--income" id="pb-income-real">—</span>
+          <span class="pb-kpi-sub">
+            <span data-i18n="personalBudget.summary.labelProjected">Proyectado</span>:
+            <span id="pb-income-proj">—</span>
+          </span>
+        </div>
+
+        <!-- Gastos -->
+        <div class="pb-kpi-card pb-kpi-expense">
+          <span class="pb-kpi-label" data-i18n="personalBudget.summary.expense">Gastos</span>
+          <span class="pb-kpi-real pb-kpi-real--expense" id="pb-expense-real">—</span>
+          <span class="pb-kpi-sub">
+            <span data-i18n="personalBudget.summary.labelProjected">Proyectado</span>:
+            <span id="pb-expense-proj">—</span>
+          </span>
+        </div>
+
+        <!-- Balance + Neto proyectado inline -->
+        <div class="pb-kpi-card pb-kpi-balance">
+          <div class="pb-kpi-balance-header">
+            <span class="pb-kpi-label" data-i18n="personalBudget.summary.balance">Balance</span>
+            <div class="pb-kpi-net-badge">
+              <span id="pb-weekly-amount" class="pb-kpi-net-amount">—</span>
+              <select id="pb-period-selector" class="pb-period-mini" aria-label="Periodo">
+                <option value="biweekly" data-i18n="personalBudget.cashflow.periodBiweekly">Quincenal</option>
+                <option value="monthly"  data-i18n="personalBudget.cashflow.periodMonthly">Mensual</option>
+              </select>
             </div>
           </div>
+          <span class="pb-kpi-real" id="pb-balance-real">—</span>
+          <span class="pb-kpi-sub">
+            <span data-i18n="personalBudget.summary.labelProjected">Proyectado</span>:
+            <span id="pb-balance-proj">—</span>
+          </span>
         </div>
 
-        <div class="pb-summary-section">
-          <span class="pb-summary-section-label pb-summary-section-label--proj" data-i18n="personalBudget.summary.labelProjected">Proyectado</span>
-          <div class="pb-summary-row">
-            <div class="pb-stat-card pb-stat-income pb-stat-card--proj">
-              <div class="pb-stat-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              </div>
-              <span class="pb-stat-label" data-i18n="personalBudget.summary.incomeProj">Ingresos</span>
-              <span class="pb-stat-value pb-stat-value--income" id="pb-income-proj">—</span>
-            </div>
-            <div class="pb-stat-card pb-stat-expense pb-stat-card--proj">
-              <div class="pb-stat-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
-              </div>
-              <span class="pb-stat-label" data-i18n="personalBudget.summary.expenseProj">Gastos</span>
-              <span class="pb-stat-value pb-stat-value--expense" id="pb-expense-proj">—</span>
-            </div>
-            <div class="pb-stat-card pb-stat-balance pb-stat-card--proj">
-              <div class="pb-stat-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              </div>
-              <span class="pb-stat-label" data-i18n="personalBudget.summary.balanceProj">Balance</span>
-              <span class="pb-stat-value" id="pb-balance-proj">—</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Cashflow Widget -->
-      <div class="dash-card" id="pb-cashflow-card">
-        <div class="pb-cashflow-header">
-          <h2 class="dash-card-title" id="pb-cashflow-title" data-i18n="personalBudget.cashflow.title">Retención Semanal</h2>
-          <select id="pb-period-selector" class="pb-period-selector" aria-label="Periodo">
-            <option value="biweekly" data-i18n="personalBudget.cashflow.periodBiweekly">Quincenal</option>
-            <option value="monthly"  data-i18n="personalBudget.cashflow.periodMonthly">Mensual</option>
-          </select>
-        </div>
-        <div class="pb-cashflow-weekly">
-          <span class="pb-cashflow-amount pb-cashflow-amount--empty" id="pb-weekly-amount">—</span>
-          <span class="pb-cashflow-subtitle" id="pb-cashflow-subtitle" data-i18n="personalBudget.cashflow.subtitle">debes retener cada semana para cubrir todos tus gastos fijos</span>
-        </div>
-        <p class="pb-cashflow-alerts-title" data-i18n="personalBudget.cashflow.alertsTitle">Próximos vencimientos (30 días)</p>
-        <div id="pb-cashflow-alerts"><!-- rendered by JS --></div>
       </div>
 
       <!-- Historial y Planificación (tabbed) -->
