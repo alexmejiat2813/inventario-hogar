@@ -12,7 +12,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{js,json,css,html}\" --ignore-path .prettierignore",
     "format:check": "prettier --check \"**/*.{js,json,css,html}\" --ignore-path .prettierignore",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "node -e \"try{require('child_process').execSync('git config core.hooksPath .githooks')}catch{}\""
   },
   "dependencies": {
     "compression": "^1.8.1",
