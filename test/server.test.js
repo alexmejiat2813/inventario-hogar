@@ -137,6 +137,49 @@ describe('API routes require authentication', () => {
   });
 });
 
+// ── More API routes require auth ──────────────────────────────
+
+describe('more API routes require authentication', () => {
+  const routes = [
+    '/api/products',
+    '/api/budget',
+    '/api/shopping',
+    '/api/templates',
+    '/api/stores',
+    '/api/categories',
+    '/api/history',
+    '/api/stats',
+  ];
+
+  for (const route of routes) {
+    test(`GET ${route} returns 401`, async () => {
+      const res = await get(route);
+      assert.equal(res.status, 401, `${route} debe requerir auth`);
+    });
+  }
+});
+
+describe('POST API routes require authentication', () => {
+  const postRoutes = [
+    '/api/inventories',
+    '/api/products',
+    '/api/purchases',
+    '/api/shopping/custom',
+    '/api/templates',
+  ];
+
+  for (const route of postRoutes) {
+    test(`POST ${route} returns 401`, async () => {
+      const res = await fetch(baseUrl + route, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      assert.equal(res.status, 401, `POST ${route} debe requerir auth`);
+    });
+  }
+});
+
 // ── Rate limiting ──────────────────────────────────────────────
 
 describe('rate limiting', () => {

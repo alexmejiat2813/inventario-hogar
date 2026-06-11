@@ -807,7 +807,7 @@ function renderModalPhotos() {
     const thumb = document.createElement('div');
     thumb.className = 'photo-thumb';
     thumb.innerHTML = `
-      <img src="${esc(img.image_path)}" alt="">
+      <img src="${esc(img.image_path)}" alt="" loading="lazy">
       <button type="button" class="photo-thumb-del" data-action="del-existing" data-image-id="${img.id}" aria-label="Eliminar foto">✕</button>
     `;
     grid.appendChild(thumb);
@@ -818,7 +818,7 @@ function renderModalPhotos() {
     const thumb = document.createElement('div');
     thumb.className = 'photo-thumb';
     thumb.innerHTML = `
-      <img src="${p.url}" alt="">
+      <img src="${p.url}" alt="" loading="lazy">
       <button type="button" class="photo-thumb-del" data-action="remove-pending-modal" data-index="${idx}" aria-label="Eliminar foto">✕</button>
     `;
     grid.appendChild(thumb);
@@ -1107,7 +1107,7 @@ function renderMembers(members, viewerRole) {
   const list = document.getElementById('members-list');
   list.innerHTML = members.map(m => `
     <div class="member-item">
-      ${m.photo ? `<img class="member-avatar" src="${esc(m.photo)}" alt="${esc(m.name)}">` : `<div class="member-avatar member-avatar-placeholder">${esc(m.name[0])}</div>`}
+      ${m.photo ? `<img class="member-avatar" src="${esc(m.photo)}" alt="${esc(m.name)}" loading="lazy">` : `<div class="member-avatar member-avatar-placeholder">${esc(m.name[0])}</div>`}
       <div class="member-info">
         <span class="member-name">${esc(m.name)}</span>
         ${viewerRole === 'owner' && m.role !== 'owner' ? `
@@ -1365,6 +1365,48 @@ function initEvents() {
     addMenu.hidden = true;
     openModal();
   });
+
+  document.getElementById('export-json').addEventListener('click', () => {
+    addMenu.hidden = true;
+    window.location.href = '/api/products/export?format=json';
+  });
+  document.getElementById('export-csv').addEventListener('click', () => {
+    addMenu.hidden = true;
+    window.location.href = '/api/products/export?format=csv';
+  });
+  const importFileInput = document.getElementById('import-file-input');
+  document.getElementById('import-products').addEventListener('click', () => {
+    addMenu.hidden = true;
+    importFileInput.click();
+  });
+  importFileInput.addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    importFileInput.value = '';
+    try {
+      const text = await file.text();
+      const isJson = file.name.endsWith('.json') || file.type.includes('json');
+      let body, contentType;
+      if (isJson) {
+        const parsed = JSON.parse(text);
+        body = JSON.stringify(parsed);
+        contentType = 'application/json';
+      } else {
+        body = text;
+        contentType = 'text/csv';
+      }
+      const res = await fetch('/api/products/import', {
+        method: 'POST', headers: { 'Content-Type': contentType }, body,
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || t('error.server'), 'error'); return; }
+      showToast(`${t('inventory.import.success') || 'Importado'}: ${data.created} ${t('inventory.import.products') || 'productos'}`);
+      await loadAll();
+    } catch (err) {
+      showToast(err.message || t('error.server'), 'error');
+    }
+  });
+
   document.addEventListener('click', e => {
     if (!addMenuWrap.contains(e.target)) addMenu.hidden = true;
   });

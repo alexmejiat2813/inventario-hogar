@@ -306,7 +306,7 @@ function renderReceipt() {
 
   const session = state.session;
   const s = sym(currencyOf());
-  let html = '';
+  let html;
 
   if (state.receiptAction === 'keep' && session?.receipt_image) {
     html = `<div class="receipt-preview">

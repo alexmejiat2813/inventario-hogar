@@ -168,7 +168,14 @@
     "confirmDelete": "Delete \"{{name}}\"?\nThis action cannot be undone.",
     "addMenu": {
       "fromCatalog": "From catalog",
-      "custom": "Custom product"
+      "custom": "Custom product",
+      "exportJson": "Export JSON",
+      "exportCsv": "Export CSV",
+      "import": "Import"
+    },
+    "import": {
+      "success": "Imported",
+      "products": "products"
     },
     "photos": {
       "title": "📷 Reference photos",
@@ -260,7 +267,10 @@
     "settings": "Settings",
     "manage": "Manage access",
     "adminMetrics": "App metrics",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "share": "Share app",
+    "shareCopied": "Link copied to clipboard",
+    "shareError": "Could not copy link"
   },
   "admin": {
     "title": "Application metrics",

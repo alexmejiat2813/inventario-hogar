@@ -465,6 +465,232 @@ describe('seeds de primera ejecucion (regression: catalogo resucitaba)', () => {
   });
 });
 
+// ── Budget — additional ────────────────────────────────────────
+
+describe('budget — config y porcentajes', () => {
+  test('saveBudgetConfig sobrescribe config previa', () => {
+    const { inv } = makeInventory();
+    db.saveBudgetConfig(inv.id, { monthlyAmount: 100, alertPercentages: [] });
+    db.saveBudgetConfig(inv.id, { monthlyAmount: 500, alertPercentages: [] });
+    const s = db.getBudgetSummary(inv.id);
+    assert.equal(s.config.monthly_amount, 500);
+  });
+
+  test('porcentaje > 100 cuando gasto supera el budget', () => {
+    const { inv, userId } = makeInventory();
+    db.saveBudgetConfig(inv.id, { monthlyAmount: 50, alertPercentages: [] });
+    db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Caro', quantityBought: 1, unitPrice: 100, unit: 'u', productId: null, storeId: null }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    const s = db.getBudgetSummary(inv.id);
+    assert.ok(s.percentage > 100, `esperado >100, obtenido ${s.percentage}`);
+  });
+
+  test('solo cuenta compras del mes actual', () => {
+    const { inv, userId } = makeInventory();
+    db.saveBudgetConfig(inv.id, { monthlyAmount: 200, alertPercentages: [] });
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Viejo', quantityBought: 1, unitPrice: 100, unit: 'u', productId: null, storeId: null }],
+      taxIds: [], currency: 'USD', purchaseDate: lastMonth.toISOString().slice(0, 10), receiptImage: null,
+    });
+    const s = db.getBudgetSummary(inv.id);
+    assert.equal(s.spent, 0, 'compras del mes anterior no deben sumarse');
+  });
+});
+
+// ── Purchases — IDOR boundary ─────────────────────────────────
+
+describe('purchases — aislamiento entre inventarios', () => {
+  test('getPurchaseSessions no devuelve sesiones de otro inventario', () => {
+    const { inv: inv1, userId } = makeInventory();
+    const { inv: inv2 } = makeInventory(userId);
+    db.createPurchaseSession({
+      inventoryId: inv1.id, userId,
+      items: [{ productName: 'Solo inv1', quantityBought: 1, unitPrice: 10, unit: 'u', productId: null, storeId: null }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    const sessions = db.getPurchaseSessions(inv2.id);
+    assert.ok(!sessions.some(s => s.inventory_id === inv1.id));
+  });
+
+  test('createPurchaseSession suma stock al producto', () => {
+    const { inv, userId } = makeInventory();
+    const prod = db.create({ name: 'Pan', category: 'Alimentos', current_qty: 2, min_qty: 1, unit: 'u', inventoryId: inv.id });
+    db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Pan', productId: prod.id, quantityBought: 3, unitPrice: 5, unit: 'u', storeId: null }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    assert.equal(db.getById(prod.id).current_qty, 5);
+  });
+
+  test('deletePurchaseSession sin revert preserva stock', () => {
+    const { inv, userId } = makeInventory();
+    const prod = db.create({ name: 'Jugo', category: 'Bebidas', current_qty: 0, min_qty: 0, unit: 'lt', inventoryId: inv.id });
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Jugo', productId: prod.id, quantityBought: 4, unitPrice: 8, unit: 'lt', storeId: null }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    db.deletePurchaseSession(session.id, inv.id, { revertInventory: false });
+    assert.equal(db.getById(prod.id).current_qty, 4, 'sin revert stock no cambia');
+  });
+});
+
+// ── Stats ──────────────────────────────────────────────────────
+
+describe('stats', () => {
+  test('getStats retorna total y critical correctos', () => {
+    const { inv } = makeInventory();
+    db.create({ name: 'Critico', category: 'Bebidas',   current_qty: 0, min_qty: 2, unit: 'lt', inventoryId: inv.id });
+    db.create({ name: 'OK',      category: 'Bebidas',   current_qty: 5, min_qty: 2, unit: 'lt', inventoryId: inv.id });
+    db.create({ name: 'Justo',   category: 'Alimentos', current_qty: 1, min_qty: 1, unit: 'u',  inventoryId: inv.id });
+    const stats = db.getStats(inv.id);
+    assert.equal(stats.total, 3);
+    assert.equal(stats.critical, 1, 'solo qty < min cuenta como critico');
+  });
+
+  test('getStats.byCategory incluye categorias con productos', () => {
+    const { inv } = makeInventory();
+    db.create({ name: 'A', category: 'Bebidas',   current_qty: 1, min_qty: 0, unit: 'u', inventoryId: inv.id });
+    db.create({ name: 'B', category: 'Alimentos', current_qty: 1, min_qty: 0, unit: 'u', inventoryId: inv.id });
+    const stats = db.getStats(inv.id);
+    assert.ok(Array.isArray(stats.byCategory));
+    const byCatNames = stats.byCategory.map(c => c.category);
+    assert.ok(byCatNames.includes('Bebidas'));
+    assert.ok(byCatNames.includes('Alimentos'));
+  });
+
+  test('stats.byCategory.count es correcto', () => {
+    const { inv } = makeInventory();
+    db.createCategory({ name: 'Limpieza', name_en: 'Cleaning', name_fr: 'Nettoyage', emoji: '🧹' });
+    db.create({ name: 'X1', category: 'Limpieza', current_qty: 1, min_qty: 0, unit: 'u', inventoryId: inv.id });
+    db.create({ name: 'X2', category: 'Limpieza', current_qty: 1, min_qty: 0, unit: 'u', inventoryId: inv.id });
+    const stats = db.getStats(inv.id);
+    const lim = stats.byCategory.find(c => c.category === 'Limpieza');
+    assert.ok(lim, 'Limpieza debe aparecer en byCategory');
+    assert.equal(lim.count, 2);
+  });
+});
+
+// ── Stores ─────────────────────────────────────────────────────
+
+describe('stores', () => {
+  test('createStore y getStores', () => {
+    const { inv } = makeInventory();
+    db.createStore({ inventoryId: inv.id, name: 'MiSuper', emoji: '🛒' });
+    const stores = db.getStores(inv.id);
+    assert.ok(stores.some(s => s.name === 'MiSuper'));
+  });
+
+  test('updateStore cambia el nombre', () => {
+    const { inv } = makeInventory();
+    const store = db.createStore({ inventoryId: inv.id, name: 'Original', emoji: '📦' });
+    db.updateStore(store.id, { name: 'Renombrado', emoji: '📦' });
+    const updated = db.getStore(store.id);
+    assert.equal(updated.name, 'Renombrado');
+  });
+
+  test('deleteStore elimina la tienda', () => {
+    const { inv } = makeInventory();
+    const store = db.createStore({ inventoryId: inv.id, name: 'Temp', emoji: '' });
+    const ok = db.deleteStore(store.id);
+    assert.equal(ok, true);
+    assert.equal(db.getStore(store.id), undefined);
+  });
+
+  test('getStores solo devuelve tiendas del inventario', () => {
+    const { inv: inv1 } = makeInventory();
+    const { inv: inv2 } = makeInventory();
+    db.createStore({ inventoryId: inv1.id, name: 'De inv1', emoji: '' });
+    db.createStore({ inventoryId: inv2.id, name: 'De inv2', emoji: '' });
+    const s1 = db.getStores(inv1.id);
+    assert.ok(s1.some(s => s.name === 'De inv1'));
+    assert.ok(!s1.some(s => s.name === 'De inv2'), 'inv1 no debe ver tiendas de inv2');
+  });
+});
+
+// ── Store prices ───────────────────────────────────────────────
+
+describe('store prices', () => {
+  test('getProductStorePrices vacio sin historial', () => {
+    const { inv } = makeInventory();
+    const prod = db.create({ name: 'SinHistorial', category: 'Bebidas', current_qty: 1, min_qty: 0, unit: 'lt', inventoryId: inv.id });
+    const prices = db.getProductStorePrices(prod.id, inv.id);
+    assert.deepEqual(prices, []);
+  });
+
+  test('getProductStorePrices devuelve orden ascendente por precio', () => {
+    const { inv, userId } = makeInventory();
+    const prod = db.create({ name: 'Cereal', category: 'Alimentos', current_qty: 1, min_qty: 0, unit: 'u', inventoryId: inv.id });
+    const cara   = db.createStore({ inventoryId: inv.id, name: 'Cara',   emoji: '' });
+    const barata = db.createStore({ inventoryId: inv.id, name: 'Barata', emoji: '' });
+    db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Cereal', productId: prod.id, quantityBought: 1, unitPrice: 100, unit: 'u', storeId: cara.id }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Cereal', productId: prod.id, quantityBought: 1, unitPrice: 50, unit: 'u', storeId: barata.id }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    const prices = db.getProductStorePrices(prod.id, inv.id);
+    assert.ok(prices.length >= 2);
+    assert.ok(prices[0].last_price <= prices[1].last_price, 'orden ascendente por precio');
+    assert.equal(prices[0].store_name, 'Barata', 'la mas barata primero');
+  });
+});
+
+// ── Category constraints ───────────────────────────────────────
+
+describe('category constraints', () => {
+  test('deleteCategory retorna error cuando hay productos que la usan', () => {
+    const { inv } = makeInventory();
+    const r = db.createCategory({ name: 'CatUsada', name_en: 'Used', name_fr: 'Utilisée', emoji: '📦' });
+    db.create({ name: 'ProdEnCat', category: 'CatUsada', current_qty: 1, min_qty: 0, unit: 'u', inventoryId: inv.id });
+    const del = db.deleteCategory(r.category.id);
+    assert.ok(del.error, 'debe retornar error cuando la categoría está en uso');
+  });
+
+  test('deleteCategory funciona cuando no está en uso', () => {
+    const r = db.createCategory({ name: 'CatVacia', name_en: 'Empty', name_fr: 'Vide', emoji: '🗂️' });
+    const del = db.deleteCategory(r.category.id);
+    assert.ok(!del.error, `error inesperado: ${del.error}`);
+    assert.equal(del.ok, true);
+  });
+});
+
+// ── Templates — guard regression #77 (store_id + unit_price) ──
+
+describe('templates — store_id y unit_price', () => {
+  test('createTemplate preserva store_id y unit_price por item', () => {
+    const { inv, userId } = makeInventory();
+    const store = db.createStore({ inventoryId: inv.id, name: 'StoreGuard', emoji: '' });
+    const tpl = db.createTemplate(inv.id, userId, 'Con precios', [
+      { productId: null, productName: 'Pan', quantity: 2, unit: 'unidades', storeId: store.id, unitPrice: 3.5 },
+    ]);
+    const full = db.getTemplate(tpl.id, inv.id);
+    assert.equal(full.items[0].store_id, store.id, 'store_id debe persistir');
+    assert.ok(Math.abs(full.items[0].unit_price - 3.5) < 0.001, 'unit_price debe persistir');
+  });
+
+  test('createTemplate sin storeId/unitPrice guarda null', () => {
+    const { inv, userId } = makeInventory();
+    const tpl = db.createTemplate(inv.id, userId, 'Sin precio', [
+      { productId: null, productName: 'Sal', quantity: 1, unit: 'unidades' },
+    ]);
+    const full = db.getTemplate(tpl.id, inv.id);
+    assert.equal(full.items[0].store_id, null);
+    assert.equal(full.items[0].unit_price, null);
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {

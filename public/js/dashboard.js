@@ -1,4 +1,5 @@
 'use strict';
+/* eslint-disable no-unused-vars -- initDashboard is a global called by the page HTML */
 
 const dashState = {
   data:          null,

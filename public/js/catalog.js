@@ -362,7 +362,7 @@ function renderPendingPhotoGrid() {
     const thumb = document.createElement('div');
     thumb.className = 'photo-thumb';
     thumb.innerHTML = `
-      <img src="${p.url}" alt="">
+      <img src="${p.url}" alt="" loading="lazy">
       <button type="button" class="photo-thumb-del" data-action="remove-pending" data-index="${idx}" aria-label="Eliminar foto">✕</button>
     `;
     grid.appendChild(thumb);

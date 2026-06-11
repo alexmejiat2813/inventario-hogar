@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars -- globals used by other page scripts via script tag */
 /* ============================================================
    i18n — Internationalisation module
    ============================================================ */

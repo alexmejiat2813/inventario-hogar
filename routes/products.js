@@ -23,6 +23,33 @@ router.get('/expiring', (req, res) => {
   } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener productos por vencer' }); }
 });
 
+router.get('/export', (req, res) => {
+  try {
+    const products = db.getAll(req.inventoryId);
+    const format   = req.query.format === 'csv' ? 'csv' : 'json';
+    const date     = new Date().toISOString().slice(0, 10);
+
+    if (format === 'csv') {
+      const COLS   = ['name', 'category', 'unit', 'current_qty', 'min_qty', 'expiry_date', 'notes', 'location'];
+      const escape = v => v == null ? '' : String(v).includes(',') ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+      const header = COLS.join(',');
+      const rows   = products.map(p => COLS.map(c => escape(p[c])).join(','));
+      res.set('Content-Type', 'text/csv; charset=utf-8');
+      res.set('Content-Disposition', `attachment; filename="inventario-${date}.csv"`);
+      return res.send([header, ...rows].join('\n'));
+    }
+
+    const exported = products.map(p => ({
+      name: p.name, category: p.category, unit: p.unit,
+      current_qty: p.current_qty, min_qty: p.min_qty,
+      expiry_date: p.expiry_date || null,
+      notes: p.notes || null, location: p.location || null,
+    }));
+    res.set('Content-Disposition', `attachment; filename="inventario-${date}.json"`);
+    res.json(exported);
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al exportar' }); }
+});
+
 router.get('/:id', (req, res) => {
   try {
     const p = db.getById(parseInt(req.params.id));
@@ -154,6 +181,63 @@ router.get('/:id/store-prices', (req, res) => {
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     res.json(db.getProductStorePrices(productId, req.inventoryId));
   } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener precios por tienda' }); }
+});
+
+// ── Import ────────────────────────────────────────────────────
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(Boolean);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+  return lines.slice(1).map(line => {
+    const vals = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i <= line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else if (ch === undefined) { vals.push(cur.trim()); }
+      else cur += ch;
+    }
+    return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+  });
+}
+
+router.post('/import', requireEditorOrOwner, express.text({ limit: '2mb', type: ['text/csv', 'text/plain'] }), async (req, res) => {
+  try {
+    let rows;
+    const contentType = req.headers['content-type'] || '';
+
+    if (contentType.includes('json')) {
+      if (!Array.isArray(req.body)) return res.status(400).json({ error: 'Body debe ser un array JSON' });
+      rows = req.body;
+    } else {
+      const text = typeof req.body === 'string' ? req.body : '';
+      if (!text) return res.status(400).json({ error: 'Body CSV vacío' });
+      rows = parseCSV(text);
+    }
+
+    if (!rows.length) return res.status(400).json({ error: 'Sin filas para importar' });
+
+    let created = 0, skipped = 0;
+    for (const r of rows) {
+      const name = (r.name || '').trim();
+      if (!name) { skipped++; continue; }
+      const category   = (r.category || 'Sin categoría').trim();
+      const unit       = (r.unit || 'unidades').trim();
+      const currentQty = parseFloat(r.current_qty) || 0;
+      const minQty     = parseFloat(r.min_qty)     || 0;
+      const expiryDate = r.expiry_date || null;
+      const notes      = r.notes    || null;
+      const location   = r.location || null;
+
+      db.create({ name, category, unit, current_qty: currentQty, min_qty: minQty,
+        expiry_date: expiryDate, notes, location, inventoryId: req.inventoryId });
+      created++;
+    }
+
+    res.json({ ok: true, created, skipped });
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al importar' }); }
 });
 
 module.exports = router;

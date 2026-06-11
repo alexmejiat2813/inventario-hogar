@@ -1350,8 +1350,8 @@ document.addEventListener('DOMContentLoaded', init);
       + '<h1>' + t('shopping.list.title') + '</h1><p class="date">' + date + '</p>'
       + '<table><thead><tr><th></th><th>Producto</th><th style="text-align:right">Cantidad</th></tr></thead>'
       + '<tbody>' + rows + '</tbody></table>'
-      + '<script>window.onload=function(){window.print();}<\/script>'
-      + '<\/body><\/html>';
+      + '<script>window.onload=function(){window.print();}</script>'
+      + '</body></html>';
 
     var win = window.open('', '_blank');
     if (!win) { showExportToast('Permitir ventanas emergentes para exportar a PDF.', true); return; }

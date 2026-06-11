@@ -164,6 +164,7 @@ app.use('/api/stores',    require('./routes/stores'));
 app.use('/api/purchases', require('./routes/purchases'));
 app.use('/api/budget',    require('./routes/budget'));
 app.use('/api/settings',  require('./routes/settings'));
+app.use('/api/backup',   require('./routes/backup'));
 
 // ── API 404 ────────────────────────────────────────────────────────────────────
 app.use('/api', (req, res) => {

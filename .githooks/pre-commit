@@ -1,0 +1,12 @@
+#!/bin/sh
+# ESLint on staged JS files — blocks commit only on errors (warnings pass through)
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep '\.js$' | grep -v 'public/js/vendor/')
+if [ -n "$STAGED" ]; then
+  echo "ESLint: checking staged files..."
+  echo "$STAGED" | tr '\n' '\0' | xargs -0 npx eslint --no-warn-ignored
+  if [ $? -ne 0 ]; then
+    echo "ESLint: errors found. Fix them or run: git commit --no-verify to skip."
+    exit 1
+  fi
+fi
+exit 0

@@ -168,7 +168,14 @@
     "confirmDelete": "¿Eliminar \"{{name}}\"?\nEsta acción no se puede deshacer.",
     "addMenu": {
       "fromCatalog": "Del catálogo",
-      "custom": "Personalizado"
+      "custom": "Personalizado",
+      "exportJson": "Exportar JSON",
+      "exportCsv": "Exportar CSV",
+      "import": "Importar"
+    },
+    "import": {
+      "success": "Importado",
+      "products": "productos"
     },
     "photos": {
       "title": "📷 Fotos de referencia",
@@ -260,7 +267,10 @@
     "settings": "Configuración",
     "manage": "Gestionar acceso",
     "adminMetrics": "Métricas de la app",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "share": "Compartir app",
+    "shareCopied": "Enlace copiado al portapapeles",
+    "shareError": "No se pudo copiar el enlace"
   },
   "admin": {
     "title": "Métricas de la aplicación",

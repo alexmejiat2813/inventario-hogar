@@ -7,7 +7,12 @@
     "start": "node server.js",
     "dev": "node --watch server.js | pino-pretty",
     "test": "node --test test/*.test.js",
-    "coverage": "c8 node --test test/*.test.js"
+    "coverage": "c8 node --test test/*.test.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,json,css,html}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{js,json,css,html}\" --ignore-path .prettierignore",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "compression": "^1.8.1",
@@ -22,6 +27,10 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
-    "c8": "^11.0.0"
+    "@eslint/js": "^10.0.1",
+    "c8": "^11.0.0",
+    "eslint": "^10.4.1",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.4"
   }
 }

@@ -1,4 +1,5 @@
 /* Shared utilities — loaded before every page script */
+/* eslint-disable no-unused-vars -- globals used by other page scripts via script tag */
 
 async function apiFetch(method, url, body) {
   const opts = { method, headers: { 'Content-Type': 'application/json' } };

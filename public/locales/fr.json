@@ -168,7 +168,14 @@
     "confirmDelete": "Supprimer \"{{name}}\" ?\nCette action est irréversible.",
     "addMenu": {
       "fromCatalog": "Du catalogue",
-      "custom": "Produit personnalisé"
+      "custom": "Produit personnalisé",
+      "exportJson": "Exporter JSON",
+      "exportCsv": "Exporter CSV",
+      "import": "Importer"
+    },
+    "import": {
+      "success": "Importé",
+      "products": "produits"
     },
     "photos": {
       "title": "📷 Photos de référence",
@@ -260,7 +267,10 @@
     "settings": "Paramètres",
     "manage": "Gérer l'accès",
     "adminMetrics": "Métriques de l'app",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "share": "Partager l'app",
+    "shareCopied": "Lien copié dans le presse-papiers",
+    "shareError": "Impossible de copier le lien"
   },
   "admin": {
     "title": "Métriques de l'application",

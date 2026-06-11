@@ -1,4 +1,5 @@
 /* Profile menu + avatar — shared across all pages */
+/* eslint-disable no-unused-vars -- globals used by other page scripts via script tag */
 
 async function loadProfileAvatar() {
   try {
@@ -62,9 +63,38 @@ function initProfileMenu() {
     window.location.href = '/login';
   });
 
+  const share = document.getElementById('btn-share');
+  if (share) share.addEventListener('click', async () => {
+    menu.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+    const url   = window.location.origin;
+    const title = 'Inventario Hogar';
+    if (navigator.share) {
+      try { await navigator.share({ title, url }); } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        _headerToast(typeof t === 'function' ? t('profile.shareCopied') : 'Enlace copiado');
+      } catch {
+        _headerToast(typeof t === 'function' ? t('profile.shareError') : 'No se pudo copiar el enlace', true);
+      }
+    }
+  });
+
   document.querySelectorAll('.dropdown-item[href="/settings"]').forEach(function (link) {
     link.addEventListener('click', function () {
       sessionStorage.setItem('settings_referrer', window.location.href);
     });
   });
+}
+
+function _headerToast(msg, isErr = false) {
+  const c = document.getElementById('toast-container');
+  if (!c) return;
+  const el = document.createElement('div');
+  el.className = `toast toast-${isErr ? 'error' : 'success'}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('toast--show')));
+  setTimeout(() => { el.classList.remove('toast--show'); setTimeout(() => el.remove(), 300); }, 3000);
 }

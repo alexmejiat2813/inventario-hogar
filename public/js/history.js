@@ -463,7 +463,7 @@ function exportPDF() {
     <table><thead><tr>
       <th>Fecha</th><th>Usuario</th><th>Items</th><th class="num">Subtotal</th><th class="num">Total</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <script>window.onload=function(){window.print();}<\/script>
+    <script>window.onload=function(){window.print();}</script>
   </body></html>`;
 
   const win = window.open('', '_blank');
