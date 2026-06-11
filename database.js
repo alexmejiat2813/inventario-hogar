@@ -1704,6 +1704,16 @@ module.exports = {
     ).run(id, userId).changes > 0;
   },
 
+  updatePersonalBudget(userId, id, { category, amount, month, frequency = 'Mensual', due_date = null }) {
+    const changed = db.prepare(`
+      UPDATE personal_budgets
+      SET category = ?, amount = ?, month = ?, frequency = ?, due_date = ?
+      WHERE id = ? AND user_id = ?
+    `).run(category, +amount, month, frequency, due_date, id, userId).changes;
+    if (!changed) return null;
+    return db.prepare('SELECT * FROM personal_budgets WHERE id = ?').get(id);
+  },
+
   getPersonalTransactions(userId, month) {
     return db.prepare(`
       SELECT t.*, i.name AS inventory_name

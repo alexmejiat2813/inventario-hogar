@@ -856,6 +856,12 @@
     "title": "Budget Personnel",
     "back": "Inventaires",
     "monthLabel": "Mois",
+    "tabs": {
+      "title": "Historique et Planification",
+      "transactions": "Transactions du Mois",
+      "fixed": "Charges Fixes",
+      "subtotal": "Sous-total"
+    },
     "summary": {
       "income": "Revenus",
       "expense": "Dépenses",
@@ -907,17 +913,28 @@
       "colFrequency": "Fréquence",
       "colDue": "Échéance",
       "colWeekly": "Équiv. hebdo.",
+      "colBiweekly": "Équiv. bimen.",
       "deleteConfirm": "Supprimer cette charge fixe ?",
-      "deleted": "Charge fixe supprimée"
+      "deleted": "Charge fixe supprimée",
+      "pay": "Enregistrer le paiement",
+      "edit": "Modifier la charge fixe",
+      "saveEdit": "Mettre à jour",
+      "updated": "Charge fixe mise à jour",
+      "empty": "Aucune charge fixe configurée"
     },
     "cashflow": {
       "title": "Rétention Hebdomadaire Obligatoire",
+      "titleBiweekly": "Rétention Bimensuelle Obligatoire",
       "badge": "par semaine",
+      "periodWeekly": "Hebdomadaire",
+      "periodBiweekly": "Bimensuel (2 sem.)",
       "subtitle": "à retenir chaque semaine pour couvrir toutes vos charges fixes",
+      "subtitleBiweekly": "à retenir toutes les 2 semaines pour couvrir toutes vos charges fixes",
       "alertsTitle": "Échéances à venir (30 jours)",
       "noAlerts": "Aucune échéance dans les 30 prochains jours.",
       "days": "jours",
-      "weekSuffix": "sem"
+      "weekSuffix": "sem",
+      "biweekSuffix": "bimen"
     },
     "fixed": {
       "title": "Enregistrer une Charge Fixe",

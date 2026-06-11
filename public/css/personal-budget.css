@@ -209,6 +209,93 @@
   .pb-tx-table td { padding: .5rem .4rem; }
 }
 
+/* ── Tabs ── */
+.pb-tabs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.pb-tabs {
+  display: flex;
+  gap: .2rem;
+  padding: .2rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.pb-tab {
+  padding: .3rem .75rem;
+  border: none;
+  border-radius: calc(var(--r-sm) - 2px);
+  background: transparent;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+}
+.pb-tab:hover { color: var(--text); }
+.pb-tab--active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+
+/* ── Tab panels ── */
+.pb-tab-panel--hidden { display: none; }
+
+/* ── tfoot subtotals ── */
+.pb-tfoot td { border-top: 2px solid var(--border); padding-top: .5rem; }
+.pb-tfoot-label {
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+}
+.pb-tfoot-balance {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-align: right;
+}
+
+/* ── Edit button in fixed-costs table ── */
+.pb-btn-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  flex-shrink: 0;
+}
+.pb-btn-edit:hover { background: var(--bg); color: var(--text); }
+
+/* ── Pay button in fixed-costs table ── */
+.pb-btn-pay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border: 1px solid var(--accent-bg);
+  border-radius: var(--r-sm);
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background .12s;
+  flex-shrink: 0;
+}
+.pb-btn-pay:hover { background: #BFDBFE; }
+
 /* ── Delete button in table ── */
 .pb-btn-del {
   display: inline-flex;
@@ -259,6 +346,29 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+.pb-period-selector {
+  padding: .22rem .65rem .22rem .55rem;
+  border: 1px solid var(--accent-bg);
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%230369a1' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .45rem center;
+  padding-right: 1.5rem;
+  transition: border-color .12s;
+  flex-shrink: 0;
+}
+.pb-period-selector:focus { outline: none; border-color: var(--accent); }
 
 .pb-cashflow-weekly {
   display: flex;

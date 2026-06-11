@@ -20,8 +20,10 @@ router.get('/', (req, res) => {
   const budgets      = db.getPersonalBudgets(userId, month);
   const transactions = db.getPersonalTransactions(userId, month);
 
-  const income  = transactions.filter(t => t.type === 'income') .reduce((s, t) => s + t.amount, 0);
-  const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const income       = transactions.filter(t => t.type === 'income') .reduce((s, t) => s + t.amount, 0);
+  const expenseReal  = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const fixedTotal   = budgets.reduce((s, b) => s + b.amount, 0);
+  const expense      = expenseReal + fixedTotal;
 
   res.json({ month, budgets, transactions, summary: { income, expense, balance: income - expense } });
 });
@@ -100,6 +102,35 @@ router.delete('/budget/:id', (req, res) => {
   const deleted = db.deletePersonalBudget(req.user.id, id);
   if (!deleted) return res.status(404).json({ error: 'Gasto fijo no encontrado.' });
   res.json({ ok: true });
+});
+
+// PUT /api/personal-budget/budget/:id
+router.put('/budget/:id', (req, res) => {
+  const id = +req.params.id;
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'ID inválido.' });
+  }
+  const { category, amount, month, frequency, due_date } = req.body;
+  if (!category || typeof category !== 'string' || !category.trim()) {
+    return res.status(400).json({ error: 'category es requerida.' });
+  }
+  if (amount == null || isNaN(+amount) || +amount < 0) {
+    return res.status(400).json({ error: 'amount debe ser un número >= 0.' });
+  }
+  const m = month || new Date().toISOString().slice(0, 7);
+  if (!MONTH_RE.test(m)) return res.status(400).json({ error: 'month inválido. Usar YYYY-MM.' });
+  const freq = frequency || 'Mensual';
+  if (!VALID_FREQ.includes(freq)) {
+    return res.status(400).json({ error: `frequency debe ser: ${VALID_FREQ.join(', ')}.` });
+  }
+  if (due_date && !DUE_DATE_RE.test(due_date)) {
+    return res.status(400).json({ error: 'due_date debe ser "DD" o "YYYY-MM-DD".' });
+  }
+  const updated = db.updatePersonalBudget(req.user.id, id, {
+    category: category.trim(), amount, month: m, frequency: freq, due_date: due_date || null,
+  });
+  if (!updated) return res.status(404).json({ error: 'Gasto fijo no encontrado.' });
+  res.json(updated);
 });
 
 // GET /api/personal-budget/plans

@@ -100,12 +100,15 @@
       <!-- Cashflow Widget -->
       <div class="dash-card" id="pb-cashflow-card">
         <div class="pb-cashflow-header">
-          <h2 class="dash-card-title" data-i18n="personalBudget.cashflow.title">Retención Semanal</h2>
-          <span class="pb-cashflow-badge" data-i18n="personalBudget.cashflow.badge">por semana</span>
+          <h2 class="dash-card-title" id="pb-cashflow-title" data-i18n="personalBudget.cashflow.title">Retención Semanal</h2>
+          <select id="pb-period-selector" class="pb-period-selector" aria-label="Periodo">
+            <option value="weekly"   data-i18n="personalBudget.cashflow.periodWeekly">Semanal</option>
+            <option value="biweekly" data-i18n="personalBudget.cashflow.periodBiweekly">Quincenal (2 sem.)</option>
+          </select>
         </div>
         <div class="pb-cashflow-weekly">
           <span class="pb-cashflow-amount pb-cashflow-amount--empty" id="pb-weekly-amount">—</span>
-          <span class="pb-cashflow-subtitle" data-i18n="personalBudget.cashflow.subtitle">debes retener cada semana para cubrir todos tus gastos fijos</span>
+          <span class="pb-cashflow-subtitle" id="pb-cashflow-subtitle" data-i18n="personalBudget.cashflow.subtitle">debes retener cada semana para cubrir todos tus gastos fijos</span>
         </div>
         <p class="pb-cashflow-alerts-title" data-i18n="personalBudget.cashflow.alertsTitle">Próximos vencimientos (30 días)</p>
         <div id="pb-cashflow-alerts"><!-- rendered by JS --></div>
@@ -212,31 +215,43 @@
         </form>
       </div>
 
-      <!-- Fixed costs list -->
-      <div class="dash-card" id="pb-fixed-costs-card" hidden>
-        <h2 class="dash-card-title" data-i18n="personalBudget.fixedList.title">Gastos Fijos Programados</h2>
-        <div class="pb-table-scroll">
-          <table class="pb-tx-table pb-fc-table">
-            <thead>
-              <tr>
-                <th data-i18n="personalBudget.fixedList.colCategory">Categoría</th>
-                <th data-i18n="personalBudget.fixedList.colAmount">Monto</th>
-                <th data-i18n="personalBudget.fixedList.colFrequency">Frecuencia</th>
-                <th data-i18n="personalBudget.fixedList.colDue">Vence</th>
-                <th data-i18n="personalBudget.fixedList.colWeekly">Semanal</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="pb-fixed-costs-list"><!-- rendered by JS --></tbody>
-          </table>
+      <!-- Historial y Planificación (tabbed) -->
+      <div class="dash-card" id="pb-history-card">
+        <div class="pb-tabs-header">
+          <h2 class="dash-card-title" data-i18n="personalBudget.tabs.title">Historial y Planificación</h2>
+          <div class="pb-tabs" role="tablist">
+            <button class="pb-tab pb-tab--active" data-tab="transactions" role="tab" aria-selected="true">
+              <span data-i18n="personalBudget.tabs.transactions">Transacciones del Mes</span>
+            </button>
+            <button class="pb-tab" data-tab="fixed" role="tab" aria-selected="false">
+              <span data-i18n="personalBudget.tabs.fixed">Gastos Fijos</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <!-- Transactions table -->
-      <div class="dash-card">
-        <h2 class="dash-card-title" data-i18n="personalBudget.table.title">Transacciones</h2>
-        <div id="pb-table-wrap">
-          <!-- rendered by JS -->
+        <!-- Panel: Transacciones -->
+        <div class="pb-tab-panel" id="pb-panel-transactions">
+          <div id="pb-table-wrap"><!-- rendered by JS --></div>
+        </div>
+
+        <!-- Panel: Gastos Fijos -->
+        <div class="pb-tab-panel pb-tab-panel--hidden" id="pb-panel-fixed">
+          <div class="pb-table-scroll">
+            <table class="pb-tx-table pb-fc-table">
+              <thead>
+                <tr>
+                  <th data-i18n="personalBudget.fixedList.colCategory">Categoría</th>
+                  <th data-i18n="personalBudget.fixedList.colAmount">Monto</th>
+                  <th data-i18n="personalBudget.fixedList.colFrequency">Frecuencia</th>
+                  <th data-i18n="personalBudget.fixedList.colDue">Vence</th>
+                  <th id="pb-col-weekly" data-i18n="personalBudget.fixedList.colWeekly">Semanal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="pb-fixed-costs-list"><!-- rendered by JS --></tbody>
+              <tfoot id="pb-fixed-costs-foot" hidden></tfoot>
+            </table>
+          </div>
         </div>
       </div>
 

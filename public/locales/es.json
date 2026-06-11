@@ -856,6 +856,12 @@
     "title": "Presupuesto Personal",
     "back": "Inventarios",
     "monthLabel": "Mes",
+    "tabs": {
+      "title": "Historial y Planificación",
+      "transactions": "Transacciones del Mes",
+      "fixed": "Gastos Fijos",
+      "subtotal": "Subtotal"
+    },
     "summary": {
       "income": "Ingresos",
       "expense": "Gastos",
@@ -907,17 +913,28 @@
       "colFrequency": "Frecuencia",
       "colDue": "Vence",
       "colWeekly": "Equiv. semanal",
+      "colBiweekly": "Equiv. quincenal",
       "deleteConfirm": "¿Eliminar este gasto fijo?",
-      "deleted": "Gasto fijo eliminado"
+      "deleted": "Gasto fijo eliminado",
+      "pay": "Registrar pago",
+      "edit": "Editar gasto fijo",
+      "saveEdit": "Actualizar gasto",
+      "updated": "Gasto fijo actualizado",
+      "empty": "Sin gastos fijos configurados"
     },
     "cashflow": {
       "title": "Retención Semanal Obligatoria",
+      "titleBiweekly": "Retención Quincenal Obligatoria",
       "badge": "por semana",
+      "periodWeekly": "Semanal",
+      "periodBiweekly": "Quincenal (2 sem.)",
       "subtitle": "debes retener cada semana para cubrir todos tus gastos fijos",
+      "subtitleBiweekly": "debes retener cada 2 semanas para cubrir todos tus gastos fijos",
       "alertsTitle": "Próximos vencimientos (30 días)",
       "noAlerts": "Sin vencimientos en los próximos 30 días.",
       "days": "días",
-      "weekSuffix": "sem"
+      "weekSuffix": "sem",
+      "biweekSuffix": "quin"
     },
     "fixed": {
       "title": "Registrar Gasto Fijo",

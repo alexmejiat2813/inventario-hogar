@@ -856,6 +856,12 @@
     "title": "Personal Budget",
     "back": "Inventories",
     "monthLabel": "Month",
+    "tabs": {
+      "title": "History & Planning",
+      "transactions": "Month Transactions",
+      "fixed": "Fixed Expenses",
+      "subtotal": "Subtotal"
+    },
     "summary": {
       "income": "Income",
       "expense": "Expenses",
@@ -907,17 +913,28 @@
       "colFrequency": "Frequency",
       "colDue": "Due",
       "colWeekly": "Weekly equiv.",
+      "colBiweekly": "Biweekly equiv.",
       "deleteConfirm": "Delete this fixed expense?",
-      "deleted": "Fixed expense deleted"
+      "deleted": "Fixed expense deleted",
+      "pay": "Record payment",
+      "edit": "Edit fixed expense",
+      "saveEdit": "Update expense",
+      "updated": "Fixed expense updated",
+      "empty": "No fixed expenses configured"
     },
     "cashflow": {
       "title": "Mandatory Weekly Retention",
+      "titleBiweekly": "Mandatory Biweekly Retention",
       "badge": "per week",
+      "periodWeekly": "Weekly",
+      "periodBiweekly": "Biweekly (2 wks)",
       "subtitle": "you must retain each week to cover all fixed costs on time",
+      "subtitleBiweekly": "you must retain every 2 weeks to cover all fixed costs on time",
       "alertsTitle": "Upcoming due dates (30 days)",
       "noAlerts": "No due dates in the next 30 days.",
       "days": "days",
-      "weekSuffix": "wk"
+      "weekSuffix": "wk",
+      "biweekSuffix": "biwk"
     },
     "fixed": {
       "title": "Register Fixed Expense",
