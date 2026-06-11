@@ -381,6 +381,7 @@ function initEvents() {
 async function init() {
   await I18N.init();
   initEvents();
+  if (typeof initProfileMenu === 'function') initProfileMenu();
   try {
     await Promise.all([loadUser(), loadInventories()]);
   } catch (err) {
