@@ -237,6 +237,16 @@
   }
 
   // ── Render fixed costs (3 columns: biweekly / monthly / annual) ───────────
+  // Converts each item's amount directly to monthly equivalent (no weekly intermediary)
+  // to avoid floating-point drift from (amount × 12/52 × 52/12 ≠ amount).
+  const MONTHLY_FACTOR = { Mensual: 1, Quincenal: 2, Semestral: 1 / 6, Anual: 1 / 12, Bianual: 1 / 24 };
+
+  function itemPeriodValues(fc) {
+    const mf      = MONTHLY_FACTOR[fc.frequency] ?? 1;
+    const monthly = fc.amount * mf;
+    return { valQ: monthly / 2, valM: monthly, valA: monthly * 12 };
+  }
+
   function renderFixedCosts(items) {
     if (items) _lastFixedCosts = items;
     const list = _lastFixedCosts || [];
@@ -251,15 +261,20 @@
       return;
     }
 
+    let netQuincena = 0;
+    let netMensual  = 0;
+    let netAnual    = 0;
+
     elFixedCostsList.innerHTML = items.map(fc => {
       const ft      = fc.flow_type || 'expense';
       const ftLabel = t(ft === 'income' ? 'personalBudget.form.typeIncome' : 'personalBudget.form.typeExpense');
       const ftClass = ft === 'income' ? 'pb-type-badge--income' : 'pb-type-badge--expense';
-      const wkly    = fc.weekly_equivalent;
-      const biwkly  = wkly * 2;
-      const monthly = wkly * (52 / 12);
-      const annual  = wkly * 52;
-      const color   = ft === 'income' ? 'var(--success)' : 'var(--accent)';
+      const { valQ, valM, valA } = itemPeriodValues(fc);
+      const sign  = ft === 'income' ? 1 : -1;
+      netQuincena += sign * valQ;
+      netMensual  += sign * valM;
+      netAnual    += sign * valA;
+      const color = ft === 'income' ? 'var(--success)' : 'var(--accent)';
       return `
       <tr>
         <td>
@@ -268,9 +283,9 @@
         </td>
         <td>${escHtml(fc.frequency)}</td>
         <td class="pb-tx-date">${fc.due_date || '—'}</td>
-        <td class="pb-tx-amount" style="color:${color}">${fmt(biwkly)}</td>
-        <td class="pb-tx-amount" style="color:${color}">${fmt(monthly)}</td>
-        <td class="pb-tx-amount" style="color:${color}">${fmt(annual)}</td>
+        <td class="pb-tx-amount" style="color:${color}">${fmt(valQ)}</td>
+        <td class="pb-tx-amount" style="color:${color}">${fmt(valM)}</td>
+        <td class="pb-tx-amount" style="color:${color}">${fmt(valA)}</td>
         <td style="display:flex;gap:.35rem;justify-content:flex-end">
           <button class="pb-btn-edit pb-fc-edit"
             data-id="${fc.id}" data-category="${escHtml(fc.category)}"
@@ -301,26 +316,16 @@
       </tr>`;
     }).join('');
 
-    // tfoot: net subtotals for each column
-    const expItems = items.filter(fc => (fc.flow_type || 'expense') === 'expense');
-    const incItems = items.filter(fc => (fc.flow_type || 'expense') === 'income');
-    const netBiwkly  = expItems.reduce((s, fc) => s + fc.weekly_equivalent * 2, 0)
-                     - incItems.reduce((s, fc) => s + fc.weekly_equivalent * 2, 0);
-    const netMonthly = expItems.reduce((s, fc) => s + fc.weekly_equivalent * (52 / 12), 0)
-                     - incItems.reduce((s, fc) => s + fc.weekly_equivalent * (52 / 12), 0);
-    const netAnnual  = expItems.reduce((s, fc) => s + fc.weekly_equivalent * 52, 0)
-                     - incItems.reduce((s, fc) => s + fc.weekly_equivalent * 52, 0);
-
-    function netColor(v) { return v > 0 ? 'var(--danger)' : 'var(--success)'; }
+    function netColor(v) { return v >= 0 ? 'var(--success)' : 'var(--danger)'; }
 
     elFixedCostsFoot.hidden = false;
     elFixedCostsFoot.innerHTML = `
       <tr class="pb-tfoot">
         <td class="pb-tfoot-label">${t('personalBudget.tabs.subtotal')}</td>
         <td colspan="2"></td>
-        <td class="pb-tfoot-balance" style="color:${netColor(netBiwkly)}">${fmt(netBiwkly)}</td>
-        <td class="pb-tfoot-balance" style="color:${netColor(netMonthly)}">${fmt(netMonthly)}</td>
-        <td class="pb-tfoot-balance" style="color:${netColor(netAnnual)}">${fmt(netAnnual)}</td>
+        <td class="pb-tfoot-balance" style="color:${netColor(netQuincena)}">${fmt(netQuincena)}</td>
+        <td class="pb-tfoot-balance" style="color:${netColor(netMensual)}">${fmt(netMensual)}</td>
+        <td class="pb-tfoot-balance" style="color:${netColor(netAnual)}">${fmt(netAnual)}</td>
         <td></td>
       </tr>`;
   }
