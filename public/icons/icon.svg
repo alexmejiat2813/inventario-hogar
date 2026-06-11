@@ -1,18 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="108" fill="#082F49"/>
-
-  <!-- Box top face (sky blue) -->
+  <!-- top face -->
   <polygon points="256,108 400,191 256,274 112,191" fill="#38BDF8"/>
-
-  <!-- Box left face -->
-  <polygon points="112,191 256,274 256,444 112,361" fill="rgba(255,255,255,0.22)"/>
-
-  <!-- Box right face -->
-  <polygon points="400,191 400,361 256,444 256,274" fill="rgba(255,255,255,0.46)"/>
-
-  <!-- Outer hex + internal edges -->
-  <polyline points="256,108 400,191 400,361 256,444 112,361 112,191 256,108"
-    fill="none" stroke="white" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- left face -->
+  <polygon points="112,191 256,274 256,444 112,361" fill="#0c4a6e"/>
+  <!-- right face -->
+  <polygon points="400,191 400,361 256,444 256,274" fill="#155e75"/>
+  <!-- edges -->
+  <polyline points="256,108 400,191 400,361 256,444 112,361 112,191 256,108" fill="none" stroke="white" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
   <line x1="112" y1="191" x2="256" y2="274" stroke="white" stroke-width="14" stroke-linecap="round"/>
   <line x1="400" y1="191" x2="256" y2="274" stroke="white" stroke-width="14" stroke-linecap="round"/>
   <line x1="256" y1="274" x2="256" y2="444" stroke="white" stroke-width="14" stroke-linecap="round"/>

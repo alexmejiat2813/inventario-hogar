@@ -101,6 +101,7 @@ app.use('/uploads', requireAuthApi, (req, res) => {
   });
 });
 app.use('/icons',   express.static(path.join(__dirname, 'public/icons')));
+app.get('/favicon.svg', (req, res) => res.sendFile(path.join(__dirname, 'public/favicon.svg')));
 app.get('/manifest.json', (req, res) => res.sendFile(path.join(__dirname, 'public/manifest.json')));
 // sw.js siempre revalidado: el browser debe ver al instante un SW nuevo tras deploy
 app.get('/sw.js', (req, res) => {
