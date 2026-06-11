@@ -817,6 +817,11 @@
     "byStoreTitle": "By store",
     "topTitle": "Top 5 most purchased",
     "noData": "No data for this period",
+    "empty": {
+      "title": "This inventory is empty",
+      "sub": "Add your first product from the Stock tab.",
+      "action": "Go to Stock"
+    },
     "thisMonthSpend": "Spent this month",
     "vsLastMonth": "vs last month",
     "expiry": {

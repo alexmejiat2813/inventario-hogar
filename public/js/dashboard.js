@@ -44,7 +44,12 @@ async function loadDashboard() {
     } catch { dashState.expiringData = []; }
     renderDashboard(dashState.data);
   } catch {
-    /* fail silently — skeletons will just stay hidden */
+    const chartsArea = document.getElementById('dash-charts-area');
+    if (chartsArea) chartsArea.hidden = true;
+    document.getElementById('dash-summary').innerHTML =
+      `<div class="dash-empty-state"><p class="dash-empty-title">${typeof t === 'function' ? t('dashboard.noData') : '—'}</p></div>`;
+    document.getElementById('dash-expiry-wrap').innerHTML = '';
+    document.getElementById('dash-budget-wrap').innerHTML = '';
   } finally {
     dashState.loading = false;
     showDashSkeletons(false);
@@ -52,13 +57,20 @@ async function loadDashboard() {
 }
 
 function showDashSkeletons(show) {
-  document.querySelectorAll('.dash-stat-card.skeleton').forEach(el => {
+  document.querySelectorAll('.dash-stat-card.skeleton, .dash-chart-skeleton.skeleton, .dash-row-skeleton.skeleton').forEach(el => {
     if (!show) el.classList.remove('skeleton');
   });
 }
 
 // ── Render ─────────────────────────────────────────────────────
 function renderDashboard(data) {
+  const chartsArea = document.getElementById('dash-charts-area');
+  if (data.summary.total === 0) {
+    renderDashEmpty();
+    if (chartsArea) chartsArea.hidden = true;
+    return;
+  }
+  if (chartsArea) chartsArea.hidden = false;
   renderDashSummary(data.summary);
   renderExpiryCard(dashState.expiringData || []);
   renderBudgetCard(dashState.budgetData);
@@ -66,6 +78,24 @@ function renderDashboard(data) {
   renderCategoryChart(data.byCategory);
   renderStoreChart(data.byStore);
   renderTopProducts(data.topProducts);
+}
+
+function renderDashEmpty() {
+  document.getElementById('dash-summary').innerHTML = `
+    <div class="dash-empty-state">
+      <div class="dash-empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <p class="dash-empty-title">${t('dashboard.empty.title')}</p>
+      <p class="dash-empty-sub">${t('dashboard.empty.sub')}</p>
+      <button class="dash-empty-btn" onclick="switchTab('stock')">${t('dashboard.empty.action')}</button>
+    </div>`;
+  document.getElementById('dash-expiry-wrap').innerHTML = '';
+  document.getElementById('dash-budget-wrap').innerHTML = '';
 }
 
 function renderExpiryCard(products) {

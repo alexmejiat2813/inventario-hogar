@@ -817,6 +817,11 @@
     "byStoreTitle": "Par établissement",
     "topTitle": "Top 5 plus achetés",
     "noData": "Aucune donnée pour cette période",
+    "empty": {
+      "title": "Cet inventaire est vide",
+      "sub": "Ajoutez votre premier produit depuis l'onglet Stock.",
+      "action": "Aller au Stock"
+    },
     "thisMonthSpend": "Dépenses ce mois",
     "vsLastMonth": "vs mois précédent",
     "expiry": {
