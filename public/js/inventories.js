@@ -372,6 +372,22 @@ function initEvents() {
     window.location.href = '/login';
   });
 
+  const shareBtn = document.getElementById('btn-share');
+  if (shareBtn) shareBtn.addEventListener('click', async () => {
+    closeProfileDropdown();
+    const url = window.location.origin;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Inventario Hogar', url }); } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast(t('profile.shareCopied'), 'success');
+      } catch {
+        showToast(t('profile.shareError'), 'error');
+      }
+    }
+  });
+
   // Language changes: re-render dynamic content
   document.addEventListener('langchange', () => renderInventories(_lastList));
 }
@@ -381,7 +397,6 @@ function initEvents() {
 async function init() {
   await I18N.init();
   initEvents();
-  if (typeof initProfileMenu === 'function') initProfileMenu();
   try {
     await Promise.all([loadUser(), loadInventories()]);
   } catch (err) {

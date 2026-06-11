@@ -1433,6 +1433,21 @@ function initEvents() {
   document.querySelectorAll('.dropdown-item[href="/settings"]').forEach(link => {
     link.addEventListener('click', () => sessionStorage.setItem('settings_referrer', window.location.href));
   });
+  const shareBtn = document.getElementById('btn-share');
+  if (shareBtn) shareBtn.addEventListener('click', async () => {
+    closeProfileDropdown();
+    const url = window.location.origin;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Inventario Hogar', url }); } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast(t('profile.shareCopied'), 'success');
+      } catch {
+        showToast(t('profile.shareError'), 'error');
+      }
+    }
+  });
 
   // Catalog select change — switch between catalog/custom mode
   document.getElementById('f-catalog-product').addEventListener('change', e => {
@@ -1688,7 +1703,6 @@ async function init() {
   await I18N.init();
   initEvents();
   try {
-    if (typeof initProfileMenu === 'function') initProfileMenu();
     await loadUser();
     const ok = await loadActiveInventory();
     if (!ok) return;
