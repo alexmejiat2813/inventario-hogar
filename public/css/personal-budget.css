@@ -513,15 +513,40 @@
 }
 .pb-fixed-freq-select:focus { outline: none; border-color: var(--text); }
 
-/* ── Fixed costs table — 7 cols: radio / cat / freq / due / biwkly / monthly / annual ── */
+/* ── Fixed costs table — 8 cols: radio / tipo / cat / freq / due / biwkly / monthly / annual ── */
 .pb-fc-table th,
 .pb-fc-table td { padding: .45rem .65rem; }
-.pb-fc-table th:nth-child(5),
 .pb-fc-table th:nth-child(6),
 .pb-fc-table th:nth-child(7),
-.pb-fc-table td:nth-child(5),
+.pb-fc-table th:nth-child(8),
 .pb-fc-table td:nth-child(6),
-.pb-fc-table td:nth-child(7) { text-align: right; }
+.pb-fc-table td:nth-child(7),
+.pb-fc-table td:nth-child(8) { text-align: right; }
+
+/* ── Type filter column header ── */
+.pb-col-type-filter { white-space: nowrap; }
+
+.pb-fc-filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  min-width: 72px;
+}
+.pb-fc-filter-select:hover { color: var(--text); }
+.pb-fc-filter-select option { text-transform: none; font-size: .85rem; }
+
+/* ── Hidden rows (filter) ── */
+.pb-row-hidden { display: none; }
 
 /* ── Radio select column ── */
 .pb-col-radio {

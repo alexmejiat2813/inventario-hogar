@@ -52,8 +52,9 @@
   const elPeriodSelector  = document.getElementById('pb-period-selector');
 
   // fixed costs list
-  const elFixedCostsList = document.getElementById('pb-fixed-costs-list');
-  const elFixedCostsFoot = document.getElementById('pb-fixed-costs-foot');
+  const elFixedCostsList  = document.getElementById('pb-fixed-costs-list');
+  const elFixedCostsFoot  = document.getElementById('pb-fixed-costs-foot');
+  const elFcFilterType    = document.getElementById('pb-fc-filter-type');
 
   // fixed-cost inline fields
   const elInventoryGroup = document.getElementById('pb-inventory-group');
@@ -393,39 +394,29 @@
 
     if (!items.length) {
       elFixedCostsList.innerHTML = `
-        <tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.84rem">
+        <tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.84rem">
           ${t('personalBudget.fixedList.empty')}
         </td></tr>`;
       elFixedCostsFoot.hidden = true;
       return;
     }
 
-    let netQuincena = 0;
-    let netMensual  = 0;
-    let netAnual    = 0;
-
     elFixedCostsList.innerHTML = items.map(fc => {
       const ft      = fc.flow_type || 'expense';
       const ftLabel = t(ft === 'income' ? 'personalBudget.form.typeIncome' : 'personalBudget.form.typeExpense');
       const ftClass = ft === 'income' ? 'pb-type-badge--income' : 'pb-type-badge--expense';
       const { valQ, valM, valA } = itemPeriodValues(fc);
-      const sign  = ft === 'income' ? 1 : -1;
-      netQuincena += sign * valQ;
-      netMensual  += sign * valM;
-      netAnual    += sign * valA;
       const color = ft === 'income' ? 'var(--success)' : 'var(--accent)';
       return `
-      <tr>
+      <tr data-flow="${ft}">
         <td class="pb-col-radio">
           <input type="radio" name="pb-row-select" class="pb-row-radio"
             data-id="${fc.id}" data-tab="fixed" data-flow="${ft}"
             data-category="${escHtml(fc.category)}" data-amount="${fc.amount}"
             data-frequency="${escHtml(fc.frequency)}" data-due="${escHtml(fc.due_date || '')}">
         </td>
-        <td>
-          ${escHtml(fc.category)}
-          <span class="pb-type-badge ${ftClass}" style="margin-left:.35rem;vertical-align:middle">${ftLabel}</span>
-        </td>
+        <td><span class="pb-type-badge ${ftClass}">${ftLabel}</span></td>
+        <td>${escHtml(fc.category)}</td>
         <td>${escHtml(fc.frequency)}</td>
         <td class="pb-tx-date">${fc.due_date || '—'}</td>
         <td class="pb-tx-amount" style="color:${color}">${fmt(valQ)}</td>
@@ -434,13 +425,46 @@
       </tr>`;
     }).join('');
 
+    applyFcFilter();
+  }
+
+  function applyFcFilter() {
+    const filterVal = elFcFilterType ? elFcFilterType.value : 'all';
+    const rows      = elFixedCostsList.querySelectorAll('tr[data-flow]');
+    rows.forEach(row => {
+      const match = filterVal === 'all' || row.dataset.flow === filterVal;
+      row.classList.toggle('pb-row-hidden', !match);
+    });
+
+    // Recalculate tfoot only on visible (matching) items
+    const visibleItems = (_lastFixedCosts || []).filter(fc =>
+      filterVal === 'all' || (fc.flow_type || 'expense') === filterVal
+    );
+
+    if (!visibleItems.length) {
+      elFixedCostsFoot.hidden = true;
+      return;
+    }
+
+    let netQuincena = 0;
+    let netMensual  = 0;
+    let netAnual    = 0;
+    visibleItems.forEach(fc => {
+      const ft   = fc.flow_type || 'expense';
+      const sign = ft === 'income' ? 1 : -1;
+      const { valQ, valM, valA } = itemPeriodValues(fc);
+      netQuincena += sign * valQ;
+      netMensual  += sign * valM;
+      netAnual    += sign * valA;
+    });
+
     function netColor(v) { return v >= 0 ? 'var(--success)' : 'var(--danger)'; }
 
     elFixedCostsFoot.hidden = false;
     elFixedCostsFoot.innerHTML = `
       <tr class="pb-tfoot">
         <td></td>
-        <td class="pb-tfoot-label">${t('personalBudget.tabs.subtotal')}</td>
+        <td class="pb-tfoot-label" colspan="2">${t('personalBudget.tabs.subtotal')}</td>
         <td colspan="2"></td>
         <td class="pb-tfoot-balance" style="color:${netColor(netQuincena)}">${fmt(netQuincena)}</td>
         <td class="pb-tfoot-balance" style="color:${netColor(netMensual)}">${fmt(netMensual)}</td>
@@ -506,6 +530,9 @@
     renderCashflow(null);
     renderFixedCosts(null);
   });
+
+  // ── Projected flows type filter ───────────────────────────────────────────
+  elFcFilterType.addEventListener('change', applyFcFilter);
 
   // ── Tab switching ─────────────────────────────────────────────────────────
   document.querySelectorAll('.pb-tab').forEach(tab => {
