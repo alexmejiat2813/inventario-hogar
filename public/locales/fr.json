@@ -876,6 +876,13 @@
       "title": "Enregistrer une transaction",
       "type": "Type",
       "recordType": "Type d'enregistrement",
+      "toolbar": {
+        "newRecord": "Nouvel enregistrement",
+        "edit": "Modifier",
+        "pay": "Payer",
+        "delete": "Supprimer",
+        "cancel": "Annuler"
+      },
       "rt": {
         "incomeReal": "Revenu Réel",
         "expenseReal": "Dépense Réelle",

@@ -876,6 +876,13 @@
       "title": "Registrar transacción",
       "type": "Tipo",
       "recordType": "Tipo de registro",
+      "toolbar": {
+        "newRecord": "Nuevo Registro",
+        "edit": "Editar",
+        "pay": "Pagar",
+        "delete": "Eliminar",
+        "cancel": "Cancelar"
+      },
       "rt": {
         "incomeReal": "Ingreso Real",
         "expenseReal": "Gasto Real",

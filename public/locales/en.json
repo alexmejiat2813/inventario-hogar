@@ -876,6 +876,13 @@
       "title": "Record transaction",
       "type": "Type",
       "recordType": "Record type",
+      "toolbar": {
+        "newRecord": "New Record",
+        "edit": "Edit",
+        "pay": "Pay",
+        "delete": "Delete",
+        "cancel": "Cancel"
+      },
       "rt": {
         "incomeReal": "Actual Income",
         "expenseReal": "Actual Expense",

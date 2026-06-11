@@ -69,7 +69,13 @@
       <!-- Month selector -->
       <div class="pb-month-bar">
         <span class="pb-month-title" data-i18n="personalBudget.title">Presupuesto Personal</span>
-        <input type="month" id="pb-month" class="pb-month-input" aria-label="Mes">
+        <div class="pb-month-bar-right">
+          <input type="month" id="pb-month" class="pb-month-input" aria-label="Mes">
+          <button type="button" class="btn btn-primary pb-btn-new-record" id="pb-btn-new-record">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i18n="personalBudget.form.toolbar.newRecord">Nuevo Registro</span>
+          </button>
+        </div>
       </div>
 
       <!-- Summary: 6 KPIs (Real vs Proyectado) -->
@@ -148,111 +154,21 @@
         <div id="pb-cashflow-alerts"><!-- rendered by JS --></div>
       </div>
 
-      <!-- Form -->
-      <div class="dash-card">
-        <h2 class="dash-card-title" data-i18n="personalBudget.form.title">Registrar transacción</h2>
-        <form id="pb-form" novalidate>
-          <div class="pb-form-grid">
-
-            <!-- Record type select -->
-            <div class="form-group pb-form-full">
-              <label class="form-label" for="pb-record-type" data-i18n="personalBudget.form.recordType">Tipo de registro</label>
-              <select class="form-select" id="pb-record-type">
-                <option value="income_real"       data-i18n="personalBudget.form.rt.incomeReal">Ingreso Real</option>
-                <option value="expense_real"      data-i18n="personalBudget.form.rt.expenseReal">Gasto Real</option>
-                <option value="income_projected"  data-i18n="personalBudget.form.rt.incomeProjected">Ingreso Proyectado</option>
-                <option value="expense_projected" data-i18n="personalBudget.form.rt.expenseProjected">Gasto Proyectado</option>
-              </select>
-            </div>
-
-            <!-- Category -->
-            <div class="form-group">
-              <label class="form-label" for="pb-category">
-                <span data-i18n="personalBudget.form.category">Categoría</span>
-                <span class="req">*</span>
-              </label>
-              <input class="form-input" type="text" id="pb-category" maxlength="80"
-                     data-i18n-ph="personalBudget.form.categoryPlaceholder"
-                     placeholder="Ej: Salario, Alquiler..." autocomplete="off" required>
-            </div>
-
-            <!-- Amount -->
-            <div class="form-group">
-              <label class="form-label" for="pb-amount">
-                <span data-i18n="personalBudget.form.amount">Monto</span>
-                <span class="req">*</span>
-              </label>
-              <input class="form-input" type="number" id="pb-amount" min="0.01" step="0.01"
-                     data-i18n-ph="personalBudget.form.amountPlaceholder"
-                     placeholder="0.00" required>
-            </div>
-
-            <!-- Date -->
-            <div class="form-group">
-              <label class="form-label" for="pb-date">
-                <span data-i18n="personalBudget.form.date">Fecha</span>
-                <span class="req">*</span>
-              </label>
-              <input class="form-input" type="date" id="pb-date" required>
-            </div>
-
-            <!-- Inventory (optional) -->
-            <div class="form-group" id="pb-inventory-group">
-              <label class="form-label" for="pb-inventory" data-i18n="personalBudget.form.inventory">Inventario (opcional)</label>
-              <select class="form-select" id="pb-inventory">
-                <option value="" data-i18n="personalBudget.form.inventoryNone">Ninguno</option>
-              </select>
-            </div>
-
-            <!-- Fixed-cost fields (shown only when type=fixed) -->
-            <div class="form-group" id="pb-freq-group" hidden>
-              <label class="form-label" for="pb-freq" data-i18n="personalBudget.fixed.frequency">Frecuencia</label>
-              <select class="pb-fixed-freq-select" id="pb-freq">
-                <option value="Mensual"   data-i18n="personalBudget.fixed.freqMonthly">Mensual</option>
-                <option value="Quincenal" data-i18n="personalBudget.fixed.freqBiweekly">Quincenal</option>
-                <option value="Semestral" data-i18n="personalBudget.fixed.freqSemestral">Semestral</option>
-                <option value="Anual"     data-i18n="personalBudget.fixed.freqAnnual">Anual</option>
-                <option value="Bianual"   data-i18n="personalBudget.fixed.freqBiannual">Bianual</option>
-              </select>
-            </div>
-            <div class="form-group" id="pb-due-group" hidden>
-              <label class="form-label" for="pb-due-date">
-                <span data-i18n="personalBudget.fixed.dueDate">Día / Fecha de vencimiento</span>
-              </label>
-              <input class="form-input" type="text" id="pb-due-date"
-                     data-i18n-ph="personalBudget.fixed.dueDatePh"
-                     placeholder="05 o 2026-11-15" maxlength="10" autocomplete="off">
-              <small class="field-hint" data-i18n="personalBudget.fixed.dueDateHint">Día del mes "05" o fecha exacta YYYY-MM-DD</small>
-            </div>
-
-            <!-- Description -->
-            <div class="form-group pb-form-full">
-              <label class="form-label" for="pb-description" data-i18n="personalBudget.form.description">Descripción</label>
-              <input class="form-input" type="text" id="pb-description" maxlength="200"
-                     data-i18n-ph="personalBudget.form.descriptionPlaceholder"
-                     placeholder="Opcional" autocomplete="off">
-            </div>
-
-            <!-- Submit -->
-            <div class="modal-footer pb-form-full" style="padding-top:.25rem">
-              <button type="submit" class="btn btn-primary" id="pb-submit" data-i18n="personalBudget.form.submit">Guardar</button>
-            </div>
-
-          </div>
-        </form>
-      </div>
-
       <!-- Historial y Planificación (tabbed) -->
       <div class="dash-card" id="pb-history-card">
         <div class="pb-tabs-header">
-          <h2 class="dash-card-title" data-i18n="personalBudget.tabs.title">Historial y Planificación</h2>
           <div class="pb-tabs" role="tablist">
             <button class="pb-tab pb-tab--active" data-tab="transactions" role="tab" aria-selected="true">
               <span data-i18n="personalBudget.tabs.transactions">Transacciones del Mes</span>
             </button>
             <button class="pb-tab" data-tab="fixed" role="tab" aria-selected="false">
-              <span data-i18n="personalBudget.tabs.fixed">Gastos Fijos</span>
+              <span data-i18n="personalBudget.tabs.fixed">Flujos Proyectados</span>
             </button>
+          </div>
+          <div class="pb-toolbar" id="pb-toolbar">
+            <button class="pb-toolbar-btn" id="pb-btn-edit" disabled data-i18n="personalBudget.form.toolbar.edit">Editar</button>
+            <button class="pb-toolbar-btn pb-toolbar-btn--pay" id="pb-btn-pay" disabled hidden data-i18n="personalBudget.form.toolbar.pay">Pagar</button>
+            <button class="pb-toolbar-btn pb-toolbar-btn--danger" id="pb-btn-delete" disabled data-i18n="personalBudget.form.toolbar.delete">Eliminar</button>
           </div>
         </div>
 
@@ -267,13 +183,13 @@
             <table class="pb-tx-table pb-fc-table">
               <thead>
                 <tr>
+                  <th class="pb-col-radio"></th>
                   <th data-i18n="personalBudget.fixedList.colCategory">Categoría</th>
                   <th data-i18n="personalBudget.fixedList.colFrequency">Frecuencia</th>
                   <th data-i18n="personalBudget.fixedList.colDue">Vence</th>
                   <th data-i18n="personalBudget.fixedList.colBiweekly">Quincena</th>
                   <th data-i18n="personalBudget.fixedList.colMonthly">Mensual</th>
                   <th data-i18n="personalBudget.fixedList.colAnnual">Anual</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody id="pb-fixed-costs-list"><!-- rendered by JS --></tbody>
@@ -285,6 +201,103 @@
 
     </div>
   </main>
+
+  <!-- ===== FORM MODAL ===== -->
+  <div id="pb-form-modal" class="pb-modal-overlay" hidden aria-modal="true" role="dialog">
+    <div class="pb-modal">
+      <div class="pb-modal-header">
+        <h2 class="pb-modal-title" id="pb-modal-title" data-i18n="personalBudget.form.title">Registrar transacción</h2>
+        <button class="pb-modal-close" id="pb-modal-close" aria-label="Cerrar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pb-modal-body">
+        <form id="pb-form" novalidate>
+          <div class="pb-form-grid">
+
+            <div class="form-group pb-form-full">
+              <label class="form-label" for="pb-record-type" data-i18n="personalBudget.form.recordType">Tipo de registro</label>
+              <select class="form-select" id="pb-record-type">
+                <option value="income_real"       data-i18n="personalBudget.form.rt.incomeReal">Ingreso Real</option>
+                <option value="expense_real"      data-i18n="personalBudget.form.rt.expenseReal">Gasto Real</option>
+                <option value="income_projected"  data-i18n="personalBudget.form.rt.incomeProjected">Ingreso Proyectado</option>
+                <option value="expense_projected" data-i18n="personalBudget.form.rt.expenseProjected">Gasto Proyectado</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="pb-category">
+                <span data-i18n="personalBudget.form.category">Categoría</span>
+                <span class="req">*</span>
+              </label>
+              <input class="form-input" type="text" id="pb-category" maxlength="80"
+                     data-i18n-ph="personalBudget.form.categoryPlaceholder"
+                     placeholder="Ej: Salario, Alquiler..." autocomplete="off" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="pb-amount">
+                <span data-i18n="personalBudget.form.amount">Monto</span>
+                <span class="req">*</span>
+              </label>
+              <input class="form-input" type="number" id="pb-amount" min="0.01" step="0.01"
+                     data-i18n-ph="personalBudget.form.amountPlaceholder"
+                     placeholder="0.00" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="pb-date">
+                <span data-i18n="personalBudget.form.date">Fecha</span>
+                <span class="req">*</span>
+              </label>
+              <input class="form-input" type="date" id="pb-date" required>
+            </div>
+
+            <div class="form-group" id="pb-inventory-group">
+              <label class="form-label" for="pb-inventory" data-i18n="personalBudget.form.inventory">Inventario (opcional)</label>
+              <select class="form-select" id="pb-inventory">
+                <option value="" data-i18n="personalBudget.form.inventoryNone">Ninguno</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="pb-freq-group" hidden>
+              <label class="form-label" for="pb-freq" data-i18n="personalBudget.fixed.frequency">Frecuencia</label>
+              <select class="pb-fixed-freq-select" id="pb-freq">
+                <option value="Mensual"   data-i18n="personalBudget.fixed.freqMonthly">Mensual</option>
+                <option value="Quincenal" data-i18n="personalBudget.fixed.freqBiweekly">Quincenal</option>
+                <option value="Semestral" data-i18n="personalBudget.fixed.freqSemestral">Semestral</option>
+                <option value="Anual"     data-i18n="personalBudget.fixed.freqAnnual">Anual</option>
+                <option value="Bianual"   data-i18n="personalBudget.fixed.freqBiannual">Bianual</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="pb-due-group" hidden>
+              <label class="form-label" for="pb-due-date">
+                <span data-i18n="personalBudget.fixed.dueDate">Día / Fecha de vencimiento</span>
+              </label>
+              <input class="form-input" type="text" id="pb-due-date"
+                     data-i18n-ph="personalBudget.fixed.dueDatePh"
+                     placeholder="05 o 2026-11-15" maxlength="10" autocomplete="off">
+              <small class="field-hint" data-i18n="personalBudget.fixed.dueDateHint">Día del mes "05" o fecha exacta YYYY-MM-DD</small>
+            </div>
+
+            <div class="form-group pb-form-full">
+              <label class="form-label" for="pb-description" data-i18n="personalBudget.form.description">Descripción</label>
+              <input class="form-input" type="text" id="pb-description" maxlength="200"
+                     data-i18n-ph="personalBudget.form.descriptionPlaceholder"
+                     placeholder="Opcional" autocomplete="off">
+            </div>
+
+            <div class="pb-form-full pb-modal-footer">
+              <button type="button" class="btn btn-ghost" id="pb-cancel" data-i18n="personalBudget.form.toolbar.cancel">Cancelar</button>
+              <button type="submit" class="btn btn-primary" id="pb-submit" data-i18n="personalBudget.form.submit">Guardar</button>
+            </div>
+
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
