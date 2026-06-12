@@ -30,6 +30,22 @@ router.post('/', requireEditorOrOwner, (req, res) => {
     if (!purchase_date || !/^\d{4}-\d{2}-\d{2}$/.test(purchase_date)) {
       return res.status(400).json({ error: 'purchase_date es requerida (YYYY-MM-DD).' });
     }
+
+    // Sanitize + validate budgetCategory against user's known expense categories.
+    // Protects analytics from broken strings sent directly to the API.
+    let resolvedBudgetCategory = null;
+    if (budget_category && typeof budget_category === 'string') {
+      const sanitized = budget_category.replace(/[\r\n\t]/g, ' ').trim().slice(0, 100);
+      if (sanitized) {
+        const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
+        if (!knownCategories.length || knownCategories.includes(sanitized)) {
+          resolvedBudgetCategory = sanitized;
+        } else {
+          resolvedBudgetCategory = 'Otros';
+        }
+      }
+    }
+
     const session = db.createPurchaseSession({
       inventoryId:    req.inventoryId,
       userId:         req.user.id,
@@ -38,7 +54,7 @@ router.post('/', requireEditorOrOwner, (req, res) => {
       currency:       currency || 'USD',
       purchaseDate:   purchase_date,
       receiptImage:   null,
-      budgetCategory: budget_category || null,
+      budgetCategory: resolvedBudgetCategory,
     });
     db.audit(req.inventoryId, req.user.id, req.user.name, 'purchase.create', 'purchase', session.id,
       { total_amount: session.total_amount, currency: session.currency, item_count: items.length });
