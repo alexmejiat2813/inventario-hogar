@@ -1265,15 +1265,35 @@ module.exports = {
             updated_at  = datetime('now','localtime')
         WHERE id = ? AND inventory_id = ?
       `);
+      const insCatalog = db.prepare(`
+        INSERT OR IGNORE INTO catalog_products (name, category, default_unit, created_by)
+        VALUES (?, 'Otros', 'unidades', ?)
+      `);
+      const insProduct = db.prepare(`
+        INSERT INTO products (name, category, current_qty, min_qty, unit, inventory_id, catalog_product_id)
+        VALUES (?, 'Otros', 0, 0, 'unidades', ?, ?)
+      `);
+      const getCatalog = db.prepare('SELECT id FROM catalog_products WHERE name = ?');
 
       items.forEach(item => {
         const base = (item.quantityBought != null && item.unitPrice != null)
           ? +(item.quantityBought) * +(item.unitPrice) : null;
         const taxAmt = item.taxAmount != null ? +item.taxAmount : null;
         const sub = base != null ? base + (taxAmt || 0) : null;
+
+        let resolvedProductId = item.productId || null;
+
+        if (!resolvedProductId && item.saveToCatalog && item.productName?.trim()) {
+          const name = item.productName.trim();
+          insCatalog.run(name, userId);
+          const cat = getCatalog.get(name);
+          const { lastInsertRowid: prodId } = insProduct.run(name, inventoryId, cat?.id || null);
+          resolvedProductId = prodId;
+        }
+
         insItem.run(
           sessionId,
-          item.productId    || null,
+          resolvedProductId,
           item.productName,
           item.storeId      || null,
           +(item.quantityBought) || 0,
@@ -1284,8 +1304,8 @@ module.exports = {
           item.taxRate      != null ? +item.taxRate    : null,
           taxAmt
         );
-        if (item.productId && +(item.quantityBought) > 0) {
-          updQty.run(+(item.quantityBought), +item.productId, inventoryId);
+        if (resolvedProductId && +(item.quantityBought) > 0) {
+          updQty.run(+(item.quantityBought), resolvedProductId, inventoryId);
         }
       });
 

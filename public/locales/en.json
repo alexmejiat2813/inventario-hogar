@@ -235,6 +235,7 @@
       "receiptGallery": "Gallery",
       "cancel": "Cancel",
       "taxes": "Taxes",
+      "saveToCatalog": "Add to inventory",
       "budgetCategory": "Record in Personal Budget?",
       "budgetCategoryNone": "Do not link",
       "budgetHint": "A Real Expense will be created in your budget for the total purchase amount.",

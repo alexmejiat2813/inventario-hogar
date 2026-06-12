@@ -235,6 +235,7 @@
       "receiptGallery": "Galería",
       "cancel": "Cancelar",
       "taxes": "Impuestos",
+      "saveToCatalog": "Agregar al inventario",
       "budgetCategory": "¿Registrar en Presupuesto Personal?",
       "budgetCategoryNone": "No vincular",
       "budgetHint": "Se creará un Gasto Real en tu presupuesto por el monto total de esta compra.",

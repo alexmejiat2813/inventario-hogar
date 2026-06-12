@@ -642,11 +642,21 @@ function buildConfirmItems(checkedItems, checkedCustom = []) {
         ${g.subtotal > 0 ? `<span class="confirm-store-subtotal">${sym} ${g.subtotal.toFixed(2)}</span>` : ''}
       </div>`;
     g.items.forEach(({ item, pd, base }) => {
-      const unit = tSafe('units.' + item.unit, item.unit);
-      html += `<div class="confirm-item">
-        <span class="confirm-item-name">${esc(item.name)}</span>
-        <span class="confirm-item-detail">${pd.quantityBought != null ? `×${pd.quantityBought} ${unit}` : '—'}</span>
-        <span class="confirm-item-price">${base != null ? sym + base.toFixed(2) : ''}</span>
+      const unit     = tSafe('units.' + item.unit, item.unit);
+      const isCustom = String(item._pdKey).startsWith('c');
+      const saveChk  = isCustom
+        ? `<label class="sl-save-catalog-label">
+             <input type="checkbox" class="sl-save-catalog" data-id="${item.id}">
+             <span>${tSafe('shopping.register.saveToCatalog', 'Agregar al inventario')}</span>
+           </label>`
+        : '';
+      html += `<div class="confirm-item${isCustom ? ' confirm-item--custom' : ''}">
+        <div class="confirm-item-main">
+          <span class="confirm-item-name">${esc(item.name)}</span>
+          <span class="confirm-item-detail">${pd.quantityBought != null ? `×${pd.quantityBought} ${unit}` : '—'}</span>
+          <span class="confirm-item-price">${base != null ? sym + base.toFixed(2) : ''}</span>
+        </div>
+        ${saveChk}
       </div>`;
     });
     html += `</div>`;
@@ -745,6 +755,7 @@ async function handleConfirm() {
         const pd   = state.purchaseData['c' + item.id] || {};
         const base = pd.quantityBought != null && pd.unitPrice != null
           ? +pd.quantityBought * +pd.unitPrice : null;
+        const chk  = document.querySelector(`.sl-save-catalog[data-id="${item.id}"]`);
         return {
           productId:      null,
           productName:    item.name,
@@ -753,6 +764,7 @@ async function handleConfirm() {
           unit:           'unidades',
           unitPrice:      pd.unitPrice  != null ? +pd.unitPrice : null,
           subtotal:       base,
+          saveToCatalog:  chk?.checked || false,
         };
       }),
     ];

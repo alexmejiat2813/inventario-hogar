@@ -280,13 +280,22 @@
     }
     .confirm-store-subtotal { font-weight: 700; color: #082F49; }
     .confirm-item {
-      display: flex; align-items: baseline; justify-content: space-between;
-      gap: .5rem; padding: .3rem .5rem; font-size: .825rem;
+      display: flex; flex-direction: column;
+      gap: .2rem; padding: .3rem .5rem; font-size: .825rem;
+    }
+    .confirm-item-main {
+      display: flex; align-items: baseline; justify-content: space-between; gap: .5rem;
     }
     .confirm-item-name { color: #082F49; font-weight: 500; flex: 1; min-width: 0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .confirm-item-detail { color: #787774; font-weight: 400; white-space: nowrap; }
     .confirm-item-price  { color: #082F49; font-weight: 600; white-space: nowrap; margin-left: .5rem; }
+    .sl-save-catalog-label {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .72rem; color: #0369A1; cursor: pointer; padding-left: .1rem;
+    }
+    .sl-save-catalog-label input { accent-color: #0369A1; cursor: pointer; }
+    .confirm-item--custom { background: #F0F9FF; border-radius: 4px; }
 
     .confirm-total-row {
       display: flex; align-items: center; justify-content: space-between;
