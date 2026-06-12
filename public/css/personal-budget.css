@@ -303,6 +303,11 @@
 
 /* ── tfoot subtotals ── */
 .pb-tfoot td { border-top: 2px solid var(--border); padding-top: .5rem; }
+.pb-tfoot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .pb-tfoot-label {
   font-size: .65rem;
   font-weight: 700;
@@ -313,12 +318,7 @@
 .pb-tfoot-balance {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--text);
-  text-align: right;
   white-space: nowrap;
-  position: sticky;
-  right: 0;
-  background: var(--card-bg, #fff);
 }
 
 /* ── Edit button in fixed-costs table ── */

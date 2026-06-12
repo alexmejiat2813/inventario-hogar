@@ -383,9 +383,9 @@
           <tbody>${rows}</tbody>
           <tfoot class="pb-tfoot">
             <tr>
-              <td colspan="6" class="pb-tfoot-label">${t('personalBudget.tabs.subtotal')}</td>
-              <td class="pb-tfoot-balance ${balClass}" style="text-align:right">
-                ${txBalance >= 0 ? '+' : ''}${fmt(txBalance)}
+              <td colspan="7" class="pb-tfoot-row">
+                <span class="pb-tfoot-label">${t('personalBudget.tabs.subtotal')}</span>
+                <span class="pb-tfoot-balance ${balClass}">${txBalance >= 0 ? '+' : ''}${fmt(txBalance)}</span>
               </td>
             </tr>
           </tfoot>
