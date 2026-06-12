@@ -273,7 +273,8 @@
   flex-wrap: wrap;
   margin-bottom: 1rem;
 }
-.pb-tabs-header .pb-tabs { flex-shrink: 0; }
+.pb-tabs-header .pb-tabs { flex: 1 1 auto; }
+.pb-tabs-header .pb-tab  { flex: 1; text-align: center; }
 .pb-search-wrap {
   flex: 1 1 120px;
   min-width: 0;
