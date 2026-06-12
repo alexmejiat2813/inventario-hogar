@@ -121,11 +121,11 @@
       display: flex; align-items: flex-end; justify-content: center;
       animation: fade-in .15s ease;
     }
-    @media (min-width: 600px) { .modal-overlay { align-items: center; padding: 1rem; } }
+    @media (min-width: 480px) { .modal-overlay { align-items: center; padding: 1rem; } }
     @keyframes fade-in { from{opacity:0} to{opacity:1} }
     .modal {
       background: white; border-radius: 12px 12px 0 0; border: 1px solid #EAEAEA;
-      width: 100%; max-width: 400px; padding: 1.5rem;
+      width: 100%; max-width: 460px; padding: 1.5rem; box-sizing: border-box;
       animation: slide-up .22s cubic-bezier(.34,1.56,.64,1);
     }
     @media (min-width: 600px) { .modal { border-radius: 8px; animation: scale-in .18s ease; } }
@@ -155,6 +155,8 @@
     .form-input::placeholder { color: #B2B0AD; }
     .form-input.invalid, .form-select.invalid { border-color: #9F2F2D; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .form-row > .form-group { min-width: 0; }
+    @media (max-width: 400px) { .form-row { grid-template-columns: 1fr; } }
     .modal-footer { display: flex; gap: .5rem; margin-top: .25rem; }
     .btn-cancel {
       flex: 1; padding: .6rem; background: white; color: #787774;
