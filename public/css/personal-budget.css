@@ -257,6 +257,9 @@
   .pb-col-desc,
   .pb-col-inv  { display: none; }
 }
+@media (max-width: 480px) {
+  .pb-tx-date  { display: none; }
+}
 @media (max-width: 400px) {
   .pb-tx-table th,
   .pb-tx-table td { padding: .5rem .4rem; }

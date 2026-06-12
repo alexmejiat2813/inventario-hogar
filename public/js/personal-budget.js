@@ -398,7 +398,7 @@
           <thead>
             <tr>
               <th class="pb-col-radio"></th>
-              <th>${t('personalBudget.table.colDate')}</th>
+              <th class="pb-tx-date">${t('personalBudget.table.colDate')}</th>
               <th>${t('personalBudget.table.colType')}</th>
               <th>${t('personalBudget.table.colCategory')}</th>
               <th class="pb-col-desc">${t('personalBudget.table.colDescription')}</th>
