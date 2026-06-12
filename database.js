@@ -1704,9 +1704,12 @@ module.exports = {
 
   getWeeklyFixedCosts(userId) {
     const FACTOR = { 'Mensual': 12 / 52, 'Quincenal': 24 / 52, 'Semestral': 2 / 52, 'Anual': 1 / 52, 'Bianual': 1 / 104 };
-    const rows = db.prepare(
-      'SELECT * FROM personal_budgets WHERE user_id = ? ORDER BY flow_type DESC, category'
-    ).all(userId);
+    const rows = db.prepare(`
+      SELECT pb.*, i.name AS inventory_name
+      FROM personal_budgets pb
+      LEFT JOIN inventories i ON i.id = pb.inventory_id
+      WHERE pb.user_id = ? ORDER BY pb.flow_type DESC, pb.category
+    `).all(userId);
     let expense_weekly = 0, income_weekly = 0;
     const items = rows.map(row => {
       const weekly = row.amount * (FACTOR[row.frequency] ?? (12 / 52));

@@ -238,6 +238,14 @@
 .pb-type-badge--income  { background: var(--success-bg); color: var(--success); }
 .pb-type-badge--expense { background: var(--danger-bg);  color: var(--danger);  }
 
+.pb-inv-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  margin-left: 6px; padding: 1px 6px;
+  background: #EFF6FF; color: #1D4ED8;
+  border: 1px solid #BFDBFE; border-radius: 10px;
+  font-size: .7rem; font-weight: 500; white-space: nowrap; vertical-align: middle;
+}
+
 .pb-tx-date {
   color: var(--text-muted);
   font-size: .8rem;

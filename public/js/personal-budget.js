@@ -176,10 +176,12 @@
       tab: 'fixed',
       flow_type: radio.dataset.flow,
       data: {
-        category:  radio.dataset.category,
-        amount:    +radio.dataset.amount,
-        frequency: radio.dataset.frequency,
-        due_date:  radio.dataset.due || '',
+        category:       radio.dataset.category,
+        amount:         +radio.dataset.amount,
+        frequency:      radio.dataset.frequency,
+        due_date:       radio.dataset.due || '',
+        inventory_id:   radio.dataset.inventoryId ? +radio.dataset.inventoryId : null,
+        inventory_name: radio.dataset.inventoryName || '',
       },
     };
     document.querySelectorAll('tr.pb-row--selected').forEach(r => r.classList.remove('pb-row--selected'));
@@ -226,10 +228,11 @@
       const d = _selectedRow.data;
       elRecordType.value = _selectedRow.flow_type + '_projected';
       applyTypeVisibility();
-      elCategory.value = d.category;
-      elAmount.value   = d.amount;
-      elFreq.value     = d.frequency || 'Mensual';
-      elDueDate.value  = d.due_date || '';
+      elCategory.value  = d.category;
+      elAmount.value    = d.amount;
+      elFreq.value      = d.frequency || 'Mensual';
+      elDueDate.value   = d.due_date || '';
+      elInventory.value = d.inventory_id || '';
       elSubmit.textContent = t('personalBudget.fixedList.saveEdit');
     } else {
       _editingTxId = _selectedRow.id;
@@ -425,10 +428,14 @@
           <input type="radio" name="pb-row-select" class="pb-row-radio"
             data-id="${fc.id}" data-tab="fixed" data-flow="${ft}"
             data-category="${escHtml(fc.category)}" data-amount="${fc.amount}"
-            data-frequency="${escHtml(fc.frequency)}" data-due="${escHtml(fc.due_date || '')}">
+            data-frequency="${escHtml(fc.frequency)}" data-due="${escHtml(fc.due_date || '')}"
+            data-inventory-id="${fc.inventory_id || ''}" data-inventory-name="${escHtml(fc.inventory_name || '')}">
         </td>
         <td><span class="pb-type-badge ${ftClass}">${ftLabel}</span></td>
-        <td>${escHtml(fc.category)}</td>
+        <td>
+          ${escHtml(fc.category)}
+          ${fc.inventory_name ? `<span class="pb-inv-badge">${escHtml(fc.inventory_name)}</span>` : ''}
+        </td>
         <td>${escHtml(fc.frequency)}</td>
         <td class="pb-tx-date">${fc.due_date || '—'}</td>
         <td class="pb-tx-amount" style="color:${color}">${fmt(valQ)}</td>
