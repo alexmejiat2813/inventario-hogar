@@ -315,6 +315,46 @@ if (!ptCols.includes('source_purchase_session_id')) {
   db.exec('ALTER TABLE personal_transactions ADD COLUMN source_purchase_session_id INTEGER REFERENCES purchase_sessions(id) ON DELETE SET NULL');
 }
 
+// Migration: fix FK semantic — source_purchase_session_id ON DELETE SET NULL → ON DELETE CASCADE.
+// SQLite cannot ALTER a constraint; requires full table recreation. Detected via foreign_key_list.
+// Idempotent: only runs when the FK still has on_delete='SET NULL'.
+{
+  const fkList = db.prepare('PRAGMA foreign_key_list(personal_transactions)').all();
+  const needsFix = fkList.some(fk => fk.table === 'purchase_sessions' && fk.on_delete === 'SET NULL');
+  if (needsFix) {
+    db.exec('PRAGMA foreign_keys = OFF');
+    db.exec('BEGIN');
+    try {
+      db.exec(`
+        CREATE TABLE personal_transactions_v2 (
+          id           INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          inventory_id INTEGER REFERENCES inventories(id) ON DELETE SET NULL,
+          type         TEXT    NOT NULL CHECK(type IN ('income','expense')),
+          category     TEXT    NOT NULL,
+          amount       REAL    NOT NULL,
+          description  TEXT,
+          date         TEXT    NOT NULL,
+          created_at   TEXT    DEFAULT (datetime('now','localtime')),
+          source       TEXT    NOT NULL DEFAULT 'manual',
+          source_purchase_session_id INTEGER REFERENCES purchase_sessions(id) ON DELETE CASCADE
+        )
+      `);
+      db.exec('INSERT INTO personal_transactions_v2 SELECT * FROM personal_transactions');
+      db.exec('DROP TABLE personal_transactions');
+      db.exec('ALTER TABLE personal_transactions_v2 RENAME TO personal_transactions');
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    } finally {
+      db.exec('PRAGMA foreign_keys = ON');
+    }
+    // Recreate index lost when table was dropped
+    db.exec('CREATE INDEX IF NOT EXISTS idx_personal_tx_user_date ON personal_transactions(user_id, date)');
+  }
+}
+
 // ── Categorías: una sola tabla manda en todas las vistas ──────────────────────
 // [name ES (canónico/almacenado en productos), name EN, name FR, emoji].
 const BASE_CATEGORIES = [
@@ -1319,21 +1359,26 @@ module.exports = {
         }
       });
 
-      if (budgetCategory && userId && totalAmount > 0) {
-        const normalizedCategory = budgetCategory.trim();
-        const invName = db.prepare('SELECT name FROM inventories WHERE id = ?').get(inventoryId)?.name || '';
-        db.prepare(`
-          INSERT INTO personal_transactions
-            (user_id, inventory_id, type, category, amount, description, date, source, source_purchase_session_id)
-          VALUES (?, ?, 'expense', ?, ?, ?, ?, 'purchase', ?)
-        `).run(userId, inventoryId, normalizedCategory, totalAmount,
-               `Compra Automatizada Inventario: ${invName}`, purchaseDate, sessionId);
+      let budgetTxOmitted = false;
+      if (budgetCategory && userId) {
+        if (totalAmount > 0) {
+          const normalizedCategory = budgetCategory.trim();
+          const invName = db.prepare('SELECT name FROM inventories WHERE id = ?').get(inventoryId)?.name || '';
+          db.prepare(`
+            INSERT INTO personal_transactions
+              (user_id, inventory_id, type, category, amount, description, date, source, source_purchase_session_id)
+            VALUES (?, ?, 'expense', ?, ?, ?, ?, 'purchase', ?)
+          `).run(userId, inventoryId, normalizedCategory, totalAmount,
+                 `Compra Automatizada Inventario: ${invName}`, purchaseDate, sessionId);
+        } else {
+          budgetTxOmitted = true;
+        }
       }
 
       db.exec('COMMIT');
 
       const session = db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
-      return { ...session, budget_category: budgetCategory };
+      return { ...session, budget_category: budgetCategory, budget_tx_omitted: budgetTxOmitted };
     } catch (err) {
       db.exec('ROLLBACK');
       throw err;

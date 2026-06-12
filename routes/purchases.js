@@ -58,6 +58,10 @@ router.post('/', requireEditorOrOwner, (req, res) => {
     });
     db.audit(req.inventoryId, req.user.id, req.user.name, 'purchase.create', 'purchase', session.id,
       { total_amount: session.total_amount, currency: session.currency, item_count: items.length });
+    if (session.budget_tx_omitted) {
+      logger.info({ sessionId: session.id, userId: req.user.id },
+        'budget_tx omitted: purchase total_amount=0, no personal_transaction inserted');
+    }
     res.status(201).json(session);
   } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al registrar la compra' }); }
 });
