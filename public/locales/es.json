@@ -269,6 +269,7 @@
   "profile": {
     "language": "Idioma",
     "settings": "Configuración",
+    "settingsInventory": "Configuración Inventarios",
     "manage": "Gestionar acceso",
     "adminMetrics": "Métricas de la app",
     "logout": "Cerrar sesión",

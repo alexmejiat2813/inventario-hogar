@@ -269,6 +269,7 @@
   "profile": {
     "language": "Language",
     "settings": "Settings",
+    "settingsInventory": "Inventory Settings",
     "manage": "Manage access",
     "adminMetrics": "App metrics",
     "logout": "Sign out",
