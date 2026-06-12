@@ -713,6 +713,9 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 .pb-toolbar-btn:disabled { opacity: .4; cursor: not-allowed; }
 .pb-toolbar-btn--pay:not(:disabled)    { border-color: var(--accent-bg); color: var(--accent); background: var(--accent-bg); }
 .pb-toolbar-btn--danger:not(:disabled) { border-color: var(--danger-bg); color: var(--danger);  background: var(--danger-bg); }
+.pb-toolbar-btn--primary               { border-color: var(--accent); color: #fff; background: var(--accent); }
+.pb-toolbar-btn--primary:hover         { background: color-mix(in srgb, var(--accent) 85%, #000); border-color: color-mix(in srgb, var(--accent) 85%, #000); }
+.pb-toolbar .pb-dropdown               { margin-right: .4rem; padding-right: .4rem; border-right: 1px solid var(--border); }
 
 /* ── Modal overlay ── */
 .pb-modal-overlay {
