@@ -337,8 +337,7 @@
   // ── Render transactions table ──────────────────────────────────────────────
   function _renderTableRows(transactions) {
     const tbody = elTableWrap.querySelector('tbody');
-    const tfoot = elTableWrap.querySelector('tfoot');
-    if (!tbody || !tfoot) return;
+    if (!tbody) return;
 
     const txIncome  = transactions.filter(tx => tx.type === 'income') .reduce((s, tx) => s + tx.amount, 0);
     const txExpense = transactions.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
