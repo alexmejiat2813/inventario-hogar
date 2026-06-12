@@ -367,11 +367,13 @@
         </tr>`;
     }).join('');
 
-    tfoot.innerHTML = `
-      <tr>
-        <td colspan="6" class="pb-tfoot-label">${t('personalBudget.tabs.subtotal')}</td>
-        <td class="pb-tfoot-balance pb-col-amount ${balClass}">${txBalance >= 0 ? '+' : ''}${fmt(txBalance)}</td>
-      </tr>`;
+    // Subtotal bar lives OUTSIDE the scroll container to avoid horizontal overflow
+    const bar = elTableWrap.querySelector('.pb-tfoot-bar');
+    if (bar) {
+      bar.innerHTML = `
+        <span class="pb-tfoot-label">${t('personalBudget.tabs.subtotal')}</span>
+        <span class="pb-tfoot-balance ${balClass}">${txBalance >= 0 ? '+' : ''}${fmt(txBalance)}</span>`;
+    }
   }
 
   function renderTable(transactions) {
@@ -403,13 +405,13 @@
               <th>${t('personalBudget.table.colCategory')}</th>
               <th class="pb-col-desc">${t('personalBudget.table.colDescription')}</th>
               <th class="pb-col-inv">${t('personalBudget.table.colInventory')}</th>
-              <th class="pb-col-amount" style="text-align:right">${t('personalBudget.table.colAmount')}</th>
+              <th style="text-align:right">${t('personalBudget.table.colAmount')}</th>
             </tr>
           </thead>
           <tbody></tbody>
-          <tfoot class="pb-tfoot"></tfoot>
         </table>
-      </div>`;
+      </div>
+      <div class="pb-tfoot-bar"></div>`;
     _renderTableRows(_lastTransactions);
   }
 

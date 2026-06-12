@@ -320,20 +320,15 @@
 /* ── Tab panels ── */
 .pb-tab-panel--hidden { display: none; }
 
-/* ── Sticky MONTO column ── */
-.pb-col-amount {
-  position: sticky;
-  right: 0;
-  background: var(--surface);
-  text-align: right;
-  white-space: nowrap;
+/* ── Subtotal bar (outside scroll container) ── */
+.pb-tfoot-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .55rem .75rem .35rem;
+  border-top: 2px solid var(--border);
+  margin-top: -1px;
 }
-.pb-tx-table thead .pb-col-amount { background: var(--surface); }
-.pb-tx-table tbody tr:hover .pb-col-amount { background: var(--bg); }
-.pb-tfoot .pb-col-amount { background: var(--surface); }
-
-/* ── tfoot subtotals ── */
-.pb-tfoot td { border-top: 2px solid var(--border); padding-top: .5rem; }
 .pb-tfoot-label {
   font-size: .65rem;
   font-weight: 700;
