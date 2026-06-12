@@ -626,7 +626,8 @@
       color: #082F49;
       font-variant-numeric: tabular-nums;
     }
-    .inv-bp-stat-num--income { color: #14B8A6; }
+    .inv-bp-stat-num--income   { color: #14B8A6; }
+    .inv-bp-stat-num--negative { color: #DC2626; }
     .inv-bp-stat-lbl {
       font-size: .62rem;
       font-weight: 700;

@@ -1015,6 +1015,7 @@
       "deleteConfirm": "Delete this budget plan?",
       "enterBtn": "Open budget →",
       "totalBudgeted": "Budgeted",
+      "balanceReal": "Available",
       "income": "Est. income",
       "linkedTo": "Linked to",
       "badge": "Budget",

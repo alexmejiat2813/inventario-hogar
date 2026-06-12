@@ -104,8 +104,8 @@ function renderBudgetPlanCard(plan) {
           <span class="inv-bp-stat-lbl">${t('personalBudget.plan.income')}</span>
         </div>
         <div class="inv-bp-stat">
-          <span class="inv-bp-stat-num">${fmtMoney(plan.total_budgeted ?? 0)}</span>
-          <span class="inv-bp-stat-lbl">${t('personalBudget.plan.totalBudgeted')}</span>
+          <span class="inv-bp-stat-num ${(plan.balance_real ?? 0) >= 0 ? 'inv-bp-stat-num--income' : 'inv-bp-stat-num--negative'}">${fmtMoney(plan.balance_real ?? 0)}</span>
+          <span class="inv-bp-stat-lbl">${t('personalBudget.plan.balanceReal')}</span>
         </div>
       </div>
       <div class="inv-bp-footer">

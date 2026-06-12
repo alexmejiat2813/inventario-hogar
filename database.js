@@ -1805,12 +1805,14 @@ module.exports = {
       FROM personal_transactions
       WHERE user_id = ? AND type = 'income' AND strftime('%Y-%m', date) = ?
     `).get(userId, month);
-    const budgetRow = db.prepare(`
+    const expenseRow = db.prepare(`
       SELECT COALESCE(SUM(amount), 0) AS total
-      FROM personal_budgets
-      WHERE user_id = ?
-    `).get(userId);
-    return { income_real: incomeRow.total, total_budgeted: budgetRow.total };
+      FROM personal_transactions
+      WHERE user_id = ? AND type = 'expense' AND strftime('%Y-%m', date) = ?
+    `).get(userId, month);
+    const income_real  = incomeRow.total;
+    const expense_real = expenseRow.total;
+    return { income_real, expense_real, balance_real: income_real - expense_real };
   },
 
   createPersonalBudgetPlan(userId, { name, inventoryId }) {
