@@ -226,7 +226,7 @@
       transition: box-shadow 200ms, border-color 200ms;
       animation: card-in .22s ease both;
     }
-    .inv-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.04); border-color: #C0BFBC; }
+    @media (hover: hover) { .inv-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.04); border-color: #C0BFBC; } }
     @keyframes card-in {
       from { opacity: 0; transform: translateY(6px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -513,7 +513,7 @@
       background: white;
       transition: box-shadow 200ms;
     }
-    .inv-composite-block:hover { box-shadow: 0 2px 12px rgba(8,47,73,.07); }
+    @media (hover: hover) { .inv-composite-block:hover { box-shadow: 0 2px 12px rgba(8,47,73,.07); } }
 
     .inv-composite-block .inv-card {
       border: none;
@@ -524,7 +524,7 @@
       overflow-wrap: break-word;
       word-break: break-word;
     }
-    .inv-composite-block .inv-card:hover { box-shadow: none !important; }
+    @media (hover: hover) { .inv-composite-block .inv-card:hover { box-shadow: none !important; } }
 
     .inv-composite-label {
       grid-column: 1 / -1;
@@ -553,7 +553,7 @@
       transition: box-shadow 200ms;
       position: relative;
     }
-    .inv-budget-plan-card:hover { box-shadow: 0 2px 8px rgba(8,47,73,.05); }
+    @media (hover: hover) { .inv-budget-plan-card:hover { box-shadow: 0 2px 8px rgba(8,47,73,.05); } }
 
     .inv-composite-block .inv-budget-plan-card {
       border: none;
