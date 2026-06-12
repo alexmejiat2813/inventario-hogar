@@ -315,6 +315,10 @@
   font-variant-numeric: tabular-nums;
   color: var(--text);
   text-align: right;
+  white-space: nowrap;
+  position: sticky;
+  right: 0;
+  background: var(--card-bg, #fff);
 }
 
 /* ── Edit button in fixed-costs table ── */
