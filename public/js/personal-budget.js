@@ -526,7 +526,7 @@
     const { nature, flow } = getNatureFlow();
     elFreqGroup.hidden      = nature !== 'projected';
     elDueGroup.hidden       = nature !== 'projected';
-    elInventoryGroup.hidden = nature !== 'real' || flow !== 'expense';
+    elInventoryGroup.hidden = nature === 'real' ? flow !== 'expense' : nature !== 'projected';
     elDate.closest('.form-group').hidden = nature !== 'real';
   }
 
@@ -600,11 +600,12 @@
       if (nature === 'projected') {
         const payload = {
           category,
-          amount:    +amount,
-          month:     _month,
-          frequency: elFreq.value,
-          due_date:  elDueDate.value.trim() || null,
-          flow_type: flow,
+          amount:      +amount,
+          month:       _month,
+          frequency:   elFreq.value,
+          due_date:    elDueDate.value.trim() || null,
+          flow_type:   flow,
+          inventoryId: elInventory.value ? +elInventory.value : null,
         };
         if (_editingFixedId) {
           await apiFetch('PUT', `/api/personal-budget/budget/${_editingFixedId}`, payload);

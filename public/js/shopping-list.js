@@ -551,7 +551,7 @@ function openConfirmModal() {
   showConfirmModal();
 }
 
-function showConfirmModal() {
+async function showConfirmModal() {
   const checkedItems  = state.items.filter(i => i.checked);
   const checkedCustom = state.customItems.filter(i => i.checked);
   if (!checkedItems.length && !checkedCustom.length) return;
@@ -566,6 +566,34 @@ function showConfirmModal() {
   document.getElementById('receipt-input').value = '';
   document.getElementById('receipt-preview-wrap').hidden = true;
   document.getElementById('receipt-pick-wrap').hidden = false;
+
+  // Load personal budget expense categories for the link dropdown
+  const budgetSection = document.getElementById('confirm-budget-section');
+  const budgetSelect  = document.getElementById('confirm-budget-category');
+  const budgetHint    = document.getElementById('confirm-budget-hint');
+  budgetSelect.innerHTML = `<option value="">${tSafe('shopping.register.budgetCategoryNone', 'No vincular')}</option>`;
+  try {
+    const cats = await apiFetch('GET', '/api/personal-budget/expense-categories');
+    if (Array.isArray(cats) && cats.length) {
+      cats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        budgetSelect.appendChild(opt);
+      });
+      budgetSection.hidden = false;
+    } else {
+      budgetSection.hidden = true;
+    }
+  } catch {
+    budgetSection.hidden = true;
+  }
+  budgetSelect.value = '';
+  if (budgetHint) budgetHint.hidden = true;
+  budgetSelect.onchange = () => {
+    if (budgetHint) budgetHint.hidden = !budgetSelect.value;
+  };
+
   document.getElementById('confirm-overlay').hidden = false;
 }
 
@@ -729,11 +757,13 @@ async function handleConfirm() {
       }),
     ];
 
+    const budgetCategory = document.getElementById('confirm-budget-category')?.value || null;
     const session = await apiFetch('POST', '/api/purchases', {
       items,
-      currency:      state.inventory?.currency || 'USD',
-      purchase_date: today,
-      tax_ids:       state.selectedTaxIds,
+      currency:        state.inventory?.currency || 'USD',
+      purchase_date:   today,
+      tax_ids:         state.selectedTaxIds,
+      budget_category: budgetCategory || undefined,
     });
 
     // Upload receipt if selected

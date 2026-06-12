@@ -61,8 +61,11 @@ router.post('/budget', (req, res) => {
     return res.status(400).json({ error: 'flow_type debe ser "income" o "expense".' });
   }
 
+  const { inventoryId } = req.body;
   const budget = db.addPersonalBudget(userId, {
-    category: category.trim(), amount, month: m, frequency: freq, due_date: due_date || null, flow_type: ft,
+    category: category.trim(), amount, month: m, frequency: freq,
+    due_date: due_date || null, flow_type: ft,
+    inventory_id: inventoryId ? +inventoryId : null,
   });
   res.status(201).json(budget);
 });
@@ -103,6 +106,11 @@ router.get('/fixed-costs', (req, res) => {
   res.json(items);
 });
 
+// GET /api/personal-budget/expense-categories — categorías expense únicas para dropdown de compras
+router.get('/expense-categories', (req, res) => {
+  res.json(db.getPersonalBudgetExpenseCategories(req.user.id));
+});
+
 // DELETE /api/personal-budget/budget/:id
 router.delete('/budget/:id', (req, res) => {
   const id = +req.params.id;
@@ -120,7 +128,7 @@ router.put('/budget/:id', (req, res) => {
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ error: 'ID inválido.' });
   }
-  const { category, amount, month, frequency, due_date, flow_type } = req.body;
+  const { category, amount, month, frequency, due_date, flow_type, inventoryId } = req.body;
   if (!category || typeof category !== 'string' || !category.trim()) {
     return res.status(400).json({ error: 'category es requerida.' });
   }
@@ -141,7 +149,9 @@ router.put('/budget/:id', (req, res) => {
     return res.status(400).json({ error: 'flow_type debe ser "income" o "expense".' });
   }
   const updated = db.updatePersonalBudget(req.user.id, id, {
-    category: category.trim(), amount, month: m, frequency: freq, due_date: due_date || null, flow_type: ft,
+    category: category.trim(), amount, month: m, frequency: freq,
+    due_date: due_date || null, flow_type: ft,
+    inventory_id: inventoryId ? +inventoryId : null,
   });
   if (!updated) return res.status(404).json({ error: 'Flujo proyectado no encontrado.' });
   res.json(updated);

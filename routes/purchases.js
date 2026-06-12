@@ -25,16 +25,17 @@ router.get('/', (req, res) => {
 
 router.post('/', requireEditorOrOwner, (req, res) => {
   try {
-    const { items, currency, purchase_date, tax_ids } = req.body;
+    const { items, currency, purchase_date, tax_ids, budget_category } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
     const session = db.createPurchaseSession({
-      inventoryId:  req.inventoryId,
-      userId:       req.user.id,
+      inventoryId:    req.inventoryId,
+      userId:         req.user.id,
       items,
-      taxIds:       Array.isArray(tax_ids) ? tax_ids : [],
-      currency:     currency      || 'USD',
-      purchaseDate: purchase_date || new Date().toISOString().slice(0, 10),
-      receiptImage: null,
+      taxIds:         Array.isArray(tax_ids) ? tax_ids : [],
+      currency:       currency       || 'USD',
+      purchaseDate:   purchase_date  || new Date().toISOString().slice(0, 10),
+      receiptImage:   null,
+      budgetCategory: budget_category || null,
     });
     db.audit(req.inventoryId, req.user.id, req.user.name, 'purchase.create', 'purchase', session.id,
       { total_amount: session.total_amount, currency: session.currency, item_count: items.length });

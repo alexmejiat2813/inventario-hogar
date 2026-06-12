@@ -300,9 +300,12 @@ if (!tplItemCols.includes('store_id'))   db.exec('ALTER TABLE list_template_item
 if (!tplItemCols.includes('unit_price')) db.exec('ALTER TABLE list_template_items ADD COLUMN unit_price REAL');
 
 const pbCols = db.prepare('PRAGMA table_info(personal_budgets)').all().map(c => c.name);
-if (!pbCols.includes('frequency'))  db.exec("ALTER TABLE personal_budgets ADD COLUMN frequency TEXT NOT NULL DEFAULT 'Mensual'");
-if (!pbCols.includes('due_date'))   db.exec('ALTER TABLE personal_budgets ADD COLUMN due_date TEXT');
-if (!pbCols.includes('flow_type'))  db.exec("ALTER TABLE personal_budgets ADD COLUMN flow_type TEXT NOT NULL DEFAULT 'expense'");
+if (!pbCols.includes('frequency'))    db.exec("ALTER TABLE personal_budgets ADD COLUMN frequency TEXT NOT NULL DEFAULT 'Mensual'");
+if (!pbCols.includes('due_date'))     db.exec('ALTER TABLE personal_budgets ADD COLUMN due_date TEXT');
+if (!pbCols.includes('flow_type'))    db.exec("ALTER TABLE personal_budgets ADD COLUMN flow_type TEXT NOT NULL DEFAULT 'expense'");
+if (!pbCols.includes('inventory_id')) db.exec('ALTER TABLE personal_budgets ADD COLUMN inventory_id INTEGER REFERENCES inventories(id) ON DELETE SET NULL');
+
+if (!sessionCols.includes('budget_category')) db.exec('ALTER TABLE purchase_sessions ADD COLUMN budget_category TEXT');
 
 // ── Categorías: una sola tabla manda en todas las vistas ──────────────────────
 // [name ES (canónico/almacenado en productos), name EN, name FR, emoji].
@@ -1200,7 +1203,7 @@ module.exports = {
   },
 
   // ── Purchases ──────────────────────────────────────────────────────────────
-  createPurchaseSession({ inventoryId, userId, items, taxIds, currency, purchaseDate, receiptImage }) {
+  createPurchaseSession({ inventoryId, userId, items, taxIds, currency, purchaseDate, receiptImage, budgetCategory = null }) {
     let subtotalBeforeTax = 0;
     let totalTax = 0;
     let taxBreakdown = null;
@@ -1286,8 +1289,20 @@ module.exports = {
         }
       });
 
+      if (budgetCategory && userId) {
+        const invName = db.prepare('SELECT name FROM inventories WHERE id = ?').get(inventoryId)?.name || '';
+        db.prepare(`
+          INSERT INTO personal_transactions
+            (user_id, inventory_id, type, category, amount, description, date)
+          VALUES (?, ?, 'expense', ?, ?, ?, ?)
+        `).run(userId, inventoryId, budgetCategory, totalAmount,
+               `Compra Automatizada Inventario: ${invName}`, purchaseDate);
+      }
+
       db.exec('COMMIT');
-      return db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
+
+      const session = db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
+      return { ...session, budget_category: budgetCategory };
     } catch (err) {
       db.exec('ROLLBACK');
       throw err;
@@ -1671,11 +1686,19 @@ module.exports = {
     ).all(userId, month);
   },
 
-  addPersonalBudget(userId, { category, amount, month, frequency = 'Mensual', due_date = null, flow_type = 'expense' }) {
+  getPersonalBudgetExpenseCategories(userId) {
+    return db.prepare(`
+      SELECT DISTINCT category FROM personal_budgets
+      WHERE user_id = ? AND flow_type = 'expense'
+      ORDER BY category
+    `).all(userId).map(r => r.category);
+  },
+
+  addPersonalBudget(userId, { category, amount, month, frequency = 'Mensual', due_date = null, flow_type = 'expense', inventory_id = null }) {
     const { lastInsertRowid } = db.prepare(`
-      INSERT INTO personal_budgets (user_id, category, amount, month, frequency, due_date, flow_type)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(userId, category, +amount, month, frequency, due_date, flow_type);
+      INSERT INTO personal_budgets (user_id, category, amount, month, frequency, due_date, flow_type, inventory_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, category, +amount, month, frequency, due_date, flow_type, inventory_id);
     return db.prepare('SELECT * FROM personal_budgets WHERE id = ?').get(lastInsertRowid);
   },
 
@@ -1701,12 +1724,12 @@ module.exports = {
     ).run(id, userId).changes > 0;
   },
 
-  updatePersonalBudget(userId, id, { category, amount, month, frequency = 'Mensual', due_date = null, flow_type = 'expense' }) {
+  updatePersonalBudget(userId, id, { category, amount, month, frequency = 'Mensual', due_date = null, flow_type = 'expense', inventory_id = null }) {
     const changed = db.prepare(`
       UPDATE personal_budgets
-      SET category = ?, amount = ?, month = ?, frequency = ?, due_date = ?, flow_type = ?
+      SET category = ?, amount = ?, month = ?, frequency = ?, due_date = ?, flow_type = ?, inventory_id = ?
       WHERE id = ? AND user_id = ?
-    `).run(category, +amount, month, frequency, due_date, flow_type, id, userId).changes;
+    `).run(category, +amount, month, frequency, due_date, flow_type, inventory_id, id, userId).changes;
     if (!changed) return null;
     return db.prepare('SELECT * FROM personal_budgets WHERE id = ?').get(id);
   },

@@ -296,6 +296,15 @@
     }
     .confirm-total-amount { font-size: 1.1rem; }
 
+    /* Budget link section */
+    .confirm-budget-section {
+      margin-top: 1rem; padding: .875rem;
+      background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 8px;
+    }
+    .confirm-budget-section .receipt-title { color: #0369A1; margin-bottom: .5rem; }
+    .confirm-budget-section .form-select { width: 100%; margin-top: .25rem; }
+    .confirm-budget-section .receipt-hint { color: #0369A1; opacity: .8; }
+
     /* Receipt section */
     .receipt-section {
       margin-top: 1rem; padding: .875rem;
