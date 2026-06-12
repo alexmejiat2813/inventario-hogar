@@ -949,6 +949,23 @@ tr.pb-row--selected td { background: var(--accent-bg); }
   font-size: .7rem;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  transition: color .3s ease, background-color .3s ease;
+  border-radius: 4px;
+  padding: .1rem .3rem;
+  display: inline-block;
+}
+.pb-projection-hint--safe {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+.pb-projection-hint--warn {
+  color: #92400E;
+  background: #FEF3C7;
+}
+.pb-projection-hint--critical {
+  color: var(--danger);
+  background: var(--danger-bg, #FEE2E2);
+  font-weight: 600;
 }
 
 /* ── Table row fade microinteraction ── */

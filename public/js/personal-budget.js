@@ -356,6 +356,15 @@
       if (elapsed > 0 && expense_real > 0) {
         const projected = (expense_real / elapsed) * daysInM;
         elProjectionHint.textContent = `Proyección fin de mes: ${fmt(projected)}`;
+        // Semaphore: compare projection against income_projected (budget limit)
+        let hintMod = '';
+        if (income_projected > 0) {
+          const ratio = projected / income_projected;
+          hintMod = ratio >= 0.85 ? 'pb-projection-hint--critical'
+                  : ratio >= 0.60 ? 'pb-projection-hint--warn'
+                  : 'pb-projection-hint--safe';
+        }
+        elProjectionHint.className = `pb-projection-hint${hintMod ? ' ' + hintMod : ''}`;
         elProjectionHint.hidden = false;
       } else {
         elProjectionHint.hidden = true;
