@@ -323,6 +323,38 @@ if (!pbCols.includes('due_date'))     db.exec('ALTER TABLE personal_budgets ADD 
 if (!pbCols.includes('flow_type'))    db.exec("ALTER TABLE personal_budgets ADD COLUMN flow_type TEXT NOT NULL DEFAULT 'expense'");
 if (!pbCols.includes('inventory_id')) db.exec('ALTER TABLE personal_budgets ADD COLUMN inventory_id INTEGER REFERENCES inventories(id) ON DELETE SET NULL');
 
+// Eliminar UNIQUE(user_id, category, month) de personal_budgets — permite
+// multiples flujos proyectados con la misma categoria en el mismo mes.
+const pbIndexes = db.prepare("PRAGMA index_list(personal_budgets)").all();
+const hasUnique = pbIndexes.some(idx => idx.unique === 1 && (() => {
+  const cols = db.prepare(`PRAGMA index_info(${idx.name})`).all().map(c => c.name).sort().join(',');
+  return cols === 'category,month,user_id';
+})());
+if (hasUnique) {
+  db.exec('PRAGMA foreign_keys = OFF');
+  db.exec(`
+    BEGIN;
+    CREATE TABLE personal_budgets_v2 (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      category     TEXT    NOT NULL,
+      amount       REAL    NOT NULL DEFAULT 0,
+      month        TEXT    NOT NULL,
+      created_at   TEXT    DEFAULT (datetime('now','localtime')),
+      frequency    TEXT    NOT NULL DEFAULT 'Mensual',
+      due_date     TEXT,
+      flow_type    TEXT    NOT NULL DEFAULT 'expense',
+      inventory_id INTEGER REFERENCES inventories(id) ON DELETE SET NULL
+    );
+    INSERT INTO personal_budgets_v2 SELECT id, user_id, category, amount, month, created_at, frequency, due_date, flow_type, inventory_id FROM personal_budgets;
+    DROP TABLE personal_budgets;
+    ALTER TABLE personal_budgets_v2 RENAME TO personal_budgets;
+    COMMIT;
+  `);
+  db.exec('PRAGMA foreign_keys = ON');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_personal_budgets_user_month ON personal_budgets(user_id, month)');
+}
+
 if (!sessionCols.includes('budget_category')) db.exec('ALTER TABLE purchase_sessions ADD COLUMN budget_category TEXT');
 
 const ptCols = db.prepare('PRAGMA table_info(personal_transactions)').all().map(c => c.name);
