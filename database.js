@@ -1360,6 +1360,7 @@ module.exports = {
           }
         });
       }
+      db.prepare('DELETE FROM personal_transactions WHERE source_purchase_session_id = ?').run(sessionId);
       db.prepare('DELETE FROM purchase_sessions WHERE id = ?').run(sessionId);
       db.exec('COMMIT');
       return { deleted: true, receipt_image: session.receipt_image };

@@ -6,14 +6,17 @@
   // ── State ──────────────────────────────────────────────────────────────────
   const _now = new Date();
   let _month = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+  let _range          = 1; // months to load
   let _inventories    = [];
   let _editingFixedId = null;
   let _editingTxId    = null;
   let _currentPeriod  = 'biweekly';
   let _lastFixedCosts = null;
   let _selectedRow    = null; // { id, tab, flow_type, data:{category,amount,frequency,due_date} }
+  let _donutChart     = null;
 
   // ── DOM refs ───────────────────────────────────────────────────────────────
+  const elRange        = document.getElementById('pb-range');
   const elMonth        = document.getElementById('pb-month');
   const elIncomeReal   = document.getElementById('pb-income-real');
   const elExpenseReal  = document.getElementById('pb-expense-real');
@@ -614,20 +617,102 @@
     } catch { /* non-fatal */ }
   }
 
-  // ── Load data for current month ────────────────────────────────────────────
+  // ── Month range helpers ────────────────────────────────────────────────────
+  function monthsBack(base, n) {
+    // Returns array of YYYY-MM strings: [base, base-1, ..., base-(n-1)]
+    const [y, m] = base.split('-').map(Number);
+    const months = [];
+    for (let i = 0; i < n; i++) {
+      const d = new Date(y, m - 1 - i, 1);
+      months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    }
+    return months;
+  }
+
+  // ── Load data for current month / range ────────────────────────────────────
   async function load() {
     try {
-      const data = await apiFetch('GET', `/api/personal-budget?month=${_month}`);
-      if (!data) return;
+      const months = monthsBack(_month, _range);
+      const results = await Promise.all(
+        months.map(mo => apiFetch('GET', `/api/personal-budget?month=${mo}`))
+      );
+
+      // Merge transactions across all months
+      const allTx = results.flatMap(d => d?.transactions || []);
+
+      // Aggregate summary
+      const income_real  = allTx.filter(t => t.type === 'income') .reduce((s, t) => s + t.amount, 0);
+      const expense_real = allTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      const firstData    = results[0];
+
       renderSummary({
-        ...data.summary,
-        income_projected:  data.summary.income_projected,
-        expense_projected: data.summary.expense_projected,
+        income_real,
+        expense_real,
+        balance_real:      income_real - expense_real,
+        income_projected:  firstData?.summary?.income_projected  || 0,
+        expense_projected: firstData?.summary?.expense_projected || 0,
       });
-      renderTable(data.transactions);
+      renderTable(allTx);
+      renderDonut(allTx);
     } catch {
       showToast(t('personalBudget.errorLoad'), 'error');
     }
+  }
+
+  // ── Donut chart ────────────────────────────────────────────────────────────
+  const CHART_COLORS = [
+    '#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6',
+    '#EC4899','#14B8A6','#F97316','#6366F1','#84CC16',
+  ];
+
+  function renderDonut(transactions) {
+    const expenses = transactions.filter(tx => tx.type === 'expense');
+    if (!expenses.length) {
+      document.getElementById('pb-chart-card').hidden = true;
+      return;
+    }
+
+    // Group by category
+    const totals = {};
+    expenses.forEach(tx => {
+      totals[tx.category] = (totals[tx.category] || 0) + tx.amount;
+    });
+    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    const grand  = sorted.reduce((s, [, v]) => s + v, 0);
+
+    const labels = sorted.map(([k]) => k);
+    const data   = sorted.map(([, v]) => v);
+    const colors = sorted.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
+
+    const canvas = document.getElementById('pb-donut-canvas');
+    if (_donutChart) { _donutChart.destroy(); _donutChart = null; }
+    _donutChart = new Chart(canvas, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 1.5, borderColor: 'var(--surface)' }] },
+      options: {
+        cutout: '68%',
+        plugins: { legend: { display: false }, tooltip: { callbacks: {
+          label: ctx => ` ${fmt(ctx.parsed)} (${Math.round(ctx.parsed / grand * 100)}%)`,
+        }}},
+        animation: { duration: 400 },
+      },
+    });
+
+    // Custom legend
+    const legendEl = document.getElementById('pb-chart-legend');
+    legendEl.innerHTML = sorted.slice(0, 7).map(([cat, amt], i) => `
+      <div class="pb-legend-item">
+        <span class="pb-legend-dot" style="background:${colors[i]}"></span>
+        <span class="pb-legend-cat">${escHtml(cat)}</span>
+        <span class="pb-legend-pct">${Math.round(amt / grand * 100)}%</span>
+        <span class="pb-legend-amt">${fmt(amt)}</span>
+      </div>`).join('');
+
+    // Period label
+    const periodEl = document.getElementById('pb-chart-period');
+    if (periodEl) periodEl.textContent = _range === 1 ? elMonth.value : `Últimos ${_range} meses`;
+
+    document.getElementById('pb-chart-card').hidden = false;
   }
 
   // ── Populate inventory select ──────────────────────────────────────────────
@@ -690,6 +775,17 @@
       clearSelection();
     });
   });
+
+  // ── Range change ───────────────────────────────────────────────────────────
+  if (elRange) {
+    elRange.addEventListener('change', () => {
+      _range = +elRange.value;
+      // Multi-month range: hide the month picker (irrelevant — always uses current month as base)
+      elMonth.style.display = _range > 1 ? 'none' : '';
+      clearSelection();
+      load();
+    });
+  }
 
   // ── Month change ───────────────────────────────────────────────────────────
   elMonth.addEventListener('change', () => {
@@ -784,8 +880,9 @@
   document.addEventListener('langchange', () => { load(); loadFixedCosts(); applyPeriodLabels(); });
 
   // ── Init ──────────────────────────────────────────────────────────────────
+  if (elRange) elRange.value = String(_range);
   elMonth.value          = _month;
-  elDate.value           = new Date().toISOString().slice(0, 10);
+  const _id = new Date(); elDate.value = `${_id.getFullYear()}-${String(_id.getMonth()+1).padStart(2,'0')}-${String(_id.getDate()).padStart(2,'0')}`;
   elPeriodSelector.value = _currentPeriod;
   applyTypeVisibility();
   applyPeriodLabels();

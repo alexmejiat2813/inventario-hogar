@@ -66,10 +66,15 @@
   <main class="main">
     <div class="inv-panel">
 
-      <!-- Month selector -->
+      <!-- Month selector + range -->
       <div class="pb-month-bar">
         <span class="pb-month-title" data-i18n="personalBudget.title">Presupuesto Personal</span>
         <div class="pb-month-bar-right">
+          <select id="pb-range" class="pb-month-input" aria-label="Rango">
+            <option value="1" selected>Este mes</option>
+            <option value="3">Últimos 3 meses</option>
+            <option value="6">Últimos 6 meses</option>
+          </select>
           <input type="month" id="pb-month" class="pb-month-input" aria-label="Mes">
         </div>
       </div>
@@ -129,6 +134,20 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- Distribución de gastos por categoría -->
+      <div class="dash-card pb-chart-card" id="pb-chart-card" hidden>
+        <div class="pb-chart-header">
+          <span class="pb-chart-title" data-i18n="personalBudget.chart.title">Distribución de Gastos</span>
+          <span class="pb-chart-period" id="pb-chart-period"></span>
+        </div>
+        <div class="pb-chart-body">
+          <div class="pb-chart-wrap">
+            <canvas id="pb-donut-canvas" width="200" height="200"></canvas>
+          </div>
+          <div class="pb-chart-legend" id="pb-chart-legend"></div>
+        </div>
       </div>
 
       <!-- Historial y Planificación (tabbed) -->
@@ -339,6 +358,7 @@
 
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
+  <script src="/js/vendor/chart.umd.min.js"></script>
   <script src="/js/i18n.js"></script>
   <script src="/js/utils.js"></script>
   <script src="/js/header.js"></script>
