@@ -728,10 +728,13 @@ tr.pb-row--selected td { background: var(--accent-bg); }
   display: flex;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
-  overflow: hidden;
 }
 .pb-action-group > * + * { border-left: 1px solid var(--border); }
 .pb-action-group .pb-dropdown { display: flex; }
+.pb-action-group > :first-child,
+.pb-action-group > :first-child .pb-icon-btn { border-radius: var(--r-sm) 0 0 var(--r-sm); }
+.pb-action-group > :last-child,
+.pb-action-group > :last-child .pb-icon-btn  { border-radius: 0 var(--r-sm) var(--r-sm) 0; }
 
 .pb-icon-btn {
   display: inline-flex;
