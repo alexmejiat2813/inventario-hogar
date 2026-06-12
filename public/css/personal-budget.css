@@ -773,6 +773,142 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 .pb-icon-btn--pay:not(:disabled)    { color: var(--accent); background: var(--accent-bg); }
 .pb-icon-btn--danger:not(:disabled) { color: var(--danger); background: var(--danger-bg); }
 
+/* ── Skeleton loading ── */
+@keyframes pb-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.pb-kpi-card--loading .pb-skeleton-line {
+  color: transparent !important;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+  background-size: 800px 100%;
+  animation: pb-shimmer 1.4s infinite linear;
+  pointer-events: none;
+}
+.pb-skeleton-value { display: block; height: 1.5rem; max-width: 120px; }
+.pb-skeleton-sub   { display: block; height: .85rem; max-width: 90px;  margin-top: .15rem; }
+
+/* ── Deviation alert badge ── */
+.pb-deviation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pb-deviation-badge--warn {
+  background: #FEF3C7;
+  color: #92400E;
+}
+.pb-deviation-badge--alert {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+/* ── Progress bar (mes vs. gasto) ── */
+.pb-progress-wrap {
+  margin-top: .6rem;
+}
+.pb-progress-track {
+  position: relative;
+  height: 6px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.pb-progress-month {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  background: var(--text-muted);
+  opacity: .35;
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+.pb-progress-spent {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  background: var(--success);
+  border-radius: 999px;
+  transition: width .4s ease, background .3s;
+}
+.pb-progress-spent--warn  { background: #F59E0B; }
+.pb-progress-spent--alert { background: var(--danger); }
+.pb-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: .25rem;
+}
+.pb-progress-label {
+  font-size: .6rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Table row fade microinteraction ── */
+.pb-tx-table tbody tr,
+.pb-fc-table tbody tr {
+  transition: opacity .12s ease;
+}
+.pb-rows-filtering .pb-tx-table tbody tr,
+.pb-rows-filtering .pb-fc-table tbody tr {
+  opacity: .4;
+}
+
+/* ── Budget toggle ── */
+.confirm-budget-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  cursor: pointer;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--text);
+  padding: .5rem 0 .25rem;
+}
+.confirm-budget-toggle-check {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Flujos empty state ── */
+.pb-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+.pb-empty-icon {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text-muted);
+}
+.pb-empty-title {
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.pb-empty-sub {
+  font-size: .8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
 /* ── Modal overlay ── */
 .pb-modal-overlay {
   position: fixed;

@@ -4,7 +4,8 @@
   await I18N.init();
 
   // ── State ──────────────────────────────────────────────────────────────────
-  let _month          = new Date().toISOString().slice(0, 7);
+  const _now = new Date();
+  let _month = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
   let _inventories    = [];
   let _editingFixedId = null;
   let _editingTxId    = null;
@@ -284,14 +285,64 @@
 
   const MONTHLY_FACTOR = { Mensual: 1, Quincenal: 2, Semestral: 1 / 6, Anual: 1 / 12, Bianual: 1 / 24 };
 
+  // ── Refs for new elements ─────────────────────────────────────────────────
+  const elDeviationBadge  = document.getElementById('pb-deviation-badge');
+  const elProgressWrap    = document.getElementById('pb-progress-wrap');
+  const elProgressMonth   = document.getElementById('pb-progress-month');
+  const elProgressSpent   = document.getElementById('pb-progress-spent');
+  const elProgressLabelM  = document.getElementById('pb-progress-label-month');
+  const elProgressLabelS  = document.getElementById('pb-progress-label-spent');
+
   // ── Render summary cards ───────────────────────────────────────────────────
-  function renderSummary({ income_real, expense_real, balance_real }) {
+  function renderSummary({ income_real, expense_real, balance_real, income_projected, expense_projected }) {
+    // Remove skeleton state
+    document.querySelectorAll('.pb-kpi-card--loading').forEach(card => {
+      card.classList.remove('pb-kpi-card--loading');
+      card.querySelectorAll('.pb-skeleton-line').forEach(el => el.classList.remove('pb-skeleton-line', 'pb-skeleton-value', 'pb-skeleton-sub'));
+    });
+
     elIncomeReal.textContent  = fmt(income_real);
     elExpenseReal.textContent = fmt(expense_real);
 
     elBalanceReal.textContent = fmt(balance_real);
     elBalanceReal.className   = 'pb-kpi-real ' +
       (balance_real > 0 ? 'pb-kpi-real--positive' : balance_real < 0 ? 'pb-kpi-real--negative' : '');
+
+    // Deviation alert badge
+    if (elDeviationBadge && income_projected > 0) {
+      const pct = expense_real / income_projected;
+      if (pct >= 1) {
+        elDeviationBadge.textContent = '⚠ +100%';
+        elDeviationBadge.className   = 'pb-deviation-badge pb-deviation-badge--alert';
+        elDeviationBadge.hidden      = false;
+      } else if (pct >= 0.8) {
+        elDeviationBadge.textContent = `⚠ ${Math.round(pct * 100)}%`;
+        elDeviationBadge.className   = 'pb-deviation-badge pb-deviation-badge--warn';
+        elDeviationBadge.hidden      = false;
+      } else {
+        elDeviationBadge.hidden = true;
+      }
+    } else if (elDeviationBadge) {
+      elDeviationBadge.hidden = true;
+    }
+
+    // Monthly progress bar: % month elapsed vs % budget spent
+    if (elProgressWrap && income_projected > 0) {
+      const today    = new Date();
+      const daysInM  = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      const elapsed  = Math.round((today.getDate() / daysInM) * 100);
+      const spentPct = Math.min(Math.round((expense_real / income_projected) * 100), 100);
+      elProgressMonth.style.width = elapsed + '%';
+      elProgressSpent.style.width = spentPct + '%';
+      const spentClass = spentPct >= 100 ? 'pb-progress-spent--alert'
+                       : spentPct > elapsed + 10 ? 'pb-progress-spent--warn' : '';
+      elProgressSpent.className = 'pb-progress-spent ' + spentClass;
+      elProgressLabelM.textContent = `Mes ${elapsed}%`;
+      elProgressLabelS.textContent = `Gasto ${spentPct}%`;
+      elProgressWrap.hidden = false;
+    } else if (elProgressWrap) {
+      elProgressWrap.hidden = true;
+    }
 
     computeAndRenderProj();
   }
@@ -331,6 +382,12 @@
     const filtered = q
       ? _lastTransactions.filter(tx => tx.category.toLowerCase().includes(q))
       : _lastTransactions;
+    // Microinteraction: brief fade
+    const tableEl = elTableWrap.querySelector('table');
+    if (tableEl) {
+      tableEl.classList.add('pb-rows-filtering');
+      requestAnimationFrame(() => requestAnimationFrame(() => tableEl.classList.remove('pb-rows-filtering')));
+    }
     _renderTableRows(filtered);
   }
 
@@ -430,9 +487,30 @@
 
     if (!items.length) {
       elFixedCostsList.innerHTML = `
-        <tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.84rem">
-          ${t('personalBudget.fixedList.empty')}
+        <tr><td colspan="8">
+          <div class="pb-empty-state">
+            <div class="pb-empty-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                <line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/>
+              </svg>
+            </div>
+            <p class="pb-empty-title">${t('personalBudget.fixedList.empty')}</p>
+            <p class="pb-empty-sub">${t('personalBudget.fixedList.emptySub') || 'Planifica tus ingresos y gastos recurrentes'}</p>
+            <button class="btn btn-primary" style="font-size:.8rem;padding:.35rem .9rem" id="pb-empty-add-flow">
+              + ${t('personalBudget.fixedList.addFlow') || 'Agregar flujo'}
+            </button>
+          </div>
         </td></tr>`;
+      // Wire CTA to open dropdown with income_projected preselected
+      document.getElementById('pb-empty-add-flow')?.addEventListener('click', () => {
+        resetForm();
+        clearSelection();
+        elRecordType.value = 'income_projected';
+        applyTypeVisibility();
+        openModal('personalBudget.form.title');
+      });
       elFixedCostsFoot.hidden = true;
       return;
     }
@@ -444,7 +522,7 @@
       const { valQ, valM, valA } = itemPeriodValues(fc);
       const color = ft === 'income' ? 'var(--success)' : 'var(--accent)';
       return `
-      <tr data-flow="${ft}" data-freq="${escHtml(fc.frequency)}">
+      <tr data-flow="${ft}" data-freq="${escHtml(fc.frequency)}" data-category="${escHtml(fc.category.toLowerCase())}">
         <td class="pb-col-radio">
           <input type="radio" name="pb-row-select" class="pb-row-radio"
             data-id="${fc.id}" data-tab="fixed" data-flow="${ft}"
@@ -473,8 +551,16 @@
     const freqVal = elFcFilterFreq ? elFcFilterFreq.value : 'all';
     const q       = elSearch ? elSearch.value.toLowerCase().trim() : '';
     const rows    = elFixedCostsList.querySelectorAll('tr[data-flow]');
+
+    // Microinteraction: brief fade while filtering
+    const tableEl = elFixedCostsList.closest('table');
+    if (tableEl) {
+      tableEl.classList.add('pb-rows-filtering');
+      requestAnimationFrame(() => requestAnimationFrame(() => tableEl.classList.remove('pb-rows-filtering')));
+    }
+
     rows.forEach(row => {
-      const cat       = (row.querySelector('td:nth-child(3)')?.textContent || '').toLowerCase();
+      const cat       = row.dataset.category || '';
       const matchType = typeVal === 'all' || row.dataset.flow === typeVal;
       const matchFreq = freqVal === 'all' || row.dataset.freq === freqVal;
       const matchQ    = !q || cat.includes(q);
@@ -533,7 +619,11 @@
     try {
       const data = await apiFetch('GET', `/api/personal-budget?month=${_month}`);
       if (!data) return;
-      renderSummary(data.summary);
+      renderSummary({
+        ...data.summary,
+        income_projected:  data.summary.income_projected,
+        expense_projected: data.summary.expense_projected,
+      });
       renderTable(data.transactions);
     } catch {
       showToast(t('personalBudget.errorLoad'), 'error');
@@ -618,7 +708,7 @@
     elCategory.classList.remove('invalid');
     elAmount.classList.remove('invalid');
     elDate.classList.remove('invalid');
-    elDate.value = new Date().toISOString().slice(0, 10);
+    const _td = new Date(); elDate.value = `${_td.getFullYear()}-${String(_td.getMonth()+1).padStart(2,'0')}-${String(_td.getDate()).padStart(2,'0')}`;
     elSubmit.textContent = t('personalBudget.form.submit');
   }
 

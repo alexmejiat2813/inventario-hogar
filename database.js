@@ -307,6 +307,14 @@ if (!pbCols.includes('inventory_id')) db.exec('ALTER TABLE personal_budgets ADD 
 
 if (!sessionCols.includes('budget_category')) db.exec('ALTER TABLE purchase_sessions ADD COLUMN budget_category TEXT');
 
+const ptCols = db.prepare('PRAGMA table_info(personal_transactions)').all().map(c => c.name);
+if (!ptCols.includes('source')) {
+  db.exec("ALTER TABLE personal_transactions ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'");
+}
+if (!ptCols.includes('source_purchase_session_id')) {
+  db.exec('ALTER TABLE personal_transactions ADD COLUMN source_purchase_session_id INTEGER REFERENCES purchase_sessions(id) ON DELETE SET NULL');
+}
+
 // ── Categorías: una sola tabla manda en todas las vistas ──────────────────────
 // [name ES (canónico/almacenado en productos), name EN, name FR, emoji].
 const BASE_CATEGORIES = [
@@ -1314,10 +1322,10 @@ module.exports = {
         const invName = db.prepare('SELECT name FROM inventories WHERE id = ?').get(inventoryId)?.name || '';
         db.prepare(`
           INSERT INTO personal_transactions
-            (user_id, inventory_id, type, category, amount, description, date)
-          VALUES (?, ?, 'expense', ?, ?, ?, ?)
+            (user_id, inventory_id, type, category, amount, description, date, source, source_purchase_session_id)
+          VALUES (?, ?, 'expense', ?, ?, ?, ?, 'purchase', ?)
         `).run(userId, inventoryId, normalizedCategory, totalAmount,
-               `Compra Automatizada Inventario: ${invName}`, purchaseDate);
+               `Compra Automatizada Inventario: ${invName}`, purchaseDate, sessionId);
       }
 
       db.exec('COMMIT');

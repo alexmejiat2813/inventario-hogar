@@ -78,35 +78,38 @@
       <div class="pb-kpi-row">
 
         <!-- Ingresos -->
-        <div class="pb-kpi-card pb-kpi-income">
+        <div class="pb-kpi-card pb-kpi-income pb-kpi-card--loading">
           <span class="pb-kpi-label" data-i18n="personalBudget.summary.income">Ingresos</span>
-          <span class="pb-kpi-real pb-kpi-real--income" id="pb-income-real">—</span>
-          <span class="pb-kpi-sub">
+          <span class="pb-kpi-real pb-kpi-real--income pb-skeleton-line pb-skeleton-value" id="pb-income-real">—</span>
+          <span class="pb-kpi-sub pb-skeleton-line pb-skeleton-sub">
             <span data-i18n="personalBudget.summary.labelProjected">Proyectado</span>:
             <span id="pb-income-proj">—</span>
           </span>
         </div>
 
         <!-- Gastos -->
-        <div class="pb-kpi-card pb-kpi-expense">
+        <div class="pb-kpi-card pb-kpi-expense pb-kpi-card--loading">
           <span class="pb-kpi-label" data-i18n="personalBudget.summary.expense">Gastos</span>
-          <span class="pb-kpi-real pb-kpi-real--expense" id="pb-expense-real">—</span>
-          <span class="pb-kpi-sub">
+          <span class="pb-kpi-real pb-kpi-real--expense pb-skeleton-line pb-skeleton-value" id="pb-expense-real">—</span>
+          <span class="pb-kpi-sub pb-skeleton-line pb-skeleton-sub">
             <span data-i18n="personalBudget.summary.labelProjected">Proyectado</span>:
             <span id="pb-expense-proj">—</span>
           </span>
         </div>
 
         <!-- Balance + Neto proyectado inline -->
-        <div class="pb-kpi-card pb-kpi-balance">
+        <div class="pb-kpi-card pb-kpi-balance pb-kpi-card--loading">
           <div class="pb-kpi-balance-header">
             <span class="pb-kpi-label" data-i18n="personalBudget.summary.balance">Balance</span>
-            <div class="pb-kpi-net-badge">
-              <span id="pb-weekly-amount" class="pb-kpi-net-amount">—</span>
-              <select id="pb-period-selector" class="pb-period-mini" aria-label="Periodo">
-                <option value="biweekly" data-i18n="personalBudget.cashflow.periodBiweekly">Quincenal</option>
-                <option value="monthly"  data-i18n="personalBudget.cashflow.periodMonthly">Mensual</option>
-              </select>
+            <div style="display:flex;align-items:center;gap:.35rem">
+              <span id="pb-deviation-badge" class="pb-deviation-badge" hidden></span>
+              <div class="pb-kpi-net-badge">
+                <span id="pb-weekly-amount" class="pb-kpi-net-amount">—</span>
+                <select id="pb-period-selector" class="pb-period-mini" aria-label="Periodo">
+                  <option value="biweekly" data-i18n="personalBudget.cashflow.periodBiweekly">Quincenal</option>
+                  <option value="monthly"  data-i18n="personalBudget.cashflow.periodMonthly">Mensual</option>
+                </select>
+              </div>
             </div>
           </div>
           <span class="pb-kpi-real" id="pb-balance-real">—</span>
@@ -114,6 +117,16 @@
             <span data-i18n="personalBudget.summary.labelProjected">Proyectado</span>:
             <span id="pb-balance-proj">—</span>
           </span>
+          <div class="pb-progress-wrap" id="pb-progress-wrap" hidden>
+            <div class="pb-progress-track">
+              <div class="pb-progress-month" id="pb-progress-month" style="width:0%"></div>
+              <div class="pb-progress-spent" id="pb-progress-spent" style="width:0%"></div>
+            </div>
+            <div class="pb-progress-labels">
+              <span id="pb-progress-label-month" class="pb-progress-label"></span>
+              <span id="pb-progress-label-spent" class="pb-progress-label"></span>
+            </div>
+          </div>
         </div>
 
       </div>

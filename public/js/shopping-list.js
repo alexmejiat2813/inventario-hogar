@@ -569,8 +569,23 @@ async function showConfirmModal() {
 
   // Load personal budget expense categories for the link dropdown
   const budgetSection = document.getElementById('confirm-budget-section');
+  const budgetToggle  = document.getElementById('confirm-budget-toggle');
+  const budgetExpand  = document.getElementById('confirm-budget-expand');
   const budgetSelect  = document.getElementById('confirm-budget-category');
   const budgetHint    = document.getElementById('confirm-budget-hint');
+
+  // Compute dominant store from checked items
+  const allChecked = [...state.items.filter(i => i.checked), ...state.customItems.filter(i => i.checked)];
+  const storeCounts = {};
+  allChecked.forEach(item => {
+    const pd = state.purchaseData[item.id] || state.purchaseData['c' + item.id] || {};
+    const k = pd.storeId ? String(pd.storeId) : '__none__';
+    storeCounts[k] = (storeCounts[k] || 0) + 1;
+  });
+  const dominantStoreId = Object.entries(storeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '__none__';
+  const lsKey = `pb_cat_store_${dominantStoreId}`;
+  const savedCat = localStorage.getItem(lsKey) || '';
+
   budgetSelect.innerHTML = `<option value="">${tSafe('shopping.register.budgetCategoryNone', 'No vincular')}</option>`;
   try {
     const cats = await apiFetch('GET', '/api/personal-budget/expense-categories');
@@ -588,11 +603,31 @@ async function showConfirmModal() {
   } catch {
     budgetSection.hidden = true;
   }
-  budgetSelect.value = '';
-  if (budgetHint) budgetHint.hidden = true;
+
+  // Restore last used category for this store, toggle on if found
+  if (savedCat) {
+    budgetSelect.value = savedCat;
+    if (budgetToggle) budgetToggle.checked = true;
+    if (budgetExpand) budgetExpand.hidden = false;
+  } else {
+    budgetSelect.value = '';
+    if (budgetToggle) budgetToggle.checked = false;
+    if (budgetExpand) budgetExpand.hidden = true;
+  }
+
+  if (budgetHint) budgetHint.hidden = !budgetSelect.value;
   budgetSelect.onchange = () => {
     if (budgetHint) budgetHint.hidden = !budgetSelect.value;
   };
+  if (budgetToggle) {
+    budgetToggle.onchange = () => {
+      if (budgetExpand) budgetExpand.hidden = !budgetToggle.checked;
+      if (!budgetToggle.checked) {
+        budgetSelect.value = '';
+        if (budgetHint) budgetHint.hidden = true;
+      }
+    };
+  }
 
   document.getElementById('confirm-overlay').hidden = false;
 }
@@ -769,7 +804,24 @@ async function handleConfirm() {
       }),
     ];
 
-    const budgetCategory = document.getElementById('confirm-budget-category')?.value || null;
+    const budgetToggle   = document.getElementById('confirm-budget-toggle');
+    const budgetCategory = (budgetToggle?.checked
+      ? document.getElementById('confirm-budget-category')?.value
+      : null) || null;
+
+    // Persist chosen category per store for next time
+    if (budgetCategory) {
+      const pd0 = state.purchaseData[allChecked[0]?.id] || state.purchaseData['c' + allChecked[0]?.id] || {};
+      const storeCounts2 = {};
+      allChecked.forEach(item => {
+        const pd = state.purchaseData[item.id] || state.purchaseData['c' + item.id] || {};
+        const k = pd.storeId ? String(pd.storeId) : '__none__';
+        storeCounts2[k] = (storeCounts2[k] || 0) + 1;
+      });
+      const dominantStore2 = Object.entries(storeCounts2).sort((a, b) => b[1] - a[1])[0]?.[0] || '__none__';
+      localStorage.setItem(`pb_cat_store_${dominantStore2}`, budgetCategory);
+    }
+
     const session = await apiFetch('POST', '/api/purchases', {
       items,
       currency:        state.inventory?.currency || 'USD',
@@ -804,7 +856,14 @@ async function handleConfirm() {
 
     closeConfirmModal();
     render();
-    showToast(tSafe('shopping.register.success', 'Compra registrada'));
+    const sym = getCurrencySym();
+    const grandTotal = session?.total_amount;
+    let toastMsg = tSafe('shopping.register.success', 'Compra registrada');
+    if (grandTotal != null) {
+      toastMsg += ` · ${sym} ${grandTotal.toFixed(2)}`;
+      if (budgetCategory) toastMsg += ` → ${budgetCategory}`;
+    }
+    showToast(toastMsg);
 
     // Reload to reflect updated quantities
     setTimeout(() => loadList(), 400);
