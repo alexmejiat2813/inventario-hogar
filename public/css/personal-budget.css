@@ -271,6 +271,22 @@
   flex-wrap: wrap;
   margin-bottom: 1rem;
 }
+.pb-search-input {
+  flex: 1 1 140px;
+  min-width: 0;
+  max-width: 220px;
+  padding: .32rem .65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: .8rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s;
+}
+.pb-search-input:focus { border-color: var(--accent); }
+.pb-search-input::placeholder { color: var(--text-muted); }
 .pb-tabs {
   display: flex;
   gap: .2rem;
@@ -301,13 +317,20 @@
 /* ── Tab panels ── */
 .pb-tab-panel--hidden { display: none; }
 
+/* ── Sticky MONTO column ── */
+.pb-col-amount {
+  position: sticky;
+  right: 0;
+  background: var(--surface);
+  text-align: right;
+  white-space: nowrap;
+}
+.pb-tx-table thead .pb-col-amount { background: var(--surface); }
+.pb-tx-table tbody tr:hover .pb-col-amount { background: var(--bg); }
+.pb-tfoot .pb-col-amount { background: var(--surface); }
+
 /* ── tfoot subtotals ── */
 .pb-tfoot td { border-top: 2px solid var(--border); padding-top: .5rem; }
-.pb-tfoot-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 .pb-tfoot-label {
   font-size: .65rem;
   font-weight: 700;

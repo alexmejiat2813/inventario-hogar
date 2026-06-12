@@ -55,6 +55,7 @@
   const elFixedCostsFoot  = document.getElementById('pb-fixed-costs-foot');
   const elFcFilterType    = document.getElementById('pb-fc-filter-type');
   const elFcFilterFreq    = document.getElementById('pb-fc-filter-freq');
+  const elSearch          = document.getElementById('pb-search');
 
   // fixed-cost inline fields
   const elInventoryGroup = document.getElementById('pb-inventory-group');
@@ -322,24 +323,29 @@
       (net === 0 ? 'pb-kpi-net--zero' : isPositive ? 'pb-kpi-net--positive' : 'pb-kpi-net--negative');
   }
 
-  // ── Render transactions table ──────────────────────────────────────────────
-  function renderTable(transactions) {
-    if (!transactions.length) {
-      elTableWrap.innerHTML = `
-        <div class="empty-state" style="padding:2.5rem 1rem">
-          <div class="empty-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <line x1="12" y1="1" x2="12" y2="23"/>
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
-          </div>
-          <h3>${t('personalBudget.empty.title')}</h3>
-          <p>${t('personalBudget.empty.sub')}</p>
-        </div>`;
-      return;
-    }
+  // ── Search / filter helpers ────────────────────────────────────────────────
+  let _lastTransactions = [];
 
-    const rows = transactions.map(tx => {
+  function applyTxSearch() {
+    const q = elSearch ? elSearch.value.toLowerCase().trim() : '';
+    const filtered = q
+      ? _lastTransactions.filter(tx => tx.category.toLowerCase().includes(q))
+      : _lastTransactions;
+    _renderTableRows(filtered);
+  }
+
+  // ── Render transactions table ──────────────────────────────────────────────
+  function _renderTableRows(transactions) {
+    const tbody = elTableWrap.querySelector('tbody');
+    const tfoot = elTableWrap.querySelector('tfoot');
+    if (!tbody || !tfoot) return;
+
+    const txIncome  = transactions.filter(tx => tx.type === 'income') .reduce((s, tx) => s + tx.amount, 0);
+    const txExpense = transactions.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
+    const txBalance = txIncome - txExpense;
+    const balClass  = txBalance >= 0 ? 'pb-stat-value--positive' : 'pb-stat-value--negative';
+
+    tbody.innerHTML = transactions.map(tx => {
       const typeLabel = t(`personalBudget.table.${tx.type}`);
       const invName   = tx.inventory_name || t('personalBudget.table.noInventory');
       const sign      = tx.type === 'income' ? '+' : '-';
@@ -357,14 +363,34 @@
           <td>${escHtml(tx.category)}</td>
           <td class="pb-tx-desc pb-col-desc">${escHtml(tx.description || '—')}</td>
           <td class="pb-col-inv" style="color:var(--text-muted);font-size:.8rem">${escHtml(invName)}</td>
-          <td class="pb-tx-amount pb-tx-amount--${tx.type}">${sign}${fmt(tx.amount)}</td>
+          <td class="pb-tx-amount pb-tx-amount--${tx.type} pb-col-amount">${sign}${fmt(tx.amount)}</td>
         </tr>`;
     }).join('');
 
-    const txIncome  = transactions.filter(tx => tx.type === 'income') .reduce((s, tx) => s + tx.amount, 0);
-    const txExpense = transactions.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
-    const txBalance = txIncome - txExpense;
-    const balClass  = txBalance >= 0 ? 'pb-stat-value--positive' : 'pb-stat-value--negative';
+    tfoot.innerHTML = `
+      <tr>
+        <td colspan="6" class="pb-tfoot-label">${t('personalBudget.tabs.subtotal')}</td>
+        <td class="pb-tfoot-balance pb-col-amount ${balClass}">${txBalance >= 0 ? '+' : ''}${fmt(txBalance)}</td>
+      </tr>`;
+  }
+
+  function renderTable(transactions) {
+    _lastTransactions = transactions || [];
+
+    if (!_lastTransactions.length) {
+      elTableWrap.innerHTML = `
+        <div class="empty-state" style="padding:2.5rem 1rem">
+          <div class="empty-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <h3>${t('personalBudget.empty.title')}</h3>
+          <p>${t('personalBudget.empty.sub')}</p>
+        </div>`;
+      return;
+    }
 
     elTableWrap.innerHTML = `
       <div class="pb-table-scroll">
@@ -377,20 +403,14 @@
               <th>${t('personalBudget.table.colCategory')}</th>
               <th class="pb-col-desc">${t('personalBudget.table.colDescription')}</th>
               <th class="pb-col-inv">${t('personalBudget.table.colInventory')}</th>
-              <th style="text-align:right">${t('personalBudget.table.colAmount')}</th>
+              <th class="pb-col-amount" style="text-align:right">${t('personalBudget.table.colAmount')}</th>
             </tr>
           </thead>
-          <tbody>${rows}</tbody>
-          <tfoot class="pb-tfoot">
-            <tr>
-              <td colspan="7" class="pb-tfoot-row">
-                <span class="pb-tfoot-label">${t('personalBudget.tabs.subtotal')}</span>
-                <span class="pb-tfoot-balance ${balClass}">${txBalance >= 0 ? '+' : ''}${fmt(txBalance)}</span>
-              </td>
-            </tr>
-          </tfoot>
+          <tbody></tbody>
+          <tfoot class="pb-tfoot"></tfoot>
         </table>
       </div>`;
+    _renderTableRows(_lastTransactions);
   }
 
   function applyPeriodLabels() { /* net label lives inline in balance card */ }
@@ -450,17 +470,21 @@
   function applyFcFilter() {
     const typeVal = elFcFilterType ? elFcFilterType.value : 'all';
     const freqVal = elFcFilterFreq ? elFcFilterFreq.value : 'all';
+    const q       = elSearch ? elSearch.value.toLowerCase().trim() : '';
     const rows    = elFixedCostsList.querySelectorAll('tr[data-flow]');
     rows.forEach(row => {
+      const cat       = (row.querySelector('td:nth-child(3)')?.textContent || '').toLowerCase();
       const matchType = typeVal === 'all' || row.dataset.flow === typeVal;
       const matchFreq = freqVal === 'all' || row.dataset.freq === freqVal;
-      row.classList.toggle('pb-row-hidden', !(matchType && matchFreq));
+      const matchQ    = !q || cat.includes(q);
+      row.classList.toggle('pb-row-hidden', !(matchType && matchFreq && matchQ));
     });
 
     // Recalculate tfoot only on visible (matching) items
     const visibleItems = (_lastFixedCosts || []).filter(fc =>
       (typeVal === 'all' || (fc.flow_type || 'expense') === typeVal) &&
-      (freqVal === 'all' || fc.frequency === freqVal)
+      (freqVal === 'all' || fc.frequency === freqVal) &&
+      (!q || fc.category.toLowerCase().includes(q))
     );
 
     if (!visibleItems.length) {
@@ -550,6 +574,15 @@
   // ── Projected flows filters ───────────────────────────────────────────────
   elFcFilterType.addEventListener('change', applyFcFilter);
   elFcFilterFreq.addEventListener('change', applyFcFilter);
+
+  // ── Search by category ────────────────────────────────────────────────────
+  if (elSearch) {
+    elSearch.addEventListener('input', () => {
+      const activeTab = document.querySelector('.pb-tab--active')?.dataset.tab;
+      if (activeTab === 'fixed') applyFcFilter();
+      else applyTxSearch();
+    });
+  }
 
   // ── Tab switching ─────────────────────────────────────────────────────────
   document.querySelectorAll('.pb-tab').forEach(tab => {
