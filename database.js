@@ -1256,10 +1256,11 @@ module.exports = {
       const { lastInsertRowid: sessionId } = db.prepare(`
         INSERT INTO purchase_sessions
           (inventory_id, user_id, total_amount, currency, purchase_date, receipt_image,
-           subtotal_before_tax, total_tax, tax_breakdown)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           subtotal_before_tax, total_tax, tax_breakdown, budget_category)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(inventoryId, userId, totalAmount, currency, purchaseDate, receiptImage || null,
-             subtotalBeforeTax || null, totalTax || null, taxBreakdown);
+             subtotalBeforeTax || null, totalTax || null, taxBreakdown,
+             budgetCategory ? budgetCategory.trim() : null);
 
       const insItem = db.prepare(`
         INSERT INTO purchase_items
@@ -1277,11 +1278,11 @@ module.exports = {
         INSERT OR IGNORE INTO catalog_products (name, category, default_unit, created_by)
         VALUES (?, 'Otros', 'unidades', ?)
       `);
+      const getCatalog = db.prepare('SELECT id, category FROM catalog_products WHERE LOWER(name) = LOWER(?)');
       const insProduct = db.prepare(`
         INSERT INTO products (name, category, current_qty, min_qty, unit, inventory_id, catalog_product_id)
-        VALUES (?, 'Otros', 0, 0, 'unidades', ?, ?)
+        VALUES (?, ?, 0, 0, 'unidades', ?, ?)
       `);
-      const getCatalog = db.prepare('SELECT id FROM catalog_products WHERE LOWER(name) = LOWER(?)');
 
       items.forEach(item => {
         const base = (item.quantityBought != null && item.unitPrice != null)
@@ -1295,7 +1296,8 @@ module.exports = {
           const name = item.productName.trim();
           insCatalog.run(name, userId);
           const cat = getCatalog.get(name);
-          const { lastInsertRowid: prodId } = insProduct.run(name, inventoryId, cat?.id || null);
+          const catName = cat?.category || 'Otros';
+          const { lastInsertRowid: prodId } = insProduct.run(name, catName, inventoryId, cat?.id || null);
           resolvedProductId = prodId;
         }
 
@@ -1317,7 +1319,7 @@ module.exports = {
         }
       });
 
-      if (budgetCategory && userId) {
+      if (budgetCategory && userId && totalAmount > 0) {
         const normalizedCategory = budgetCategory.trim();
         const invName = db.prepare('SELECT name FROM inventories WHERE id = ?').get(inventoryId)?.name || '';
         db.prepare(`
@@ -1432,6 +1434,13 @@ module.exports = {
           base
         );
       });
+
+      // Sync linked personal_transaction if one exists (keeps amount + date in sync)
+      db.prepare(`
+        UPDATE personal_transactions
+        SET amount = ?, date = ?
+        WHERE source_purchase_session_id = ? AND source = 'purchase'
+      `).run(totalAmount, purchaseDate, sessionId);
 
       db.exec('COMMIT');
       return db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);

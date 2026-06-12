@@ -347,6 +347,23 @@
       elProgressWrap.hidden = true;
     }
 
+    // Proyección fin de mes: (gastoActual / díasTranscurridos) * díasDelMes
+    const elProjectionHint = document.getElementById('pb-projection-hint');
+    if (elProjectionHint && _range === 1) {
+      const today   = new Date();
+      const daysInM = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      const elapsed = today.getDate();
+      if (elapsed > 0 && expense_real > 0) {
+        const projected = (expense_real / elapsed) * daysInM;
+        elProjectionHint.textContent = `Proyección fin de mes: ${fmt(projected)}`;
+        elProjectionHint.hidden = false;
+      } else {
+        elProjectionHint.hidden = true;
+      }
+    } else if (elProjectionHint) {
+      elProjectionHint.hidden = true;
+    }
+
     computeAndRenderProj();
   }
 
@@ -506,7 +523,6 @@
             </button>
           </div>
         </td></tr>`;
-      // Wire CTA to open dropdown with income_projected preselected
       document.getElementById('pb-empty-add-flow')?.addEventListener('click', () => {
         resetForm();
         clearSelection();
@@ -579,8 +595,17 @@
 
     if (!visibleItems.length) {
       elFixedCostsFoot.hidden = true;
+      // Show "no filter results" state without the CTA (items exist, just filtered out)
+      const allRows = elFixedCostsList.querySelectorAll('tr[data-flow]');
+      if (allRows.length) {
+        elFixedCostsList.querySelector('tr[data-flow]')?.closest('tbody')?.insertAdjacentHTML('beforeend', `
+          <tr id="pb-fc-no-results"><td colspan="8" style="text-align:center;color:var(--text-muted);padding:.75rem;font-size:.8rem">
+            Sin resultados para este filtro
+          </td></tr>`);
+      }
       return;
     }
+    document.getElementById('pb-fc-no-results')?.remove();
 
     let netQuincena = 0;
     let netMensual  = 0;
@@ -694,7 +719,7 @@
         plugins: { legend: { display: false }, tooltip: { callbacks: {
           label: ctx => ` ${fmt(ctx.parsed)} (${Math.round(ctx.parsed / grand * 100)}%)`,
         }}},
-        animation: { duration: 400 },
+        animation: { duration: 700, easing: 'easeOutQuart' },
       },
     });
 
@@ -780,9 +805,14 @@
   if (elRange) {
     elRange.addEventListener('change', () => {
       _range = +elRange.value;
-      // Multi-month range: hide the month picker (irrelevant — always uses current month as base)
       elMonth.style.display = _range > 1 ? 'none' : '';
       clearSelection();
+      // Brief fade on the table while data reloads
+      const tableEl = elTableWrap.querySelector('table');
+      if (tableEl) {
+        tableEl.classList.add('pb-rows-filtering');
+        requestAnimationFrame(() => requestAnimationFrame(() => tableEl.classList.remove('pb-rows-filtering')));
+      }
       load();
     });
   }

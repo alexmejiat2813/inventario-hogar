@@ -54,9 +54,14 @@
   flex-direction: column;
   gap: .2rem;
   box-shadow: 0 2px 4px rgba(0,0,0,.02);
-  transition: box-shadow 180ms;
+  transition: box-shadow 180ms, transform 180ms;
 }
-.pb-kpi-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,.05); }
+@media (hover: hover) {
+  .pb-kpi-card:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    transform: translateY(-2px);
+  }
+}
 
 .pb-kpi-label {
   font-size: .6rem;
@@ -854,6 +859,10 @@ tr.pb-row--selected td { background: var(--accent-bg); }
   0%   { background-position: -400px 0; }
   100% { background-position:  400px 0; }
 }
+@keyframes pb-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
 .pb-kpi-card--loading .pb-skeleton-line {
   color: transparent !important;
   border-radius: 6px;
@@ -864,6 +873,11 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 }
 .pb-skeleton-value { display: block; height: 1.5rem; max-width: 120px; }
 .pb-skeleton-sub   { display: block; height: .85rem; max-width: 90px;  margin-top: .15rem; }
+/* Valores reales aparecen con fade tras quitar skeleton */
+.pb-kpi-card:not(.pb-kpi-card--loading) .pb-kpi-real,
+.pb-kpi-card:not(.pb-kpi-card--loading) .pb-kpi-proj {
+  animation: pb-fade-in 220ms ease both;
+}
 
 /* ── Deviation alert badge ── */
 .pb-deviation-badge {
@@ -877,6 +891,7 @@ tr.pb-row--selected td { background: var(--accent-bg); }
   letter-spacing: .04em;
   text-transform: uppercase;
   white-space: nowrap;
+  transition: opacity .2s ease;
 }
 .pb-deviation-badge--warn {
   background: #FEF3C7;
@@ -924,6 +939,14 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 }
 .pb-progress-label {
   font-size: .6rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Proyección fin de mes ── */
+.pb-projection-hint {
+  margin: .4rem 0 0;
+  font-size: .7rem;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
