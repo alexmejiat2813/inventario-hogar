@@ -294,7 +294,7 @@
   const elProgressLabelS  = document.getElementById('pb-progress-label-spent');
 
   // ── Render summary cards ───────────────────────────────────────────────────
-  function renderSummary({ income_real, expense_real, balance_real, income_projected, expense_projected }) {
+  function renderSummary({ income_real, expense_real, balance_real, income_projected }) {
     // Remove skeleton state
     document.querySelectorAll('.pb-kpi-card--loading').forEach(card => {
       card.classList.remove('pb-kpi-card--loading');

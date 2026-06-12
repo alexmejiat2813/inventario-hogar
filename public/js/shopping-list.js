@@ -811,7 +811,6 @@ async function handleConfirm() {
 
     // Persist chosen category per store for next time
     if (budgetCategory) {
-      const pd0 = state.purchaseData[allChecked[0]?.id] || state.purchaseData['c' + allChecked[0]?.id] || {};
       const storeCounts2 = {};
       allChecked.forEach(item => {
         const pd = state.purchaseData[item.id] || state.purchaseData['c' + item.id] || {};
