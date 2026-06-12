@@ -1273,7 +1273,7 @@ module.exports = {
         INSERT INTO products (name, category, current_qty, min_qty, unit, inventory_id, catalog_product_id)
         VALUES (?, 'Otros', 0, 0, 'unidades', ?, ?)
       `);
-      const getCatalog = db.prepare('SELECT id FROM catalog_products WHERE name = ?');
+      const getCatalog = db.prepare('SELECT id FROM catalog_products WHERE LOWER(name) = LOWER(?)');
 
       items.forEach(item => {
         const base = (item.quantityBought != null && item.unitPrice != null)
@@ -1310,12 +1310,13 @@ module.exports = {
       });
 
       if (budgetCategory && userId) {
+        const normalizedCategory = budgetCategory.trim();
         const invName = db.prepare('SELECT name FROM inventories WHERE id = ?').get(inventoryId)?.name || '';
         db.prepare(`
           INSERT INTO personal_transactions
             (user_id, inventory_id, type, category, amount, description, date)
           VALUES (?, ?, 'expense', ?, ?, ?, ?)
-        `).run(userId, inventoryId, budgetCategory, totalAmount,
+        `).run(userId, inventoryId, normalizedCategory, totalAmount,
                `Compra Automatizada Inventario: ${invName}`, purchaseDate);
       }
 

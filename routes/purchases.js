@@ -27,13 +27,16 @@ router.post('/', requireEditorOrOwner, (req, res) => {
   try {
     const { items, currency, purchase_date, tax_ids, budget_category } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
+    if (!purchase_date || !/^\d{4}-\d{2}-\d{2}$/.test(purchase_date)) {
+      return res.status(400).json({ error: 'purchase_date es requerida (YYYY-MM-DD).' });
+    }
     const session = db.createPurchaseSession({
       inventoryId:    req.inventoryId,
       userId:         req.user.id,
       items,
       taxIds:         Array.isArray(tax_ids) ? tax_ids : [],
-      currency:       currency       || 'USD',
-      purchaseDate:   purchase_date  || new Date().toISOString().slice(0, 10),
+      currency:       currency || 'USD',
+      purchaseDate:   purchase_date,
       receiptImage:   null,
       budgetCategory: budget_category || null,
     });

@@ -558,7 +558,7 @@ async function showConfirmModal() {
 
   state.selectedTaxIds = state.taxes.map(tx => tx.id);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const _d = new Date(); const today = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
   document.getElementById('confirm-date').textContent = formatDate(today);
   document.getElementById('confirm-items').innerHTML = buildConfirmItems(checkedItems, checkedCustom);
   renderTaxSection();
@@ -735,7 +735,7 @@ async function handleConfirm() {
   btn.textContent = tSafe('shopping.register.saving', 'Guardando…');
 
   try {
-    const today = new Date().toISOString().slice(0, 10);
+    const _d = new Date(); const today = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
     const items = [
       ...checkedItems.map(item => {
         const pd   = state.purchaseData[item.id] || {};
