@@ -256,9 +256,19 @@
 @media (max-width: 600px) {
   .pb-col-desc,
   .pb-col-inv  { display: none; }
+  /* Flujos: ocultar Vence, Quincena, Anual — queda Tipo·Categoría·Frecuencia·Mensual */
+  .pb-fc-table th:nth-child(5),
+  .pb-fc-table td:nth-child(5),
+  .pb-fc-table th:nth-child(6),
+  .pb-fc-table td:nth-child(6),
+  .pb-fc-table th:nth-child(8),
+  .pb-fc-table td:nth-child(8) { display: none; }
 }
 @media (max-width: 480px) {
   .pb-tx-date  { display: none; }
+  /* Flujos: también ocultar frecuencia en pantallas muy pequeñas */
+  .pb-fc-table th:nth-child(4),
+  .pb-fc-table td:nth-child(4) { display: none; }
 }
 @media (max-width: 400px) {
   .pb-tx-table th,
