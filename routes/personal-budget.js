@@ -295,4 +295,86 @@ router.delete('/transaction/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Settings: thresholds + categories ─────────────────────────────────────────
+
+// GET /api/personal-budget/settings
+router.get('/settings', (req, res) => {
+  const userId = req.user.id;
+  const thresholds  = db.getPersonalBudgetSettings(userId);
+  const categories  = db.getPersonalBudgetCategories(userId);
+  res.json({ thresholds, categories });
+});
+
+// PUT /api/personal-budget/settings/thresholds
+router.put('/settings/thresholds', (req, res) => {
+  const userId = req.user.id;
+  const { warn_pct, crit_pct } = req.body;
+  if (warn_pct == null || crit_pct == null || isNaN(+warn_pct) || isNaN(+crit_pct)) {
+    return res.status(400).json({ error: 'warn_pct y crit_pct son requeridos (números).' });
+  }
+  const w = +warn_pct, c = +crit_pct;
+  if (w <= 0 || w >= 1 || c <= 0 || c >= 1) {
+    return res.status(400).json({ error: 'Los umbrales deben estar entre 0 y 1 (ej: 0.60).' });
+  }
+  if (w >= c) {
+    return res.status(400).json({ error: 'warn_pct debe ser menor que crit_pct.' });
+  }
+  const settings = db.updatePersonalBudgetThresholds(userId, { warnPct: w, critPct: c });
+  res.json(settings);
+});
+
+// GET /api/personal-budget/categories
+router.get('/categories', (req, res) => {
+  res.json(db.getPersonalBudgetCategories(req.user.id));
+});
+
+// POST /api/personal-budget/categories
+router.post('/categories', (req, res) => {
+  const userId = req.user.id;
+  const { name, flow_type } = req.body;
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'name es requerido.' });
+  }
+  if (!['income', 'expense'].includes(flow_type)) {
+    return res.status(400).json({ error: 'flow_type debe ser "income" o "expense".' });
+  }
+  const result = db.createPersonalBudgetCategory(userId, { name, flowType: flow_type });
+  if (result.error) return res.status(409).json({ error: result.error });
+  res.status(201).json(result.category);
+});
+
+// PUT /api/personal-budget/categories/:id
+router.put('/categories/:id', (req, res) => {
+  const userId = req.user.id;
+  const id = +req.params.id;
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'ID inválido.' });
+  const { name, flow_type } = req.body;
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'name es requerido.' });
+  }
+  if (!['income', 'expense'].includes(flow_type)) {
+    return res.status(400).json({ error: 'flow_type debe ser "income" o "expense".' });
+  }
+  const result = db.updatePersonalBudgetCategory(userId, id, { name, flowType: flow_type });
+  if (result.error === 'not_found') return res.status(404).json({ error: 'Categoría no encontrada.' });
+  if (result.error) return res.status(409).json({ error: result.error });
+  res.json(result.category);
+});
+
+// DELETE /api/personal-budget/categories/:id
+router.delete('/categories/:id', (req, res) => {
+  const userId = req.user.id;
+  const id = +req.params.id;
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'ID inválido.' });
+  const result = db.deletePersonalBudgetCategory(userId, id);
+  if (result.error === 'not_found') return res.status(404).json({ error: 'Categoría no encontrada.' });
+  if (result.error === 'in_use') {
+    return res.status(409).json({
+      error: `La categoría "${result.category}" tiene transacciones asociadas y no puede eliminarse.`,
+      in_use: true,
+    });
+  }
+  res.json({ ok: true });
+});
+
 module.exports = router;

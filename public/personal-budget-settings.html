@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración — Presupuesto Personal</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/personal-budget.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icons/icon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#082F49">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <a href="/personal-budget" class="btn-back" title="Presupuesto Personal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          <span class="btn-back-label">Presupuesto</span>
+        </a>
+        <div class="header-brand">
+          <div class="header-wordmark">IH</div>
+          <h1 class="header-title">Configuración</h1>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="profile-menu-wrap" id="profile-menu-wrap">
+          <button class="profile-btn" id="profile-btn" aria-label="Menú de usuario" aria-expanded="false">
+            <img class="user-avatar" id="user-avatar" src="" alt="" hidden>
+            <div class="avatar-placeholder" id="avatar-placeholder"></div>
+          </button>
+          <div class="profile-dropdown" id="profile-dropdown" hidden>
+            <div class="dropdown-header">
+              <img class="dropdown-avatar" id="dropdown-avatar" src="" alt="" hidden>
+              <div class="dropdown-avatar-ph" id="dropdown-avatar-ph"></div>
+              <div class="dropdown-user-info">
+                <span class="dropdown-name"  id="dropdown-name"></span>
+                <span class="dropdown-email" id="dropdown-email"></span>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-item-danger" id="btn-logout">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Cerrar sesión</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="inv-panel" style="max-width:680px">
+
+      <div id="toast-container" class="toast-container"></div>
+
+      <!-- ── Sección 1: Categorías ─────────────────────────────── -->
+      <section class="pbs-section">
+        <div class="pbs-section-header">
+          <div>
+            <h2 class="pbs-section-title">Categorías de Presupuesto</h2>
+            <p class="pbs-section-sub">Define las categorías de ingresos y gastos que usarás en tu presupuesto.</p>
+          </div>
+          <button class="btn btn-primary pbs-btn-sm" id="pbs-btn-add-cat">+ Agregar</button>
+        </div>
+
+        <!-- Add/edit inline form -->
+        <div class="pbs-cat-form" id="pbs-cat-form" hidden>
+          <input type="text" class="form-input" id="pbs-cat-name" placeholder="Nombre de categoría" maxlength="100">
+          <select class="form-select pbs-cat-type" id="pbs-cat-type">
+            <option value="expense">Gasto</option>
+            <option value="income">Ingreso</option>
+          </select>
+          <button class="btn btn-primary pbs-btn-sm" id="pbs-cat-save">Guardar</button>
+          <button class="btn pbs-btn-sm" id="pbs-cat-cancel">Cancelar</button>
+        </div>
+
+        <div id="pbs-cat-list" class="pbs-cat-list">
+          <div class="pbs-empty-row">Cargando categorías…</div>
+        </div>
+      </section>
+
+      <!-- ── Sección 2: Flujos Proyectados ─────────────────────── -->
+      <section class="pbs-section">
+        <div class="pbs-section-header">
+          <div>
+            <h2 class="pbs-section-title">Flujos Proyectados</h2>
+            <p class="pbs-section-sub">Gestiona tus ingresos y gastos planificados para el mes.</p>
+          </div>
+          <a href="/personal-budget" class="btn pbs-btn-sm">Ver dashboard</a>
+        </div>
+        <div class="pbs-flows-note">
+          Los flujos proyectados se administran desde el dashboard principal de Presupuesto Personal.
+          Usa el botón <strong>+ Nuevo Registro</strong> para agregar flujos de tipo "Proyectado".
+        </div>
+      </section>
+
+      <!-- ── Sección 3: Umbrales de Alerta ─────────────────────── -->
+      <section class="pbs-section">
+        <div class="pbs-section-header">
+          <div>
+            <h2 class="pbs-section-title">Umbrales de Alerta</h2>
+            <p class="pbs-section-sub">Controla cuándo el semáforo de proyección cambia de color.</p>
+          </div>
+        </div>
+
+        <form id="pbs-thresholds-form" class="pbs-thresholds-form">
+          <div class="pbs-threshold-row">
+            <div class="pbs-threshold-dot pbs-threshold-dot--warn"></div>
+            <label class="pbs-threshold-label">
+              Advertencia
+              <span class="pbs-threshold-hint">Mostrar alerta amarilla a partir de este % del presupuesto</span>
+            </label>
+            <div class="pbs-threshold-input-wrap">
+              <input type="number" class="form-input pbs-threshold-input" id="pbs-warn-pct"
+                min="1" max="99" step="1" value="60">
+              <span class="pbs-pct-sym">%</span>
+            </div>
+          </div>
+
+          <div class="pbs-threshold-row">
+            <div class="pbs-threshold-dot pbs-threshold-dot--crit"></div>
+            <label class="pbs-threshold-label">
+              Crítico
+              <span class="pbs-threshold-hint">Mostrar alerta roja a partir de este % del presupuesto</span>
+            </label>
+            <div class="pbs-threshold-input-wrap">
+              <input type="number" class="form-input pbs-threshold-input" id="pbs-crit-pct"
+                min="1" max="100" step="1" value="85">
+              <span class="pbs-pct-sym">%</span>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:.75rem">
+            <button type="submit" class="btn btn-primary pbs-btn-sm" id="pbs-thresholds-save">Guardar umbrales</button>
+          </div>
+        </form>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ── Confirm modal ────────────────────────────────────────── -->
+  <div class="pb-modal-overlay" id="pbs-confirm-modal" hidden>
+    <div class="pb-modal">
+      <div class="pb-modal-header">
+        <h3 class="pb-modal-title" id="pbs-confirm-title">Confirmar eliminación</h3>
+        <button class="pb-modal-close" id="pbs-confirm-close" aria-label="Cerrar">&times;</button>
+      </div>
+      <p id="pbs-confirm-body" style="padding:.5rem 1.25rem 1rem;color:var(--text-muted);font-size:.875rem"></p>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;padding:.75rem 1.25rem">
+        <button class="btn" id="pbs-confirm-cancel">Cancelar</button>
+        <button class="btn btn-danger" id="pbs-confirm-ok">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/header.js"></script>
+  <script src="/js/personal-budget-settings.js"></script>
+  <script src="/js/sw-register.js"></script>
+</body>
+</html>

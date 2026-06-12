@@ -240,6 +240,22 @@ db.exec(`
     category TEXT    NOT NULL,
     amount   REAL    NOT NULL DEFAULT 0
   );
+
+  CREATE TABLE IF NOT EXISTS personal_budget_categories (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name       TEXT    NOT NULL,
+    flow_type  TEXT    NOT NULL DEFAULT 'expense' CHECK(flow_type IN ('income','expense')),
+    created_at TEXT    DEFAULT (datetime('now','localtime'))
+  );
+
+  CREATE TABLE IF NOT EXISTS personal_budget_settings (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    alert_warn_pct  REAL    NOT NULL DEFAULT 0.60,
+    alert_crit_pct  REAL    NOT NULL DEFAULT 0.85,
+    updated_at      TEXT    DEFAULT (datetime('now','localtime'))
+  );
 `);
 
 // ── Indexes ───────────────────────────────────────────────────────────────────
@@ -263,6 +279,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_personal_tx_user_date        ON personal_transactions(user_id, date);
   CREATE INDEX IF NOT EXISTS idx_pb_plans_user               ON personal_budget_plans(user_id);
   CREATE INDEX IF NOT EXISTS idx_pb_plan_cats_plan           ON personal_budget_plan_categories(plan_id);
+  CREATE INDEX IF NOT EXISTS idx_pb_categories_user          ON personal_budget_categories(user_id);
+  CREATE INDEX IF NOT EXISTS idx_pb_settings_user            ON personal_budget_settings(user_id);
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -1893,5 +1911,74 @@ module.exports = {
     return db.prepare(
       'DELETE FROM personal_budget_plans WHERE id = ? AND user_id = ?'
     ).run(id, userId).changes > 0;
+  },
+
+  // ── Personal Budget Settings ───────────────────────────────────────────────
+  getPersonalBudgetSettings(userId) {
+    let row = db.prepare('SELECT * FROM personal_budget_settings WHERE user_id = ?').get(userId);
+    if (!row) {
+      db.prepare(
+        'INSERT INTO personal_budget_settings (user_id, alert_warn_pct, alert_crit_pct) VALUES (?, 0.60, 0.85)'
+      ).run(userId);
+      row = db.prepare('SELECT * FROM personal_budget_settings WHERE user_id = ?').get(userId);
+    }
+    return row;
+  },
+
+  updatePersonalBudgetThresholds(userId, { warnPct, critPct }) {
+    db.prepare(`
+      INSERT INTO personal_budget_settings (user_id, alert_warn_pct, alert_crit_pct, updated_at)
+      VALUES (?, ?, ?, datetime('now','localtime'))
+      ON CONFLICT(user_id) DO UPDATE SET
+        alert_warn_pct = excluded.alert_warn_pct,
+        alert_crit_pct = excluded.alert_crit_pct,
+        updated_at     = excluded.updated_at
+    `).run(userId, warnPct, critPct);
+    return this.getPersonalBudgetSettings(userId);
+  },
+
+  // ── Personal Budget Categories ─────────────────────────────────────────────
+  getPersonalBudgetCategories(userId) {
+    return db.prepare(
+      'SELECT * FROM personal_budget_categories WHERE user_id = ? ORDER BY flow_type, name'
+    ).all(userId);
+  },
+
+  createPersonalBudgetCategory(userId, { name, flowType }) {
+    const trimmed = name.trim();
+    const existing = db.prepare(
+      'SELECT id FROM personal_budget_categories WHERE user_id = ? AND LOWER(name) = LOWER(?)'
+    ).get(userId, trimmed);
+    if (existing) return { error: 'Ya existe una categoría con ese nombre.' };
+    const { lastInsertRowid } = db.prepare(
+      'INSERT INTO personal_budget_categories (user_id, name, flow_type) VALUES (?, ?, ?)'
+    ).run(userId, trimmed, flowType || 'expense');
+    return { category: db.prepare('SELECT * FROM personal_budget_categories WHERE id = ?').get(lastInsertRowid) };
+  },
+
+  updatePersonalBudgetCategory(userId, id, { name, flowType }) {
+    const trimmed = name.trim();
+    const conflict = db.prepare(
+      'SELECT id FROM personal_budget_categories WHERE user_id = ? AND LOWER(name) = LOWER(?) AND id != ?'
+    ).get(userId, trimmed, id);
+    if (conflict) return { error: 'Ya existe una categoría con ese nombre.' };
+    const { changes } = db.prepare(
+      'UPDATE personal_budget_categories SET name = ?, flow_type = ? WHERE id = ? AND user_id = ?'
+    ).run(trimmed, flowType || 'expense', id, userId);
+    if (!changes) return { error: 'not_found' };
+    return { category: db.prepare('SELECT * FROM personal_budget_categories WHERE id = ?').get(id) };
+  },
+
+  deletePersonalBudgetCategory(userId, id) {
+    const cat = db.prepare(
+      'SELECT * FROM personal_budget_categories WHERE id = ? AND user_id = ?'
+    ).get(id, userId);
+    if (!cat) return { error: 'not_found' };
+    const usedInTx = db.prepare(
+      "SELECT 1 AS x FROM personal_transactions WHERE user_id = ? AND category = ? LIMIT 1"
+    ).get(userId, cat.name);
+    if (usedInTx) return { error: 'in_use', category: cat.name };
+    db.prepare('DELETE FROM personal_budget_categories WHERE id = ? AND user_id = ?').run(id, userId);
+    return { ok: true };
   },
 };

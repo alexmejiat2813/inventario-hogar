@@ -7,6 +7,8 @@
   const _now = new Date();
   let _month = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
   let _range          = 1; // months to load
+  let _warnPct        = 0.60;
+  let _critPct        = 0.85;
   let _inventories    = [];
   let _editingFixedId = null;
   let _editingTxId    = null;
@@ -360,8 +362,8 @@
         let hintMod = '';
         if (income_projected > 0) {
           const ratio = projected / income_projected;
-          hintMod = ratio >= 0.85 ? 'pb-projection-hint--critical'
-                  : ratio >= 0.60 ? 'pb-projection-hint--warn'
+          hintMod = ratio >= _critPct ? 'pb-projection-hint--critical'
+                  : ratio >= _warnPct ? 'pb-projection-hint--warn'
                   : 'pb-projection-hint--safe';
         }
         elProjectionHint.className = `pb-projection-hint${hintMod ? ' ' + hintMod : ''}`;
@@ -927,7 +929,17 @@
   applyPeriodLabels();
   updateToolbar();
 
+  async function loadSettings() {
+    try {
+      const s = await apiFetch('GET', '/api/personal-budget/settings');
+      if (s?.thresholds) {
+        _warnPct = s.thresholds.alert_warn_pct ?? 0.60;
+        _critPct = s.thresholds.alert_crit_pct ?? 0.85;
+      }
+    } catch { /* non-fatal — keep defaults */ }
+  }
+
   initProfileMenu();
-  await Promise.all([loadProfileAvatar(), loadInventories(), load(), loadFixedCosts()]);
+  await Promise.all([loadProfileAvatar(), loadInventories(), loadSettings(), load(), loadFixedCosts()]);
 
 })();
