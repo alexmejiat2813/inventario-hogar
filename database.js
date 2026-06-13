@@ -2125,4 +2125,11 @@ module.exports = {
     db.prepare('DELETE FROM personal_budget_categories WHERE id = ? AND user_id = ?').run(id, userId);
     return { ok: true };
   },
+
+  backupTo(destPath) {
+    // VACUUM INTO produces a consistent snapshot safe for live databases.
+    // Unlike fs.copyFileSync, it flushes WAL and locks only for the duration
+    // of the copy — no risk of partial writes or torn pages.
+    db.exec(`VACUUM INTO '${destPath.replace(/'/g, "''")}'`);
+  },
 };

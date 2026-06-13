@@ -5,6 +5,7 @@ const crypto  = require('node:crypto');
 const fs      = require('node:fs');
 const path    = require('node:path');
 const logger  = require('../logger');
+const db      = require('../database');
 
 const DB_PATH  = process.env.DB_PATH  || './inventario.db';
 const DATA_DIR = path.dirname(DB_PATH);
@@ -59,7 +60,11 @@ function createLocalBackup() {
 
   const ts   = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const dest = path.join(backupsDir, `backup-${ts}.db`);
-  fs.copyFileSync(DB_PATH, dest);
+
+  // VACUUM INTO via db.backupTo — consistent snapshot, safe on live WAL database.
+  // Removes the dest file first because VACUUM INTO fails if the file already exists.
+  if (fs.existsSync(dest)) fs.unlinkSync(dest);
+  db.backupTo(dest);
 
   // Keep last 7 backups only
   const files = fs.readdirSync(backupsDir)
