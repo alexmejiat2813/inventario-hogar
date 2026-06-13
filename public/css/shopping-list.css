@@ -313,6 +313,7 @@
     .confirm-budget-section .receipt-title { color: #0369A1; margin-bottom: .5rem; }
     .confirm-budget-section .form-select { width: 100%; margin-top: .25rem; }
     .confirm-budget-section .receipt-hint { color: #0369A1; opacity: .8; }
+    .confirm-budget-no-cats-hint { font-size: .8rem; color: #0369A1; margin: 0; line-height: 1.5; }
 
     /* Receipt section */
     .receipt-section {

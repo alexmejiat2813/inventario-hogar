@@ -774,10 +774,26 @@
 
   function renderDonut(transactions) {
     const expenses = transactions.filter(tx => tx.type === 'expense');
+    const chartCard = document.getElementById('pb-chart-card');
     if (!expenses.length) {
-      document.getElementById('pb-chart-card').hidden = true;
+      chartCard.hidden = false;
+      chartCard.querySelector('.pb-chart-body').hidden = true;
+      let emptyEl = chartCard.querySelector('.pb-chart-empty');
+      if (!emptyEl) {
+        emptyEl = document.createElement('div');
+        emptyEl.className = 'pb-chart-empty';
+        chartCard.appendChild(emptyEl);
+      }
+      emptyEl.innerHTML = `
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 3"/>
+        </svg>
+        <p class="pb-chart-empty-title">${t('personalBudget.chart.emptyTitle')}</p>
+        <p class="pb-chart-empty-sub">${t('personalBudget.chart.emptySub')}</p>`;
       return;
     }
+    chartCard.querySelector('.pb-chart-empty')?.remove();
+    chartCard.querySelector('.pb-chart-body').hidden = false;
 
     // Group by category
     const totals = {};

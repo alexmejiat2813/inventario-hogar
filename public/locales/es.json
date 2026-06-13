@@ -238,6 +238,7 @@
       "saveToCatalog": "Agregar al inventario",
       "budgetCategory": "¿Registrar en Presupuesto Personal?",
       "budgetCategoryNone": "No vincular",
+      "budgetNoCats": "Configurá categorías en Presupuesto Personal para vincular compras automáticamente.",
       "budgetHint": "Se creará un Gasto Real en tu presupuesto por el monto total de esta compra.",
       "confirm": "Registrar compra",
       "confirming": "Registrando…",
@@ -1024,7 +1025,9 @@
       "namePh": "Ej: Presupuesto personal 2025"
     },
     "chart": {
-      "title": "Distribución de Gastos"
+      "title": "Distribución de Gastos",
+      "emptyTitle": "Sin gastos este período",
+      "emptySub": "Registrá un gasto para ver la distribución por categoría."
     },
     "range": {
       "thisMonth": "Este mes",

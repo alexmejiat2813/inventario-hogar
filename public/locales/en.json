@@ -238,6 +238,7 @@
       "saveToCatalog": "Add to inventory",
       "budgetCategory": "Record in Personal Budget?",
       "budgetCategoryNone": "Do not link",
+      "budgetNoCats": "Set up categories in Personal Budget to automatically link purchases.",
       "budgetHint": "A Real Expense will be created in your budget for the total purchase amount.",
       "confirm": "Register purchase",
       "confirming": "Registering…",
@@ -1024,7 +1025,9 @@
       "namePh": "e.g. Personal budget 2025"
     },
     "chart": {
-      "title": "Expense Distribution"
+      "title": "Expense Distribution",
+      "emptyTitle": "No expenses this period",
+      "emptySub": "Record an expense to see the category breakdown."
     },
     "range": {
       "thisMonth": "This month",

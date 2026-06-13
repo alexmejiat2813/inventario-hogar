@@ -598,7 +598,9 @@ async function showConfirmModal() {
       });
       budgetSection.hidden = false;
     } else {
-      budgetSection.hidden = true;
+      // No categories configured — show the section with an explanatory hint
+      budgetSection.hidden = false;
+      budgetSection.innerHTML = `<p class="confirm-budget-no-cats-hint">${tSafe('shopping.register.budgetNoCats', 'Configurá categorías en Presupuesto Personal para vincular compras automáticamente.')}</p>`;
     }
   } catch {
     budgetSection.hidden = true;

@@ -238,6 +238,7 @@
       "saveToCatalog": "Ajouter à l'inventaire",
       "budgetCategory": "Enregistrer dans le Budget Personnel ?",
       "budgetCategoryNone": "Ne pas lier",
+      "budgetNoCats": "Configurez des catégories dans Budget Personnel pour lier automatiquement les achats.",
       "budgetHint": "Une Dépense Réelle sera créée dans votre budget pour le montant total de cet achat.",
       "confirm": "Enregistrer l'achat",
       "confirming": "Enregistrement…",
@@ -1024,7 +1025,9 @@
       "namePh": "Ex : Budget personnel 2025"
     },
     "chart": {
-      "title": "Distribution des Dépenses"
+      "title": "Distribution des Dépenses",
+      "emptyTitle": "Aucune dépense cette période",
+      "emptySub": "Enregistrez une dépense pour voir la répartition par catégorie."
     },
     "range": {
       "thisMonth": "Ce mois-ci",
