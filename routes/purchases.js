@@ -34,14 +34,21 @@ router.post('/', requireEditorOrOwner, (req, res) => {
     // Sanitize + validate budgetCategory against user's known expense categories.
     // Protects analytics from broken strings sent directly to the API.
     let resolvedBudgetCategory = null;
+    let budgetCategoryStatus = null; // 'accepted' | 'unvalidated' | 'degraded'
     if (budget_category && typeof budget_category === 'string') {
       const sanitized = budget_category.replace(/[\r\n\t]/g, ' ').trim().slice(0, 100);
       if (sanitized) {
         const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
-        if (!knownCategories.length || knownCategories.includes(sanitized)) {
+        if (!knownCategories.length) {
+          // No categories configured yet — accept as-is but flag it
           resolvedBudgetCategory = sanitized;
+          budgetCategoryStatus = 'unvalidated';
+        } else if (knownCategories.includes(sanitized)) {
+          resolvedBudgetCategory = sanitized;
+          budgetCategoryStatus = 'accepted';
         } else {
           resolvedBudgetCategory = 'Otros';
+          budgetCategoryStatus = 'degraded';
         }
       }
     }
@@ -62,7 +69,7 @@ router.post('/', requireEditorOrOwner, (req, res) => {
       logger.info({ sessionId: session.id, userId: req.user.id },
         'budget_tx omitted: purchase total_amount=0, no personal_transaction inserted');
     }
-    res.status(201).json(session);
+    res.status(201).json({ ...session, budget_category_status: budgetCategoryStatus });
   } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al registrar la compra' }); }
 });
 
@@ -80,15 +87,37 @@ router.put('/:sessionId', requireEditorOrOwner, (req, res) => {
   try {
     const sessionId = parseInt(req.params.sessionId);
     if (isNaN(sessionId)) return res.status(400).json({ error: 'ID inválido' });
-    const { purchase_date, items, tax_ids } = req.body;
+    const { purchase_date, items, tax_ids, budget_category } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
+
+    let resolvedBudgetCategory = null;
+    let budgetCategoryStatus = null;
+    if (budget_category && typeof budget_category === 'string') {
+      const sanitized = budget_category.replace(/[\r\n\t]/g, ' ').trim().slice(0, 100);
+      if (sanitized) {
+        const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
+        if (!knownCategories.length) {
+          resolvedBudgetCategory = sanitized;
+          budgetCategoryStatus = 'unvalidated';
+        } else if (knownCategories.includes(sanitized)) {
+          resolvedBudgetCategory = sanitized;
+          budgetCategoryStatus = 'accepted';
+        } else {
+          resolvedBudgetCategory = 'Otros';
+          budgetCategoryStatus = 'degraded';
+        }
+      }
+    }
+
     const session = db.updatePurchaseSession(sessionId, req.inventoryId, {
-      purchaseDate: purchase_date,
+      purchaseDate:   purchase_date,
       items,
-      taxIds: tax_ids || [],
+      taxIds:         tax_ids || [],
+      budgetCategory: resolvedBudgetCategory,
+      userId:         req.user.id,
     });
     if (!session) return res.status(404).json({ error: 'Sesión no encontrada' });
-    res.json(session);
+    res.json({ ...session, budget_category_status: budgetCategoryStatus });
   } catch (err) { res.status(500).json({ error: err.message || 'Error al actualizar la compra' }); }
 });
 

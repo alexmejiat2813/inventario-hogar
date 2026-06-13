@@ -668,7 +668,7 @@ const CATALOG_SEED = [
       db.exec('COMMIT');
     } catch (err) {
       db.exec('ROLLBACK');
-      throw err;
+      console.error(`[migration] failed to seed budget categories for user ${user_id}:`, err.message);
     }
   });
 }
@@ -1493,7 +1493,7 @@ module.exports = {
     }
   },
 
-  deletePurchaseSession(sessionId, inventoryId, { revertInventory = false } = {}) {
+  deletePurchaseSession(sessionId, inventoryId, { revertInventory = false, revertBudget = true } = {}) {
     const session = db.prepare(
       'SELECT * FROM purchase_sessions WHERE id = ? AND inventory_id = ?'
     ).get(sessionId, inventoryId);
@@ -1515,7 +1515,14 @@ module.exports = {
           }
         });
       }
-      db.prepare('DELETE FROM personal_transactions WHERE source_purchase_session_id = ?').run(sessionId);
+      if (revertBudget) {
+        db.prepare('DELETE FROM personal_transactions WHERE source_purchase_session_id = ?').run(sessionId);
+      } else {
+        // Detach instead of delete so the budget record survives session removal
+        db.prepare(
+          'UPDATE personal_transactions SET source_purchase_session_id = NULL WHERE source_purchase_session_id = ?'
+        ).run(sessionId);
+      }
       db.prepare('DELETE FROM purchase_sessions WHERE id = ?').run(sessionId);
       db.exec('COMMIT');
       return { deleted: true, receipt_image: session.receipt_image };
@@ -1529,7 +1536,7 @@ module.exports = {
     db.prepare('UPDATE purchase_sessions SET receipt_image = ? WHERE id = ?').run(imagePath, sessionId);
   },
 
-  updatePurchaseSession(sessionId, inventoryId, { purchaseDate, items, taxIds = [] }) {
+  updatePurchaseSession(sessionId, inventoryId, { purchaseDate, items, taxIds = [], budgetCategory = null, userId = null }) {
     const session = db.prepare(
       'SELECT * FROM purchase_sessions WHERE id = ? AND inventory_id = ?'
     ).get(sessionId, inventoryId);
@@ -1588,12 +1595,33 @@ module.exports = {
         );
       });
 
-      // Sync linked personal_transaction if one exists (keeps amount + date in sync)
-      db.prepare(`
-        UPDATE personal_transactions
-        SET amount = ?, date = ?
-        WHERE source_purchase_session_id = ? AND source = 'purchase'
-      `).run(totalAmount, purchaseDate, sessionId);
+      // Sync personal_transaction: insert if missing, update if exists, delete if totalAmount drops to 0
+      const existingTx = db.prepare(
+        `SELECT id, category FROM personal_transactions WHERE source_purchase_session_id = ? AND source = 'purchase'`
+      ).get(sessionId);
+      const resolvedUserId = userId || session.user_id;
+      const resolvedCategory = budgetCategory?.trim() || existingTx?.category || null;
+
+      if (totalAmount > 0 && resolvedCategory && resolvedUserId) {
+        const invName = db.prepare('SELECT name FROM inventories WHERE id = ?').get(inventoryId)?.name || '';
+        if (existingTx) {
+          db.prepare(`
+            UPDATE personal_transactions
+            SET amount = ?, date = ?, category = ?, description = ?
+            WHERE id = ?
+          `).run(totalAmount, purchaseDate, resolvedCategory,
+                 `Compra Automatizada Inventario: ${invName}`, existingTx.id);
+        } else {
+          db.prepare(`
+            INSERT INTO personal_transactions
+              (user_id, inventory_id, type, category, amount, description, date, source, source_purchase_session_id)
+            VALUES (?, ?, 'expense', ?, ?, ?, ?, 'purchase', ?)
+          `).run(resolvedUserId, inventoryId, resolvedCategory, totalAmount,
+                 `Compra Automatizada Inventario: ${invName}`, purchaseDate, sessionId);
+        }
+      } else if (totalAmount === 0 && existingTx) {
+        db.prepare('DELETE FROM personal_transactions WHERE id = ?').run(existingTx.id);
+      }
 
       db.exec('COMMIT');
       return db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
