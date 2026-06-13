@@ -283,6 +283,24 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pb_settings_user            ON personal_budget_settings(user_id);
 `);
 
+// user_inventory_budget_links — opt-in link between a user's personal budget
+// and a specific inventory. UNIQUE(user_id, inventory_id) enforces Rule 3:
+// max 1 active budget link per user per inventory.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS user_inventory_budget_links (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id          INTEGER NOT NULL REFERENCES users(id)       ON DELETE CASCADE,
+    inventory_id     INTEGER NOT NULL REFERENCES inventories(id) ON DELETE CASCADE,
+    default_category TEXT,
+    enabled          INTEGER NOT NULL DEFAULT 1,
+    created_at       TEXT    DEFAULT (datetime('now','localtime')),
+    updated_at       TEXT    DEFAULT (datetime('now','localtime')),
+    UNIQUE(user_id, inventory_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_inv_budget_links_user_inv
+    ON user_inventory_budget_links(user_id, inventory_id);
+`);
+
 // ── Migrations ────────────────────────────────────────────────────────────────
 const invCols = db.prepare('PRAGMA table_info(inventories)').all().map(c => c.name);
 if (!invCols.includes('currency')) {
@@ -2124,6 +2142,35 @@ module.exports = {
     if (usedInTx) return { error: 'in_use', category: cat.name };
     db.prepare('DELETE FROM personal_budget_categories WHERE id = ? AND user_id = ?').run(id, userId);
     return { ok: true };
+  },
+
+  // ── Inventory ↔ Personal Budget links ────────────────────────────────────────
+  // Each user can have at most ONE link per inventory (UNIQUE enforced at DB level).
+  // Privacy: queries always scope to user_id so no cross-user data is exposed.
+
+  getInventoryBudgetLink(userId, inventoryId) {
+    return db.prepare(
+      'SELECT * FROM user_inventory_budget_links WHERE user_id = ? AND inventory_id = ?'
+    ).get(userId, inventoryId) || null;
+  },
+
+  setInventoryBudgetLink(userId, inventoryId, { defaultCategory = null, enabled = true } = {}) {
+    db.prepare(`
+      INSERT INTO user_inventory_budget_links
+        (user_id, inventory_id, default_category, enabled, updated_at)
+      VALUES (?, ?, ?, ?, datetime('now','localtime'))
+      ON CONFLICT(user_id, inventory_id) DO UPDATE SET
+        default_category = excluded.default_category,
+        enabled          = excluded.enabled,
+        updated_at       = excluded.updated_at
+    `).run(userId, inventoryId, defaultCategory, enabled ? 1 : 0);
+    return this.getInventoryBudgetLink(userId, inventoryId);
+  },
+
+  deleteInventoryBudgetLink(userId, inventoryId) {
+    return db.prepare(
+      'DELETE FROM user_inventory_budget_links WHERE user_id = ? AND inventory_id = ?'
+    ).run(userId, inventoryId).changes > 0;
   },
 
   backupTo(destPath) {

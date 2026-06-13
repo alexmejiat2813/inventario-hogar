@@ -239,11 +239,19 @@
       "budgetCategory": "¿Registrar en Presupuesto Personal?",
       "budgetCategoryNone": "No vincular",
       "budgetNoCats": "Configurá categorías en Presupuesto Personal para vincular compras automáticamente.",
+      "confirm": "Confirmar"
       "budgetHint": "Se creará un Gasto Real en tu presupuesto por el monto total de esta compra.",
       "confirm": "Registrar compra",
       "confirming": "Registrando…",
       "success": "Compra registrada",
       "error": "Error al registrar la compra"
+    },
+    "payerConfirm": {
+      "title": "¿Fuiste vos quien pagó?",
+      "body": "¿Confirmás que VOS pagaste esta compra? El monto se registrará como Gasto Real en tu presupuesto (categoría: {category}). Si pagó otra persona, cancelá para que esa persona inicie sesión y lo registre.",
+      "confirm": "Sí, yo pagué",
+      "cancel": "Cancelar",
+      "alt": "Si pagó otra persona, cancelá para que esa persona inicie sesión y registre la compra desde su cuenta."
     },
     "fields": {
       "store": "Establecimiento",

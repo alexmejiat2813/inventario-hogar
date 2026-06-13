@@ -245,6 +245,13 @@
       "success": "Achat enregistré",
       "error": "Erreur lors de l'enregistrement"
     },
+    "payerConfirm": {
+      "title": "Avez-vous payé cet achat ?",
+      "body": "Confirmez-vous que VOUS avez payé cet achat ? Le montant sera enregistré comme Dépense Réelle dans votre budget (catégorie : {category}). Si quelqu'un d'autre a payé, annulez pour qu'il se connecte et enregistre l'achat.",
+      "confirm": "Oui, j'ai payé",
+      "cancel": "Annuler",
+      "alt": "Si quelqu'un d'autre a payé, annulez pour que cette personne se connecte et enregistre l'achat depuis son compte."
+    },
     "fields": {
       "store": "Établissement",
       "noStore": "Sans établissement",

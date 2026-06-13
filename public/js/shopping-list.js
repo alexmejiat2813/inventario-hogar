@@ -588,7 +588,13 @@ async function showConfirmModal() {
 
   budgetSelect.innerHTML = `<option value="">${tSafe('shopping.register.budgetCategoryNone', 'No vincular')}</option>`;
   try {
-    const cats = await apiFetch('GET', '/api/personal-budget/expense-categories');
+    // Fetch categories and stored inventory-budget link in parallel
+    const [cats, linkRes] = await Promise.all([
+      apiFetch('GET', '/api/personal-budget/expense-categories'),
+      apiFetch('GET', '/api/purchases/budget-link').catch(() => null),
+    ]);
+    const activeLink = linkRes?.link?.enabled ? linkRes.link : null;
+
     if (Array.isArray(cats) && cats.length) {
       cats.forEach(cat => {
         const opt = document.createElement('option');
@@ -602,19 +608,21 @@ async function showConfirmModal() {
       budgetSection.hidden = false;
       budgetSection.innerHTML = `<p class="confirm-budget-no-cats-hint">${tSafe('shopping.register.budgetNoCats', 'Configurá categorías en Presupuesto Personal para vincular compras automáticamente.')}</p>`;
     }
+
+    // Priority: server-stored link default_category > localStorage per-store
+    const preferredCat = activeLink?.default_category || savedCat || '';
+
+    if (preferredCat) {
+      budgetSelect.value = preferredCat;
+      if (budgetToggle) budgetToggle.checked = true;
+      if (budgetExpand) budgetExpand.hidden = false;
+    } else {
+      budgetSelect.value = '';
+      if (budgetToggle) budgetToggle.checked = false;
+      if (budgetExpand) budgetExpand.hidden = true;
+    }
   } catch {
     budgetSection.hidden = true;
-  }
-
-  // Restore last used category for this store, toggle on if found
-  if (savedCat) {
-    budgetSelect.value = savedCat;
-    if (budgetToggle) budgetToggle.checked = true;
-    if (budgetExpand) budgetExpand.hidden = false;
-  } else {
-    budgetSelect.value = '';
-    if (budgetToggle) budgetToggle.checked = false;
-    if (budgetExpand) budgetExpand.hidden = true;
   }
 
   if (budgetHint) budgetHint.hidden = !budgetSelect.value;
@@ -762,6 +770,36 @@ function renderTaxSection() {
   section.innerHTML = html;
 }
 
+// Resolves true if user confirms they are the payer, or if no budget is active
+// (no confirmation needed). Resolves false if user cancels.
+function requirePayerConfirmation(budgetCategory) {
+  if (!budgetCategory) return Promise.resolve(true);
+  return new Promise(resolve => {
+    const overlay  = document.getElementById('payer-confirm-overlay');
+    const bodyEl   = document.getElementById('payer-confirm-body');
+    const btnYes   = document.getElementById('btn-payer-confirm');
+    const btnNo    = document.getElementById('btn-payer-cancel');
+    bodyEl.textContent = tSafe(
+      'shopping.payerConfirm.body',
+      `¿Estás seguro de que fuiste VOS quien pagó esta compra? Si confirmás, este monto se registrará como Gasto Real en tu presupuesto (categoría: ${budgetCategory}). Si pagó otra persona, cancelá.`
+    ).replace('{category}', budgetCategory);
+    overlay.hidden = false;
+    function cleanup(result) {
+      overlay.hidden = true;
+      btnYes.removeEventListener('click', onYes);
+      btnNo.removeEventListener('click',  onNo);
+      overlay.removeEventListener('click', onBackdrop);
+      resolve(result);
+    }
+    const onYes      = () => cleanup(true);
+    const onNo       = () => cleanup(false);
+    const onBackdrop = e => { if (e.target === overlay) cleanup(false); };
+    btnYes.addEventListener('click', onYes);
+    btnNo.addEventListener('click',  onNo);
+    overlay.addEventListener('click', onBackdrop);
+  });
+}
+
 async function handleConfirm() {
   const checkedItems  = state.items.filter(i => i.checked);
   const checkedCustom = state.customItems.filter(i => i.checked);
@@ -821,6 +859,15 @@ async function handleConfirm() {
       });
       const dominantStore2 = Object.entries(storeCounts2).sort((a, b) => b[1] - a[1])[0]?.[0] || '__none__';
       localStorage.setItem(`pb_cat_store_${dominantStore2}`, budgetCategory);
+    }
+
+    // Rule 5: if a budget category is active, require explicit payer confirmation
+    // before writing the expense to the user's personal budget.
+    const payerConfirmed = await requirePayerConfirmation(budgetCategory);
+    if (!payerConfirmed) {
+      btn.disabled = false;
+      btn.textContent = tSafe('shopping.register.confirm', 'Confirmar');
+      return;
     }
 
     const session = await apiFetch('POST', '/api/purchases', {

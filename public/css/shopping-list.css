@@ -315,6 +315,10 @@
     .confirm-budget-section .receipt-hint { color: #0369A1; opacity: .8; }
     .confirm-budget-no-cats-hint { font-size: .8rem; color: #0369A1; margin: 0; line-height: 1.5; }
 
+    /* Payer confirmation modal */
+    .payer-confirm-body { font-size: .9rem; color: #082F49; font-weight: 500; line-height: 1.55; margin-bottom: .75rem; }
+    .payer-confirm-alt  { font-size: .8rem; color: #64748B; line-height: 1.5; margin: 0; }
+
     /* Receipt section */
     .receipt-section {
       margin-top: 1rem; padding: .875rem;

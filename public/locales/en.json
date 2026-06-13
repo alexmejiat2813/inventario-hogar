@@ -245,6 +245,13 @@
       "success": "Purchase registered",
       "error": "Error registering purchase"
     },
+    "payerConfirm": {
+      "title": "Did you pay for this?",
+      "body": "Are you sure YOU paid for this purchase? The amount will be recorded as a Real Expense in your budget (category: {category}). If someone else paid, cancel so they can log in and register it.",
+      "confirm": "Yes, I paid",
+      "cancel": "Cancel",
+      "alt": "If someone else paid, cancel so that person can log in and register the purchase from their own account."
+    },
     "fields": {
       "store": "Store",
       "noStore": "No store",

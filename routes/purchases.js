@@ -8,6 +8,42 @@ const { uploadReceipt, uploadFilePath, checkMagicBytes, cleanupFiles } = require
 
 const router = express.Router();
 
+// ── Inventory ↔ Personal Budget link CRUD ────────────────────────────────────
+// Scoped to req.user.id + req.inventoryId — no cross-user exposure possible.
+
+router.get('/budget-link', (req, res) => {
+  try {
+    const link = db.getInventoryBudgetLink(req.user.id, req.inventoryId);
+    res.json({ link });
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener el enlace' }); }
+});
+
+router.put('/budget-link', (req, res) => {
+  try {
+    const { default_category, enabled } = req.body;
+    if (default_category !== undefined && default_category !== null) {
+      // Validate category against user's known categories
+      const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
+      const sanitized = String(default_category).replace(/[\r\n\t]/g, ' ').trim().slice(0, 100);
+      if (knownCategories.length && !knownCategories.includes(sanitized)) {
+        return res.status(400).json({ error: 'Categoría desconocida', known: knownCategories });
+      }
+    }
+    const link = db.setInventoryBudgetLink(req.user.id, req.inventoryId, {
+      defaultCategory: default_category ?? null,
+      enabled:         enabled !== false,
+    });
+    res.json({ link });
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al guardar el enlace' }); }
+});
+
+router.delete('/budget-link', (req, res) => {
+  try {
+    db.deleteInventoryBudgetLink(req.user.id, req.inventoryId);
+    res.json({ ok: true });
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar el enlace' }); }
+});
+
 router.get('/summary', (req, res) => {
   try { res.json(db.getMonthlySummary(req.inventoryId)); }
   catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener resumen' }); }
@@ -31,12 +67,23 @@ router.post('/', requireEditorOrOwner, (req, res) => {
       return res.status(400).json({ error: 'purchase_date es requerida (YYYY-MM-DD).' });
     }
 
+    // If frontend didn't send a category, check for a stored inventory-budget link.
+    // This implements opt-in (Rule 2): only users who explicitly linked their budget
+    // to this inventory get auto-categorized purchases.
+    let effectiveBudgetCategory = budget_category;
+    if (!effectiveBudgetCategory) {
+      const link = db.getInventoryBudgetLink(req.user.id, req.inventoryId);
+      if (link?.enabled && link?.default_category) {
+        effectiveBudgetCategory = link.default_category;
+      }
+    }
+
     // Sanitize + validate budgetCategory against user's known expense categories.
     // Protects analytics from broken strings sent directly to the API.
     let resolvedBudgetCategory = null;
     let budgetCategoryStatus = null; // 'accepted' | 'unvalidated' | 'degraded'
-    if (budget_category && typeof budget_category === 'string') {
-      const sanitized = budget_category.replace(/[\r\n\t]/g, ' ').trim().slice(0, 100);
+    if (effectiveBudgetCategory && typeof effectiveBudgetCategory === 'string') {
+      const sanitized = effectiveBudgetCategory.replace(/[\r\n\t]/g, ' ').trim().slice(0, 100);
       if (sanitized) {
         const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
         if (!knownCategories.length) {

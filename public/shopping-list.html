@@ -269,6 +269,25 @@
     </div>
   </div>
 
+  <!-- Modal: confirmación de autoría de pago (Rule 5) -->
+  <div class="modal-overlay" id="payer-confirm-overlay" hidden>
+    <div class="modal" style="max-width:380px">
+      <div class="modal-head">
+        <h2 class="modal-title" data-i18n="shopping.payerConfirm.title">¿Fuiste vos quien pagó?</h2>
+      </div>
+      <div class="modal-body">
+        <p id="payer-confirm-body" class="payer-confirm-body"></p>
+        <p class="payer-confirm-alt" data-i18n="shopping.payerConfirm.alt">
+          Si pagó otra persona, cancelá para que esa persona inicie sesión y registre la compra desde su cuenta.
+        </p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-cancel" id="btn-payer-cancel" data-i18n="shopping.payerConfirm.cancel">Cancelar</button>
+        <button type="button" class="btn-confirm" id="btn-payer-confirm" data-i18n="shopping.payerConfirm.confirm">Sí, yo pagué</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Templates panel -->
   <div class="tpl-overlay" id="tpl-overlay" hidden>
     <div class="tpl-panel" role="dialog" aria-labelledby="tpl-panel-title">
