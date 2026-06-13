@@ -1262,3 +1262,88 @@ tr.pb-row--selected td { background: var(--accent-bg); }
   .btn-icon-sm:hover { background: var(--bg); color: var(--text); transform: rotate(15deg); }
 }
 
+/* btn-icon-sm with visible label */
+.btn-icon-sm--labeled {
+  width: auto;
+  padding: 0 .6rem;
+  gap: .3rem;
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .01em;
+}
+.btn-icon-label { line-height: 1; }
+
+/* ── Sortable column headers ── */
+.pb-th-sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+@media (hover: hover) {
+  .pb-th-sortable:hover { color: var(--accent); }
+}
+.pb-sort-icon {
+  display: inline-block;
+  margin-left: .25rem;
+  font-size: .7rem;
+  opacity: .35;
+  vertical-align: middle;
+}
+.pb-sort-icon--active { opacity: 1; color: var(--accent); }
+
+/* ── Search result count badge ── */
+.pb-search-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 .35rem;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Donut skeleton ── */
+.pb-donut-skeleton {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--border) 0deg, var(--border) 360deg);
+  animation: pb-skeleton-pulse 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes pb-skeleton-pulse {
+  0%, 100% { opacity: .5; }
+  50%       { opacity: .25; }
+}
+.pb-chart-wrap { position: relative; }
+
+/* ── KPI error state ── */
+.pb-kpi-card--error {
+  border-color: var(--danger-bg, #FEE2E2);
+  background: color-mix(in srgb, var(--danger) 4%, var(--surface));
+}
+.pb-kpi-card--error .pb-kpi-label { color: var(--danger); }
+
+/* ── Donut legend clickable ── */
+.pb-legend-item--clickable {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: .1rem .25rem;
+  margin: -.1rem -.25rem;
+  transition: background .12s;
+}
+@media (hover: hover) {
+  .pb-legend-item--clickable:hover { background: var(--bg); }
+}
+.pb-legend-item--active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-weight: 600;
+}
+.pb-legend-item--active .pb-legend-cat { color: var(--accent); }
+

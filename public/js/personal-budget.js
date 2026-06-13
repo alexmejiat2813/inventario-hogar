@@ -15,7 +15,10 @@
   let _currentPeriod  = 'biweekly';
   let _lastFixedCosts = null;
   let _selectedRow    = null; // { id, tab, flow_type, data:{category,amount,frequency,due_date} }
-  let _donutChart     = null;
+  let _donutChart        = null;
+  let _sortCol           = 'date';   // 'date' | 'amount' | 'category'
+  let _sortDir           = 'desc';   // 'asc' | 'desc'
+  let _donutFilterCat    = null;     // null = no filter, string = filter by donut slice click
 
   // ── DOM refs ───────────────────────────────────────────────────────────────
   const elRange        = document.getElementById('pb-range');
@@ -410,16 +413,41 @@
 
   function applyTxSearch() {
     const q = elSearch ? elSearch.value.toLowerCase().trim() : '';
-    const filtered = q
+    let filtered = q
       ? _lastTransactions.filter(tx => tx.category.toLowerCase().includes(q))
       : _lastTransactions;
+    if (_donutFilterCat) {
+      filtered = filtered.filter(tx => tx.category === _donutFilterCat);
+    }
+    // Search count badge
+    const elCount = document.getElementById('pb-search-count');
+    if (elCount) {
+      if (q || _donutFilterCat) {
+        elCount.textContent = `${filtered.length}`;
+        elCount.hidden = false;
+      } else {
+        elCount.hidden = true;
+      }
+    }
     // Microinteraction: brief fade
     const tableEl = elTableWrap.querySelector('table');
     if (tableEl) {
       tableEl.classList.add('pb-rows-filtering');
       requestAnimationFrame(() => requestAnimationFrame(() => tableEl.classList.remove('pb-rows-filtering')));
     }
-    _renderTableRows(filtered);
+    _renderTableRows(_sortTransactions(filtered));
+  }
+
+  function _sortTransactions(txs) {
+    return [...txs].sort((a, b) => {
+      let va, vb;
+      if (_sortCol === 'amount')   { va = a.amount;   vb = b.amount; }
+      else if (_sortCol === 'category') { va = a.category; vb = b.category; }
+      else                         { va = a.date;     vb = b.date; }
+      if (va < vb) return _sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return _sortDir === 'asc' ?  1 : -1;
+      return 0;
+    });
   }
 
   // ── Render transactions table ──────────────────────────────────────────────
@@ -481,25 +509,42 @@
       return;
     }
 
+    function sortIcon(col) {
+      if (_sortCol !== col) return '<span class="pb-sort-icon">⇅</span>';
+      return _sortDir === 'asc'
+        ? '<span class="pb-sort-icon pb-sort-icon--active">↑</span>'
+        : '<span class="pb-sort-icon pb-sort-icon--active">↓</span>';
+    }
     elTableWrap.innerHTML = `
       <div class="pb-table-scroll">
         <table class="pb-tx-table">
           <thead>
             <tr>
               <th class="pb-col-radio"></th>
-              <th class="pb-tx-date">${t('personalBudget.table.colDate')}</th>
+              <th class="pb-tx-date pb-th-sortable" data-sort="date">${t('personalBudget.table.colDate')}${sortIcon('date')}</th>
               <th>${t('personalBudget.table.colType')}</th>
-              <th>${t('personalBudget.table.colCategory')}</th>
+              <th class="pb-th-sortable" data-sort="category">${t('personalBudget.table.colCategory')}${sortIcon('category')}</th>
               <th class="pb-col-desc">${t('personalBudget.table.colDescription')}</th>
               <th class="pb-col-inv">${t('personalBudget.table.colInventory')}</th>
-              <th style="text-align:right">${t('personalBudget.table.colAmount')}</th>
+              <th class="pb-th-sortable" data-sort="amount" style="text-align:right">${t('personalBudget.table.colAmount')}${sortIcon('amount')}</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
       <div class="pb-tfoot-bar"></div>`;
-    _renderTableRows(_lastTransactions);
+
+    // Sort click handlers
+    elTableWrap.querySelectorAll('.pb-th-sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.sort;
+        if (_sortCol === col) _sortDir = _sortDir === 'asc' ? 'desc' : 'asc';
+        else { _sortCol = col; _sortDir = col === 'amount' ? 'desc' : 'asc'; }
+        renderTable(_lastTransactions);
+      });
+    });
+
+    _renderTableRows(_sortTransactions(_lastTransactions));
   }
 
   function applyPeriodLabels() { /* net label lives inline in balance card */ }
@@ -692,6 +737,14 @@
       renderDonut(allTx);
     } catch {
       showToast(t('personalBudget.errorLoad'), 'error');
+      document.querySelectorAll('.pb-kpi-card--loading').forEach(card => {
+        card.classList.remove('pb-kpi-card--loading');
+        card.classList.add('pb-kpi-card--error');
+        card.querySelectorAll('.pb-skeleton-line').forEach(el => {
+          el.classList.remove('pb-skeleton-line', 'pb-skeleton-value', 'pb-skeleton-sub');
+          el.textContent = '—';
+        });
+      });
     }
   }
 
@@ -722,6 +775,7 @@
 
     const canvas = document.getElementById('pb-donut-canvas');
     if (_donutChart) { _donutChart.destroy(); _donutChart = null; }
+    document.getElementById('pb-donut-skeleton')?.remove();
     _donutChart = new Chart(canvas, {
       type: 'doughnut',
       data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 1.5, borderColor: 'var(--surface)' }] },
@@ -731,18 +785,44 @@
           label: ctx => ` ${fmt(ctx.parsed)} (${Math.round(ctx.parsed / grand * 100)}%)`,
         }}},
         animation: { duration: 700, easing: 'easeOutQuart' },
+        onClick: (_evt, elements) => {
+          if (!elements.length) {
+            _donutFilterCat = null;
+          } else {
+            const cat = labels[elements[0].index];
+            _donutFilterCat = _donutFilterCat === cat ? null : cat;
+          }
+          if (elSearch) elSearch.value = _donutFilterCat || '';
+          // Switch to transactions tab
+          const txTab = document.querySelector('.pb-tab[data-tab="transactions"]');
+          if (txTab && !txTab.classList.contains('pb-tab--active')) txTab.click();
+          applyTxSearch();
+        },
       },
     });
 
-    // Custom legend
+    // Custom legend — clickable to filter table
     const legendEl = document.getElementById('pb-chart-legend');
     legendEl.innerHTML = sorted.slice(0, 7).map(([cat, amt], i) => `
-      <div class="pb-legend-item">
+      <div class="pb-legend-item pb-legend-item--clickable" data-cat="${escHtml(cat)}" title="Filtrar por ${escHtml(cat)}">
         <span class="pb-legend-dot" style="background:${colors[i]}"></span>
         <span class="pb-legend-cat">${escHtml(cat)}</span>
         <span class="pb-legend-pct">${Math.round(amt / grand * 100)}%</span>
         <span class="pb-legend-amt">${fmt(amt)}</span>
       </div>`).join('');
+    legendEl.querySelectorAll('.pb-legend-item--clickable').forEach(el => {
+      el.addEventListener('click', () => {
+        const cat = el.dataset.cat;
+        _donutFilterCat = _donutFilterCat === cat ? null : cat;
+        legendEl.querySelectorAll('.pb-legend-item--clickable').forEach(e =>
+          e.classList.toggle('pb-legend-item--active', e.dataset.cat === _donutFilterCat)
+        );
+        if (elSearch) elSearch.value = _donutFilterCat || '';
+        const txTab = document.querySelector('.pb-tab[data-tab="transactions"]');
+        if (txTab && !txTab.classList.contains('pb-tab--active')) txTab.click();
+        applyTxSearch();
+      });
+    });
 
     // Period label
     const periodEl = document.getElementById('pb-chart-period');
@@ -816,9 +896,12 @@
   if (elRange) {
     elRange.addEventListener('change', () => {
       _range = +elRange.value;
+      _donutFilterCat = null;
+      if (elSearch) elSearch.value = '';
+      const elCount = document.getElementById('pb-search-count');
+      if (elCount) elCount.hidden = true;
       elMonth.style.display = _range > 1 ? 'none' : '';
       clearSelection();
-      // Brief fade on the table while data reloads
       const tableEl = elTableWrap.querySelector('table');
       if (tableEl) {
         tableEl.classList.add('pb-rows-filtering');
@@ -831,6 +914,10 @@
   // ── Month change ───────────────────────────────────────────────────────────
   elMonth.addEventListener('change', () => {
     _month = elMonth.value;
+    _donutFilterCat = null;
+    if (elSearch) elSearch.value = '';
+    const elCount = document.getElementById('pb-search-count');
+    if (elCount) elCount.hidden = true;
     clearSelection();
     load();
   });
