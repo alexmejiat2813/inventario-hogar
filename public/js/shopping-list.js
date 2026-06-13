@@ -587,6 +587,8 @@ async function showConfirmModal() {
   const savedCat = localStorage.getItem(lsKey) || '';
 
   budgetSelect.innerHTML = `<option value="">${tSafe('shopping.register.budgetCategoryNone', 'No vincular')}</option>`;
+  state._budgetLinkSnapshot = null;
+
   try {
     // Fetch categories and stored inventory-budget link in parallel
     const [cats, linkRes] = await Promise.all([
@@ -594,6 +596,7 @@ async function showConfirmModal() {
       apiFetch('GET', '/api/purchases/budget-link').catch(() => null),
     ]);
     const activeLink = linkRes?.link?.enabled ? linkRes.link : null;
+    state._budgetLinkSnapshot = linkRes?.link ?? null;
 
     if (Array.isArray(cats) && cats.length) {
       cats.forEach(cat => {
@@ -604,7 +607,6 @@ async function showConfirmModal() {
       });
       budgetSection.hidden = false;
     } else {
-      // No categories configured — show the section with an explanatory hint
       budgetSection.hidden = false;
       budgetSection.innerHTML = `<p class="confirm-budget-no-cats-hint">${tSafe('shopping.register.budgetNoCats', 'Configurá categorías en Presupuesto Personal para vincular compras automáticamente.')}</p>`;
     }
@@ -621,14 +623,29 @@ async function showConfirmModal() {
       if (budgetToggle) budgetToggle.checked = false;
       if (budgetExpand) budgetExpand.hidden = true;
     }
+
+    // Inject "set as default" checkbox once, reuse on subsequent openings
+    let defaultChk = document.getElementById('confirm-budget-set-default');
+    if (!defaultChk) {
+      const wrap = document.createElement('label');
+      wrap.className = 'confirm-budget-default-label';
+      wrap.innerHTML = `<input type="checkbox" id="confirm-budget-set-default" class="confirm-budget-default-check"><span>${tSafe('shopping.register.setDefault', 'Establecer como categoría predeterminada para este inventario')}</span>`;
+      budgetHint?.before(wrap);
+      defaultChk = document.getElementById('confirm-budget-set-default');
+    }
+    // Pre-check if selected category matches the stored link
+    defaultChk.checked = !!(activeLink?.enabled && activeLink.default_category === preferredCat && preferredCat);
+
+    if (budgetHint) budgetHint.hidden = !budgetSelect.value;
+    budgetSelect.onchange = () => {
+      if (budgetHint) budgetHint.hidden = !budgetSelect.value;
+      // Uncheck "set as default" when user picks a different category than the stored one
+      if (defaultChk) defaultChk.checked = activeLink?.default_category === budgetSelect.value && !!activeLink?.enabled;
+    };
   } catch {
     budgetSection.hidden = true;
   }
 
-  if (budgetHint) budgetHint.hidden = !budgetSelect.value;
-  budgetSelect.onchange = () => {
-    if (budgetHint) budgetHint.hidden = !budgetSelect.value;
-  };
   if (budgetToggle) {
     budgetToggle.onchange = () => {
       if (budgetExpand) budgetExpand.hidden = !budgetToggle.checked;
@@ -859,6 +876,22 @@ async function handleConfirm() {
       });
       const dominantStore2 = Object.entries(storeCounts2).sort((a, b) => b[1] - a[1])[0]?.[0] || '__none__';
       localStorage.setItem(`pb_cat_store_${dominantStore2}`, budgetCategory);
+    }
+
+    // Sync budget link silently before purchase — doesn't block if it fails
+    const defaultChk   = document.getElementById('confirm-budget-set-default');
+    const setAsDefault = !!(defaultChk && !defaultChk.closest('[hidden]') && defaultChk.checked && budgetCategory);
+    const hadActiveLink = !!(state._budgetLinkSnapshot?.enabled);
+    if (setAsDefault) {
+      const catChanged = state._budgetLinkSnapshot?.default_category !== budgetCategory;
+      if (catChanged || !hadActiveLink) {
+        await apiFetch('PUT', '/api/purchases/budget-link', {
+          default_category: budgetCategory,
+          enabled: true,
+        }).catch(() => {});
+      }
+    } else if (!setAsDefault && hadActiveLink) {
+      await apiFetch('DELETE', '/api/purchases/budget-link').catch(() => {});
     }
 
     // Rule 5: if a budget category is active, require explicit payer confirmation

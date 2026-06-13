@@ -239,6 +239,7 @@
       "budgetCategory": "¿Registrar en Presupuesto Personal?",
       "budgetCategoryNone": "No vincular",
       "budgetNoCats": "Configurá categorías en Presupuesto Personal para vincular compras automáticamente.",
+      "setDefault": "Establecer como categoría predeterminada para este inventario",
       "confirm": "Confirmar"
       "budgetHint": "Se creará un Gasto Real en tu presupuesto por el monto total de esta compra.",
       "confirm": "Registrar compra",

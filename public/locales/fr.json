@@ -239,6 +239,7 @@
       "budgetCategory": "Enregistrer dans le Budget Personnel ?",
       "budgetCategoryNone": "Ne pas lier",
       "budgetNoCats": "Configurez des catégories dans Budget Personnel pour lier automatiquement les achats.",
+      "setDefault": "Définir comme catégorie par défaut pour cet inventaire",
       "budgetHint": "Une Dépense Réelle sera créée dans votre budget pour le montant total de cet achat.",
       "confirm": "Enregistrer l'achat",
       "confirming": "Enregistrement…",

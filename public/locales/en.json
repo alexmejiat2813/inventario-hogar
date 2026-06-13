@@ -239,6 +239,7 @@
       "budgetCategory": "Record in Personal Budget?",
       "budgetCategoryNone": "Do not link",
       "budgetNoCats": "Set up categories in Personal Budget to automatically link purchases.",
+      "setDefault": "Set as default category for this inventory",
       "budgetHint": "A Real Expense will be created in your budget for the total purchase amount.",
       "confirm": "Register purchase",
       "confirming": "Registering…",
