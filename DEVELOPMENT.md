@@ -70,11 +70,38 @@
 
 Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo explícito para saltarse.
 
+### P0 — Bugs críticos (núcleo financiero)
+
+| # | Tarea | Descripción | Importancia | Dificultad | Estado |
+|---|-------|-------------|-------------|------------|--------|
+| 115 | `updatePurchaseSession` sin compensación 0→>0 | Si la compra original tenía `total_amount=0` (budget_tx_omitted), la edición posterior que ponga precios reales nunca crea la `personal_transaction` — el UPDATE en línea 1593 no inserta si no existe fila. Fix: después del UPDATE, verificar si existe fila con ese `source_purchase_session_id`; si no existe y `totalAmount > 0` y `budgetCategory`, INSERT. | Crítica | Baja | ⬜ |
+| 116 | `updatePurchaseSession` sin compensación >0→0 | Inverso del anterior: compra con gastos reales editada a $0 deja la `personal_transaction` con amount=0 en lugar de eliminarla. Fix: si `totalAmount === 0`, DELETE la personal_transaction vinculada dentro del mismo BEGIN/COMMIT. | Alta | Baja | ⬜ |
+| 117 | Categoría desconocida degradada a 'Otros' sin notificar al cliente | `routes/purchases.js:44` silencia el rechazo — el frontend cree que guardó "Supermercado" y quedó "Otros". Fix: devolver flag `budget_category_resolved: 'Otros'` en el JSON de respuesta para que el frontend pueda mostrarlo en el toast. | Alta | Baja | ⬜ |
+| 118 | Bypass de validación categoría cuando `knownCategories` está vacío | `routes/purchases.js:41`: si el usuario no tiene categorías registradas, cualquier string pasa directo a DB. Fix: si `knownCategories.length === 0` guardar igualmente (comportamiento correcto para nuevos usuarios) pero marcar `source='purchase'` y registrar en `personal_budget_categories` vía `ensurePersonalBudgetCategory`. | Media | Baja | ⬜ |
+
 ### P1 — Bugs conocidos
 
 | # | Tarea | Descripción | Importancia | Dificultad | Estado |
 |---|-------|-------------|-------------|------------|--------|
 | 45 | Bug foto→Dashboard (móvil) | Al abrir cámara en Android, el SO puede descartar la PWA de memoria; al volver recarga en Dashboard perdiendo el modal. Fix: persistir `{productoActivo, tabActiva}` en `sessionStorage` + restaurar en `init()`. Requiere dispositivo para reproducir. | Alta | Media | ⬜ |
+
+### P2 — Tests de regresión núcleo financiero
+
+| # | Tarea | Descripción | Importancia | Dificultad | Estado |
+|---|-------|-------------|-------------|------------|--------|
+| 119 | Tests `updatePurchaseSession` casos borde | Cubrir: (a) totalAmount 0→>0 crea personal_transaction, (b) totalAmount >0→0 elimina personal_transaction, (c) edición sin budgetCategory no toca personal_transactions. Sin estos tests los bugs #115/#116 pueden resurgir sin detección. | Crítica | Baja | ⬜ |
+| 120 | Test categoría desconocida + knownCategories vacío vs populado | Verificar comportamiento exacto del resolver en `routes/purchases.js`: categoría desconocida con categorías registradas → 'Otros'; sin categorías registradas → pasa y auto-registra. | Alta | Baja | ⬜ |
+| 121 | Test migración histórica — fallo en mitad de forEach | Verificar que si la migración falla para el usuario N, los usuarios N+1..M no se ven afectados y la DB no queda con transacción abierta. | Alta | Media | ⬜ |
+
+### P3 — Features de alto impacto inmediato
+
+| # | Tarea | Descripción | Importancia | Dificultad | Estado |
+|---|-------|-------------|-------------|------------|--------|
+| 122 | Alertas proactivas de desvío presupuestario | Los umbrales warn/critical ya existen en `personal_budget_settings`. Falta el job que compare gasto actual vs umbral y dispare notificación push/in-app. Usar el cron de Fly o `setInterval` en startup. Sin esto el 80% del valor de los umbrales no se usa. | Crítica | Baja | ⬜ |
+| 123 | Editar categoría de `personal_transaction` existente | PUT ya existe en la ruta. Falta inline-edit en la columna CATEGORIA de la tabla. El usuario no puede corregir una categoría mal asignada sin borrar y recrear. | Alta | Baja | ⬜ |
+| 124 | Columna `budget_category` en historial de compras | La integración M:N existe en DB pero es invisible en `/historial`. Agregar columna filtrable por `budget_category` en `getPurchaseSessions` y en la UI de historial. | Alta | Baja | ⬜ |
+| 125 | Proyección fin de mes como KPI principal | El hint de proyección ya existe pero está escondido bajo la barra de progreso. En la segunda mitad del mes debería ser el número más prominente del dashboard (KPI card propio con color semáforo). | Alta | Baja | ⬜ |
+| 126 | Pre-selección automática categoría en modal compra | Si `localStorage` tiene `pb_cat_store_${dominantStore}`, expandir el panel de presupuesto automáticamente y marcar toggle ON. Hoy el toggle es OFF por defecto — el usuario tiene que hacer 2 clics extra para el caso 90%. | Media | Baja | ⬜ |
 
 ### P4 — Performance
 
@@ -82,14 +109,21 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 |---|-------|-------------|-------------|------------|--------|
 | 69 | Chart.js lazy load | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a script condicional. | Baja | Baja | ⬜ |
 | 70 | Minificación JS/CSS | Build step con `esbuild` para minificar antes del deploy. ~20-30% adicional sobre gzip. Requiere ajustar CI y rutas de assets. | Media | Media | ⬜ |
+| 127 | Índice compuesto `(user_id, date, type)` en `personal_transactions` | Las queries de presupuesto mensual hacen scan por `user_id` solo. Con 5k+ filas empieza a notarse. `CREATE INDEX IF NOT EXISTS idx_pt_user_date_type ON personal_transactions(user_id, date, type)`. | Media | Baja | ⬜ |
+| 128 | Litestream → R2/S3 backup SQLite | Fly volumes no son S3. Un crash del volumen = pérdida total de datos. Litestream replica WAL continuamente. Diferencia entre "perdimos todo" y "restauramos en 2 minutos". | Alta | Media | ⬜ |
 
-### P5 — Features nuevas
+### P5 — Features roadmap futuro
 
 | # | Tarea | Descripción | Importancia | Dificultad | Estado |
 |---|-------|-------------|-------------|------------|--------|
 | 74 | Escáner de códigos de barras | Cámara ya integrada. Agregar librería de decode (ej. `zxing-js`) para identificar/agregar productos escaneando el código. | Media | Alta | ⬜ |
 | 75 | Sugerencia de reposición inteligente | Predecir cuándo se acaba un producto basándose en historial de compras y consumo promedio. Requiere análisis de `purchase_sessions` + `purchase_items`. | Media | Alta | ⬜ |
 | 76 | Modo oscuro | CSS variables ya están parcialmente preparadas. Agregar `prefers-color-scheme: dark` + toggle manual. | Baja | Media | ⬜ |
+| 129 | Presupuesto próximo mes auto-generado | Basado en promedio 3 meses anteriores por categoría. El usuario abre enero y ya tiene una propuesta — solo ajusta. Elimina la planificación desde cero cada mes. | Alta | Media | ⬜ |
+| 130 | Reporte mensual PDF/imagen compartible | Resumen "cómo quedó el mes" — distribución de gastos, balance, desvíos. Para hogares con dos personas que gestionan juntas: transparencia sin que ambos abran la app. | Alta | Media | ⬜ |
+| 131 | Importación CSV de banco | El 90% de usuarios latinoamericanos no tiene Plaid. CSV de Bancolombia/BBVA/Banorte con mapeo de columnas es el 80% del valor de un aggregador con el 5% de la complejidad. Idempotencia: `external_tx_id` UNIQUE por usuario. | Alta | Alta | ⬜ |
+| 132 | Metas de ahorro | "Ahorrar $500 para vacaciones en 4 meses" — proyecta cuánto recortar por categoría. Complementa el presupuesto con intención positiva. Requiere tabla `savings_goals`. | Media | Alta | ⬜ |
+| 133 | Sincronización bancaria (Plaid/Flinks) | Requiere: tabla `bank_connections` con token cifrado + cursor incremental, índice UNIQUE `(user_id, external_tx_id)`, cola async de procesamiento (`sync_jobs` table + worker). No implementar sin el CSV como validación de demanda primero. | Alta | Muy alta | ⬜ |
 
 ---
 
@@ -166,6 +200,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 112 | Mejoras UI/UX dashboard presupuesto | Columnas sortables FECHA/CATEGORIA/MONTO. Click en donut/leyenda filtra tabla (toggle). Badge contador resultados en buscador. Skeleton animado en donut card. Error state KPI cards. Gear con label 'Config.' visible. Reset filtro al cambiar mes/rango. | `3ac96b8` | ✅ |
 | 111 | Deuda tecnica SE — nucleo financiero | `getPersonalBudgetExpenseCategories` unifica `personal_budget_categories` + `personal_budgets` como fuente de verdad unica. Toast diferenciado cuando `budget_tx_omitted=true`. 20 tests nuevos: compra atomica, sync update, cascade delete, CRUD categorias, settings umbrales. | `2204f8c` | ✅ |
 | 110 | Modulo configuracion presupuesto personal | Tablas `personal_budget_categories` + `personal_budget_settings`. Migracion idempotente FK `personal_transactions` ON DELETE CASCADE (deteccion via `PRAGMA foreign_key_list`). Guard `totalAmount > 0` + flag `budget_tx_omitted`. `updatePurchaseSession` sincroniza `personal_transaction` vinculada. `saveToCatalog` hereda categoria real del catalogo. Sanitizacion `budgetCategory` con fallback a 'Otros' en route. CRUD `/api/personal-budget/categories`. `GET/PUT /api/personal-budget/settings` (umbrales). Pagina `/personal-budget/settings` 3 secciones: Categorias, Flujos Proyectados, Umbrales. Dashboard carga umbrales dinamicamente via `loadSettings()` — semaforo proyeccion configurable por usuario. CSS completo `pbs-*` + `btn-icon-sm`. | `1ba01c4` | ✅ |
+| 115b | Fix i18n — keys faltantes y strings hardcodeados en presupuesto personal | Agregar `personalBudget.chart.*`, `range.*`, `progress.*`, `projection.*`, `search.*` en es/en/fr.json. Reemplazar labels hardcodeados (Mes X%, Gasto X%, Proyeccion fin de mes) con `t()` en personal-budget.js. Opciones selector rango con `data-i18n`. Campo busqueda con `data-i18n-ph`. | `3c819a2` | ✅ |
 
 ---
 
