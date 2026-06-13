@@ -615,15 +615,35 @@ const CATALOG_SEED = [
   }
 }
 
+// ── Migración: UNIQUE INDEX en personal_budget_categories(user_id, LOWER(name)) ─
+// SQLite soporta expresiones en CREATE UNIQUE INDEX aunque no en CREATE TABLE.
+// Primero elimina duplicados existentes (conserva el id más bajo por par user+name),
+// luego crea el índice. Idempotente.
+{
+  const idxExists = db.prepare(
+    "SELECT 1 FROM sqlite_master WHERE type='index' AND name='idx_pb_categories_user_name_unique' LIMIT 1"
+  ).get();
+  if (!idxExists) {
+    // Eliminar filas duplicadas manteniendo el id menor por (user_id, LOWER(name))
+    db.exec(`
+      DELETE FROM personal_budget_categories
+      WHERE id NOT IN (
+        SELECT MIN(id) FROM personal_budget_categories
+        GROUP BY user_id, LOWER(name)
+      )
+    `);
+    db.exec(
+      'CREATE UNIQUE INDEX idx_pb_categories_user_name_unique ON personal_budget_categories(user_id, LOWER(name))'
+    );
+  }
+}
+
 // ── Migración: importar categorías históricas a personal_budget_categories ─────
-// Para usuarios con datos en personal_budgets/personal_transactions pero sin
-// categorías en la tabla de settings. Idempotente: INSERT OR IGNORE por nombre.
+// Corre para TODOS los usuarios con datos — INSERT OR IGNORE deduplicacion via
+// el indice unico creado arriba. Idempotente en multiples deploys.
 {
   const insHistorical = db.prepare(
     'INSERT OR IGNORE INTO personal_budget_categories (user_id, name, flow_type) VALUES (?, ?, ?)'
-  );
-  const hasCategories = db.prepare(
-    'SELECT 1 FROM personal_budget_categories WHERE user_id = ? LIMIT 1'
   );
   const usersWithData = db.prepare(`
     SELECT DISTINCT user_id FROM personal_budgets
@@ -632,16 +652,19 @@ const CATALOG_SEED = [
   `).all();
 
   usersWithData.forEach(({ user_id }) => {
-    if (hasCategories.get(user_id)) return;
     db.exec('BEGIN');
     try {
       db.prepare(`
         SELECT DISTINCT category AS name, flow_type FROM personal_budgets WHERE user_id = ?
-      `).all(user_id).forEach(r => insHistorical.run(user_id, r.name.trim(), r.flow_type || 'expense'));
+      `).all(user_id).forEach(r => {
+        if (r.name?.trim()) insHistorical.run(user_id, r.name.trim(), r.flow_type || 'expense');
+      });
       db.prepare(`
         SELECT DISTINCT category AS name, type AS flow_type FROM personal_transactions
         WHERE user_id = ? AND source = 'manual' AND category IS NOT NULL AND category != ''
-      `).all(user_id).forEach(r => insHistorical.run(user_id, r.name.trim(), r.flow_type));
+      `).all(user_id).forEach(r => {
+        if (r.name?.trim()) insHistorical.run(user_id, r.name.trim(), r.flow_type);
+      });
       db.exec('COMMIT');
     } catch (err) {
       db.exec('ROLLBACK');
@@ -2020,43 +2043,21 @@ module.exports = {
     ).all(userId);
   },
 
-  // Upsert silencioso — crea si no existe, retorna id existente si ya existe.
-  // Usado por POST /transaction y POST /budget para auto-registrar categorías.
+  // Upsert silencioso — INSERT OR IGNORE via unique index (user_id, LOWER(name)).
   ensurePersonalBudgetCategory(userId, name, flowType) {
     const trimmed = name.trim();
     if (!trimmed) return;
-    const existing = db.prepare(
-      'SELECT id FROM personal_budget_categories WHERE user_id = ? AND LOWER(name) = LOWER(?)'
-    ).get(userId, trimmed);
-    if (existing) return existing.id;
-    const { lastInsertRowid } = db.prepare(
-      'INSERT INTO personal_budget_categories (user_id, name, flow_type) VALUES (?, ?, ?)'
+    db.prepare(
+      'INSERT OR IGNORE INTO personal_budget_categories (user_id, name, flow_type) VALUES (?, ?, ?)'
     ).run(userId, trimmed, flowType || 'expense');
-    return lastInsertRowid;
   },
 
-  // Todas las categorías del usuario (income + expense) desde personal_budget_categories.
-  // Incluye categorías históricas de personal_budgets y personal_transactions
-  // que aún no estén en la tabla de settings.
+  // Todas las categorías del usuario (income + expense), deduplicadas por LOWER(name).
+  // Fuente única: personal_budget_categories (ya contiene histórico importado).
   getAllPersonalBudgetCategories(userId) {
-    const fromSettings = db.prepare(
-      'SELECT name, flow_type FROM personal_budget_categories WHERE user_id = ? ORDER BY flow_type, name'
+    return db.prepare(
+      'SELECT name, flow_type FROM personal_budget_categories WHERE user_id = ? ORDER BY flow_type, name COLLATE NOCASE'
     ).all(userId);
-
-    // Collect names already in settings (case-insensitive)
-    const inSettings = new Set(fromSettings.map(r => r.name.toLowerCase()));
-
-    // Historical categories not yet imported
-    const historical = [];
-    db.prepare("SELECT DISTINCT category AS name, flow_type FROM personal_budgets WHERE user_id = ?").all(userId)
-      .forEach(r => { if (!inSettings.has(r.name.toLowerCase())) historical.push(r); });
-    db.prepare("SELECT DISTINCT category AS name, type AS flow_type FROM personal_transactions WHERE user_id = ? AND source = 'manual'").all(userId)
-      .forEach(r => { if (!inSettings.has(r.name.toLowerCase())) historical.push({ name: r.name, flow_type: r.flow_type }); });
-
-    return [
-      ...fromSettings,
-      ...historical.sort((a, b) => a.name.localeCompare(b.name)),
-    ];
   },
 
   createPersonalBudgetCategory(userId, { name, flowType }) {
