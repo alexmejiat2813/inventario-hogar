@@ -1022,6 +1022,25 @@
       "badge": "Budget",
       "noInventory": "Sans inventaire",
       "namePh": "Ex : Budget personnel 2025"
+    },
+    "chart": {
+      "title": "Distribution des Dépenses"
+    },
+    "range": {
+      "thisMonth": "Ce mois-ci",
+      "last3": "3 derniers mois",
+      "last6": "6 derniers mois",
+      "lastN": "{n} derniers mois"
+    },
+    "progress": {
+      "month": "Mois {pct}%",
+      "spent": "Dépensé {pct}%"
+    },
+    "projection": {
+      "hint": "Projection fin de mois : {amount}"
+    },
+    "search": {
+      "placeholder": "Rechercher par catégorie…"
     }
   }
 }

@@ -1022,6 +1022,25 @@
       "badge": "Budget",
       "noInventory": "No inventory",
       "namePh": "e.g. Personal budget 2025"
+    },
+    "chart": {
+      "title": "Expense Distribution"
+    },
+    "range": {
+      "thisMonth": "This month",
+      "last3": "Last 3 months",
+      "last6": "Last 6 months",
+      "lastN": "Last {n} months"
+    },
+    "progress": {
+      "month": "Month {pct}%",
+      "spent": "Spent {pct}%"
+    },
+    "projection": {
+      "hint": "Month-end projection: {amount}"
+    },
+    "search": {
+      "placeholder": "Search by category…"
     }
   }
 }

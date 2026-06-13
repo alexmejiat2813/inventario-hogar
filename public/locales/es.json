@@ -1022,6 +1022,25 @@
       "badge": "Presupuesto",
       "noInventory": "Sin inventario",
       "namePh": "Ej: Presupuesto personal 2025"
+    },
+    "chart": {
+      "title": "Distribución de Gastos"
+    },
+    "range": {
+      "thisMonth": "Este mes",
+      "last3": "Últimos 3 meses",
+      "last6": "Últimos 6 meses",
+      "lastN": "Últimos {n} meses"
+    },
+    "progress": {
+      "month": "Mes {pct}%",
+      "spent": "Gasto {pct}%"
+    },
+    "projection": {
+      "hint": "Proyección fin de mes: {amount}"
+    },
+    "search": {
+      "placeholder": "Buscar por categoría…"
     }
   }
 }

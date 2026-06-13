@@ -363,8 +363,8 @@
       const spentClass = spentPct >= 100 ? 'pb-progress-spent--alert'
                        : spentPct > elapsed + 10 ? 'pb-progress-spent--warn' : '';
       elProgressSpent.className = 'pb-progress-spent ' + spentClass;
-      elProgressLabelM.textContent = `Mes ${elapsed}%`;
-      elProgressLabelS.textContent = `Gasto ${spentPct}%`;
+      elProgressLabelM.textContent = t('personalBudget.progress.month', { pct: elapsed });
+      elProgressLabelS.textContent = t('personalBudget.progress.spent', { pct: spentPct });
       elProgressWrap.hidden = false;
     } else if (elProgressWrap) {
       elProgressWrap.hidden = true;
@@ -378,7 +378,7 @@
       const elapsed = today.getDate();
       if (elapsed > 0 && expense_real > 0) {
         const projected = (expense_real / elapsed) * daysInM;
-        elProjectionHint.textContent = `Proyección fin de mes: ${fmt(projected)}`;
+        elProjectionHint.textContent = t('personalBudget.projection.hint', { amount: fmt(projected) });
         // Semaphore: compare projection against income_projected (budget limit)
         let hintMod = '';
         if (income_projected > 0) {
@@ -844,7 +844,7 @@
 
     // Period label
     const periodEl = document.getElementById('pb-chart-period');
-    if (periodEl) periodEl.textContent = _range === 1 ? elMonth.value : `Últimos ${_range} meses`;
+    if (periodEl) periodEl.textContent = _range === 1 ? elMonth.value : t('personalBudget.range.lastN', { n: _range });
 
     document.getElementById('pb-chart-card').hidden = false;
   }
