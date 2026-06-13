@@ -691,6 +691,168 @@ describe('templates — store_id y unit_price', () => {
   });
 });
 
+// ── Núcleo financiero integrado ────────────────────────────────
+
+describe('createPurchaseSession — integración presupuestaria', () => {
+  function makeSession(inv, userId, opts = {}) {
+    return db.createPurchaseSession({
+      inventoryId:  inv.id,
+      userId,
+      items:        opts.items ?? [{ productName: 'Leche', quantityBought: 1, unitPrice: 5, unit: 'lt' }],
+      taxIds:       [],
+      currency:     'USD',
+      purchaseDate: today(),
+      receiptImage: null,
+      budgetCategory: opts.budgetCategory ?? null,
+    });
+  }
+
+  test('sin budgetCategory no inserta personal_transaction', () => {
+    const { inv, userId } = makeInventory();
+    const session = makeSession(inv, userId);
+    assert.equal(session.budget_tx_omitted, false);
+    assert.equal(session.budget_category, null);
+    const txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    assert.equal(txs.filter(t => t.source === 'purchase').length, 0);
+  });
+
+  test('con budgetCategory y monto>0 inserta personal_transaction vinculada', () => {
+    const { inv, userId } = makeInventory();
+    db.createPersonalBudgetCategory(userId, { name: 'Mercado', flowType: 'expense' });
+    const session = makeSession(inv, userId, { budgetCategory: 'Mercado' });
+    assert.equal(session.budget_tx_omitted, false);
+    assert.equal(session.budget_category, 'Mercado');
+    const txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    const linked = txs.filter(t => t.source === 'purchase' && t.source_purchase_session_id === session.id);
+    assert.equal(linked.length, 1);
+    assert.ok(Math.abs(linked[0].amount - 5) < 0.001);
+    assert.equal(linked[0].category, 'Mercado');
+  });
+
+  test('con budgetCategory y totalAmount=0 omite personal_transaction y retorna budget_tx_omitted=true', () => {
+    const { inv, userId } = makeInventory();
+    db.createPersonalBudgetCategory(userId, { name: 'Gratis', flowType: 'expense' });
+    const session = makeSession(inv, userId, {
+      items: [{ productName: 'Muestra', quantityBought: 1, unitPrice: 0, unit: 'unidades' }],
+      budgetCategory: 'Gratis',
+    });
+    assert.equal(session.budget_tx_omitted, true);
+    const txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    assert.equal(txs.filter(t => t.source === 'purchase').length, 0);
+  });
+
+  test('updatePurchaseSession sincroniza monto en personal_transaction vinculada', () => {
+    const { inv, userId } = makeInventory();
+    db.createPersonalBudgetCategory(userId, { name: 'Hogar', flowType: 'expense' });
+    const prod = db.create({ name: 'Jabon', category: 'Limpieza', current_qty: 10, min_qty: 0, unit: 'unidades', inventoryId: inv.id });
+    const session = makeSession(inv, userId, { budgetCategory: 'Hogar' });
+    db.updatePurchaseSession(session.id, inv.id, {
+      purchaseDate: today(),
+      items: [{ productId: prod.id, productName: 'Jabon', quantityBought: 2, unitPrice: 20, unit: 'unidades', storeId: null }],
+      taxIds: [],
+    });
+    const txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    const linked = txs.filter(t => t.source_purchase_session_id === session.id);
+    assert.equal(linked.length, 1);
+    assert.ok(Math.abs(linked[0].amount - 40) < 0.001, `esperado 40, recibido ${linked[0].amount}`);
+  });
+
+  test('deletePurchaseSession elimina personal_transaction vinculada en cascada', () => {
+    const { inv, userId } = makeInventory();
+    db.createPersonalBudgetCategory(userId, { name: 'Cascada', flowType: 'expense' });
+    const session = makeSession(inv, userId, { budgetCategory: 'Cascada' });
+    db.deletePurchaseSession(session.id, inv.id, { revertInventory: false });
+    const txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    assert.equal(txs.filter(t => t.source_purchase_session_id === session.id).length, 0);
+  });
+});
+
+describe('getPersonalBudgetExpenseCategories — fuente unificada', () => {
+  test('retorna categorias de personal_budget_categories', () => {
+    const u = makeUser();
+    db.createPersonalBudgetCategory(u.id, { name: 'SettingsCat', flowType: 'expense' });
+    const cats = db.getPersonalBudgetExpenseCategories(u.id);
+    assert.ok(cats.includes('SettingsCat'));
+  });
+
+  test('no incluye categorias de tipo income', () => {
+    const u = makeUser();
+    db.createPersonalBudgetCategory(u.id, { name: 'Salario', flowType: 'income' });
+    const cats = db.getPersonalBudgetExpenseCategories(u.id);
+    assert.ok(!cats.includes('Salario'));
+  });
+
+  test('merge con categorias de personal_budgets legacy', () => {
+    const u = makeUser();
+    db.addPersonalBudget(u.id, { category: 'LegacyCat', amount: 100, month: today().slice(0, 7), flow_type: 'expense' });
+    const cats = db.getPersonalBudgetExpenseCategories(u.id);
+    assert.ok(cats.includes('LegacyCat'));
+  });
+
+  test('lista vacia cuando usuario no tiene categorias', () => {
+    const u = makeUser();
+    const cats = db.getPersonalBudgetExpenseCategories(u.id);
+    assert.equal(cats.length, 0);
+  });
+});
+
+describe('personal_budget_categories — CRUD', () => {
+  test('createPersonalBudgetCategory crea categoria y la retorna', () => {
+    const u = makeUser();
+    const res = db.createPersonalBudgetCategory(u.id, { name: 'Entretenimiento', flowType: 'expense' });
+    assert.ok(!res.error, `error inesperado: ${res.error}`);
+    assert.equal(res.category.name, 'Entretenimiento');
+    assert.equal(res.category.flow_type, 'expense');
+    assert.equal(res.category.user_id, u.id);
+  });
+
+  test('createPersonalBudgetCategory rechaza duplicado case-insensitive', () => {
+    const u = makeUser();
+    db.createPersonalBudgetCategory(u.id, { name: 'Gym', flowType: 'expense' });
+    const dup = db.createPersonalBudgetCategory(u.id, { name: 'gym', flowType: 'expense' });
+    assert.ok(dup.error, 'debe retornar error en duplicado');
+  });
+
+  test('deletePersonalBudgetCategory bloqueado si categoria tiene transacciones', () => {
+    const u = makeUser();
+    const res = db.createPersonalBudgetCategory(u.id, { name: 'EnUso', flowType: 'expense' });
+    const catId = res.category.id;
+    db.addPersonalTransaction(u.id, {
+      type: 'expense', category: 'EnUso', amount: 50,
+      description: 'test', date: today(), inventoryId: null,
+    });
+    const result = db.deletePersonalBudgetCategory(u.id, catId);
+    assert.equal(result.error, 'in_use', 'debe retornar error in_use');
+  });
+
+  test('deletePersonalBudgetCategory elimina si no hay transacciones', () => {
+    const u = makeUser();
+    const res = db.createPersonalBudgetCategory(u.id, { name: 'SinUso', flowType: 'expense' });
+    const catId = res.category.id;
+    const result = db.deletePersonalBudgetCategory(u.id, catId);
+    assert.ok(!result.error, `error inesperado: ${result.error}`);
+    assert.equal(db.getPersonalBudgetCategories(u.id).find(c => c.id === catId), undefined);
+  });
+});
+
+describe('personal_budget_settings — umbrales', () => {
+  test('getPersonalBudgetSettings crea fila default si no existe y es idempotente', () => {
+    const u = makeUser();
+    const s1 = db.getPersonalBudgetSettings(u.id);
+    const s2 = db.getPersonalBudgetSettings(u.id);
+    assert.ok(typeof s1.alert_warn_pct === 'number', 'alert_warn_pct debe ser numero');
+    assert.equal(s1.alert_warn_pct, s2.alert_warn_pct);
+  });
+
+  test('updatePersonalBudgetThresholds persiste y recupera valores', () => {
+    const u = makeUser();
+    db.updatePersonalBudgetThresholds(u.id, { warnPct: 0.55, critPct: 0.90 });
+    const s = db.getPersonalBudgetSettings(u.id);
+    assert.ok(Math.abs(s.alert_warn_pct - 0.55) < 0.001);
+    assert.ok(Math.abs(s.alert_crit_pct - 0.90) < 0.001);
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {

@@ -857,12 +857,16 @@ async function handleConfirm() {
     render();
     const sym = getCurrencySym();
     const grandTotal = session?.total_amount;
-    let toastMsg = tSafe('shopping.register.success', 'Compra registrada');
-    if (grandTotal != null) {
-      toastMsg += ` · ${sym} ${grandTotal.toFixed(2)}`;
-      if (budgetCategory) toastMsg += ` → ${budgetCategory}`;
+    if (budgetCategory && session?.budget_tx_omitted) {
+      showToast(tSafe('shopping.register.budgetOmitted', 'Compra registrada (monto $0 — no se registró en presupuesto)'), 'warn');
+    } else {
+      let toastMsg = tSafe('shopping.register.success', 'Compra registrada');
+      if (grandTotal != null) {
+        toastMsg += ` · ${sym} ${grandTotal.toFixed(2)}`;
+        if (budgetCategory) toastMsg += ` → ${budgetCategory}`;
+      }
+      showToast(toastMsg);
     }
-    showToast(toastMsg);
 
     // Reload to reflect updated quantities
     setTimeout(() => loadList(), 400);

@@ -1821,11 +1821,20 @@ module.exports = {
   },
 
   getPersonalBudgetExpenseCategories(userId) {
-    return db.prepare(`
+    // Primary source: personal_budget_categories (settings table).
+    // Fallback: distinct categories from personal_budgets (legacy projected flows).
+    // Both are merged so validation accepts either source.
+    const fromSettings = db.prepare(`
+      SELECT name AS category FROM personal_budget_categories
+      WHERE user_id = ? AND flow_type = 'expense'
+    `).all(userId).map(r => r.category);
+
+    const fromFlows = db.prepare(`
       SELECT DISTINCT category FROM personal_budgets
       WHERE user_id = ? AND flow_type = 'expense'
-      ORDER BY category
     `).all(userId).map(r => r.category);
+
+    return [...new Set([...fromSettings, ...fromFlows])].sort();
   },
 
   addPersonalBudget(userId, { category, amount, month, frequency = 'Mensual', due_date = null, flow_type = 'expense', inventory_id = null }) {
