@@ -19,6 +19,7 @@
   let _sortCol           = 'date';   // 'date' | 'amount' | 'category'
   let _sortDir           = 'desc';   // 'asc' | 'desc'
   let _donutFilterCat    = null;     // null = no filter, string = filter by donut slice click
+  let _allBudgetCats     = [];       // cache from /categories-all
 
   // ── DOM refs ───────────────────────────────────────────────────────────────
   const elRange        = document.getElementById('pb-range');
@@ -110,12 +111,29 @@
       .replace(/"/g, '&quot;');
   }
 
+  // ── Category datalist ─────────────────────────────────────────────────────
+  async function loadCategoryDatalist() {
+    try {
+      _allBudgetCats = await apiFetch('GET', '/api/personal-budget/categories-all') || [];
+    } catch { /* keep cache */ }
+    refreshCategoryDatalist();
+  }
+
+  function refreshCategoryDatalist() {
+    const dl = document.getElementById('pb-category-list');
+    if (!dl) return;
+    const { flow } = getNatureFlow();
+    const filtered = _allBudgetCats.filter(c => c.flow_type === flow);
+    dl.innerHTML = filtered.map(c => `<option value="${escHtml(c.name)}"></option>`).join('');
+  }
+
   // ── Modal ──────────────────────────────────────────────────────────────────
   function openModal(titleKey) {
     elModalTitle.textContent = t(titleKey || 'personalBudget.form.title');
     elFormModal.hidden = false;
     document.body.style.overflow = 'hidden';
     requestAnimationFrame(() => elFormModal.classList.add('pb-modal-overlay--visible'));
+    loadCategoryDatalist();
     elCategory.focus();
   }
 
@@ -853,7 +871,7 @@
     elDate.closest('.form-group').hidden = nature !== 'real';
   }
 
-  elRecordType.addEventListener('change', applyTypeVisibility);
+  elRecordType.addEventListener('change', () => { applyTypeVisibility(); refreshCategoryDatalist(); });
 
   // ── Period selector ───────────────────────────────────────────────────────
   elPeriodSelector.addEventListener('change', () => {

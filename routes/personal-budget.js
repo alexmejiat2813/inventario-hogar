@@ -62,11 +62,14 @@ router.post('/budget', (req, res) => {
   }
 
   const { inventoryId } = req.body;
+  const trimmedCat = category.trim();
   const budget = db.addPersonalBudget(userId, {
-    category: category.trim(), amount, month: m, frequency: freq,
+    category: trimmedCat, amount, month: m, frequency: freq,
     due_date: due_date || null, flow_type: ft,
     inventory_id: inventoryId ? +inventoryId : null,
   });
+  // Auto-register category in personal_budget_categories so it appears in future dropdowns
+  db.ensurePersonalBudgetCategory(userId, trimmedCat, ft);
   res.status(201).json(budget);
 });
 
@@ -88,15 +91,17 @@ router.post('/transaction', (req, res) => {
     return res.status(400).json({ error: 'date inválida. Usar YYYY-MM-DD.' });
   }
 
+  const trimmedCat = category.trim();
   const transaction = db.addPersonalTransaction(userId, {
     inventoryId: inventoryId || null,
     type,
-    category: category.trim(),
+    category: trimmedCat,
     amount,
     description,
     date,
   });
-
+  // Auto-register category in personal_budget_categories
+  db.ensurePersonalBudgetCategory(userId, trimmedCat, type);
   res.status(201).json(transaction);
 });
 
@@ -106,9 +111,14 @@ router.get('/fixed-costs', (req, res) => {
   res.json(items);
 });
 
-// GET /api/personal-budget/expense-categories — categorías expense únicas para dropdown de compras
+// GET /api/personal-budget/expense-categories — categorías expense para dropdown de compras
 router.get('/expense-categories', (req, res) => {
   res.json(db.getPersonalBudgetExpenseCategories(req.user.id));
+});
+
+// GET /api/personal-budget/categories-all — todas las categorías (income+expense) para el modal
+router.get('/categories-all', (req, res) => {
+  res.json(db.getAllPersonalBudgetCategories(req.user.id));
 });
 
 // DELETE /api/personal-budget/budget/:id
