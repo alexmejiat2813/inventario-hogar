@@ -1509,7 +1509,7 @@ module.exports = {
       const session = db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
       return { ...session, budget_category: budgetCategory, budget_tx_omitted: budgetTxOmitted };
     } catch (err) {
-      try { db.exec('ROLLBACK'); } catch (_) {}
+      try { db.exec('ROLLBACK'); } catch { }
       console.error('[createPurchaseSession] error:', err.message,
         '| errcode:', err.errcode, '| dberrmsg:', err.dberrmsg,
         '| context: budgetCategory=', budgetCategory, 'userId=', userId, 'inventoryId=', inventoryId);
@@ -1551,7 +1551,7 @@ module.exports = {
       db.exec('COMMIT');
       return { deleted: true, receipt_image: session.receipt_image };
     } catch (err) {
-      try { db.exec('ROLLBACK'); } catch (_) {}
+      try { db.exec('ROLLBACK'); } catch { }
       throw err;
     }
   },
@@ -1650,7 +1650,7 @@ module.exports = {
       db.exec('COMMIT');
       return db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
     } catch (err) {
-      try { db.exec('ROLLBACK'); } catch (_) {}
+      try { db.exec('ROLLBACK'); } catch { }
       console.error('[updatePurchaseSession] error:', err.message,
         '| errcode:', err.errcode, '| dberrmsg:', err.dberrmsg,
         '| context: budgetCategory=', budgetCategory, 'sessionId=', sessionId);
