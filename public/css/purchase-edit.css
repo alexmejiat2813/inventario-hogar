@@ -127,10 +127,10 @@
       padding: .5rem .25rem; margin: 0 0 .5rem;
     }
 
-    /* Items grid (desktop) */
+    /* Items grid (desktop) — 8 cols: nombre qty unidad precio tienda subtotal imp. del */
     .items-header, .item-row {
       display: grid;
-      grid-template-columns: minmax(130px,2.5fr) 72px 96px 96px minmax(110px,1.5fr) 88px 38px;
+      grid-template-columns: minmax(130px,2.5fr) 72px 96px 96px minmax(110px,1.5fr) 88px 36px 38px;
       align-items: center; gap: .5rem;
     }
     .items-header { padding: .4rem .5rem; margin-bottom: .25rem; }
@@ -146,6 +146,8 @@
     .item-row:hover { border-color: #082F49; }
     .item-cell { min-width: 0; }
     .item-cell.cell-subtotal { text-align: right; font-weight: 600; font-size: .875rem; color: #082F49; white-space: nowrap; }
+    .item-cell.cell-taxable { display: flex; align-items: center; justify-content: center; }
+    .item-cell.cell-taxable input[type="checkbox"] { width: 16px; height: 16px; accent-color: #082F49; cursor: pointer; }
     .item-cell.cell-del { display: flex; justify-content: center; }
 
     /* Inputs inside rows */
@@ -188,6 +190,7 @@
         font-size: .68rem; font-weight: 700; color: #B2B0AD;
         text-transform: uppercase; letter-spacing: .04em; margin-bottom: .2rem;
       }
+      .item-cell.cell-taxable { justify-content: flex-start; margin-bottom: .25rem; }
       .item-cell.cell-del { margin-bottom: 0; margin-top: .375rem; }
       .item-cell.cell-del::before { display: none; }
       .item-cell.cell-del .btn-del-item { width: 100%; height: 34px; font-size: .8rem; gap: .35rem; }

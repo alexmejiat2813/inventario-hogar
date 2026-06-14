@@ -220,6 +220,7 @@ function renderItems() {
     tSafe('purchaseEdit.col.price','Precio unit.'),
     tSafe('purchaseEdit.col.store','Tienda'),
     tSafe('purchaseEdit.col.subtotal','Subtotal'),
+    tSafe('purchaseEdit.col.taxable','Imp.'),
     '',
   ];
 
