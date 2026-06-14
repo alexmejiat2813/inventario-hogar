@@ -58,4 +58,8 @@ router.get('/personal-budget/settings', requireAuthPage, (req, res) =>
   res.sendFile(path.join(__dirname, '..', 'public', 'personal-budget-settings.html'))
 );
 
+router.get('/products', requireAuthPage, (req, res) =>
+  res.sendFile(path.join(__dirname, '..', 'public', 'products.html'))
+);
+
 module.exports = router;

@@ -823,7 +823,37 @@
     "stock": "Stock",
     "shopping": "Shopping",
     "history": "History",
-    "catalog": "Catalog"
+    "catalog": "Catalog",
+    "products": "Products"
+  },
+  "productMaster": {
+    "title": "Product Master",
+    "search": "Search product…",
+    "addBtn": "New product",
+    "empty": "No products registered",
+    "emptyHint": "Add products to centralize your personal catalog.",
+    "emptyCta": "Add first product",
+    "barcode": "Barcode",
+    "brand": "Brand",
+    "category": "Expense category",
+    "isTaxable": "Apply tax",
+    "tracksStock": "Track inventory",
+    "tracksStockHint": "When active, purchases of this product update physical stock.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirmDelete": "Delete this product from the master?",
+    "saved": "Product saved",
+    "deleted": "Product deleted",
+    "errorDup": "A product with that barcode already exists",
+    "scanTitle": "Search by barcode",
+    "scanPlaceholder": "Enter code…",
+    "scanBtn": "Search",
+    "scanFound": "Product found",
+    "scanNotFound": "Code not found — fill in details manually",
+    "sourceLocal": "In your master",
+    "sourceOff": "Open Food Facts",
+    "nameRequired": "Name is required"
   },
   "dashboard": {
     "period": {

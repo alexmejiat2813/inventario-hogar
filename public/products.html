@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="productMaster.title">Maestro de Productos</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/css/products.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#082F49">
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <a class="header-back" href="/inventories" aria-label="Volver">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+      </div>
+      <div class="header-brand">
+        <div class="header-icon">IH</div>
+        <h1 class="header-title" id="inv-name">Inventario</h1>
+        <span class="header-crumb">/ <span data-i18n="productMaster.title">Maestro de Productos</span></span>
+      </div>
+
+      <nav class="top-tabs" id="top-tabs">
+        <a class="top-tab" href="/inventory">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="5" height="9"/><rect x="10" y="7" width="5" height="14"/><rect x="17" y="3" width="5" height="18"/></svg>
+          <span data-i18n="invTabs.dashboard">Dashboard</span>
+        </a>
+        <a class="top-tab" href="/inventory?tab=stock">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <span data-i18n="invTabs.stock">Stock</span>
+        </a>
+        <a class="top-tab" href="/shopping-list">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span data-i18n="invTabs.shopping">Compras</span>
+        </a>
+        <a class="top-tab" href="/history">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span data-i18n="invTabs.history">Historial</span>
+        </a>
+        <a class="top-tab top-tab--active" href="/products">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+          <span data-i18n="invTabs.products">Productos</span>
+        </a>
+      </nav>
+
+      <div class="header-right">
+        <button class="mob-ham" id="mob-ham" aria-label="Abrir menú">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="profile-menu-wrap" id="profile-menu-wrap">
+          <button class="profile-btn" id="profile-btn" aria-label="Perfil" aria-expanded="false">
+            <img class="user-avatar" id="user-avatar" src="" alt="" hidden>
+            <div class="avatar-placeholder" id="avatar-placeholder"></div>
+          </button>
+          <div class="profile-dropdown" id="profile-dropdown" hidden>
+            <div class="dropdown-header">
+              <img class="dropdown-avatar" id="dropdown-avatar" src="" alt="" hidden>
+              <div class="dropdown-avatar-ph" id="dropdown-avatar-ph"></div>
+              <div>
+                <div class="dropdown-name" id="dropdown-name"></div>
+                <div class="dropdown-email" id="dropdown-email"></div>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="/settings" data-i18n="profile.settings">Configuración</a>
+            <a class="dropdown-item" href="/personal-budget" data-i18n="profile.budget">Presupuesto</a>
+            <button class="dropdown-item" id="btn-share" data-i18n="profile.share">Compartir app</button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-item--danger" id="btn-logout" data-i18n="profile.logout">Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="pm-main">
+    <!-- Toolbar -->
+    <div class="pm-toolbar">
+      <div class="pm-search-wrap">
+        <svg class="pm-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="pm-search" class="pm-search-input"
+               data-i18n-placeholder="productMaster.search" placeholder="Buscar producto…"
+               autocomplete="off" spellcheck="false">
+        <button class="pm-search-clear" id="pm-search-clear" hidden aria-label="Limpiar">×</button>
+      </div>
+      <button class="pm-btn-add" id="pm-btn-add" data-i18n="productMaster.addBtn">+ Nuevo producto</button>
+    </div>
+
+    <!-- Cards container -->
+    <div id="pm-list" class="pm-list"></div>
+  </main>
+
+  <!-- Modal crear/editar -->
+  <div class="pm-modal-overlay" id="pm-modal-overlay" hidden>
+    <div class="pm-modal" role="dialog" aria-modal="true" aria-labelledby="pm-modal-title">
+      <div class="pm-modal-header">
+        <h2 class="pm-modal-title" id="pm-modal-title" data-i18n="productMaster.addBtn">Nuevo producto</h2>
+        <button class="pm-modal-close" id="pm-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="pm-modal-body">
+        <!-- Scan bar -->
+        <div class="pm-scan-row">
+          <label class="pm-label" data-i18n="productMaster.barcode">Código de barras</label>
+          <div class="pm-scan-input-wrap">
+            <input type="text" id="pm-field-barcode" class="pm-input" placeholder="EAN / UPC…" inputmode="numeric">
+            <button class="pm-btn-scan" id="pm-btn-scan" title="Buscar en Open Food Facts">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="3" height="16"/><rect x="7" y="4" width="2" height="16"/><rect x="12" y="4" width="3" height="16"/><rect x="18" y="4" width="1" height="16"/><rect x="21" y="4" width="2" height="16"/></svg>
+            </button>
+          </div>
+          <p class="pm-scan-hint" id="pm-scan-hint" hidden></p>
+        </div>
+
+        <div class="pm-form-row">
+          <div class="pm-form-group">
+            <label class="pm-label" for="pm-field-name">Nombre <span class="pm-req">*</span></label>
+            <input type="text" id="pm-field-name" class="pm-input" required>
+          </div>
+          <div class="pm-form-group">
+            <label class="pm-label" for="pm-field-brand" data-i18n="productMaster.brand">Marca</label>
+            <input type="text" id="pm-field-brand" class="pm-input">
+          </div>
+        </div>
+
+        <div class="pm-form-group">
+          <label class="pm-label" for="pm-field-category" data-i18n="productMaster.category">Categoría de gasto</label>
+          <select id="pm-field-category" class="pm-input">
+            <option value="">— Sin categoría —</option>
+          </select>
+        </div>
+
+        <div class="pm-toggles">
+          <label class="pm-toggle-row">
+            <span class="pm-toggle-label" data-i18n="productMaster.isTaxable">Aplica impuesto</span>
+            <span class="pm-toggle-wrap">
+              <input type="checkbox" id="pm-field-taxable" class="pm-toggle-chk" checked>
+              <span class="pm-toggle-slider"></span>
+            </span>
+          </label>
+          <label class="pm-toggle-row">
+            <span class="pm-toggle-label">
+              <span data-i18n="productMaster.tracksStock">Lleva inventario</span>
+              <span class="pm-toggle-hint" data-i18n="productMaster.tracksStockHint">Si está activo, las compras actualizan el stock físico.</span>
+            </span>
+            <span class="pm-toggle-wrap">
+              <input type="checkbox" id="pm-field-tracks" class="pm-toggle-chk" checked>
+              <span class="pm-toggle-slider"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+      <div class="pm-modal-footer">
+        <button class="pm-btn-del" id="pm-btn-del" hidden data-i18n="productMaster.delete">Eliminar</button>
+        <div class="pm-modal-actions">
+          <button class="pm-btn-cancel" id="pm-btn-cancel" data-i18n="productMaster.cancel">Cancelar</button>
+          <button class="pm-btn-save" id="pm-btn-save" data-i18n="productMaster.save">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="mob-drawer" id="mob-drawer" aria-hidden="true" data-mob-acts='{}'>
+    <div class="mob-dhead">
+      <span class="mob-dhead-title" data-i18n="productMaster.title">Maestro de Productos</span>
+      <button class="mob-dclose" id="mob-dclose" aria-label="Cerrar menú">✕</button>
+    </div>
+    <div class="mob-dbody">
+      <div class="mob-dlabel">Navegación</div>
+      <a class="mob-ditem" href="/inventory">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="5" height="9"/><rect x="10" y="7" width="5" height="14"/><rect x="17" y="3" width="5" height="18"/></svg>
+        <span data-i18n="invTabs.dashboard">Dashboard</span>
+      </a>
+      <a class="mob-ditem" href="/inventory?tab=stock">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span data-i18n="invTabs.stock">Stock</span>
+      </a>
+      <a class="mob-ditem" href="/shopping-list">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span data-i18n="invTabs.shopping">Compras</span>
+      </a>
+      <a class="mob-ditem" href="/history">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span data-i18n="invTabs.history">Historial</span>
+      </a>
+      <span class="mob-ditem mob-active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+        <span data-i18n="invTabs.products">Productos</span>
+      </span>
+      <div class="mob-ddivider"></div>
+      <div class="mob-dlabel">Acciones</div>
+      <button class="mob-ditem" id="mob-btn-add">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span data-i18n="productMaster.addBtn">Nuevo producto</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <button class="back-to-top" id="back-to-top" aria-label="Subir" title="Subir">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/shortcuts.js"></script>
+  <script src="/js/products.js"></script>
+  <script src="/js/mob-drawer.js"></script>
+  <script src="/js/header.js"></script>
+  <script src="/js/back-to-top.js"></script>
+  <script src="/js/sw-register.js"></script>
+</body>
+</html>

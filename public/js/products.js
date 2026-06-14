@@ -1,0 +1,340 @@
+'use strict';
+/* global apiFetch, showToast, tSafe, esc */
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let _products   = [];
+let _categories = [];
+let _search     = '';
+let _editingId  = null;
+
+// ── Boot ───────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await Promise.all([loadCategories(), loadProducts()]);
+  wireEvents();
+  render();
+  loadInvName();
+});
+
+async function loadInvName() {
+  try {
+    const inv = await apiFetch('GET', '/api/active-inventory');
+    if (inv?.name) {
+      const el = document.getElementById('inv-name');
+      if (el) el.textContent = inv.name;
+    }
+  } catch {}
+}
+
+async function loadProducts() {
+  try {
+    _products = await apiFetch('GET', '/api/product-master');
+  } catch {
+    _products = [];
+  }
+}
+
+async function loadCategories() {
+  try {
+    const cats = await apiFetch('GET', '/api/personal-budget/categories-all');
+    _categories = (cats || []).filter(c => c.flow_type === 'expense' || !c.flow_type);
+  } catch {
+    _categories = [];
+  }
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function render() {
+  const list = document.getElementById('pm-list');
+  if (!list) return;
+
+  const term = _search.trim().toLowerCase();
+  const visible = _products.filter(p =>
+    !term ||
+    p.name.toLowerCase().includes(term) ||
+    (p.brand || '').toLowerCase().includes(term) ||
+    (p.barcode || '').includes(term)
+  );
+
+  if (!_products.length) {
+    list.innerHTML = `
+      <div class="pm-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".3"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+        <p class="pm-empty-title">${tSafe('productMaster.empty','Sin productos registrados')}</p>
+        <p class="pm-empty-hint">${tSafe('productMaster.emptyHint','Agregá productos para centralizar tu catálogo personal.')}</p>
+        <button class="pm-cta" id="pm-empty-cta">${tSafe('productMaster.emptyCta','Agregar primer producto')}</button>
+      </div>`;
+    document.getElementById('pm-empty-cta')?.addEventListener('click', openCreate);
+    return;
+  }
+
+  if (!visible.length) {
+    list.innerHTML = `<p class="pm-no-results">${tSafe('catalog.noResults','Sin resultados')}</p>`;
+    return;
+  }
+
+  list.innerHTML = visible.map(p => renderCard(p)).join('');
+
+  list.querySelectorAll('.pm-card-edit').forEach(btn => {
+    btn.addEventListener('click', () => openEdit(parseInt(btn.dataset.id)));
+  });
+  list.querySelectorAll('.pm-tracks-toggle').forEach(chk => {
+    chk.addEventListener('change', async () => {
+      const id = parseInt(chk.dataset.id);
+      const p  = _products.find(x => x.id === id);
+      if (!p) return;
+      try {
+        const updated = await apiFetch('PUT', `/api/product-master/${id}`, {
+          name: p.name, barcode: p.barcode, brand: p.brand,
+          defaultCategoryId: p.default_category_id,
+          isTaxable: !!p.is_taxable,
+          tracksStock: chk.checked,
+        });
+        const idx = _products.findIndex(x => x.id === id);
+        if (idx !== -1) _products[idx] = updated;
+        const badge = chk.closest('.pm-card')?.querySelector('.pm-stock-badge');
+        if (badge) {
+          badge.textContent = chk.checked
+            ? tSafe('productMaster.tracksStock','Lleva inventario')
+            : tSafe('catalog.noStock','Sin seguimiento');
+          badge.classList.toggle('pm-stock-badge--off', !chk.checked);
+        }
+      } catch {
+        chk.checked = !chk.checked;
+        showToast('Error al actualizar', 'error');
+      }
+    });
+  });
+}
+
+function renderCard(p) {
+  const catName  = p.category_name || '—';
+  const stockOn  = !!p.tracks_stock;
+  const taxLabel = p.is_taxable
+    ? tSafe('productMaster.isTaxable','Aplica impuesto')
+    : tSafe('catalog.noTax','Sin impuesto');
+
+  return `<div class="pm-card" data-id="${p.id}">
+    <div class="pm-card-top">
+      <div class="pm-card-info">
+        <span class="pm-card-name">${esc(p.name)}</span>
+        ${p.brand ? `<span class="pm-card-brand">${esc(p.brand)}</span>` : ''}
+      </div>
+      <div class="pm-card-meta">
+        <span class="pm-stock-badge${stockOn ? '' : ' pm-stock-badge--off'}">
+          ${stockOn ? tSafe('productMaster.tracksStock','Lleva inventario') : tSafe('catalog.noStock','Sin seguimiento')}
+        </span>
+        <button class="pm-card-edit btn-icon-sm" data-id="${p.id}" aria-label="Editar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pm-card-details">
+      ${p.barcode ? `<span class="pm-chip pm-chip--code">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="3" height="16"/><rect x="7" y="4" width="2" height="16"/><rect x="12" y="4" width="3" height="16"/><rect x="18" y="4" width="1" height="16"/></svg>
+        ${esc(p.barcode)}
+      </span>` : ''}
+      <span class="pm-chip">${esc(catName)}</span>
+      <span class="pm-chip${p.is_taxable ? '' : ' pm-chip--muted'}">${taxLabel}</span>
+    </div>
+    <div class="pm-card-toggle-row">
+      <span class="pm-toggle-label-sm">${tSafe('productMaster.tracksStock','Lleva inventario')}</span>
+      <label class="pm-toggle-wrap pm-toggle-wrap--sm">
+        <input type="checkbox" class="pm-toggle-chk pm-tracks-toggle" data-id="${p.id}"${stockOn ? ' checked' : ''}>
+        <span class="pm-toggle-slider pm-toggle-slider--sm"></span>
+      </label>
+    </div>
+  </div>`;
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────────
+function buildCategoryOptions(selectedId) {
+  const none = `<option value="">— Sin categoría —</option>`;
+  return none + _categories.map(c =>
+    `<option value="${c.id}"${c.id === selectedId ? ' selected' : ''}>${esc(c.name)}</option>`
+  ).join('');
+}
+
+function openCreate() {
+  _editingId = null;
+  document.getElementById('pm-modal-title').textContent = tSafe('productMaster.addBtn','Nuevo producto');
+  document.getElementById('pm-field-barcode').value  = '';
+  document.getElementById('pm-field-name').value     = '';
+  document.getElementById('pm-field-brand').value    = '';
+  document.getElementById('pm-field-taxable').checked = true;
+  document.getElementById('pm-field-tracks').checked  = true;
+  document.getElementById('pm-field-category').innerHTML = buildCategoryOptions(null);
+  document.getElementById('pm-btn-del').hidden = true;
+  document.getElementById('pm-scan-hint').hidden = true;
+  showModal();
+}
+
+function openEdit(id) {
+  const p = _products.find(x => x.id === id);
+  if (!p) return;
+  _editingId = id;
+  document.getElementById('pm-modal-title').textContent = tSafe('productMaster.title','Editar producto');
+  document.getElementById('pm-field-barcode').value   = p.barcode || '';
+  document.getElementById('pm-field-name').value      = p.name;
+  document.getElementById('pm-field-brand').value     = p.brand || '';
+  document.getElementById('pm-field-taxable').checked = !!p.is_taxable;
+  document.getElementById('pm-field-tracks').checked  = !!p.tracks_stock;
+  document.getElementById('pm-field-category').innerHTML = buildCategoryOptions(p.default_category_id);
+  document.getElementById('pm-btn-del').hidden = false;
+  document.getElementById('pm-scan-hint').hidden = true;
+  showModal();
+}
+
+function showModal() {
+  document.getElementById('pm-modal-overlay').hidden = false;
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('pm-field-name').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('pm-modal-overlay').hidden = true;
+  document.body.style.overflow = '';
+  _editingId = null;
+}
+
+async function saveProduct() {
+  const name     = document.getElementById('pm-field-name').value.trim();
+  const barcode  = document.getElementById('pm-field-barcode').value.trim() || null;
+  const brand    = document.getElementById('pm-field-brand').value.trim()   || null;
+  const catId    = parseInt(document.getElementById('pm-field-category').value) || null;
+  const taxable  = document.getElementById('pm-field-taxable').checked;
+  const tracks   = document.getElementById('pm-field-tracks').checked;
+
+  if (!name) { showToast(tSafe('productMaster.nameRequired','El nombre es requerido'), 'warn'); return; }
+
+  const btn = document.getElementById('pm-btn-save');
+  btn.disabled = true;
+
+  try {
+    const payload = { name, barcode, brand, defaultCategoryId: catId, isTaxable: taxable, tracksStock: tracks };
+    if (_editingId) {
+      const updated = await apiFetch('PUT', `/api/product-master/${_editingId}`, payload);
+      _products = _products.map(p => p.id === _editingId ? updated : p);
+    } else {
+      const created = await apiFetch('POST', '/api/product-master', payload);
+      _products.unshift(created);
+    }
+    showToast(tSafe('productMaster.saved','Producto guardado'), 'success');
+    closeModal();
+    render();
+  } catch (err) {
+    const msg = err?.message?.includes('409')
+      ? tSafe('productMaster.errorDup','Ya existe un producto con ese código de barras')
+      : 'Error al guardar';
+    showToast(msg, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteProduct() {
+  if (!_editingId) return;
+  if (!confirm(tSafe('productMaster.confirmDelete','¿Eliminar este producto del maestro?'))) return;
+  try {
+    await apiFetch('DELETE', `/api/product-master/${_editingId}`);
+    _products = _products.filter(p => p.id !== _editingId);
+    showToast(tSafe('productMaster.deleted','Producto eliminado'), 'success');
+    closeModal();
+    render();
+  } catch {
+    showToast('Error al eliminar', 'error');
+  }
+}
+
+async function scanBarcode() {
+  const barcode = document.getElementById('pm-field-barcode').value.trim();
+  if (!barcode) return;
+  const hint = document.getElementById('pm-scan-hint');
+  const btn  = document.getElementById('pm-btn-scan');
+  btn.disabled = true;
+  hint.hidden = true;
+
+  try {
+    const res = await apiFetch('POST', '/api/product-master/scan-register', { barcode });
+    if (res.product) {
+      // Found locally or via OFF — fill form
+      const p = res.product;
+      document.getElementById('pm-field-name').value  = p.name;
+      document.getElementById('pm-field-brand').value = p.brand || '';
+      if (p.default_category_id) {
+        document.getElementById('pm-field-category').value = p.default_category_id;
+      }
+      document.getElementById('pm-field-taxable').checked = !!p.is_taxable;
+      document.getElementById('pm-field-tracks').checked  = !!p.tracks_stock;
+
+      const srcLabel = res.source === 'local'
+        ? tSafe('productMaster.sourceLocal','En tu maestro')
+        : tSafe('productMaster.sourceOff','Open Food Facts');
+      hint.textContent = `${tSafe('productMaster.scanFound','Producto encontrado')} (${srcLabel})`;
+      hint.className   = 'pm-scan-hint pm-scan-hint--ok';
+
+      // If found locally, switch to edit mode
+      if (res.source === 'local') {
+        _editingId = p.id;
+        document.getElementById('pm-btn-del').hidden = false;
+        // Also refresh local list to include if new
+        if (!_products.find(x => x.id === p.id)) {
+          _products.unshift(p);
+          render();
+        }
+      } else if (res.source === 'openfoodfacts') {
+        // Already created — update list
+        _products.unshift(p);
+        _editingId = p.id;
+        document.getElementById('pm-btn-del').hidden = false;
+        render();
+      }
+    } else {
+      hint.textContent = tSafe('productMaster.scanNotFound','Código no encontrado — completá los datos manualmente');
+      hint.className   = 'pm-scan-hint pm-scan-hint--warn';
+    }
+  } catch {
+    hint.textContent = 'Error al buscar el código';
+    hint.className   = 'pm-scan-hint pm-scan-hint--warn';
+  } finally {
+    hint.hidden  = false;
+    btn.disabled = false;
+  }
+}
+
+// ── Events ─────────────────────────────────────────────────────────────────────
+function wireEvents() {
+  document.getElementById('pm-btn-add')?.addEventListener('click', openCreate);
+  document.getElementById('mob-btn-add')?.addEventListener('click', () => {
+    document.getElementById('mob-drawer')?.setAttribute('aria-hidden','true');
+    openCreate();
+  });
+  document.getElementById('pm-modal-close')?.addEventListener('click', closeModal);
+  document.getElementById('pm-btn-cancel')?.addEventListener('click', closeModal);
+  document.getElementById('pm-modal-overlay')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+  document.getElementById('pm-btn-save')?.addEventListener('click', saveProduct);
+  document.getElementById('pm-btn-del')?.addEventListener('click', deleteProduct);
+  document.getElementById('pm-btn-scan')?.addEventListener('click', scanBarcode);
+  document.getElementById('pm-field-barcode')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') scanBarcode();
+  });
+
+  const searchEl = document.getElementById('pm-search');
+  const clearEl  = document.getElementById('pm-search-clear');
+  searchEl?.addEventListener('input', () => {
+    _search = searchEl.value;
+    if (clearEl) clearEl.hidden = !_search;
+    render();
+  });
+  clearEl?.addEventListener('click', () => {
+    _search = '';
+    searchEl.value = '';
+    clearEl.hidden = true;
+    render();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !document.getElementById('pm-modal-overlay').hidden) closeModal();
+  });
+}

@@ -823,7 +823,37 @@
     "stock": "Stock",
     "shopping": "Courses",
     "history": "Historique",
-    "catalog": "Catalogue"
+    "catalog": "Catalogue",
+    "products": "Produits"
+  },
+  "productMaster": {
+    "title": "Référentiel Produits",
+    "search": "Rechercher un produit…",
+    "addBtn": "Nouveau produit",
+    "empty": "Aucun produit enregistré",
+    "emptyHint": "Ajoutez des produits pour centraliser votre catalogue personnel.",
+    "emptyCta": "Ajouter le premier produit",
+    "barcode": "Code-barres",
+    "brand": "Marque",
+    "category": "Catégorie de dépense",
+    "isTaxable": "Appliquer la taxe",
+    "tracksStock": "Suivi d'inventaire",
+    "tracksStockHint": "Si actif, les achats de ce produit mettent à jour le stock physique.",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirmDelete": "Supprimer ce produit du référentiel ?",
+    "saved": "Produit enregistré",
+    "deleted": "Produit supprimé",
+    "errorDup": "Un produit avec ce code-barres existe déjà",
+    "scanTitle": "Recherche par code-barres",
+    "scanPlaceholder": "Entrer le code…",
+    "scanBtn": "Rechercher",
+    "scanFound": "Produit trouvé",
+    "scanNotFound": "Code introuvable — remplissez les détails manuellement",
+    "sourceLocal": "Dans votre référentiel",
+    "sourceOff": "Open Food Facts",
+    "nameRequired": "Le nom est requis"
   },
   "dashboard": {
     "period": {

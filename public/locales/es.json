@@ -824,7 +824,37 @@
     "stock": "Stock",
     "shopping": "Compras",
     "history": "Historial",
-    "catalog": "Catálogo"
+    "catalog": "Catálogo",
+    "products": "Productos"
+  },
+  "productMaster": {
+    "title": "Maestro de Productos",
+    "search": "Buscar producto…",
+    "addBtn": "Nuevo producto",
+    "empty": "Sin productos registrados",
+    "emptyHint": "Agregá productos para centralizar tu catálogo personal.",
+    "emptyCta": "Agregar primer producto",
+    "barcode": "Código de barras",
+    "brand": "Marca",
+    "category": "Categoría de gasto",
+    "isTaxable": "Aplica impuesto",
+    "tracksStock": "Lleva inventario",
+    "tracksStockHint": "Si está activo, las compras de este producto actualizan el stock físico.",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "confirmDelete": "¿Eliminar este producto del maestro?",
+    "saved": "Producto guardado",
+    "deleted": "Producto eliminado",
+    "errorDup": "Ya existe un producto con ese código de barras",
+    "scanTitle": "Buscar por código de barras",
+    "scanPlaceholder": "Ingresar código…",
+    "scanBtn": "Buscar",
+    "scanFound": "Producto encontrado",
+    "scanNotFound": "Código no encontrado — completá los datos manualmente",
+    "sourceLocal": "En tu maestro",
+    "sourceOff": "Open Food Facts",
+    "nameRequired": "El nombre es requerido"
   },
   "dashboard": {
     "period": {

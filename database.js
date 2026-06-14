@@ -301,6 +301,30 @@ db.exec(`
     ON user_inventory_budget_links(user_id, inventory_id);
 `);
 
+// ── Maestro de Productos ───────────────────────────────────────────────────────
+// Tabla user-scoped: fuente de verdad para barcode, brand, flags de impuesto y stock.
+// Enlaza opcionalmente al catálogo global (catalog_product_id) y a categorías
+// de presupuesto del usuario (default_category_id).
+db.exec(`
+  CREATE TABLE IF NOT EXISTS product_master (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name                TEXT    NOT NULL,
+    barcode             TEXT,
+    brand               TEXT,
+    default_category_id INTEGER REFERENCES personal_budget_categories(id) ON DELETE SET NULL,
+    is_taxable          INTEGER NOT NULL DEFAULT 1,
+    tracks_stock        INTEGER NOT NULL DEFAULT 1,
+    catalog_product_id  INTEGER REFERENCES catalog_products(id) ON DELETE SET NULL,
+    created_at          TEXT    DEFAULT (datetime('now','localtime')),
+    updated_at          TEXT    DEFAULT (datetime('now','localtime'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_product_master_user
+    ON product_master(user_id);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_product_master_user_barcode
+    ON product_master(user_id, barcode) WHERE barcode IS NOT NULL;
+`);
+
 // ── Migrations ────────────────────────────────────────────────────────────────
 // PRAGMA reads run outside any transaction — results drive the conditional ALTERs below.
 const invCols     = db.prepare('PRAGMA table_info(inventories)').all().map(c => c.name);
@@ -2256,6 +2280,80 @@ module.exports = {
     return db.prepare(
       'DELETE FROM user_inventory_budget_links WHERE user_id = ? AND inventory_id = ?'
     ).run(userId, inventoryId).changes > 0;
+  },
+
+  // ── Maestro de Productos ────────────────────────────────────────────────────
+
+  getProductMaster(userId) {
+    return db.prepare(`
+      SELECT pm.*, pbc.name AS category_name
+      FROM product_master pm
+      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id
+      WHERE pm.user_id = ?
+      ORDER BY pm.name COLLATE NOCASE ASC
+    `).all(userId);
+  },
+
+  createProductMaster(userId, { name, barcode, brand, defaultCategoryId, isTaxable, tracksStock, catalogProductId }) {
+    const { lastInsertRowid } = db.prepare(`
+      INSERT INTO product_master
+        (user_id, name, barcode, brand, default_category_id, is_taxable, tracks_stock, catalog_product_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      userId,
+      name.trim(),
+      barcode?.trim() || null,
+      brand?.trim()   || null,
+      defaultCategoryId || null,
+      isTaxable !== false ? 1 : 0,
+      tracksStock !== false ? 1 : 0,
+      catalogProductId || null
+    );
+    return db.prepare(`
+      SELECT pm.*, pbc.name AS category_name
+      FROM product_master pm
+      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id
+      WHERE pm.id = ?
+    `).get(Number(lastInsertRowid));
+  },
+
+  updateProductMaster(id, userId, { name, barcode, brand, defaultCategoryId, isTaxable, tracksStock }) {
+    db.prepare(`
+      UPDATE product_master
+      SET name = ?, barcode = ?, brand = ?, default_category_id = ?,
+          is_taxable = ?, tracks_stock = ?,
+          updated_at = datetime('now','localtime')
+      WHERE id = ? AND user_id = ?
+    `).run(
+      name.trim(),
+      barcode?.trim() || null,
+      brand?.trim()   || null,
+      defaultCategoryId || null,
+      isTaxable !== false ? 1 : 0,
+      tracksStock !== false ? 1 : 0,
+      id, userId
+    );
+    return db.prepare(`
+      SELECT pm.*, pbc.name AS category_name
+      FROM product_master pm
+      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id
+      WHERE pm.id = ? AND pm.user_id = ?
+    `).get(id, userId);
+  },
+
+  deleteProductMaster(id, userId) {
+    return db.prepare(
+      'DELETE FROM product_master WHERE id = ? AND user_id = ?'
+    ).run(id, userId).changes > 0;
+  },
+
+  findProductMasterByBarcode(userId, barcode) {
+    return db.prepare(`
+      SELECT pm.*, pbc.name AS category_name
+      FROM product_master pm
+      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id
+      WHERE pm.user_id = ? AND pm.barcode = ?
+    `).get(userId, barcode);
   },
 
   backupTo(destPath) {

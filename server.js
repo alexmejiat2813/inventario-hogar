@@ -150,6 +150,7 @@ app.use('/api/inventories',  require('./routes/inventories'));
 app.use('/api/catalog',      require('./routes/catalog'));
 app.use('/api/notifications',    require('./routes/notifications'));
 app.use('/api/personal-budget',  require('./routes/personal-budget'));
+app.use('/api/product-master',   require('./routes/product-master'));
 
 // Routes below require an active inventory in session
 app.use(
