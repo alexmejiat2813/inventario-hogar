@@ -315,13 +315,24 @@
     .confirm-budget-section .receipt-hint { color: #0369A1; opacity: .8; }
     .confirm-budget-no-cats-hint { font-size: .8rem; color: #0369A1; margin: 0; line-height: 1.5; }
     .confirm-budget-default-label {
-      display: flex; align-items: center; gap: .5rem;
-      margin-top: .65rem; cursor: pointer;
-      font-size: .78rem; color: #475569; line-height: 1.4;
+      display: flex; align-items: center; gap: .45rem;
+      margin-top: .5rem; margin-left: 1.5rem; cursor: pointer;
+      font-size: .74rem; color: #94A3B8; line-height: 1.4;
+      opacity: .9;
     }
     .confirm-budget-default-check {
-      width: 14px; height: 14px; flex-shrink: 0;
-      accent-color: #0369A1; cursor: pointer;
+      width: 13px; height: 13px; flex-shrink: 0;
+      accent-color: #64748B; cursor: pointer;
+    }
+    /* Keep confirm button in viewport on small screens */
+    @media (max-width: 420px) {
+      .modal-foot {
+        position: sticky; bottom: 0;
+        background: var(--modal-bg, #fff);
+        padding: .75rem 1rem;
+        border-top: 1px solid var(--border, #e2e8f0);
+        z-index: 2;
+      }
     }
 
     /* Payer confirmation modal */

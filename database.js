@@ -382,6 +382,33 @@ if (!ptCols.includes('source')) {
 if (!ptCols.includes('source_purchase_session_id')) {
   db.exec('ALTER TABLE personal_transactions ADD COLUMN source_purchase_session_id INTEGER REFERENCES purchase_sessions(id) ON DELETE SET NULL');
 }
+if (!ptCols.includes('category_id')) {
+  db.exec('ALTER TABLE personal_transactions ADD COLUMN category_id INTEGER REFERENCES personal_budget_categories(id) ON DELETE SET NULL');
+  // Backfill from string match so existing rows get ID-based anchor immediately
+  db.exec(`
+    UPDATE personal_transactions
+    SET category_id = (
+      SELECT id FROM personal_budget_categories
+      WHERE user_id = personal_transactions.user_id AND name = personal_transactions.category
+      LIMIT 1
+    )
+    WHERE category_id IS NULL
+  `);
+}
+
+const pbCols2 = db.prepare('PRAGMA table_info(personal_budgets)').all().map(c => c.name);
+if (!pbCols2.includes('category_id')) {
+  db.exec('ALTER TABLE personal_budgets ADD COLUMN category_id INTEGER REFERENCES personal_budget_categories(id) ON DELETE SET NULL');
+  db.exec(`
+    UPDATE personal_budgets
+    SET category_id = (
+      SELECT id FROM personal_budget_categories
+      WHERE user_id = personal_budgets.user_id AND name = personal_budgets.category
+      LIMIT 1
+    )
+    WHERE category_id IS NULL
+  `);
+}
 
 // Migration: fix FK semantic — source_purchase_session_id ON DELETE SET NULL → ON DELETE CASCADE.
 // SQLite cannot ALTER a constraint; requires full table recreation. Detected via foreign_key_list.
@@ -1493,11 +1520,14 @@ module.exports = {
         if (totalAmount > 0) {
           const normalizedCategory = budgetCategory.trim();
           const invName = db.prepare('SELECT name FROM inventories WHERE id = ?').get(inventoryId)?.name || '';
+          const catRow  = db.prepare(
+            'SELECT id FROM personal_budget_categories WHERE user_id = ? AND name = ? LIMIT 1'
+          ).get(userId, normalizedCategory);
           db.prepare(`
             INSERT INTO personal_transactions
-              (user_id, inventory_id, type, category, amount, description, date, source, source_purchase_session_id)
-            VALUES (?, ?, 'expense', ?, ?, ?, ?, 'purchase', ?)
-          `).run(userId, inventoryId, normalizedCategory, totalAmount,
+              (user_id, inventory_id, type, category, category_id, amount, description, date, source, source_purchase_session_id)
+            VALUES (?, ?, 'expense', ?, ?, ?, ?, ?, 'purchase', ?)
+          `).run(userId, inventoryId, normalizedCategory, catRow?.id || null, totalAmount,
                  `Compra Automatizada Inventario: ${invName}`, purchaseDate, sessionId);
         } else {
           budgetTxOmitted = true;
@@ -1951,10 +1981,13 @@ module.exports = {
   },
 
   addPersonalBudget(userId, { category, amount, month, frequency = 'Mensual', due_date = null, flow_type = 'expense', inventory_id = null }) {
+    const catRow = db.prepare(
+      'SELECT id FROM personal_budget_categories WHERE user_id = ? AND name = ? LIMIT 1'
+    ).get(userId, category);
     const { lastInsertRowid } = db.prepare(`
-      INSERT INTO personal_budgets (user_id, category, amount, month, frequency, due_date, flow_type, inventory_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(userId, category, +amount, month, frequency, due_date, flow_type, inventory_id);
+      INSERT INTO personal_budgets (user_id, category, category_id, amount, month, frequency, due_date, flow_type, inventory_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, category, catRow?.id || null, +amount, month, frequency, due_date, flow_type, inventory_id);
     return db.prepare('SELECT * FROM personal_budgets WHERE id = ?').get(lastInsertRowid);
   },
 
@@ -2004,11 +2037,14 @@ module.exports = {
   },
 
   addPersonalTransaction(userId, { inventoryId, type, category, amount, description, date }) {
+    const catRow = db.prepare(
+      'SELECT id FROM personal_budget_categories WHERE user_id = ? AND name = ? LIMIT 1'
+    ).get(userId, category);
     const { lastInsertRowid } = db.prepare(`
       INSERT INTO personal_transactions
-        (user_id, inventory_id, type, category, amount, description, date)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(userId, inventoryId || null, type, category, +amount, description || null, date);
+        (user_id, inventory_id, type, category, category_id, amount, description, date)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, inventoryId || null, type, category, catRow?.id || null, +amount, description || null, date);
     return db.prepare('SELECT * FROM personal_transactions WHERE id = ?').get(lastInsertRowid);
   },
 
@@ -2129,14 +2165,34 @@ module.exports = {
 
   updatePersonalBudgetCategory(userId, id, { name, flowType }) {
     const trimmed = name.trim();
+    const existing = db.prepare(
+      'SELECT id, name FROM personal_budget_categories WHERE id = ? AND user_id = ?'
+    ).get(id, userId);
+    if (!existing) return { error: 'not_found' };
     const conflict = db.prepare(
       'SELECT id FROM personal_budget_categories WHERE user_id = ? AND LOWER(name) = LOWER(?) AND id != ?'
     ).get(userId, trimmed, id);
     if (conflict) return { error: 'Ya existe una categoría con ese nombre.' };
-    const { changes } = db.prepare(
-      'UPDATE personal_budget_categories SET name = ?, flow_type = ? WHERE id = ? AND user_id = ?'
-    ).run(trimmed, flowType || 'expense', id, userId);
-    if (!changes) return { error: 'not_found' };
+
+    db.exec('BEGIN');
+    try {
+      db.prepare(
+        'UPDATE personal_budget_categories SET name = ?, flow_type = ? WHERE id = ? AND user_id = ?'
+      ).run(trimmed, flowType || 'expense', id, userId);
+      // Cascade rename to all string-based references so analytics never breaks
+      if (existing.name !== trimmed) {
+        db.prepare('UPDATE personal_transactions SET category = ? WHERE user_id = ? AND category = ?')
+          .run(trimmed, userId, existing.name);
+        db.prepare('UPDATE personal_budgets SET category = ? WHERE user_id = ? AND category = ?')
+          .run(trimmed, userId, existing.name);
+        db.prepare('UPDATE user_inventory_budget_links SET default_category = ? WHERE user_id = ? AND default_category = ?')
+          .run(trimmed, userId, existing.name);
+      }
+      db.exec('COMMIT');
+    } catch (err) {
+      try { db.exec('ROLLBACK'); } catch { }
+      throw err;
+    }
     return { category: db.prepare('SELECT * FROM personal_budget_categories WHERE id = ?').get(id) };
   },
 
@@ -2149,6 +2205,11 @@ module.exports = {
       "SELECT 1 AS x FROM personal_transactions WHERE user_id = ? AND category = ? LIMIT 1"
     ).get(userId, cat.name);
     if (usedInTx) return { error: 'in_use', category: cat.name };
+    // Degrade any stored default_category reference before deleting — avoids pre-selecting
+    // a non-existent category in the confirm modal next time the user opens it.
+    db.prepare(
+      'UPDATE user_inventory_budget_links SET default_category = NULL WHERE user_id = ? AND default_category = ?'
+    ).run(userId, cat.name);
     db.prepare('DELETE FROM personal_budget_categories WHERE id = ? AND user_id = ?').run(id, userId);
     return { ok: true };
   },

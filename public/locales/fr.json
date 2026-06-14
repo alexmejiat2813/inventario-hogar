@@ -935,7 +935,8 @@
       "expense": "Dépense",
       "noInventory": "—",
       "deleteConfirm": "Supprimer cette transaction ?",
-      "deleted": "Transaction supprimée"
+      "deleted": "Transaction supprimée",
+      "loadMore": "Charger plus"
     },
     "empty": {
       "title": "Aucune transaction",
@@ -1035,7 +1036,11 @@
     "chart": {
       "title": "Distribution des Dépenses",
       "emptyTitle": "Aucune dépense cette période",
-      "emptySub": "Enregistrez une dépense pour voir la répartition par catégorie."
+      "emptySub": "Enregistrez une dépense pour voir la répartition par catégorie.",
+      "emptyCta": "Enregistrer première dépense"
+    },
+    "trend": {
+      "vsLastMonth": "vs mois précédent"
     },
     "range": {
       "thisMonth": "Ce mois-ci",

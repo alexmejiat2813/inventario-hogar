@@ -428,6 +428,8 @@
 
   // ── Search / filter helpers ────────────────────────────────────────────────
   let _lastTransactions = [];
+  const TX_PAGE_SIZE = 30;
+  let _txPageCount   = 1;
 
   function applyTxSearch() {
     const q = elSearch ? elSearch.value.toLowerCase().trim() : '';
@@ -473,12 +475,16 @@
     const tbody = elTableWrap.querySelector('tbody');
     if (!tbody) return;
 
+    // Pagination: only render the current page slice
+    const visible = transactions.slice(0, TX_PAGE_SIZE * _txPageCount);
+    const hasMore = visible.length < transactions.length;
+
     const txIncome  = transactions.filter(tx => tx.type === 'income') .reduce((s, tx) => s + tx.amount, 0);
     const txExpense = transactions.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
     const txBalance = txIncome - txExpense;
     const balClass  = txBalance >= 0 ? 'pb-stat-value--positive' : 'pb-stat-value--negative';
 
-    tbody.innerHTML = transactions.map(tx => {
+    tbody.innerHTML = visible.map(tx => {
       const typeLabel = t(`personalBudget.table.${tx.type}`);
       const invName   = tx.inventory_name || t('personalBudget.table.noInventory');
       const sign      = tx.type === 'income' ? '+' : '-';
@@ -500,6 +506,19 @@
         </tr>`;
     }).join('');
 
+    // "Cargar más" row appended inside tbody
+    if (hasMore) {
+      const remaining = transactions.length - visible.length;
+      const tr = document.createElement('tr');
+      tr.className = 'pb-load-more-row';
+      tr.innerHTML = `<td colspan="7"><button class="pb-load-more-btn">${t('personalBudget.table.loadMore', 'Cargar más')} (${remaining})</button></td>`;
+      tr.querySelector('button').addEventListener('click', () => {
+        _txPageCount += 1;
+        _renderTableRows(transactions);
+      });
+      tbody.appendChild(tr);
+    }
+
     // Subtotal bar lives OUTSIDE the scroll container to avoid horizontal overflow
     const bar = elTableWrap.querySelector('.pb-tfoot-bar');
     if (bar) {
@@ -510,6 +529,7 @@
   }
 
   function renderTable(transactions) {
+    _txPageCount      = 1;
     _lastTransactions = transactions || [];
 
     if (!_lastTransactions.length) {
@@ -751,6 +771,7 @@
         income_projected:  firstData?.summary?.income_projected  || 0,
         expense_projected: firstData?.summary?.expense_projected || 0,
       });
+      renderTrends(income_real, expense_real, firstData?.prev_summary);
       renderTable(allTx);
       renderDonut(allTx);
     } catch {
@@ -772,6 +793,32 @@
     '#EC4899','#14B8A6','#F97316','#6366F1','#84CC16',
   ];
 
+  // ── Trend delta badges vs prev month ──────────────────────────────────────
+  function renderTrends(incomeReal, expenseReal, prevSummary) {
+    function _badge(curr, prev, elId) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      if (!prev || prev === 0) { el.hidden = true; return; }
+      const pct  = Math.round((curr - prev) / prev * 100);
+      const up   = pct > 0;
+      const cls  = up ? 'pb-trend--up' : pct < 0 ? 'pb-trend--down' : 'pb-trend--flat';
+      const arrow = up ? '↑' : pct < 0 ? '↓' : '→';
+      el.textContent = `${arrow} ${Math.abs(pct)}%`;
+      el.className   = `pb-kpi-trend ${cls}`;
+      el.title       = t('personalBudget.trend.vsLastMonth', 'vs mes anterior');
+      el.hidden      = false;
+    }
+    if (_range === 1 && prevSummary) {
+      _badge(incomeReal,  prevSummary.income_real,  'pb-income-trend');
+      _badge(expenseReal, prevSummary.expense_real, 'pb-expense-trend');
+    } else {
+      ['pb-income-trend', 'pb-expense-trend'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.hidden = true;
+      });
+    }
+  }
+
   function renderDonut(transactions) {
     const expenses = transactions.filter(tx => tx.type === 'expense');
     const chartCard = document.getElementById('pb-chart-card');
@@ -789,7 +836,13 @@
           <circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 3"/>
         </svg>
         <p class="pb-chart-empty-title">${t('personalBudget.chart.emptyTitle')}</p>
-        <p class="pb-chart-empty-sub">${t('personalBudget.chart.emptySub')}</p>`;
+        <p class="pb-chart-empty-sub">${t('personalBudget.chart.emptySub')}</p>
+        <button class="pb-chart-empty-cta" id="pb-donut-empty-cta">${t('personalBudget.chart.emptyCta', 'Registrar primer gasto')}</button>`;
+      requestAnimationFrame(() => {
+        document.getElementById('pb-donut-empty-cta')?.addEventListener('click', () => {
+          elBtnNewRecord?.click();
+        });
+      });
       return;
     }
     chartCard.querySelector('.pb-chart-empty')?.remove();
@@ -1061,6 +1114,9 @@
   }
 
   initProfileMenu();
-  await Promise.all([loadProfileAvatar(), loadInventories(), loadSettings(), load(), loadFixedCosts()]);
+  // loadSettings must resolve before load() so _warnPct/_critPct are set
+  // before the first renderSummary projection hint renders.
+  await Promise.all([loadProfileAvatar(), loadInventories(), loadSettings()]);
+  await Promise.all([load(), loadFixedCosts()]);
 
 })();

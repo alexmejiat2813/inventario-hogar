@@ -830,6 +830,34 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 .pb-chart-empty svg { opacity: .35; }
 .pb-chart-empty-title { font-size: .9rem; font-weight: 600; color: var(--text); margin: 0; }
 .pb-chart-empty-sub   { font-size: .8rem; margin: 0; }
+.pb-chart-empty-cta {
+  margin-top: .75rem; padding: .4rem .9rem;
+  background: var(--accent, #0369A1); color: #fff;
+  border: none; border-radius: 6px; font-size: .8rem;
+  cursor: pointer; font-weight: 500;
+}
+.pb-chart-empty-cta:hover { opacity: .88; }
+
+/* Trend delta badges on KPI cards */
+.pb-kpi-trend {
+  display: inline-block; font-size: .72rem; font-weight: 600;
+  padding: .1rem .35rem; border-radius: 4px; margin-top: .15rem;
+}
+.pb-trend--up   { background: #FEF2F2; color: #DC2626; } /* gastos arriba = red */
+.pb-trend--down { background: #F0FDF4; color: #16A34A; } /* gastos abajo = green */
+.pb-trend--flat { background: var(--surface-2, #F1F5F9); color: var(--text-muted); }
+/* For income cards swap semantics: up=green, down=red */
+.pb-kpi-income .pb-trend--up   { background: #F0FDF4; color: #16A34A; }
+.pb-kpi-income .pb-trend--down { background: #FEF2F2; color: #DC2626; }
+
+/* Load-more row */
+.pb-load-more-row td { text-align: center; padding: .6rem 0; border: none; }
+.pb-load-more-btn {
+  background: none; border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px; padding: .35rem .9rem;
+  font-size: .8rem; color: var(--text-muted); cursor: pointer;
+}
+.pb-load-more-btn:hover { background: var(--surface-2, #F1F5F9); }
 .pb-chart-wrap {
   flex-shrink: 0;
   width: 140px;

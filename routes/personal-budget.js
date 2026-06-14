@@ -25,12 +25,23 @@ router.get('/', (req, res) => {
   const income_projected  = budgets.filter(b => (b.flow_type || 'expense') === 'income') .reduce((s, b) => s + b.amount, 0);
   const expense_projected = budgets.filter(b => (b.flow_type || 'expense') === 'expense').reduce((s, b) => s + b.amount, 0);
 
+  // Previous month — lightweight query for trend deltas in the frontend
+  const _d = new Date(month + '-01');
+  _d.setMonth(_d.getMonth() - 1);
+  const prevMonth = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}`;
+  const prevTx    = db.getPersonalTransactions(userId, prevMonth);
+  const prev_summary = {
+    income_real:  prevTx.filter(t => t.type === 'income') .reduce((s, t) => s + t.amount, 0),
+    expense_real: prevTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+  };
+
   res.json({
     month, budgets, transactions,
     summary: {
       income_real, expense_real, balance_real: income_real - expense_real,
       income_projected, expense_projected, balance_projected: income_projected - expense_projected,
     },
+    prev_summary,
   });
 });
 

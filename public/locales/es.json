@@ -240,7 +240,7 @@
       "budgetCategoryNone": "No vincular",
       "budgetNoCats": "Configurá categorías en Presupuesto Personal para vincular compras automáticamente.",
       "setDefault": "Establecer como categoría predeterminada para este inventario",
-      "confirm": "Confirmar"
+      "confirm": "Confirmar",
       "budgetHint": "Se creará un Gasto Real en tu presupuesto por el monto total de esta compra.",
       "confirm": "Registrar compra",
       "confirming": "Registrando…",
@@ -936,7 +936,8 @@
       "expense": "Gasto",
       "noInventory": "—",
       "deleteConfirm": "¿Eliminar esta transacción?",
-      "deleted": "Transacción eliminada"
+      "deleted": "Transacción eliminada",
+      "loadMore": "Cargar más"
     },
     "empty": {
       "title": "Sin transacciones",
@@ -1036,7 +1037,11 @@
     "chart": {
       "title": "Distribución de Gastos",
       "emptyTitle": "Sin gastos este período",
-      "emptySub": "Registrá un gasto para ver la distribución por categoría."
+      "emptySub": "Registrá un gasto para ver la distribución por categoría.",
+      "emptyCta": "Registrar primer gasto"
+    },
+    "trend": {
+      "vsLastMonth": "vs mes anterior"
     },
     "range": {
       "thisMonth": "Este mes",

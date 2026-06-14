@@ -935,7 +935,8 @@
       "expense": "Expense",
       "noInventory": "—",
       "deleteConfirm": "Delete this transaction?",
-      "deleted": "Transaction deleted"
+      "deleted": "Transaction deleted",
+      "loadMore": "Load more"
     },
     "empty": {
       "title": "No transactions",
@@ -1035,7 +1036,11 @@
     "chart": {
       "title": "Expense Distribution",
       "emptyTitle": "No expenses this period",
-      "emptySub": "Record an expense to see the category breakdown."
+      "emptySub": "Record an expense to see the category breakdown.",
+      "emptyCta": "Record first expense"
+    },
+    "trend": {
+      "vsLastMonth": "vs last month"
     },
     "range": {
       "thisMonth": "This month",

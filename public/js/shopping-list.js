@@ -879,9 +879,16 @@ async function handleConfirm() {
       localStorage.setItem(`pb_cat_store_${dominantStore2}`, budgetCategory);
     }
 
-    // Sync budget link silently before purchase — doesn't block if it fails
+    // Sync budget link silently before purchase — doesn't block if it fails.
+    // Use explicit section/expand hidden checks rather than .closest('[hidden]')
+    // so the PUT/DELETE only fires when the user has the budget UI open and visible.
+    const _budgetSectionOpen = (() => {
+      const section = document.getElementById('confirm-budget-section');
+      const expand  = document.getElementById('confirm-budget-expand');
+      return !!(section && !section.hidden && expand && !expand.hidden);
+    })();
     const defaultChk   = document.getElementById('confirm-budget-set-default');
-    const setAsDefault = !!(defaultChk && !defaultChk.closest('[hidden]') && defaultChk.checked && budgetCategory);
+    const setAsDefault = !!(defaultChk && defaultChk.checked && budgetCategory && _budgetSectionOpen);
     const hadActiveLink = !!(state._budgetLinkSnapshot?.enabled);
     if (setAsDefault) {
       const catChanged = state._budgetLinkSnapshot?.default_category !== budgetCategory;
@@ -891,7 +898,7 @@ async function handleConfirm() {
           enabled: true,
         }).catch(() => {});
       }
-    } else if (!setAsDefault && hadActiveLink) {
+    } else if (_budgetSectionOpen && !setAsDefault && hadActiveLink) {
       await apiFetch('DELETE', '/api/purchases/budget-link').catch(() => {});
     }
 
