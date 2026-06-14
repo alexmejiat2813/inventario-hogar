@@ -12,6 +12,10 @@ RUN npm ci --omit=dev
 # Copy application source
 COPY . .
 
+# Build-time commit SHA — passed by CI via --build-arg; fallback empty string
+ARG COMMIT_SHA=""
+ENV FLY_COMMIT_SHA=${COMMIT_SHA}
+
 # The app listens on PORT (Fly sets it via env / fly.toml internal_port)
 ENV NODE_ENV=production
 ENV PORT=8080

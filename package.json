@@ -1,6 +1,6 @@
 {
   "name": "inventario-hogar",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Gestión de inventario doméstico",
   "main": "server.js",
   "scripts": {
