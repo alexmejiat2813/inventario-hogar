@@ -956,6 +956,12 @@ async function handleConfirm() {
         if (budgetCategory) toastMsg += ` → ${budgetCategory}`;
       }
       showToast(toastMsg);
+      if (session?.budget_category_status === 'degraded') {
+        setTimeout(() => showToast(
+          tSafe('shopping.register.budgetDegraded', 'Categoría no encontrada — gasto asignado a "Otros"'),
+          'warn'
+        ), 600);
+      }
     }
 
     // Reload to reflect updated quantities

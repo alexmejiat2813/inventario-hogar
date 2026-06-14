@@ -244,6 +244,8 @@
       "confirm": "Register purchase",
       "confirming": "Registering…",
       "success": "Purchase registered",
+      "budgetOmitted": "Purchase registered ($0 amount — not recorded in budget)",
+      "budgetDegraded": "Category not found — expense assigned to \"Others\"",
       "error": "Error registering purchase"
     },
     "payerConfirm": {

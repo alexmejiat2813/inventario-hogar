@@ -244,6 +244,8 @@
       "confirm": "Enregistrer l'achat",
       "confirming": "Enregistrement…",
       "success": "Achat enregistré",
+      "budgetOmitted": "Achat enregistré (montant $0 — non comptabilisé dans le budget)",
+      "budgetDegraded": "Catégorie introuvable — dépense assignée à \"Autres\"",
       "error": "Erreur lors de l'enregistrement"
     },
     "payerConfirm": {

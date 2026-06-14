@@ -90,12 +90,15 @@ router.post('/', requireEditorOrOwner, (req, res) => {
           // No categories configured yet — accept as-is but flag it
           resolvedBudgetCategory = sanitized;
           budgetCategoryStatus = 'unvalidated';
-        } else if (knownCategories.includes(sanitized)) {
-          resolvedBudgetCategory = sanitized;
-          budgetCategoryStatus = 'accepted';
         } else {
-          resolvedBudgetCategory = 'Otros';
-          budgetCategoryStatus = 'degraded';
+          const matched = knownCategories.find(c => c.toLowerCase() === sanitized.toLowerCase());
+          if (matched) {
+            resolvedBudgetCategory = matched; // canonical casing from DB
+            budgetCategoryStatus = 'accepted';
+          } else {
+            resolvedBudgetCategory = 'Otros';
+            budgetCategoryStatus = 'degraded';
+          }
         }
       }
     }
@@ -146,12 +149,15 @@ router.put('/:sessionId', requireEditorOrOwner, (req, res) => {
         if (!knownCategories.length) {
           resolvedBudgetCategory = sanitized;
           budgetCategoryStatus = 'unvalidated';
-        } else if (knownCategories.includes(sanitized)) {
-          resolvedBudgetCategory = sanitized;
-          budgetCategoryStatus = 'accepted';
         } else {
-          resolvedBudgetCategory = 'Otros';
-          budgetCategoryStatus = 'degraded';
+          const matched = knownCategories.find(c => c.toLowerCase() === sanitized.toLowerCase());
+          if (matched) {
+            resolvedBudgetCategory = matched;
+            budgetCategoryStatus = 'accepted';
+          } else {
+            resolvedBudgetCategory = 'Otros';
+            budgetCategoryStatus = 'degraded';
+          }
         }
       }
     }

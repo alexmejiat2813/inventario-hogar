@@ -245,6 +245,8 @@
       "confirm": "Registrar compra",
       "confirming": "Registrando…",
       "success": "Compra registrada",
+      "budgetOmitted": "Compra registrada (monto $0 — no se registró en presupuesto)",
+      "budgetDegraded": "Categoría no encontrada — gasto asignado a \"Otros\"",
       "error": "Error al registrar la compra"
     },
     "payerConfirm": {
