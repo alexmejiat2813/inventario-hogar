@@ -91,6 +91,7 @@ async function loadData() {
     unit:           item.unit          || 'unidades',
     unitPrice:      item.unit_price    != null ? +item.unit_price : null,
     storeId:        item.store_id      || null,
+    isTaxable:      item.is_taxable !== 0,
   }));
 
   state.receiptAction = 'keep';
@@ -145,14 +146,16 @@ function renderItemRow(item) {
     : '—';
 
   const colLabels = {
-    product:  tSafe('purchaseEdit.col.product','Producto'),
-    qty:      tSafe('purchaseEdit.col.qty','Cant.'),
-    unit:     tSafe('purchaseEdit.col.unit','Unidad'),
-    price:    tSafe('purchaseEdit.col.price','Precio unit.'),
-    store:    tSafe('purchaseEdit.col.store','Tienda'),
-    subtotal: tSafe('purchaseEdit.col.subtotal','Subtotal'),
-    remove:   tSafe('purchaseEdit.removeProduct','Eliminar'),
+    product:   tSafe('purchaseEdit.col.product','Producto'),
+    qty:       tSafe('purchaseEdit.col.qty','Cant.'),
+    unit:      tSafe('purchaseEdit.col.unit','Unidad'),
+    price:     tSafe('purchaseEdit.col.price','Precio unit.'),
+    store:     tSafe('purchaseEdit.col.store','Tienda'),
+    subtotal:  tSafe('purchaseEdit.col.subtotal','Subtotal'),
+    taxable:   tSafe('purchaseEdit.col.taxable','Imp.'),
+    remove:    tSafe('purchaseEdit.removeProduct','Eliminar'),
   };
+  const taxableChecked = item.isTaxable !== false ? 'checked' : '';
 
   return `<div class="item-row" data-key="${item._key}">
     <div class="item-cell cell-name" data-label="${esc(colLabels.product)}">
@@ -177,6 +180,9 @@ function renderItemRow(item) {
     </div>
     <div class="item-cell cell-subtotal" data-label="${esc(colLabels.subtotal)}">
       <span class="item-subtotal">${sub}</span>
+    </div>
+    <div class="item-cell cell-taxable" data-label="${esc(colLabels.taxable)}" title="${esc(tSafe('purchaseEdit.col.taxableTip','¿Aplica impuesto?'))}">
+      <input type="checkbox" class="item-taxable" ${taxableChecked}>
     </div>
     <div class="item-cell cell-del">
       <button class="btn-del-item" data-action="remove-item" data-key="${item._key}"
@@ -231,16 +237,18 @@ function syncItemsFromDOM() {
   state.items.forEach(item => {
     const row = document.querySelector(`.item-row[data-key="${item._key}"]`);
     if (!row) return;
-    const nameEl  = row.querySelector('.item-name');
-    const qtyEl   = row.querySelector('.item-qty');
-    const unitEl  = row.querySelector('.item-unit');
-    const priceEl = row.querySelector('.item-price');
-    const storeEl = row.querySelector('.item-store');
-    if (nameEl)  item.productName    = nameEl.value;
-    if (qtyEl)   item.quantityBought = parseFloat(qtyEl.value) || 0;
-    if (unitEl)  item.unit           = unitEl.value || 'unidades';
-    if (priceEl) item.unitPrice      = priceEl.value !== '' ? parseFloat(priceEl.value) : null;
-    if (storeEl) item.storeId        = storeEl.value ? parseInt(storeEl.value) : null;
+    const nameEl    = row.querySelector('.item-name');
+    const qtyEl     = row.querySelector('.item-qty');
+    const unitEl    = row.querySelector('.item-unit');
+    const priceEl   = row.querySelector('.item-price');
+    const storeEl   = row.querySelector('.item-store');
+    const taxableEl = row.querySelector('.item-taxable');
+    if (nameEl)    item.productName    = nameEl.value;
+    if (qtyEl)     item.quantityBought = parseFloat(qtyEl.value) || 0;
+    if (unitEl)    item.unit           = unitEl.value || 'unidades';
+    if (priceEl)   item.unitPrice      = priceEl.value !== '' ? parseFloat(priceEl.value) : null;
+    if (storeEl)   item.storeId        = storeEl.value ? parseInt(storeEl.value) : null;
+    if (taxableEl) item.isTaxable      = taxableEl.checked;
   });
 }
 
@@ -265,6 +273,7 @@ function addItem() {
     unit:           state.units[0]?.name || 'unidades',
     unitPrice:      null,
     storeId:        null,
+    isTaxable:      true,
   };
   state.items.push(item);
   renderItems();
@@ -378,6 +387,10 @@ function calcTotals() {
   const subtotal = state.items.reduce((acc, item) => {
     return acc + (item.quantityBought || 0) * (item.unitPrice || 0);
   }, 0);
+  const taxableSubtotal = state.items.reduce((acc, item) => {
+    if (item.isTaxable === false) return acc;
+    return acc + (item.quantityBought || 0) * (item.unitPrice || 0);
+  }, 0);
 
   const taxIds = getSelectedTaxIds();
   let totalTax = 0;
@@ -385,7 +398,7 @@ function calcTotals() {
   taxIds.forEach(taxId => {
     const tax = state.taxes.find(tx => tx.id === taxId);
     if (tax) {
-      const amt = subtotal * (tax.rate / 100);
+      const amt = taxableSubtotal * (tax.rate / 100);
       totalTax += amt;
       breakdown.push({ taxId: tax.id, taxName: tax.name, taxRate: tax.rate, taxAmount: amt });
     }
@@ -467,6 +480,7 @@ async function save() {
         quantityBought: item.quantityBought,
         unit:           item.unit         || 'unidades',
         unitPrice:      item.unitPrice,
+        isTaxable:      item.isTaxable !== false,
       }));
 
     if (!items.length) throw new Error('Agrega al menos un producto');

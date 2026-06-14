@@ -565,6 +565,10 @@
     "title": "Modifier l'achat",
     "filterPlaceholder": "Filtrer les produits…",
     "searchEmpty": "Aucun produit trouvé",
+    "col": {
+      "taxable": "Tax.",
+      "taxableTip": "Appliquer la taxe ?"
+    },
     "back": "Historique",
     "saveBtn": "Enregistrer",
     "saving": "Enregistrement…",

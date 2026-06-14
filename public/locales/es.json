@@ -566,6 +566,10 @@
     "title": "Editar compra",
     "filterPlaceholder": "Filtrar productos…",
     "searchEmpty": "No se encontraron productos",
+    "col": {
+      "taxable": "Imp.",
+      "taxableTip": "¿Aplica impuesto?"
+    },
     "back": "Historial",
     "saveBtn": "Guardar cambios",
     "saving": "Guardando…",

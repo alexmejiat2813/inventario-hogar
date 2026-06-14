@@ -370,8 +370,9 @@ if (hasUnique) {
   db.exec('CREATE INDEX IF NOT EXISTS idx_personal_budgets_user_month ON personal_budgets(user_id, month)');
 }
 
-const ptCols  = db.prepare('PRAGMA table_info(personal_transactions)').all().map(c => c.name);
-const pbCols2 = db.prepare('PRAGMA table_info(personal_budgets)').all().map(c => c.name);
+const ptCols     = db.prepare('PRAGMA table_info(personal_transactions)').all().map(c => c.name);
+const pbCols2    = db.prepare('PRAGMA table_info(personal_budgets)').all().map(c => c.name);
+const piItemCols = db.prepare('PRAGMA table_info(purchase_items)').all().map(c => c.name);
 
 db.exec('BEGIN');
 try {
@@ -389,6 +390,8 @@ try {
     db.exec('ALTER TABLE personal_budgets ADD COLUMN category_id INTEGER REFERENCES personal_budget_categories(id) ON DELETE SET NULL');
     db.exec(`UPDATE personal_budgets SET category_id = (SELECT id FROM personal_budget_categories WHERE user_id = personal_budgets.user_id AND name = personal_budgets.category LIMIT 1) WHERE category_id IS NULL`);
   }
+  if (!piItemCols.includes('is_taxable'))
+    db.exec('ALTER TABLE purchase_items ADD COLUMN is_taxable INTEGER NOT NULL DEFAULT 1');
   db.exec('COMMIT');
 } catch (err) { try { db.exec('ROLLBACK'); } catch {} throw err; }
 
@@ -1113,6 +1116,8 @@ module.exports = {
   },
 
   getProductStorePrices(productId, inventoryId) {
+    // Bug 5 fix: show MIN(unit_price) per store (best price), not most recent price.
+    // last_date = date of the purchase where that minimum was first seen.
     return db.prepare(`
       SELECT
         COALESCE(s.name, 'Sin tienda')  AS store_name,
@@ -1126,11 +1131,11 @@ module.exports = {
         AND ps.inventory_id = ?
         AND pi.unit_price IS NOT NULL
         AND pi.unit_price > 0
-        AND ps.purchase_date = (
-          SELECT MAX(ps2.purchase_date)
+        AND pi.unit_price = (
+          SELECT MIN(pi2.unit_price)
           FROM purchase_items pi2
           JOIN purchase_sessions ps2 ON ps2.id = pi2.session_id
-          WHERE pi2.product_id = pi.product_id
+          WHERE pi2.product_id = ?
             AND ps2.inventory_id = ?
             AND pi2.unit_price IS NOT NULL
             AND pi2.unit_price > 0
@@ -1138,7 +1143,7 @@ module.exports = {
         )
       GROUP BY COALESCE(pi.store_id, -1)
       ORDER BY last_price ASC
-    `).all(productId, inventoryId, inventoryId);
+    `).all(productId, inventoryId, productId, inventoryId);
   },
 
   getProductPriceHistory(productId, inventoryId) {
@@ -1388,6 +1393,7 @@ module.exports = {
   // ── Purchases ──────────────────────────────────────────────────────────────
   createPurchaseSession({ inventoryId, userId, items, taxIds, currency, purchaseDate, receiptImage, budgetCategory = null }) {
     let subtotalBeforeTax = 0;
+    let taxableSubtotal   = 0; // Bug 3: only items with isTaxable=true contribute to tax base
     let totalTax = 0;
     let taxBreakdown = null;
 
@@ -1395,15 +1401,16 @@ module.exports = {
       const base = (item.quantityBought != null && item.unitPrice != null)
         ? +(item.quantityBought) * +(item.unitPrice) : 0;
       subtotalBeforeTax += base;
+      if (item.isTaxable !== false) taxableSubtotal += base;
     });
 
     if (taxIds?.length) {
-      // Invoice-level taxes: look up each tax and apply to the total subtotal
+      // Invoice-level taxes applied only to taxable items subtotal
       const groups = {};
       taxIds.forEach(taxId => {
         const tax = db.prepare('SELECT * FROM tax_types WHERE id = ? AND inventory_id = ?').get(+taxId, inventoryId);
         if (tax) {
-          const amt = subtotalBeforeTax * (+tax.rate / 100);
+          const amt = taxableSubtotal * (+tax.rate / 100);
           totalTax += amt;
           groups[taxId] = { taxId: tax.id, taxName: tax.name, taxRate: +tax.rate, taxAmount: amt };
         }
@@ -1443,8 +1450,8 @@ module.exports = {
       const insItem = db.prepare(`
         INSERT INTO purchase_items
           (session_id, product_id, product_name, store_id, quantity_bought, unit,
-           unit_price, subtotal, tax_id, tax_rate, tax_amount)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           unit_price, subtotal, tax_id, tax_rate, tax_amount, is_taxable)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       const updQty = db.prepare(`
         UPDATE products
@@ -1490,7 +1497,8 @@ module.exports = {
           sub,
           item.taxId        || null,
           item.taxRate      != null ? +item.taxRate    : null,
-          taxAmt
+          taxAmt,
+          item.isTaxable !== false ? 1 : 0
         );
         if (resolvedProductId && +(item.quantityBought) > 0) {
           updQty.run(+(item.quantityBought), resolvedProductId, inventoryId);
@@ -1579,9 +1587,12 @@ module.exports = {
     if (!session) return null;
 
     let subtotalBeforeTax = 0;
+    let taxableSubtotal   = 0;
     items.forEach(item => {
       if (item.quantityBought != null && item.unitPrice != null) {
-        subtotalBeforeTax += +(item.quantityBought) * +(item.unitPrice);
+        const base = +(item.quantityBought) * +(item.unitPrice);
+        subtotalBeforeTax += base;
+        if (item.isTaxable !== false) taxableSubtotal += base;
       }
     });
 
@@ -1590,7 +1601,7 @@ module.exports = {
     taxIds.forEach(taxId => {
       const tax = db.prepare('SELECT * FROM tax_types WHERE id = ? AND inventory_id = ?').get(taxId, inventoryId);
       if (tax && tax.active) {
-        const taxAmount = +(subtotalBeforeTax * (tax.rate / 100)).toFixed(4);
+        const taxAmount = +(taxableSubtotal * (tax.rate / 100)).toFixed(4);
         totalTax += taxAmount;
         taxBreakdownArr.push({ taxId: tax.id, taxName: tax.name, taxRate: tax.rate, taxAmount });
       }
@@ -1608,17 +1619,34 @@ module.exports = {
         WHERE id = ?
       `).run(totalAmount, purchaseDate, subtotalBeforeTax || null, totalTax || null, taxBreakdown, sessionId);
 
+      // Bug 1: revert old item quantities before deleting
+      const oldItems = db.prepare('SELECT product_id, quantity_bought FROM purchase_items WHERE session_id = ?').all(sessionId);
+      const revertQty = db.prepare(`
+        UPDATE products SET current_qty = current_qty - ?, updated_at = datetime('now','localtime')
+        WHERE id = ? AND inventory_id = ?
+      `);
+      oldItems.forEach(oi => {
+        if (oi.product_id && oi.quantity_bought > 0) {
+          revertQty.run(oi.quantity_bought, oi.product_id, inventoryId);
+        }
+      });
+
       db.prepare('DELETE FROM purchase_items WHERE session_id = ?').run(sessionId);
 
       const insItem = db.prepare(`
         INSERT INTO purchase_items
           (session_id, product_id, product_name, store_id, quantity_bought, unit, unit_price, subtotal,
-           tax_id, tax_rate, tax_amount)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL)
+           tax_id, tax_rate, tax_amount, is_taxable)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, ?)
+      `);
+      const applyQty = db.prepare(`
+        UPDATE products SET current_qty = current_qty + ?, updated_at = datetime('now','localtime')
+        WHERE id = ? AND inventory_id = ?
       `);
       items.forEach(item => {
         const base = (item.quantityBought != null && item.unitPrice != null)
           ? +(item.quantityBought) * +(item.unitPrice) : null;
+        const isTaxable = item.isTaxable !== false ? 1 : 0;
         insItem.run(
           sessionId,
           item.productId    || null,
@@ -1627,8 +1655,13 @@ module.exports = {
           +(item.quantityBought) || 0,
           item.unit         || 'unidades',
           item.unitPrice    != null ? +item.unitPrice : null,
-          base
+          base,
+          isTaxable
         );
+        // Bug 1: apply new quantities
+        if (item.productId && +(item.quantityBought) > 0) {
+          applyQty.run(+(item.quantityBought), item.productId, inventoryId);
+        }
       });
 
       // Sync personal_transaction: insert if missing, update if exists, delete if totalAmount drops to 0

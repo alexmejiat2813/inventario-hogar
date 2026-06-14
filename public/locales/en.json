@@ -565,6 +565,10 @@
     "title": "Edit purchase",
     "filterPlaceholder": "Filter products…",
     "searchEmpty": "No products found",
+    "col": {
+      "taxable": "Tax",
+      "taxableTip": "Apply tax?"
+    },
     "back": "History",
     "saveBtn": "Save changes",
     "saving": "Saving…",
