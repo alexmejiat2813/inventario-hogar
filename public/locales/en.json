@@ -938,7 +938,8 @@
       "noInventory": "—",
       "deleteConfirm": "Delete this transaction?",
       "deleted": "Transaction deleted",
-      "loadMore": "Load more"
+      "loadMore": "Load more",
+      "emptyCta": "Record first transaction"
     },
     "empty": {
       "title": "No transactions",

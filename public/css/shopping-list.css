@@ -325,7 +325,7 @@
       accent-color: #64748B; cursor: pointer;
     }
     /* Keep confirm button in viewport on small screens */
-    @media (max-width: 420px) {
+    @media (max-width: 430px) {
       .modal-foot {
         position: sticky; bottom: 0;
         background: var(--modal-bg, #fff);

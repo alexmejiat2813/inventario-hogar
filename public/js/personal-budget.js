@@ -543,7 +543,11 @@
           </div>
           <h3>${t('personalBudget.empty.title')}</h3>
           <p>${t('personalBudget.empty.sub')}</p>
+          <button class="pb-chart-empty-cta" id="pb-tx-empty-cta">${t('personalBudget.table.emptyCta', 'Registrar primer movimiento')}</button>
         </div>`;
+      requestAnimationFrame(() => {
+        document.getElementById('pb-tx-empty-cta')?.addEventListener('click', () => elBtnNewRecord?.click());
+      });
       return;
     }
 

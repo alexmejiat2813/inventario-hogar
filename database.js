@@ -302,38 +302,35 @@ db.exec(`
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
-const invCols = db.prepare('PRAGMA table_info(inventories)').all().map(c => c.name);
-if (!invCols.includes('currency')) {
-  db.exec("ALTER TABLE inventories ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'");
-}
-
+// PRAGMA reads run outside any transaction — results drive the conditional ALTERs below.
+const invCols     = db.prepare('PRAGMA table_info(inventories)').all().map(c => c.name);
 const productCols = db.prepare('PRAGMA table_info(products)').all().map(c => c.name);
-if (!productCols.includes('inventory_id')) {
-  db.exec('ALTER TABLE products ADD COLUMN inventory_id INTEGER REFERENCES inventories(id) ON DELETE CASCADE');
-}
-if (!productCols.includes('catalog_product_id')) {
-  db.exec('ALTER TABLE products ADD COLUMN catalog_product_id INTEGER REFERENCES catalog_products(id) ON DELETE SET NULL');
-}
-if (!productCols.includes('expiry_date')) {
-  db.exec('ALTER TABLE products ADD COLUMN expiry_date TEXT');
-}
-
 const sessionCols = db.prepare('PRAGMA table_info(purchase_sessions)').all().map(c => c.name);
-if (!sessionCols.includes('subtotal_before_tax')) db.exec('ALTER TABLE purchase_sessions ADD COLUMN subtotal_before_tax REAL');
-if (!sessionCols.includes('total_tax'))           db.exec('ALTER TABLE purchase_sessions ADD COLUMN total_tax REAL');
-if (!sessionCols.includes('tax_breakdown'))       db.exec('ALTER TABLE purchase_sessions ADD COLUMN tax_breakdown TEXT');
-
-const userCols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
-if (!userCols.includes('last_login_at')) db.exec('ALTER TABLE users ADD COLUMN last_login_at TEXT');
-
-const itemCols = db.prepare('PRAGMA table_info(purchase_items)').all().map(c => c.name);
-if (!itemCols.includes('tax_id'))     db.exec('ALTER TABLE purchase_items ADD COLUMN tax_id INTEGER REFERENCES tax_types(id) ON DELETE SET NULL');
-if (!itemCols.includes('tax_rate'))   db.exec('ALTER TABLE purchase_items ADD COLUMN tax_rate REAL');
-if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD COLUMN tax_amount REAL');
-
+const userCols    = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+const itemCols    = db.prepare('PRAGMA table_info(purchase_items)').all().map(c => c.name);
 const tplItemCols = db.prepare('PRAGMA table_info(list_template_items)').all().map(c => c.name);
-if (!tplItemCols.includes('store_id'))   db.exec('ALTER TABLE list_template_items ADD COLUMN store_id INTEGER REFERENCES stores(id) ON DELETE SET NULL');
-if (!tplItemCols.includes('unit_price')) db.exec('ALTER TABLE list_template_items ADD COLUMN unit_price REAL');
+
+db.exec('BEGIN');
+try {
+  if (!invCols.includes('currency'))
+    db.exec("ALTER TABLE inventories ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'");
+  if (!productCols.includes('inventory_id'))
+    db.exec('ALTER TABLE products ADD COLUMN inventory_id INTEGER REFERENCES inventories(id) ON DELETE CASCADE');
+  if (!productCols.includes('catalog_product_id'))
+    db.exec('ALTER TABLE products ADD COLUMN catalog_product_id INTEGER REFERENCES catalog_products(id) ON DELETE SET NULL');
+  if (!productCols.includes('expiry_date'))
+    db.exec('ALTER TABLE products ADD COLUMN expiry_date TEXT');
+  if (!sessionCols.includes('subtotal_before_tax')) db.exec('ALTER TABLE purchase_sessions ADD COLUMN subtotal_before_tax REAL');
+  if (!sessionCols.includes('total_tax'))           db.exec('ALTER TABLE purchase_sessions ADD COLUMN total_tax REAL');
+  if (!sessionCols.includes('tax_breakdown'))       db.exec('ALTER TABLE purchase_sessions ADD COLUMN tax_breakdown TEXT');
+  if (!userCols.includes('last_login_at'))          db.exec('ALTER TABLE users ADD COLUMN last_login_at TEXT');
+  if (!itemCols.includes('tax_id'))     db.exec('ALTER TABLE purchase_items ADD COLUMN tax_id INTEGER REFERENCES tax_types(id) ON DELETE SET NULL');
+  if (!itemCols.includes('tax_rate'))   db.exec('ALTER TABLE purchase_items ADD COLUMN tax_rate REAL');
+  if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD COLUMN tax_amount REAL');
+  if (!tplItemCols.includes('store_id'))   db.exec('ALTER TABLE list_template_items ADD COLUMN store_id INTEGER REFERENCES stores(id) ON DELETE SET NULL');
+  if (!tplItemCols.includes('unit_price')) db.exec('ALTER TABLE list_template_items ADD COLUMN unit_price REAL');
+  db.exec('COMMIT');
+} catch (err) { try { db.exec('ROLLBACK'); } catch {} throw err; }
 
 const pbCols = db.prepare('PRAGMA table_info(personal_budgets)').all().map(c => c.name);
 if (!pbCols.includes('frequency'))    db.exec("ALTER TABLE personal_budgets ADD COLUMN frequency TEXT NOT NULL DEFAULT 'Mensual'");
@@ -373,42 +370,27 @@ if (hasUnique) {
   db.exec('CREATE INDEX IF NOT EXISTS idx_personal_budgets_user_month ON personal_budgets(user_id, month)');
 }
 
-if (!sessionCols.includes('budget_category')) db.exec('ALTER TABLE purchase_sessions ADD COLUMN budget_category TEXT');
-
-const ptCols = db.prepare('PRAGMA table_info(personal_transactions)').all().map(c => c.name);
-if (!ptCols.includes('source')) {
-  db.exec("ALTER TABLE personal_transactions ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'");
-}
-if (!ptCols.includes('source_purchase_session_id')) {
-  db.exec('ALTER TABLE personal_transactions ADD COLUMN source_purchase_session_id INTEGER REFERENCES purchase_sessions(id) ON DELETE SET NULL');
-}
-if (!ptCols.includes('category_id')) {
-  db.exec('ALTER TABLE personal_transactions ADD COLUMN category_id INTEGER REFERENCES personal_budget_categories(id) ON DELETE SET NULL');
-  // Backfill from string match so existing rows get ID-based anchor immediately
-  db.exec(`
-    UPDATE personal_transactions
-    SET category_id = (
-      SELECT id FROM personal_budget_categories
-      WHERE user_id = personal_transactions.user_id AND name = personal_transactions.category
-      LIMIT 1
-    )
-    WHERE category_id IS NULL
-  `);
-}
-
+const ptCols  = db.prepare('PRAGMA table_info(personal_transactions)').all().map(c => c.name);
 const pbCols2 = db.prepare('PRAGMA table_info(personal_budgets)').all().map(c => c.name);
-if (!pbCols2.includes('category_id')) {
-  db.exec('ALTER TABLE personal_budgets ADD COLUMN category_id INTEGER REFERENCES personal_budget_categories(id) ON DELETE SET NULL');
-  db.exec(`
-    UPDATE personal_budgets
-    SET category_id = (
-      SELECT id FROM personal_budget_categories
-      WHERE user_id = personal_budgets.user_id AND name = personal_budgets.category
-      LIMIT 1
-    )
-    WHERE category_id IS NULL
-  `);
-}
+
+db.exec('BEGIN');
+try {
+  if (!sessionCols.includes('budget_category'))
+    db.exec('ALTER TABLE purchase_sessions ADD COLUMN budget_category TEXT');
+  if (!ptCols.includes('source'))
+    db.exec("ALTER TABLE personal_transactions ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'");
+  if (!ptCols.includes('source_purchase_session_id'))
+    db.exec('ALTER TABLE personal_transactions ADD COLUMN source_purchase_session_id INTEGER REFERENCES purchase_sessions(id) ON DELETE SET NULL');
+  if (!ptCols.includes('category_id')) {
+    db.exec('ALTER TABLE personal_transactions ADD COLUMN category_id INTEGER REFERENCES personal_budget_categories(id) ON DELETE SET NULL');
+    db.exec(`UPDATE personal_transactions SET category_id = (SELECT id FROM personal_budget_categories WHERE user_id = personal_transactions.user_id AND name = personal_transactions.category LIMIT 1) WHERE category_id IS NULL`);
+  }
+  if (!pbCols2.includes('category_id')) {
+    db.exec('ALTER TABLE personal_budgets ADD COLUMN category_id INTEGER REFERENCES personal_budget_categories(id) ON DELETE SET NULL');
+    db.exec(`UPDATE personal_budgets SET category_id = (SELECT id FROM personal_budget_categories WHERE user_id = personal_budgets.user_id AND name = personal_budgets.category LIMIT 1) WHERE category_id IS NULL`);
+  }
+  db.exec('COMMIT');
+} catch (err) { try { db.exec('ROLLBACK'); } catch {} throw err; }
 
 // Migration: fix FK semantic — source_purchase_session_id ON DELETE SET NULL → ON DELETE CASCADE.
 // SQLite cannot ALTER a constraint; requires full table recreation. Detected via foreign_key_list.

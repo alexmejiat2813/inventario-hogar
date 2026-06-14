@@ -939,7 +939,8 @@
       "noInventory": "—",
       "deleteConfirm": "¿Eliminar esta transacción?",
       "deleted": "Transacción eliminada",
-      "loadMore": "Cargar más"
+      "loadMore": "Cargar más",
+      "emptyCta": "Registrar primer movimiento"
     },
     "empty": {
       "title": "Sin transacciones",
