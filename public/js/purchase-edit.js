@@ -185,6 +185,24 @@ function renderItemRow(item) {
   </div>`;
 }
 
+function applyEditFilter() {
+  const input = document.getElementById('history-edit-search-input');
+  const noRes = document.getElementById('pe-no-results');
+  const term  = (input?.value || '').trim().toLowerCase();
+  const rows  = document.querySelectorAll('#items-wrap .item-row');
+  let visible = 0;
+  rows.forEach(row => {
+    const name  = (row.querySelector('.item-name')?.value || '').toLowerCase();
+    const match = !term || name.includes(term);
+    row.hidden  = !match;
+    if (match) visible++;
+  });
+  if (noRes) {
+    noRes.textContent = tSafe('purchaseEdit.searchEmpty', 'No se encontraron productos');
+    noRes.hidden = !term || visible > 0;
+  }
+}
+
 function renderItems() {
   const wrap = document.getElementById('items-wrap');
   if (!wrap) return;
@@ -206,6 +224,7 @@ function renderItems() {
   state.items.forEach(item => { html += renderItemRow(item); });
 
   wrap.innerHTML = html;
+  applyEditFilter();
 }
 
 function syncItemsFromDOM() {
@@ -508,6 +527,26 @@ function initEvents() {
       titleEl.innerHTML = `✏️ ${tSafe('purchaseEdit.title','Editar compra')} — <span style="font-weight:500;opacity:.85">${fmtDate(e.target.value)}</span>`;
     }
   });
+
+  // Search filter for items — wired once; applyEditFilter is called from renderItems()
+  (function wireEditSearch() {
+    const input  = document.getElementById('history-edit-search-input');
+    const clrBtn = document.getElementById('pe-search-clear');
+    if (!input) return;
+
+    input.addEventListener('input', () => {
+      applyEditFilter();
+      if (clrBtn) clrBtn.hidden = !input.value;
+    });
+    if (clrBtn) {
+      clrBtn.addEventListener('click', () => {
+        input.value = '';
+        if (clrBtn) clrBtn.hidden = true;
+        applyEditFilter();
+        input.focus();
+      });
+    }
+  })();
 
   // Items container — delegation
   const itemsWrap = document.getElementById('items-wrap');

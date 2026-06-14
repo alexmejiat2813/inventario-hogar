@@ -160,6 +160,21 @@ function updateBudgetBar() {
 
 // ── Render ────────────────────────────────────────────────────
 
+let _searchTerm = '';
+
+function applySearchFilter() {
+  const term = _searchTerm.trim().toLowerCase();
+  const rows = document.querySelectorAll('#shopping-list .sl-row[data-name]');
+  let visible = 0;
+  rows.forEach(tr => {
+    const match = !term || tr.dataset.name.toLowerCase().includes(term);
+    tr.hidden = !match;
+    if (match) visible++;
+  });
+  const noRes = document.getElementById('sl-search-no-results');
+  if (noRes) noRes.hidden = !term || visible > 0;
+}
+
 function render() {
   const listEl   = document.getElementById('shopping-list');
   const empty    = document.getElementById('empty-state');
@@ -222,6 +237,13 @@ function renderTable(container, items) {
     </tr>`;
 
   container.innerHTML = `
+    <div class="sl-search-bar">
+      <svg class="sl-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="shopping-search-input" class="sl-search-input"
+             placeholder="${tSafe('shopping.searchPlaceholder','Buscar artículo…')}"
+             value="${esc(_searchTerm)}" autocomplete="off" spellcheck="false">
+      ${_searchTerm ? `<button class="sl-search-clear" id="sl-search-clear" aria-label="Limpiar">×</button>` : ''}
+    </div>
     <div class="sl-wrap">
       <table class="sl-table">
         <thead><tr>
@@ -235,9 +257,42 @@ function renderTable(container, items) {
           <th class="sl-th sl-th--r">${tSafe('shopping.cols.price','Precio/u')}</th>
           <th class="sl-th sl-th--r">${tSafe('shopping.cols.subtotal','Subtotal')}</th>
         </tr></thead>
-        <tbody>${autoRows}${customRows}${addRow}</tbody>
+        <tbody>
+          ${autoRows}${customRows}${addRow}
+          <tr id="sl-search-no-results" hidden>
+            <td colspan="9" class="sl-no-results">${tSafe('shopping.searchEmpty','No se encontraron artículos')}</td>
+          </tr>
+        </tbody>
       </table>
     </div>`;
+
+  // Re-wire search after each render (innerHTML wipes old listeners)
+  const searchInput = document.getElementById('shopping-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', e => {
+      _searchTerm = e.target.value;
+      // Toggle clear button without full re-render
+      const clr = document.getElementById('sl-search-clear');
+      if (_searchTerm && !clr) {
+        const btn = document.createElement('button');
+        btn.id = 'sl-search-clear'; btn.className = 'sl-search-clear'; btn.textContent = '×';
+        btn.setAttribute('aria-label', 'Limpiar');
+        btn.addEventListener('click', () => { _searchTerm = ''; searchInput.value = ''; btn.remove(); applySearchFilter(); });
+        searchInput.after(btn);
+      } else if (!_searchTerm && clr) clr.remove();
+      applySearchFilter();
+    });
+  }
+  const clrBtn = document.getElementById('sl-search-clear');
+  if (clrBtn) {
+    clrBtn.addEventListener('click', () => {
+      _searchTerm = '';
+      if (searchInput) searchInput.value = '';
+      clrBtn.remove();
+      applySearchFilter();
+    });
+  }
+  applySearchFilter();
 }
 
 function renderTableRow(item) {
@@ -256,7 +311,7 @@ function renderTableRow(item) {
   const expanded = state.expandedItems.has(String(item.id));
 
   return `
-    <tr class="sl-row${item.checked ? ' sl-row--checked' : ''}${expanded ? ' sl-row--expanded' : ''}" data-id="${item.id}">
+    <tr class="sl-row${item.checked ? ' sl-row--checked' : ''}${expanded ? ' sl-row--expanded' : ''}" data-id="${item.id}" data-name="${esc(item.name)}">
       <td class="sl-td sl-td--check">
         <button class="sl-cbtn" data-action="check" data-id="${item.id}" aria-label="Marcar como comprado">
           <span class="sl-circle">
@@ -308,7 +363,7 @@ function renderCustomRow(item) {
   const expanded = state.expandedItems.has('c' + item.id);
 
   return `
-    <tr class="sl-row sl-row--custom${item.checked ? ' sl-row--checked' : ''}${expanded ? ' sl-row--expanded' : ''}" data-custom-id="${item.id}">
+    <tr class="sl-row sl-row--custom${item.checked ? ' sl-row--checked' : ''}${expanded ? ' sl-row--expanded' : ''}" data-custom-id="${item.id}" data-name="${esc(item.name)}">
       <td class="sl-td sl-td--check">
         <button class="sl-cbtn" data-action="check-custom" data-id="${item.id}" aria-label="Marcar">
           <span class="sl-circle">

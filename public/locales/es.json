@@ -192,6 +192,8 @@
   "shopping": {
     "back": "Volver",
     "title": "Lista de compras",
+    "searchPlaceholder": "Buscar artículo…",
+    "searchEmpty": "No se encontraron artículos",
     "clear": "Limpiar",
     "registerBtn": "Registrar compra",
     "export": {
@@ -562,6 +564,8 @@
   },
   "purchaseEdit": {
     "title": "Editar compra",
+    "filterPlaceholder": "Filtrar productos…",
+    "searchEmpty": "No se encontraron productos",
     "back": "Historial",
     "saveBtn": "Guardar cambios",
     "saving": "Guardando…",
