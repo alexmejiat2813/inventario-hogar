@@ -76,7 +76,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 |---|-------|-------------|-------------|------------|--------|
 | 115 | `updatePurchaseSession` sin compensación 0→>0 | RESUELTO en `7f06392` — reescritura con UPSERT/DELETE logic detecta fila existente y crea si no existe. | Crítica | Baja | ✅ |
 | 116 | `updatePurchaseSession` sin compensación >0→0 | RESUELTO en `7f06392` — mismo bloque: si `totalAmount === 0` y existe tx, DELETE. | Alta | Baja | ✅ |
-| 117 | Categoría desconocida degradada a 'Otros' sin notificar al cliente | `routes/purchases.js:44` silencia el rechazo — el frontend cree que guardó "Supermercado" y quedó "Otros". Fix: devolver flag `budget_category_resolved: 'Otros'` en el JSON de respuesta para que el frontend pueda mostrarlo en el toast. | Alta | Baja | ⬜ |
+| 117 | Categoría desconocida degradada a 'Otros' sin notificar al cliente | RESUELTO en `73d92d0` — match case-insensitive en POST y PUT (find+toLowerCase) usa nombre canónico de la BD; toast ámbar diferido 600ms cuando `budget_category_status === 'degraded'`. | Alta | Baja | ✅ |
 | 118 | Bypass de validación categoría cuando `knownCategories` está vacío | `routes/purchases.js:41`: si el usuario no tiene categorías registradas, cualquier string pasa directo a DB. Fix: si `knownCategories.length === 0` guardar igualmente (comportamiento correcto para nuevos usuarios) pero marcar `source='purchase'` y registrar en `personal_budget_categories` vía `ensurePersonalBudgetCategory`. | Media | Baja | ⬜ |
 
 ### P1 — Bugs conocidos
@@ -209,6 +209,9 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 139 | fix | ReferenceError `allChecked` en `handleConfirm` — variable usada en bloque `if (budgetCategory)` sin declarar, causaba fallo silencioso en frontend que se interpretaba como ROLLBACK en backend. | `ff4d141` | ✅ |
 | 140 | fix | catch defensivo en ROLLBACK (preserva error original), coerción `Number(lastInsertRowid)`, log estructurado `err.errcode`/`err.dberrmsg` en `createPurchaseSession` y `updatePurchaseSession`. | `c082195` | ✅ |
 | 141 | feat | Reconciliación por ID: `category_id` FK en `personal_transactions` + `personal_budgets` con backfill. Cascade rename atómico en `updatePersonalBudgetCategory`. Limpieza vínculo huérfano en `deletePersonalBudgetCategory`. `loadSettings()` secuenciado antes de `load()`. Trend badges ↑/↓ % vs mes anterior. Paginación TX (30/página). Donut empty state CTA. Jerarquía visual modal. Sticky footer mobile. Visibility detection robusta. i18n ES/EN/FR. | `6878cd6` | ✅ |
+| 142 | fix | Validación categoría case-insensitive en POST/PUT purchases: `find+toLowerCase` usa nombre canónico de la BD, evita degradaciones por autocorrector móvil. Toast ámbar diferido cuando `budget_category_status === 'degraded'`. i18n `budgetOmitted`/`budgetDegraded` ES/EN/FR. | `73d92d0` | ✅ |
+| 143 | fix | Atomicidad de migraciones: dos bloques BEGIN/COMMIT agrupan ALTER TABLE del startup (PRAGMA reads fuera del tx). Empty state tabla transacciones con botón CTA "Registrar primer movimiento". `pb-modal-footer` sticky en ≤430px. Breakpoint `modal-foot` shopping-list extendido 420→430px. i18n `table.emptyCta` ES/EN/FR. | `0b68c44` | ✅ |
+| 144 | feat | Filtro búsqueda en tiempo real: lista de compras (`_searchTerm` persistente, `applySearchFilter()`, search bar con lupa+×, `data-name` en filas, estado vacío) y edición de historial (`applyEditFilter()` en módulo, re-aplica en cada `renderItems()`, input en HTML, estado vacío). CSS `sl-search-bar`/`pe-search-bar` con `var(--border)`. i18n ES/EN/FR. | `253e23b` | ✅ |
 
 ---
 
