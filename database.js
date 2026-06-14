@@ -1419,7 +1419,7 @@ module.exports = {
 
     db.exec('BEGIN');
     try {
-      const { lastInsertRowid: sessionId } = db.prepare(`
+      const { lastInsertRowid: _sessionRowid } = db.prepare(`
         INSERT INTO purchase_sessions
           (inventory_id, user_id, total_amount, currency, purchase_date, receipt_image,
            subtotal_before_tax, total_tax, tax_breakdown, budget_category)
@@ -1427,6 +1427,9 @@ module.exports = {
       `).run(inventoryId, userId, totalAmount, currency, purchaseDate, receiptImage || null,
              subtotalBeforeTax || null, totalTax || null, taxBreakdown,
              budgetCategory ? budgetCategory.trim() : null);
+      // node:sqlite may return lastInsertRowid as BigInt in some versions; coerce to Number
+      // so FK parameter binding against purchase_sessions.id INTEGER is type-consistent.
+      const sessionId = Number(_sessionRowid);
 
       const insItem = db.prepare(`
         INSERT INTO purchase_items
@@ -1506,7 +1509,10 @@ module.exports = {
       const session = db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
       return { ...session, budget_category: budgetCategory, budget_tx_omitted: budgetTxOmitted };
     } catch (err) {
-      db.exec('ROLLBACK');
+      try { db.exec('ROLLBACK'); } catch (_) {}
+      console.error('[createPurchaseSession] error:', err.message,
+        '| errcode:', err.errcode, '| dberrmsg:', err.dberrmsg,
+        '| context: budgetCategory=', budgetCategory, 'userId=', userId, 'inventoryId=', inventoryId);
       throw err;
     }
   },
@@ -1545,7 +1551,7 @@ module.exports = {
       db.exec('COMMIT');
       return { deleted: true, receipt_image: session.receipt_image };
     } catch (err) {
-      db.exec('ROLLBACK');
+      try { db.exec('ROLLBACK'); } catch (_) {}
       throw err;
     }
   },
@@ -1644,7 +1650,10 @@ module.exports = {
       db.exec('COMMIT');
       return db.prepare('SELECT * FROM purchase_sessions WHERE id = ?').get(sessionId);
     } catch (err) {
-      db.exec('ROLLBACK');
+      try { db.exec('ROLLBACK'); } catch (_) {}
+      console.error('[updatePurchaseSession] error:', err.message,
+        '| errcode:', err.errcode, '| dberrmsg:', err.dberrmsg,
+        '| context: budgetCategory=', budgetCategory, 'sessionId=', sessionId);
       throw err;
     }
   },
