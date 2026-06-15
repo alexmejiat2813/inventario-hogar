@@ -116,26 +116,22 @@ function renderCard(p) {
     : tSafe('catalog.noTax','Sin impuesto');
 
   return `<div class="pm-card" data-id="${p.id}">
-    <div class="pm-card-top">
-      <div class="pm-card-info">
-        <span class="pm-card-name">${esc(p.name)}</span>
-        ${p.brand ? `<span class="pm-card-brand">${esc(p.brand)}</span>` : ''}
-      </div>
-      <div class="pm-card-meta">
-        <span class="pm-stock-badge${stockOn ? '' : ' pm-stock-badge--off'}">
-          ${stockOn ? tSafe('productMaster.tracksStock','Lleva inventario') : tSafe('catalog.noStock','Sin seguimiento')}
-        </span>
-        <button class="pm-card-edit btn-icon-sm" data-id="${p.id}" aria-label="Editar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-      </div>
+    <div class="pm-card-img">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" width="40" height="40"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+    </div>
+    <button class="pm-card-edit" data-id="${p.id}" aria-label="Editar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+    </button>
+    <div class="pm-card-body">
+      <span class="pm-cat-badge">${esc(catName)}</span>
+      <h3 class="pm-card-name">${esc(p.name)}</h3>
+      ${p.brand ? `<span class="pm-card-brand">${esc(p.brand)}</span>` : ''}
     </div>
     <div class="pm-card-details">
       ${p.barcode ? `<span class="pm-chip pm-chip--code">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="3" height="16"/><rect x="7" y="4" width="2" height="16"/><rect x="12" y="4" width="3" height="16"/><rect x="18" y="4" width="1" height="16"/></svg>
         ${esc(p.barcode)}
       </span>` : ''}
-      <span class="pm-chip">${esc(catName)}</span>
       <span class="pm-chip${p.is_taxable ? '' : ' pm-chip--muted'}">${taxLabel}</span>
     </div>
     <div class="pm-card-toggle-row">
