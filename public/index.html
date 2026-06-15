@@ -513,23 +513,27 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
         <span data-i18n="invTabs.products">Productos</span>
       </a>
-      <div class="mob-ddivider"></div>
-      <div class="mob-dlabel" data-i18n="dashboard.periodLabel">Período (Dashboard)</div>
-      <button class="mob-ditem mob-active" data-mob-period="month"><span data-i18n="dashboard.period.month">Este mes</span></button>
-      <button class="mob-ditem" data-mob-period="3m"><span data-i18n="dashboard.period.3m">3 meses</span></button>
-      <button class="mob-ditem" data-mob-period="6m"><span data-i18n="dashboard.period.6m">6 meses</span></button>
-      <button class="mob-ditem" data-mob-period="year"><span data-i18n="dashboard.period.year">Este año</span></button>
+      <div data-mob-for="dashboard">
+        <div class="mob-ddivider"></div>
+        <div class="mob-dlabel" data-i18n="dashboard.periodLabel">Período (Dashboard)</div>
+        <button class="mob-ditem mob-active" data-mob-period="month"><span data-i18n="dashboard.period.month">Este mes</span></button>
+        <button class="mob-ditem" data-mob-period="3m"><span data-i18n="dashboard.period.3m">3 meses</span></button>
+        <button class="mob-ditem" data-mob-period="6m"><span data-i18n="dashboard.period.6m">6 meses</span></button>
+        <button class="mob-ditem" data-mob-period="year"><span data-i18n="dashboard.period.year">Este año</span></button>
+      </div>
 
-      <div class="mob-ddivider"></div>
-      <div class="mob-dlabel" data-i18n="inventory.add">Agregar</div>
-      <button class="mob-ditem" id="mob-add-catalog">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        <span data-i18n="inventory.addMenu.fromCatalog">Del catálogo</span>
-      </button>
-      <button class="mob-ditem" id="mob-add-custom">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span data-i18n="inventory.addMenu.custom">Producto personalizado</span>
-      </button>
+      <div data-mob-for="stock">
+        <div class="mob-ddivider"></div>
+        <div class="mob-dlabel" data-i18n="inventory.add">Agregar</div>
+        <button class="mob-ditem" id="mob-add-catalog">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span data-i18n="inventory.addMenu.fromCatalog">Del catálogo</span>
+        </button>
+        <button class="mob-ditem" id="mob-add-custom">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span data-i18n="inventory.addMenu.custom">Producto personalizado</span>
+        </button>
+      </div>
     </div>
   </aside>
 

@@ -518,9 +518,12 @@ function switchTab(tabName) {
   document.querySelectorAll('.action-group[data-action-group]').forEach(g => {
     g.classList.toggle('active', g.dataset.actionGroup === tabName);
   });
-  // Drawer móvil: marcar tab activo
+  // Drawer móvil: marcar tab activo y mostrar secciones del tab
   document.querySelectorAll('#mob-drawer [data-mob-tab]').forEach(btn => {
     btn.classList.toggle('mob-active', btn.dataset.mobTab === tabName);
+  });
+  document.querySelectorAll('#mob-drawer [data-mob-for]').forEach(el => {
+    el.hidden = el.dataset.mobFor !== tabName;
   });
   const dashPanel  = document.getElementById('panel-dashboard');
   const stockPanel = document.getElementById('panel-stock');
@@ -1694,6 +1697,9 @@ function closeMobDrawer() {
 function syncMobDrawerActive() {
   document.querySelectorAll('#mob-drawer [data-mob-tab]').forEach(btn => {
     btn.classList.toggle('mob-active', btn.dataset.mobTab === state.activeTab);
+  });
+  document.querySelectorAll('#mob-drawer [data-mob-for]').forEach(el => {
+    el.hidden = el.dataset.mobFor !== state.activeTab;
   });
 }
 
