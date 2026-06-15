@@ -107,10 +107,17 @@
           <label class="pm-label" data-i18n="productMaster.barcode">Código de barras</label>
           <div class="pm-scan-input-wrap">
             <input type="text" id="pm-field-barcode" class="pm-input" placeholder="EAN / UPC…" inputmode="numeric">
+            <!-- Botón cámara — abre scanner nativo -->
+            <button class="pm-btn-camera" id="pm-btn-camera" type="button" title="Escanear con cámara" aria-label="Escanear con cámara">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
+            <!-- Botón buscar en OFF (texto escrito) -->
             <button class="pm-btn-scan" id="pm-btn-scan" title="Buscar en Open Food Facts">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="3" height="16"/><rect x="7" y="4" width="2" height="16"/><rect x="12" y="4" width="3" height="16"/><rect x="18" y="4" width="1" height="16"/><rect x="21" y="4" width="2" height="16"/></svg>
             </button>
           </div>
+          <!-- Fallback iOS: input file con cámara -->
+          <input type="file" id="pm-camera-fallback" accept="image/*" capture="environment" hidden>
           <p class="pm-scan-hint" id="pm-scan-hint" hidden></p>
         </div>
 
@@ -197,6 +204,22 @@
       </button>
     </div>
   </aside>
+
+  <!-- Scanner overlay -->
+  <div class="pm-scanner-overlay" id="pm-scanner-overlay" hidden>
+    <div class="pm-scanner-box">
+      <video id="pm-scanner-video" class="pm-scanner-video" autoplay muted playsinline></video>
+      <div class="pm-scanner-frame">
+        <span class="pm-corner pm-corner--tl"></span>
+        <span class="pm-corner pm-corner--tr"></span>
+        <span class="pm-corner pm-corner--bl"></span>
+        <span class="pm-corner pm-corner--br"></span>
+        <div class="pm-scanner-line"></div>
+      </div>
+      <p class="pm-scanner-label" id="pm-scanner-label" data-i18n="productMaster.scannerHint">Apuntá al código de barras</p>
+      <button class="pm-scanner-close" id="pm-scanner-close">✕ Cancelar</button>
+    </div>
+  </div>
 
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 

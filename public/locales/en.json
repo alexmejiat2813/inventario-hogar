@@ -853,7 +853,12 @@
     "scanNotFound": "Code not found — fill in details manually",
     "sourceLocal": "In your master",
     "sourceOff": "Open Food Facts",
-    "nameRequired": "Name is required"
+    "nameRequired": "Name is required",
+    "scannerHint": "Point at the barcode",
+    "scannerDenied": "Camera permission denied",
+    "scannerError": "Could not activate camera",
+    "scannerUnsupported": "Scanner not available — enter code manually",
+    "scannerNotFound": "No barcode detected — enter it manually"
   },
   "dashboard": {
     "period": {

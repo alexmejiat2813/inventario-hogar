@@ -853,7 +853,12 @@
     "scanNotFound": "Code introuvable — remplissez les détails manuellement",
     "sourceLocal": "Dans votre référentiel",
     "sourceOff": "Open Food Facts",
-    "nameRequired": "Le nom est requis"
+    "nameRequired": "Le nom est requis",
+    "scannerHint": "Pointez vers le code-barres",
+    "scannerDenied": "Permission caméra refusée",
+    "scannerError": "Impossible d'activer la caméra",
+    "scannerUnsupported": "Scanner non disponible — entrez le code manuellement",
+    "scannerNotFound": "Aucun code détecté — entrez-le manuellement"
   },
   "dashboard": {
     "period": {

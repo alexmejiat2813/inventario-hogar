@@ -7,6 +7,8 @@ let _categories = [];
 let _search     = '';
 let _editingId  = null;
 
+const _scanner = { stream: null, detector: null, raf: null, active: false };
+
 // ── Boot ───────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([loadCategories(), loadProducts()]);
@@ -245,6 +247,117 @@ async function deleteProduct() {
   }
 }
 
+// ── Camera Scanner ─────────────────────────────────────────────────────────────
+
+function beep() {
+  try {
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 1800;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+    setTimeout(() => ctx.close(), 400);
+  } catch {}
+}
+
+function closeScanner() {
+  _scanner.active = false;
+  if (_scanner.raf)    { cancelAnimationFrame(_scanner.raf); _scanner.raf = null; }
+  if (_scanner.stream) { _scanner.stream.getTracks().forEach(t => t.stop()); _scanner.stream = null; }
+  const vid = document.getElementById('pm-scanner-video');
+  if (vid) vid.srcObject = null;
+  const overlay = document.getElementById('pm-scanner-overlay');
+  if (overlay) overlay.hidden = true;
+}
+
+function scanLoop(video) {
+  if (!_scanner.active) return;
+  _scanner.raf = requestAnimationFrame(async () => {
+    if (!_scanner.active) return;
+    try {
+      const results = await _scanner.detector.detect(video);
+      if (results.length > 0) {
+        await onBarcodeDetected(results[0].rawValue);
+        return;
+      }
+    } catch {}
+    scanLoop(video);
+  });
+}
+
+async function openScanner() {
+  if (_scanner.active) return;
+
+  // iOS / old browsers fallback: use file input with camera capture
+  if (!('BarcodeDetector' in window)) {
+    document.getElementById('pm-camera-fallback').click();
+    return;
+  }
+
+  const overlay = document.getElementById('pm-scanner-overlay');
+  const video   = document.getElementById('pm-scanner-video');
+  const label   = document.getElementById('pm-scanner-label');
+
+  try {
+    _scanner.detector = new BarcodeDetector({
+      formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'],
+    });
+    _scanner.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+    });
+    video.srcObject = _scanner.stream;
+    await video.play();
+    _scanner.active = true;
+    overlay.hidden  = false;
+    if (label) label.textContent = tSafe('productMaster.scannerHint', 'Apuntá al código de barras');
+    scanLoop(video);
+  } catch (err) {
+    closeScanner();
+    const msg = err?.name === 'NotAllowedError'
+      ? tSafe('productMaster.scannerDenied', 'Permiso de cámara denegado')
+      : tSafe('productMaster.scannerError', 'No se pudo activar la cámara');
+    showToast(msg, 'warn');
+  }
+}
+
+async function onBarcodeDetected(code) {
+  beep();
+  closeScanner();
+  document.getElementById('pm-field-barcode').value = code;
+  await scanBarcode(); // HTTP lookup → auto-fills name/brand
+}
+
+async function handleCameraFallback(e) {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  if (!file) return;
+
+  if (!('BarcodeDetector' in window)) {
+    showToast(tSafe('productMaster.scannerUnsupported', 'Escáner no disponible — ingresá el código manualmente'), 'warn');
+    return;
+  }
+  try {
+    const bitmap   = await createImageBitmap(file);
+    const detector = new BarcodeDetector({
+      formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'],
+    });
+    const results = await detector.detect(bitmap);
+    if (results.length > 0) {
+      await onBarcodeDetected(results[0].rawValue);
+    } else {
+      showToast(tSafe('productMaster.scannerNotFound', 'No se detectó código — ingresalo manualmente'), 'warn');
+    }
+  } catch {
+    showToast(tSafe('productMaster.scannerError', 'Error al procesar la imagen'), 'error');
+  }
+}
+
 async function scanBarcode() {
   const barcode = document.getElementById('pm-field-barcode').value.trim();
   if (!barcode) return;
@@ -316,6 +429,9 @@ function wireEvents() {
   document.getElementById('pm-btn-save')?.addEventListener('click', saveProduct);
   document.getElementById('pm-btn-del')?.addEventListener('click', deleteProduct);
   document.getElementById('pm-btn-scan')?.addEventListener('click', scanBarcode);
+  document.getElementById('pm-btn-camera')?.addEventListener('click', openScanner);
+  document.getElementById('pm-scanner-close')?.addEventListener('click', closeScanner);
+  document.getElementById('pm-camera-fallback')?.addEventListener('change', handleCameraFallback);
   document.getElementById('pm-field-barcode')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') scanBarcode();
   });
@@ -335,6 +451,9 @@ function wireEvents() {
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !document.getElementById('pm-modal-overlay').hidden) closeModal();
+    if (e.key === 'Escape') {
+      if (!document.getElementById('pm-scanner-overlay').hidden) { closeScanner(); return; }
+      if (!document.getElementById('pm-modal-overlay').hidden)   closeModal();
+    }
   });
 }

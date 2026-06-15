@@ -854,7 +854,12 @@
     "scanNotFound": "Código no encontrado — completá los datos manualmente",
     "sourceLocal": "En tu maestro",
     "sourceOff": "Open Food Facts",
-    "nameRequired": "El nombre es requerido"
+    "nameRequired": "El nombre es requerido",
+    "scannerHint": "Apuntá al código de barras",
+    "scannerDenied": "Permiso de cámara denegado",
+    "scannerError": "No se pudo activar la cámara",
+    "scannerUnsupported": "Escáner no disponible — ingresá el código manualmente",
+    "scannerNotFound": "No se detectó código — ingresalo manualmente"
   },
   "dashboard": {
     "period": {
