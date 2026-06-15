@@ -1106,11 +1106,11 @@
       "lastN": "Últimos {n} meses"
     },
     "progress": {
-      "month": "Mes {pct}%",
-      "spent": "Gasto {pct}%"
+      "month": "Mes {{pct}}%",
+      "spent": "Gasto {{pct}}%"
     },
     "projection": {
-      "hint": "Proyección fin de mes: {amount}"
+      "hint": "Proyección fin de mes: {{amount}}"
     },
     "search": {
       "placeholder": "Buscar por categoría…"

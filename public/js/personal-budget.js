@@ -58,7 +58,7 @@
 
   // cashflow net inline (Balance card)
   const elWeeklyAmount   = document.getElementById('pb-weekly-amount');
-  const elPeriodSelector = document.getElementById('pb-period-selector');
+  const elPeriodSelector = null; // selector removed; period fixed to biweekly
 
   // fixed costs list
   const elFixedCostsList  = document.getElementById('pb-fixed-costs-list');
@@ -946,13 +946,6 @@
 
   elRecordType.addEventListener('change', () => { applyTypeVisibility(); refreshCategoryDatalist(); });
 
-  // ── Period selector ───────────────────────────────────────────────────────
-  elPeriodSelector.addEventListener('change', () => {
-    _currentPeriod = elPeriodSelector.value;
-    applyPeriodLabels();
-    computeAndRenderProj();
-    renderFixedCosts(null);
-  });
 
   // ── Projected flows filters ───────────────────────────────────────────────
   elFcFilterType.addEventListener('change', applyFcFilter);
@@ -1102,7 +1095,6 @@
   if (elRange) elRange.value = String(_range);
   elMonth.value          = _month;
   const _id = new Date(); elDate.value = `${_id.getFullYear()}-${String(_id.getMonth()+1).padStart(2,'0')}-${String(_id.getDate()).padStart(2,'0')}`;
-  elPeriodSelector.value = _currentPeriod;
   applyTypeVisibility();
   applyPeriodLabels();
   updateToolbar();
