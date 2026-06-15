@@ -270,12 +270,21 @@
     .btn-save:hover:not(:disabled) { opacity: .85; }
     .btn-save:disabled { opacity: .35; cursor: not-allowed; }
 
-    @media (max-width: 500px) {
-      .summary-bar-inner { gap: .625rem; }
-      .bar-totals { gap: .875rem; }
+    @media (max-width: 599px) {
+      .summary-bar { padding: .5rem .875rem .625rem; }
+      .summary-bar-inner { flex-direction: column; align-items: stretch; gap: .5rem; }
+      .bar-totals { flex-wrap: nowrap; gap: 0; justify-content: space-between; }
+      .bar-total-item { align-items: center; flex: 1; }
+      .bar-actions { justify-content: stretch; gap: .5rem; }
+      .bar-actions .btn-cancel,
+      .bar-actions .btn-save { flex: 1; text-align: center; }
       .bar-amount { font-size: .875rem; }
-      .bar-total-item--total .bar-amount { font-size: .95rem; }
+      .bar-total-item--total .bar-amount { font-size: .95rem; color: #082F49; }
     }
+
+    /* back-to-top clears summary bar on purchase-edit */
+    .back-to-top { bottom: 5.5rem; }
+    @media (min-width: 600px) { .back-to-top { bottom: 4.5rem; } }
 
     /* Lightbox */
     .lightbox-overlay {
