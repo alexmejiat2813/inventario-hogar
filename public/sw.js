@@ -1,4 +1,4 @@
-/* Inventario Hogar — Service Worker */
+/* Inventario Hogar — Service Worker v2 */
 let CACHE = 'ih-v1'; // Default; actualizado en install event
 
 const PRECACHE = [
