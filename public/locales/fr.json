@@ -569,6 +569,10 @@
       "taxable": "Tax.",
       "taxableTip": "Appliquer la taxe ?"
     },
+    "tax": {
+      "withTax": "Avec taxe",
+      "noTax": "Sans taxe"
+    },
     "back": "Historique",
     "saveBtn": "Enregistrer",
     "saving": "Enregistrement…",

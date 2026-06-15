@@ -569,6 +569,10 @@
       "taxable": "Tax",
       "taxableTip": "Apply tax?"
     },
+    "tax": {
+      "withTax": "With Tax",
+      "noTax": "No Tax"
+    },
     "back": "History",
     "saveBtn": "Save changes",
     "saving": "Saving…",

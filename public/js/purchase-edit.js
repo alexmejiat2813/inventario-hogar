@@ -155,7 +155,9 @@ function renderItemRow(item) {
     taxable:   tSafe('purchaseEdit.col.taxable','Imp.'),
     remove:    tSafe('purchaseEdit.removeProduct','Eliminar'),
   };
-  const taxableChecked = item.isTaxable !== false ? 'checked' : '';
+  const taxableVal = item.isTaxable !== false ? '1' : '0';
+  const labelConTax = tSafe('purchaseEdit.tax.withTax','Con Tax');
+  const labelSinTax = tSafe('purchaseEdit.tax.noTax','Sin Tax');
 
   return `<div class="item-row" data-key="${item._key}">
     <div class="item-cell cell-name" data-label="${esc(colLabels.product)}">
@@ -181,8 +183,11 @@ function renderItemRow(item) {
     <div class="item-cell cell-subtotal" data-label="${esc(colLabels.subtotal)}">
       <span class="item-subtotal">${sub}</span>
     </div>
-    <div class="item-cell cell-taxable" data-label="${esc(colLabels.taxable)}" title="${esc(tSafe('purchaseEdit.col.taxableTip','¿Aplica impuesto?'))}">
-      <input type="checkbox" class="item-taxable" ${taxableChecked}>
+    <div class="item-cell cell-taxable" data-label="${esc(colLabels.taxable)}">
+      <select class="item-input item-taxable-select">
+        <option value="1"${taxableVal === '1' ? ' selected' : ''}>${esc(labelConTax)}</option>
+        <option value="0"${taxableVal === '0' ? ' selected' : ''}>${esc(labelSinTax)}</option>
+      </select>
     </div>
     <div class="item-cell cell-del">
       <button class="btn-del-item" data-action="remove-item" data-key="${item._key}"
@@ -243,13 +248,13 @@ function syncItemsFromDOM() {
     const unitEl    = row.querySelector('.item-unit');
     const priceEl   = row.querySelector('.item-price');
     const storeEl   = row.querySelector('.item-store');
-    const taxableEl = row.querySelector('.item-taxable');
+    const taxableEl = row.querySelector('.item-taxable-select');
     if (nameEl)    item.productName    = nameEl.value;
     if (qtyEl)     item.quantityBought = parseFloat(qtyEl.value) || 0;
     if (unitEl)    item.unit           = unitEl.value || 'unidades';
     if (priceEl)   item.unitPrice      = priceEl.value !== '' ? parseFloat(priceEl.value) : null;
     if (storeEl)   item.storeId        = storeEl.value ? parseInt(storeEl.value) : null;
-    if (taxableEl) item.isTaxable      = taxableEl.checked;
+    if (taxableEl) item.isTaxable      = taxableEl.value !== '0';
   });
 }
 
@@ -573,7 +578,7 @@ function initEvents() {
     }
   });
   itemsWrap.addEventListener('change', e => {
-    if (e.target.matches('.item-unit, .item-store')) updateTotals();
+    if (e.target.matches('.item-unit, .item-store, .item-taxable-select')) updateTotals();
   });
   itemsWrap.addEventListener('click', e => {
     const btn = e.target.closest('[data-action="remove-item"]');

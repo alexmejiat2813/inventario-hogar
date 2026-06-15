@@ -570,6 +570,10 @@
       "taxable": "Imp.",
       "taxableTip": "¿Aplica impuesto?"
     },
+    "tax": {
+      "withTax": "Con Tax",
+      "noTax": "Sin Tax"
+    },
     "back": "Historial",
     "saveBtn": "Guardar cambios",
     "saving": "Guardando…",
