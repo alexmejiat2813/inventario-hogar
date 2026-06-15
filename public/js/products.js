@@ -1,5 +1,25 @@
 'use strict';
-/* global apiFetch, showToast, tSafe, esc */
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str ?? '';
+  return d.innerHTML;
+}
+
+function tSafe(key, fallback) {
+  const v = t(key);
+  return (v && v !== key) ? v : (fallback ?? key.split('.').pop());
+}
+
+function showToast(message, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast toast--${type}`;
+  el.textContent = message;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('toast--show'));
+  setTimeout(() => { el.classList.remove('toast--show'); setTimeout(() => el.remove(), 300); }, 3000);
+}
 
 // ── State ──────────────────────────────────────────────────────────────────────
 let _products   = [];
