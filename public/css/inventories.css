@@ -305,7 +305,7 @@
 
     .inv-card-budget { display: flex; flex-direction: column; gap: .35rem; margin-top: .15rem; }
     .inv-budget-bar { height: 6px; background: #EEF2F6; border-radius: 99px; overflow: hidden; }
-    .inv-budget-fill { height: 100%; background: #14B8A6; border-radius: 99px; transition: width .3s; }
+    .inv-budget-fill { display: block; height: 6px; width: 0; background: #14B8A6; border-radius: 99px; transition: width .3s; }
     .inv-budget-fill--over { background: #DC2626; }
     .inv-budget-row { display: flex; justify-content: space-between; gap: .5rem; font-size: .72rem; color: #64748B; }
     .inv-budget-row strong { color: #082F49; font-weight: 700; }
