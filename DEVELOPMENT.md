@@ -228,6 +228,10 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 158 | fix | `.dash-budget-bar-fill` `width:0` CSS default (bloquea render 100% cuando JS no setea inline style por cache). `display:block; height:6px` explícito. Bump v1.1.2 → v1.1.3 para invalidar SW cache. | `fff4461`, `aa24a4d` | ✅ |
 | 159 | fix | `.inv-budget-fill` mismo patrón: `display:block; height:6px; width:0` en inventories.css. JS: `inv.budget_pct \|\| 0` para evitar `NaN%` cuando API no incluye el campo. | `fab8791` | ✅ |
 | 160 | fix | Key `invTabs.section` faltaba en los 3 locales → drawer mostraba "INVTABS.SECTION". Agregado `"section": "Navegación/Navigation/Navigation"` en ES/EN/FR. Reorden drawer index.html: Dashboard → Productos → Stock → Compras → Historial. | `fee144f` | ✅ |
+| 161 | feat | Rediseño tarjetas Maestro de Productos: `pm-card` ahora tiene imagen placeholder en top (estilo `product-card` de inventory), botón 3 puntos absoluto top-right, categoría badge prominente, nombre como `h3`, chips con padding propio, toggle row al pie. CSS `pm-card-img`, `pm-cat-badge`. Bump v1.1.5. | `6fbf38c` | ✅ |
+| 162 | fix | `esc`, `tSafe`, `showToast` no estaban definidas en el contexto de `products.html` (declaradas `/* global */` pero nunca incluidas). Página en blanco + botón roto. Fix: definir las 3 funciones al inicio de `products.js`. | `d89a9f2` | ✅ |
+| 163 | fix | Unificar logo: `favicon.svg` y `icons/icon.svg` reemplazados por diseño "IH" (texto blanco sobre `#082F49`, igual al `.header-icon`). `products.html` faltaban `<link rel="icon">` y `<link rel="apple-touch-icon">`. | `eef572f` | ✅ |
+| 164 | fix | Orden menú inconsistente: tab bar de `index.html` tenía Productos al final → movido a posición 2 (Dashboard → Productos → Stock → Compras → Historial). Drawer de `products.html` reordenado igual con Productos activo entre Dashboard y Stock. | `9d2540e` | ✅ |
 
 ---
 
