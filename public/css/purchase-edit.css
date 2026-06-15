@@ -179,8 +179,8 @@
     }
     .btn-add-item:hover { border-color: #082F49; color: #082F49; }
 
-    /* Mobile: cards */
-    @media (max-width: 639px) {
+    /* Cards layout — applies up to 900px (grid min ~700px no cabe en tablets) */
+    @media (max-width: 900px) {
       .items-header { display: none; }
       .item-row { display: block; padding: .875rem; }
       .item-cell { margin-bottom: .5rem; }
@@ -198,6 +198,20 @@
       .item-cell.cell-subtotal { text-align: left; }
       .item-mobile-row { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
     }
+
+    /* Back-to-top (header.css no se carga en esta página) */
+    .back-to-top {
+      position: fixed; right: 1rem; bottom: 5.5rem; z-index: 150;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: #082F49; color: #fff; border: none;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(8,47,73,.28); cursor: pointer;
+      opacity: 0; transform: translateY(8px); pointer-events: none;
+      transition: opacity .2s, transform .2s, background .15s;
+    }
+    .back-to-top.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .back-to-top:hover { background: #0EA5E9; }
+    @media (min-width: 600px) { .back-to-top { bottom: 4.5rem; } }
 
     /* Taxes section */
     .tax-row {
@@ -282,9 +296,6 @@
       .bar-total-item--total .bar-amount { font-size: .95rem; color: #082F49; }
     }
 
-    /* back-to-top clears summary bar on purchase-edit */
-    .back-to-top { bottom: 5.5rem; }
-    @media (min-width: 600px) { .back-to-top { bottom: 4.5rem; } }
 
     /* Lightbox */
     .lightbox-overlay {
