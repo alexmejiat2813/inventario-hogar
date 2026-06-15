@@ -599,7 +599,7 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
   margin-bottom: 1rem;
 }
-.dash-budget-bar-fill { height: 100%; border-radius: 999px; transition: width .4s ease; background: #16a34a; }
+.dash-budget-bar-fill { height: 100%; width: 0; border-radius: 999px; transition: width .4s ease; background: #16a34a; }
 .dash-budget-stats { display: flex; gap: 1rem; }
 .dash-budget-stat  { flex: 1; }
 .dash-budget-stat-label {
