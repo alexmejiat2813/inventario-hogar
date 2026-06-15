@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   wireEvents();
   render();
   loadInvName();
+  loadProfileAvatar();
+  initProfileMenu();
 });
 
 async function loadInvName() {
