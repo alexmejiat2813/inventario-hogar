@@ -65,7 +65,7 @@ function renderInvCard(inv) {
       ${inv.budget_amount > 0 ? `
       <div class="inv-card-budget">
         <div class="inv-budget-bar">
-          <div class="inv-budget-fill${inv.budget_pct >= 100 ? ' inv-budget-fill--over' : ''}" style="width:${Math.min(100, inv.budget_pct || 0)}%"></div>
+          <div class="inv-budget-fill${inv.budget_pct >= 100 ? ' inv-budget-fill--over' : ''}" data-pct="${Math.min(100, inv.budget_pct || 0)}"></div>
         </div>
         <div class="inv-budget-row">
           <span>${t('inventories.card.spent')} <strong>${curSym(inv.currency)}${fmtMoney(inv.budget_spent)}</strong></span>
@@ -162,6 +162,10 @@ function renderInventories(list, plans) {
   });
 
   grid.innerHTML = items.join('');
+  grid.querySelectorAll('.inv-budget-fill[data-pct]').forEach(el => {
+    const pct = parseFloat(el.dataset.pct) || 0;
+    requestAnimationFrame(() => { el.style.width = pct + '%'; });
+  });
 }
 
 function closeAllCardMenus(exceptId) {

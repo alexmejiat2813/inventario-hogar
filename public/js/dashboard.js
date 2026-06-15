@@ -175,7 +175,7 @@ function renderBudgetCard(summary) {
         <span class="dash-budget-pct" style="color:${barColor};">${pct}% ${t('settings.budget.card.used')}</span>
       </div>
       <div class="dash-budget-bar-track">
-        <div class="dash-budget-bar-fill" style="width:${barWidth}%;background:${barColor};"></div>
+        <div class="dash-budget-bar-fill" style="background:${barColor};"></div>
       </div>
       <div class="dash-budget-stats">
         <div class="dash-budget-stat">
@@ -192,6 +192,8 @@ function renderBudgetCard(summary) {
         </div>
       </div>
     </div>`;
+  const fillEl = wrap.querySelector('.dash-budget-bar-fill');
+  if (fillEl) requestAnimationFrame(() => { fillEl.style.width = barWidth + '%'; });
 }
 
 function renderDashSummary(summary) {
