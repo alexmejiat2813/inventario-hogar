@@ -347,6 +347,8 @@ try {
   if (!sessionCols.includes('subtotal_before_tax')) db.exec('ALTER TABLE purchase_sessions ADD COLUMN subtotal_before_tax REAL');
   if (!sessionCols.includes('total_tax'))           db.exec('ALTER TABLE purchase_sessions ADD COLUMN total_tax REAL');
   if (!sessionCols.includes('tax_breakdown'))       db.exec('ALTER TABLE purchase_sessions ADD COLUMN tax_breakdown TEXT');
+  if (!sessionCols.includes('discount_type'))       db.exec("ALTER TABLE purchase_sessions ADD COLUMN discount_type TEXT NOT NULL DEFAULT 'fixed'");
+  if (!sessionCols.includes('discount_value'))      db.exec('ALTER TABLE purchase_sessions ADD COLUMN discount_value REAL NOT NULL DEFAULT 0');
   if (!userCols.includes('last_login_at'))          db.exec('ALTER TABLE users ADD COLUMN last_login_at TEXT');
   if (!itemCols.includes('tax_id'))     db.exec('ALTER TABLE purchase_items ADD COLUMN tax_id INTEGER REFERENCES tax_types(id) ON DELETE SET NULL');
   if (!itemCols.includes('tax_rate'))   db.exec('ALTER TABLE purchase_items ADD COLUMN tax_rate REAL');
@@ -1416,7 +1418,7 @@ module.exports = {
   },
 
   // ── Purchases ──────────────────────────────────────────────────────────────
-  createPurchaseSession({ inventoryId, userId, items, taxIds, currency, purchaseDate, receiptImage, budgetCategory = null }) {
+  createPurchaseSession({ inventoryId, userId, items, taxIds, currency, purchaseDate, receiptImage, budgetCategory = null, discountType = 'fixed', discountValue = 0 }) {
     let subtotalBeforeTax = 0;
     let taxableSubtotal   = 0; // Bug 3: only items with isTaxable=true contribute to tax base
     let totalTax = 0;
@@ -1456,18 +1458,24 @@ module.exports = {
       if (Object.keys(groups).length) taxBreakdown = JSON.stringify(Object.values(groups));
     }
 
-    const totalAmount = subtotalBeforeTax + totalTax;
+    const grossTotal  = subtotalBeforeTax + totalTax;
+    const discountAmt = discountType === 'percentage'
+      ? +(grossTotal * ((+discountValue) / 100)).toFixed(4)
+      : +(+discountValue).toFixed(4);
+    const totalAmount = +Math.max(0, grossTotal - discountAmt).toFixed(4);
 
     db.exec('BEGIN');
     try {
       const { lastInsertRowid: _sessionRowid } = db.prepare(`
         INSERT INTO purchase_sessions
           (inventory_id, user_id, total_amount, currency, purchase_date, receipt_image,
-           subtotal_before_tax, total_tax, tax_breakdown, budget_category)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           subtotal_before_tax, total_tax, tax_breakdown, budget_category,
+           discount_type, discount_value)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(inventoryId, userId, totalAmount, currency, purchaseDate, receiptImage || null,
              subtotalBeforeTax || null, totalTax || null, taxBreakdown,
-             budgetCategory ? budgetCategory.trim() : null);
+             budgetCategory ? budgetCategory.trim() : null,
+             discountType || 'fixed', +discountValue || 0);
       // node:sqlite may return lastInsertRowid as BigInt in some versions; coerce to Number
       // so FK parameter binding against purchase_sessions.id INTEGER is type-consistent.
       const sessionId = Number(_sessionRowid);
@@ -1605,7 +1613,7 @@ module.exports = {
     db.prepare('UPDATE purchase_sessions SET receipt_image = ? WHERE id = ?').run(imagePath, sessionId);
   },
 
-  updatePurchaseSession(sessionId, inventoryId, { purchaseDate, items, taxIds = [], budgetCategory = null, userId = null }) {
+  updatePurchaseSession(sessionId, inventoryId, { purchaseDate, items, taxIds = [], budgetCategory = null, userId = null, discountType = 'fixed', discountValue = 0 }) {
     const session = db.prepare(
       'SELECT * FROM purchase_sessions WHERE id = ? AND inventory_id = ?'
     ).get(sessionId, inventoryId);
@@ -1632,7 +1640,11 @@ module.exports = {
       }
     });
 
-    const totalAmount = subtotalBeforeTax + totalTax;
+    const grossTotal  = subtotalBeforeTax + totalTax;
+    const discountAmt = discountType === 'percentage'
+      ? +(grossTotal * ((+discountValue) / 100)).toFixed(4)
+      : +(+discountValue).toFixed(4);
+    const totalAmount = +Math.max(0, grossTotal - discountAmt).toFixed(4);
     const taxBreakdown = taxBreakdownArr.length ? JSON.stringify(taxBreakdownArr) : null;
 
     db.exec('BEGIN');
@@ -1640,9 +1652,11 @@ module.exports = {
       db.prepare(`
         UPDATE purchase_sessions
         SET total_amount = ?, purchase_date = ?,
-            subtotal_before_tax = ?, total_tax = ?, tax_breakdown = ?
+            subtotal_before_tax = ?, total_tax = ?, tax_breakdown = ?,
+            discount_type = ?, discount_value = ?
         WHERE id = ?
-      `).run(totalAmount, purchaseDate, subtotalBeforeTax || null, totalTax || null, taxBreakdown, sessionId);
+      `).run(totalAmount, purchaseDate, subtotalBeforeTax || null, totalTax || null, taxBreakdown,
+             discountType || 'fixed', +discountValue || 0, sessionId);
 
       // Bug 1: revert old item quantities before deleting
       const oldItems = db.prepare('SELECT product_id, quantity_bought FROM purchase_items WHERE session_id = ?').all(sessionId);

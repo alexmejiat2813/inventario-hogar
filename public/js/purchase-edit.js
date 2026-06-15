@@ -98,6 +98,12 @@ async function loadData() {
   state.receiptFile   = null;
 
   renderAll();
+
+  const discTypeEl = document.getElementById('discount-type');
+  const discValEl  = document.getElementById('discount-value');
+  if (discTypeEl) discTypeEl.value = session.discount_type  || 'fixed';
+  if (discValEl)  discValEl.value  = session.discount_value != null ? session.discount_value : 0;
+  updateTotals();
 }
 
 // ── Render ────────────────────────────────────────────────────
@@ -410,11 +416,19 @@ function calcTotals() {
     }
   });
 
-  return { subtotal, totalTax, total: subtotal + totalTax, breakdown, taxIds };
+  const grossTotal    = subtotal + totalTax;
+  const discountType  = document.getElementById('discount-type')?.value || 'fixed';
+  const discountValue = parseFloat(document.getElementById('discount-value')?.value) || 0;
+  const discountAmt   = discountType === 'percentage'
+    ? grossTotal * (discountValue / 100)
+    : discountValue;
+  const total = Math.max(0, grossTotal - discountAmt);
+
+  return { subtotal, totalTax, grossTotal, discountAmt, discountType, discountValue, total, breakdown, taxIds };
 }
 
 function updateTotals() {
-  const { subtotal, totalTax, total, breakdown } = calcTotals();
+  const { subtotal, totalTax, discountAmt, total, breakdown } = calcTotals();
   const s = sym(currencyOf());
 
   const fmt = v => s + ' ' + v.toFixed(2);
@@ -431,9 +445,13 @@ function updateTotals() {
   const bs = document.getElementById('bar-subtotal');
   const bt = document.getElementById('bar-taxes');
   const bT = document.getElementById('bar-total');
+  const bd = document.getElementById('bar-discount');
+  const bdw = document.getElementById('bar-discount-wrap');
   if (bs) bs.textContent = fmt(subtotal);
   if (bt) bt.textContent = totalTax > 0 ? fmt(totalTax) : '—';
   if (bT) bT.textContent = fmt(total);
+  if (bdw) bdw.hidden = discountAmt <= 0;
+  if (bd)  bd.textContent = discountAmt > 0 ? '- ' + fmt(discountAmt) : '—';
 
   // Tax amount spans in the taxes section
   state.taxes.forEach(tax => {
@@ -465,7 +483,7 @@ async function save() {
   try {
     const sessionId    = state.session.id;
     const purchaseDate = document.getElementById('edit-date').value;
-    const { taxIds }   = calcTotals();
+    const { taxIds, discountType, discountValue } = calcTotals();
 
     // Receipt changes
     if (state.receiptAction === 'remove') {
@@ -491,7 +509,13 @@ async function save() {
 
     if (!items.length) throw new Error('Agrega al menos un producto');
 
-    await apiFetch('PUT', `/api/inventories/${state.inventory.id}/purchases/${sessionId}`, { purchase_date: purchaseDate, items, tax_ids: taxIds });
+    await apiFetch('PUT', `/api/inventories/${state.inventory.id}/purchases/${sessionId}`, {
+      purchase_date:  purchaseDate,
+      items,
+      tax_ids:        taxIds,
+      discount_type:  discountType,
+      discount_value: discountValue,
+    });
 
     showToast(tSafe('purchaseEdit.success', 'Compra guardada'), 'success');
     setTimeout(() => history.back(), 700);
@@ -592,6 +616,10 @@ function initEvents() {
   document.getElementById('taxes-wrap').addEventListener('change', e => {
     if (e.target.matches('.tax-check')) updateTotals();
   });
+
+  // Discount controls
+  document.getElementById('discount-type')?.addEventListener('change', updateTotals);
+  document.getElementById('discount-value')?.addEventListener('input', updateTotals);
 
   // Receipt — delegation
   const receiptWrap = document.getElementById('receipt-wrap');

@@ -213,6 +213,39 @@
     .back-to-top:hover { background: #0EA5E9; }
     @media (min-width: 600px) { .back-to-top { bottom: 4.5rem; } }
 
+    /* Discount block */
+    .discount-wrap {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .75rem; margin-top: .875rem;
+      padding: .625rem .875rem;
+      border: 1px solid #E2E8F0; border-radius: 6px;
+      background: #F8FAFC;
+    }
+    .discount-label {
+      font-size: .8rem; font-weight: 700; color: #475569;
+      white-space: nowrap;
+    }
+    .discount-controls {
+      display: flex; gap: .5rem; align-items: center; flex-shrink: 0;
+    }
+    .discount-type-select {
+      padding: .35rem .5rem; border: 1px solid #E2E8F0; border-radius: 4px;
+      font-size: .8rem; background: white; color: #082F49; outline: none;
+      cursor: pointer;
+    }
+    .discount-type-select:focus { border-color: #082F49; }
+    .discount-value-input {
+      width: 80px; padding: .35rem .5rem;
+      border: 1px solid #E2E8F0; border-radius: 4px;
+      font-size: .85rem; font-weight: 600; color: #082F49;
+      background: white; outline: none; text-align: right;
+    }
+    .discount-value-input:focus { border-color: #082F49; }
+
+    /* Bar discount amount */
+    .bar-amount--discount { color: #b91c1c; }
+
+
     /* Taxes section */
     .tax-row {
       display: flex; align-items: center; gap: .75rem;

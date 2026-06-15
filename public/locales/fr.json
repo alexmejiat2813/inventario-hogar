@@ -830,6 +830,12 @@
     "catalog": "Catalogue",
     "products": "Produits"
   },
+  "discount": {
+    "title": "Remise Générale",
+    "label": "Remise",
+    "fixed": "Montant $",
+    "percentage": "% Pourcentage"
+  },
   "productMaster": {
     "title": "Référentiel Produits",
     "search": "Rechercher un produit…",

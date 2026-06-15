@@ -833,13 +833,41 @@ function renderTaxSection() {
           </div>`;
         });
     }
+    const discType  = document.getElementById('sl-discount-type')?.value  || 'fixed';
+    const discValue = parseFloat(document.getElementById('sl-discount-value')?.value) || 0;
+    const discAmt   = discType === 'percentage' ? grand * (discValue / 100) : discValue;
+    const netTotal  = Math.max(0, grand - discAmt);
+
+    if (discAmt > 0) {
+      html += `<div class="confirm-subtotal-row confirm-subtotal-row--discount">
+        <span>${tSafe('discount.title','Descuento')}</span>
+        <span>- ${sym} ${discAmt.toFixed(2)}</span>
+      </div>`;
+    }
     html += `<div class="confirm-total-row">
       <span>${tSafe('shopping.register.total','Total')}</span>
-      <span class="confirm-total-amount">${sym} ${grand.toFixed(2)}</span>
+      <span class="confirm-total-amount">${sym} ${netTotal.toFixed(2)}</span>
     </div></div>`;
   }
 
+  // Discount controls (always visible in modal)
+  html += `<div class="sl-discount-wrap">
+    <span class="sl-discount-label">${tSafe('discount.title','Descuento General')}</span>
+    <div class="sl-discount-controls">
+      <select id="sl-discount-type" class="sl-discount-type-select">
+        <option value="fixed">${tSafe('discount.fixed','Monto $')}</option>
+        <option value="percentage">${tSafe('discount.percentage','% Porcentaje')}</option>
+      </select>
+      <input type="number" id="sl-discount-value" class="sl-discount-value-input"
+             min="0" step="any" value="0" inputmode="decimal" placeholder="0">
+    </div>
+  </div>`;
+
   section.innerHTML = html;
+
+  // Re-render totals when discount changes
+  document.getElementById('sl-discount-type')?.addEventListener('change',  renderTaxSection);
+  document.getElementById('sl-discount-value')?.addEventListener('input', renderTaxSection);
 }
 
 // Resolves true if user confirms they are the payer, or if no budget is active
@@ -972,6 +1000,8 @@ async function handleConfirm() {
       purchase_date:   today,
       tax_ids:         state.selectedTaxIds,
       budget_category: budgetCategory || undefined,
+      discount_type:   document.getElementById('sl-discount-type')?.value  || 'fixed',
+      discount_value:  parseFloat(document.getElementById('sl-discount-value')?.value) || 0,
     });
 
     // Upload receipt if selected

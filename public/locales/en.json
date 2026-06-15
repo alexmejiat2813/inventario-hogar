@@ -830,6 +830,12 @@
     "catalog": "Catalog",
     "products": "Products"
   },
+  "discount": {
+    "title": "General Discount",
+    "label": "Disc.",
+    "fixed": "Fixed $",
+    "percentage": "% Percentage"
+  },
   "productMaster": {
     "title": "Product Master",
     "search": "Search product…",

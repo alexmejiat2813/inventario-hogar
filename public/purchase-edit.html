@@ -77,10 +77,21 @@
       </div>
     </section>
 
-    <!-- Section 2: Taxes -->
+    <!-- Section 2: Taxes + Discount -->
     <section class="page-section" id="taxes-section">
       <h2 class="section-title" data-i18n="purchaseEdit.section.taxes">Impuestos</h2>
       <div id="taxes-wrap"></div>
+      <div class="discount-wrap" id="discount-wrap">
+        <span class="discount-label" data-i18n="discount.title">Descuento General</span>
+        <div class="discount-controls">
+          <select id="discount-type" class="discount-type-select">
+            <option value="fixed"      data-i18n="discount.fixed">Monto $</option>
+            <option value="percentage" data-i18n="discount.percentage">% Porcentaje</option>
+          </select>
+          <input type="number" id="discount-value" class="discount-value-input"
+                 min="0" step="any" value="0" inputmode="decimal" placeholder="0">
+        </div>
+      </div>
     </section>
 
     <!-- Section 3: Receipt -->
@@ -118,6 +129,10 @@
         <div class="bar-total-item">
           <span class="bar-label" data-i18n="purchaseEdit.bar.taxes">Imp.</span>
           <span class="bar-amount" id="bar-taxes">—</span>
+        </div>
+        <div class="bar-total-item bar-total-item--discount" id="bar-discount-wrap" hidden>
+          <span class="bar-label" data-i18n="discount.label">Desc.</span>
+          <span class="bar-amount bar-amount--discount" id="bar-discount">—</span>
         </div>
         <div class="bar-total-item bar-total-item--total">
           <span class="bar-label" data-i18n="purchaseEdit.bar.total">Total</span>

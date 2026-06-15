@@ -457,6 +457,26 @@
       display: flex; justify-content: space-between;
       padding: .2rem .5rem; font-size: .8rem; color: #787774;
     }
+    .confirm-subtotal-row--discount { color: #b91c1c; font-weight: 600; }
+    .sl-discount-wrap {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .75rem; margin-top: .75rem;
+      padding: .5rem .75rem;
+      border: 1px solid #E2E8F0; border-radius: 6px;
+      background: #F8FAFC;
+    }
+    .sl-discount-label { font-size: .8rem; font-weight: 700; color: #475569; white-space: nowrap; }
+    .sl-discount-controls { display: flex; gap: .5rem; align-items: center; }
+    .sl-discount-type-select {
+      padding: .3rem .4rem; border: 1px solid #E2E8F0; border-radius: 4px;
+      font-size: .78rem; background: white; color: #082F49; outline: none; cursor: pointer;
+    }
+    .sl-discount-value-input {
+      width: 72px; padding: .3rem .4rem;
+      border: 1px solid #E2E8F0; border-radius: 4px;
+      font-size: .82rem; font-weight: 600; color: #082F49;
+      background: white; outline: none; text-align: right;
+    }
 
     /* Toast */
     .toast-container {

@@ -61,7 +61,7 @@ router.get('/', (req, res) => {
 
 router.post('/', requireEditorOrOwner, (req, res) => {
   try {
-    const { items, currency, purchase_date, tax_ids, budget_category } = req.body;
+    const { items, currency, purchase_date, tax_ids, budget_category, discount_type, discount_value } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
     if (!purchase_date || !/^\d{4}-\d{2}-\d{2}$/.test(purchase_date)) {
       return res.status(400).json({ error: 'purchase_date es requerida (YYYY-MM-DD).' });
@@ -112,6 +112,8 @@ router.post('/', requireEditorOrOwner, (req, res) => {
       purchaseDate:   purchase_date,
       receiptImage:   null,
       budgetCategory: resolvedBudgetCategory,
+      discountType:   discount_type  || 'fixed',
+      discountValue:  +(discount_value) || 0,
     });
     db.audit(req.inventoryId, req.user.id, req.user.name, 'purchase.create', 'purchase', session.id,
       { total_amount: session.total_amount, currency: session.currency, item_count: items.length });
@@ -137,7 +139,7 @@ router.put('/:sessionId', requireEditorOrOwner, (req, res) => {
   try {
     const sessionId = parseInt(req.params.sessionId);
     if (isNaN(sessionId)) return res.status(400).json({ error: 'ID inválido' });
-    const { purchase_date, items, tax_ids, budget_category } = req.body;
+    const { purchase_date, items, tax_ids, budget_category, discount_type, discount_value } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
 
     let resolvedBudgetCategory = null;
@@ -168,6 +170,8 @@ router.put('/:sessionId', requireEditorOrOwner, (req, res) => {
       taxIds:         tax_ids || [],
       budgetCategory: resolvedBudgetCategory,
       userId:         req.user.id,
+      discountType:   discount_type  || 'fixed',
+      discountValue:  +(discount_value) || 0,
     });
     if (!session) return res.status(404).json({ error: 'Sesión no encontrada' });
     res.json({ ...session, budget_category_status: budgetCategoryStatus });
