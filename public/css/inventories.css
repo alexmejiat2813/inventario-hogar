@@ -239,11 +239,12 @@
     .inv-card-menu { position: relative; }
     .inv-card-menu-btn {
       width: 28px; height: 28px; border-radius: 5px;
-      background: none; border: 1px solid transparent;
-      color: #B2B0AD; display: flex; align-items: center; justify-content: center;
+      background: var(--surface, #fff); border: 1px solid #EAEAEA;
+      color: #4B5563; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(8,47,73,.08);
       transition: background .12s, border-color .12s, color .12s;
     }
-    .inv-card-menu-btn:hover { background: #F8F8F7; border-color: #EAEAEA; color: #082F49; }
+    .inv-card-menu-btn:hover { background: #F0F9FF; border-color: #0EA5E9; color: #082F49; }
     .inv-card-dropdown {
       position: absolute; top: calc(100% + 4px); right: 0;
       background: white; border: 1px solid #EAEAEA; border-radius: 8px;
