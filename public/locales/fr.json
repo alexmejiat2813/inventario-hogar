@@ -823,6 +823,7 @@
     "notificationsError": "Erreur lors de la configuration des notifications"
   },
   "invTabs": {
+    "section": "Navigation",
     "dashboard": "Dashboard",
     "stock": "Stock",
     "shopping": "Courses",

@@ -824,6 +824,7 @@
     "notificationsError": "Error al configurar notificaciones"
   },
   "invTabs": {
+    "section": "Navegación",
     "dashboard": "Dashboard",
     "stock": "Stock",
     "shopping": "Compras",
