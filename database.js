@@ -441,7 +441,8 @@ try {
           date         TEXT    NOT NULL,
           created_at   TEXT    DEFAULT (datetime('now','localtime')),
           source       TEXT    NOT NULL DEFAULT 'manual',
-          source_purchase_session_id INTEGER REFERENCES purchase_sessions(id) ON DELETE CASCADE
+          source_purchase_session_id INTEGER REFERENCES purchase_sessions(id) ON DELETE CASCADE,
+          category_id  INTEGER REFERENCES personal_budget_categories(id) ON DELETE SET NULL
         )
       `);
       db.exec('INSERT INTO personal_transactions_v2 SELECT * FROM personal_transactions');
