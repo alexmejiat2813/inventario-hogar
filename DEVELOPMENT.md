@@ -232,6 +232,8 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 162 | fix | `esc`, `tSafe`, `showToast` no estaban definidas en el contexto de `products.html` (declaradas `/* global */` pero nunca incluidas). Página en blanco + botón roto. Fix: definir las 3 funciones al inicio de `products.js`. | `d89a9f2` | ✅ |
 | 163 | fix | Unificar logo: `favicon.svg` y `icons/icon.svg` reemplazados por diseño "IH" (texto blanco sobre `#082F49`, igual al `.header-icon`). `products.html` faltaban `<link rel="icon">` y `<link rel="apple-touch-icon">`. | `eef572f` | ✅ |
 | 164 | fix | Orden menú inconsistente: tab bar de `index.html` tenía Productos al final → movido a posición 2 (Dashboard → Productos → Stock → Compras → Historial). Drawer de `products.html` reordenado igual con Productos activo entre Dashboard y Stock. | `9d2540e` | ✅ |
+| 165 | fix | SW v2 + bump 1.1.6: forzar reinstalación del service worker para limpiar caches viejos de menús. | `a7045dc` | ✅ |
+| 166 | chore | Renombrar "Maestro de Productos" → "Productos" en locales ES/EN/FR, products.html (title/breadcrumb/drawer) y fallbacks en products.js. | — | ✅ |
 
 ---
 

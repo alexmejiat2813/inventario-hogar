@@ -839,7 +839,7 @@
     "percentage": "% Porcentaje"
   },
   "productMaster": {
-    "title": "Maestro de Productos",
+    "title": "Productos",
     "search": "Buscar producto…",
     "addBtn": "Nuevo producto",
     "empty": "Sin productos registrados",
@@ -854,7 +854,7 @@
     "save": "Guardar",
     "cancel": "Cancelar",
     "delete": "Eliminar",
-    "confirmDelete": "¿Eliminar este producto del maestro?",
+    "confirmDelete": "¿Eliminar este producto?",
     "saved": "Producto guardado",
     "deleted": "Producto eliminado",
     "errorDup": "Ya existe un producto con ese código de barras",
@@ -863,7 +863,7 @@
     "scanBtn": "Buscar",
     "scanFound": "Producto encontrado",
     "scanNotFound": "Código no encontrado — completá los datos manualmente",
-    "sourceLocal": "En tu maestro",
+    "sourceLocal": "En tu catálogo",
     "sourceOff": "Open Food Facts",
     "nameRequired": "El nombre es requerido",
     "scannerHint": "Apuntá al código de barras",

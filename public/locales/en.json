@@ -838,7 +838,7 @@
     "percentage": "% Percentage"
   },
   "productMaster": {
-    "title": "Product Master",
+    "title": "Products",
     "search": "Search product…",
     "addBtn": "New product",
     "empty": "No products registered",
@@ -853,7 +853,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
-    "confirmDelete": "Delete this product from the master?",
+    "confirmDelete": "Delete this product?",
     "saved": "Product saved",
     "deleted": "Product deleted",
     "errorDup": "A product with that barcode already exists",
@@ -862,7 +862,7 @@
     "scanBtn": "Search",
     "scanFound": "Product found",
     "scanNotFound": "Code not found — fill in details manually",
-    "sourceLocal": "In your master",
+    "sourceLocal": "In your catalog",
     "sourceOff": "Open Food Facts",
     "nameRequired": "Name is required",
     "scannerHint": "Point at the barcode",

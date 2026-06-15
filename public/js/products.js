@@ -192,7 +192,7 @@ function openEdit(id) {
   const p = _products.find(x => x.id === id);
   if (!p) return;
   _editingId = id;
-  document.getElementById('pm-modal-title').textContent = tSafe('productMaster.title','Editar producto');
+  document.getElementById('pm-modal-title').textContent = tSafe('productMaster.title','Productos');
   document.getElementById('pm-field-barcode').value   = p.barcode || '';
   document.getElementById('pm-field-name').value      = p.name;
   document.getElementById('pm-field-brand').value     = p.brand || '';
@@ -253,7 +253,7 @@ async function saveProduct() {
 
 async function deleteProduct() {
   if (!_editingId) return;
-  if (!confirm(tSafe('productMaster.confirmDelete','¿Eliminar este producto del maestro?'))) return;
+  if (!confirm(tSafe('productMaster.confirmDelete','¿Eliminar este producto?'))) return;
   try {
     await apiFetch('DELETE', `/api/product-master/${_editingId}`);
     _products = _products.filter(p => p.id !== _editingId);
@@ -398,7 +398,7 @@ async function scanBarcode() {
       document.getElementById('pm-field-tracks').checked  = !!p.tracks_stock;
 
       const srcLabel = res.source === 'local'
-        ? tSafe('productMaster.sourceLocal','En tu maestro')
+        ? tSafe('productMaster.sourceLocal','En tu catálogo')
         : tSafe('productMaster.sourceOff','Open Food Facts');
       hint.textContent = `${tSafe('productMaster.scanFound','Producto encontrado')} (${srcLabel})`;
       hint.className   = 'pm-scan-hint pm-scan-hint--ok';
