@@ -56,8 +56,6 @@
   const elBtnPay       = document.getElementById('pb-btn-pay');
   const elBtnDelete    = document.getElementById('pb-btn-delete');
 
-  // cashflow net inline (Balance card)
-  const elWeeklyAmount   = document.getElementById('pb-weekly-amount');
   const elPeriodSelector = null; // selector removed; period fixed to biweekly
 
   // fixed costs list
@@ -418,12 +416,6 @@
     elBalanceProj.className   =
       balanceM > 0 ? 'pb-kpi-proj--positive' : balanceM < 0 ? 'pb-kpi-proj--negative' : '';
 
-    // Badge: period-adjusted projection
-    const net        = _currentPeriod === 'monthly' ? balanceM : balanceM / 2;
-    const isPositive = net >= 0;
-    elWeeklyAmount.textContent = (isPositive ? '+' : '') + fmt(net);
-    elWeeklyAmount.className   = 'pb-kpi-net-amount ' +
-      (net === 0 ? 'pb-kpi-net--zero' : isPositive ? 'pb-kpi-net--positive' : 'pb-kpi-net--negative');
   }
 
   // ── Search / filter helpers ────────────────────────────────────────────────
