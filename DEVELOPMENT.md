@@ -255,6 +255,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 185 | feat | Resumen total deuda + cuota mensual junto al título "Cuotas": suma el restante de todos los planes y las cuotas mensuales activas (excluye planes ya pagados), convertido a la divisa base. | `ec5e56d` | ✅ |
 | 186 | fix | Resumen de cuotas se cortaba a mitad de palabra en pantallas chicas: splitteado en 2 spans, separador oculto y columna en ≤480px. | `77366a4` | ✅ |
 | 187 | UI | Cuotas usa todo el ancho en pantallas grandes (congruente con Presupuesto): `cq-wrap` max-width 720px→1600px, grid auto-fill 3-4 columnas desde 760px, mobile sin cambios. | `fd8dda6` | ✅ |
+| 188 | fix | Item #187 no se veía en prod: `.cq-wrap` con `margin:0 auto` dentro de `.main` (flex-direction:column) no se estiraba — auto margins en cross-axis anulan `align-items:stretch` y el item queda shrink-to-content (~412px real, ignorando max-width:1600px). Fix: `width:100%` explícito + `box-sizing:border-box`. Verificado con harness aislado (node static server + preview eval), no era caché. | `4910cb7` | ✅ |
 
 ---
 
