@@ -869,7 +869,11 @@
     "scannerDenied": "Camera permission denied",
     "scannerError": "Could not activate camera",
     "scannerUnsupported": "Scanner not available — enter code manually",
-    "scannerNotFound": "No barcode detected — enter it manually"
+    "scannerNotFound": "No barcode detected — enter it manually",
+    "nutrition": {
+      "title": "Nutritional info",
+      "serving": "Per serving:"
+    }
   },
   "dashboard": {
     "period": {

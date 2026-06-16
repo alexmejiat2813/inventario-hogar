@@ -161,6 +161,16 @@
             </span>
           </label>
         </div>
+
+        <!-- Información nutricional (solo lectura, fuente: Open Food Facts) -->
+        <div class="pm-nutrition-section" id="pm-nutrition-section" hidden>
+          <div class="pm-nutrition-header">
+            <span class="pm-nutrition-title" data-i18n="productMaster.nutrition.title">Información nutricional</span>
+            <span class="pm-nutriscore" id="pm-nutriscore-badge" hidden></span>
+          </div>
+          <p class="pm-nutrition-serving" id="pm-nutrition-serving"></p>
+          <table class="pm-nutrition-table" id="pm-nutrition-table"><tbody></tbody></table>
+        </div>
       </div>
       <div class="pm-modal-footer">
         <button class="pm-btn-del" id="pm-btn-del" hidden data-i18n="productMaster.delete">Eliminar</button>

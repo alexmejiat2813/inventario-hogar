@@ -83,7 +83,7 @@ router.post('/scan-register', (req, res) => {
     if (existing) return res.json({ source: 'local', product: existing });
 
     // Step 2: Open Food Facts lookup
-    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode.trim())}.json?fields=product_name,brands,categories_tags`;
+    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode.trim())}.json?fields=product_name,brands,categories_tags,image_front_url,nutriments,serving_size,nutriscore_grade`;
     https.get(url, { headers: { 'User-Agent': 'InventarioHogar/1.0' } }, (offRes) => {
       let raw = '';
       offRes.on('data', chunk => { raw += chunk; });
@@ -100,6 +100,10 @@ router.post('/scan-register', (req, res) => {
           const created = db.createProductMaster(req.user.id, {
             name, barcode: barcode.trim(), brand,
             isTaxable: true, tracksStock: true,
+            imageUrl:    p.image_front_url || null,
+            nutriments:  p.nutriments      || null,
+            servingSize: p.serving_size    || null,
+            nutriscore:  p.nutriscore_grade || null,
           });
           res.status(201).json({ source: 'openfoodfacts', product: created });
         } catch (parseErr) {

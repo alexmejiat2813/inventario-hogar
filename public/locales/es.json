@@ -870,7 +870,11 @@
     "scannerDenied": "Permiso de cámara denegado",
     "scannerError": "No se pudo activar la cámara",
     "scannerUnsupported": "Escáner no disponible — ingresá el código manualmente",
-    "scannerNotFound": "No se detectó código — ingresalo manualmente"
+    "scannerNotFound": "No se detectó código — ingresalo manualmente",
+    "nutrition": {
+      "title": "Información nutricional",
+      "serving": "Por porción:"
+    }
   },
   "dashboard": {
     "period": {

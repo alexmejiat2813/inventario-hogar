@@ -233,7 +233,8 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 163 | fix | Unificar logo: `favicon.svg` y `icons/icon.svg` reemplazados por diseño "IH" (texto blanco sobre `#082F49`, igual al `.header-icon`). `products.html` faltaban `<link rel="icon">` y `<link rel="apple-touch-icon">`. | `eef572f` | ✅ |
 | 164 | fix | Orden menú inconsistente: tab bar de `index.html` tenía Productos al final → movido a posición 2 (Dashboard → Productos → Stock → Compras → Historial). Drawer de `products.html` reordenado igual con Productos activo entre Dashboard y Stock. | `9d2540e` | ✅ |
 | 165 | fix | SW v2 + bump 1.1.6: forzar reinstalación del service worker para limpiar caches viejos de menús. | `a7045dc` | ✅ |
-| 166 | chore | Renombrar "Maestro de Productos" → "Productos" en locales ES/EN/FR, products.html (title/breadcrumb/drawer) y fallbacks en products.js. | — | ✅ |
+| 166 | chore | Renombrar "Maestro de Productos" → "Productos" en locales ES/EN/FR, products.html (title/breadcrumb/drawer) y fallbacks en products.js. | `257a7a2` | ✅ |
+| 167 | feat | Foto de producto + Nutriscore + tabla nutricional desde Open Food Facts: 4 cols nuevas en `product_master` (image_url, nutriments, serving_size, nutriscore), OFF fetch ampliado, card muestra foto real o SVG placeholder, badge Nutriscore A-E con colores, sección nutricional colapsable en modal (energía, grasas, carbohidratos, azúcares, proteínas, fibra, sodio / 100g). i18n ES/EN/FR. Bump v1.1.8. | — | ✅ |
 
 ---
 

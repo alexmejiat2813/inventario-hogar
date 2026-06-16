@@ -333,6 +333,7 @@ const sessionCols = db.prepare('PRAGMA table_info(purchase_sessions)').all().map
 const userCols    = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
 const itemCols    = db.prepare('PRAGMA table_info(purchase_items)').all().map(c => c.name);
 const tplItemCols = db.prepare('PRAGMA table_info(list_template_items)').all().map(c => c.name);
+const pmCols      = db.prepare('PRAGMA table_info(product_master)').all().map(c => c.name);
 
 db.exec('BEGIN');
 try {
@@ -355,6 +356,10 @@ try {
   if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD COLUMN tax_amount REAL');
   if (!tplItemCols.includes('store_id'))   db.exec('ALTER TABLE list_template_items ADD COLUMN store_id INTEGER REFERENCES stores(id) ON DELETE SET NULL');
   if (!tplItemCols.includes('unit_price')) db.exec('ALTER TABLE list_template_items ADD COLUMN unit_price REAL');
+  if (!pmCols.includes('image_url'))    db.exec('ALTER TABLE product_master ADD COLUMN image_url TEXT');
+  if (!pmCols.includes('nutriments'))   db.exec('ALTER TABLE product_master ADD COLUMN nutriments TEXT');
+  if (!pmCols.includes('serving_size')) db.exec('ALTER TABLE product_master ADD COLUMN serving_size TEXT');
+  if (!pmCols.includes('nutriscore'))   db.exec('ALTER TABLE product_master ADD COLUMN nutriscore TEXT');
   db.exec('COMMIT');
 } catch (err) { try { db.exec('ROLLBACK'); } catch {} throw err; }
 
@@ -2309,11 +2314,12 @@ module.exports = {
     `).all(userId);
   },
 
-  createProductMaster(userId, { name, barcode, brand, defaultCategoryId, isTaxable, tracksStock, catalogProductId }) {
+  createProductMaster(userId, { name, barcode, brand, defaultCategoryId, isTaxable, tracksStock, catalogProductId, imageUrl, nutriments, servingSize, nutriscore }) {
     const { lastInsertRowid } = db.prepare(`
       INSERT INTO product_master
-        (user_id, name, barcode, brand, default_category_id, is_taxable, tracks_stock, catalog_product_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (user_id, name, barcode, brand, default_category_id, is_taxable, tracks_stock, catalog_product_id,
+         image_url, nutriments, serving_size, nutriscore)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       userId,
       name.trim(),
@@ -2322,7 +2328,11 @@ module.exports = {
       defaultCategoryId || null,
       isTaxable !== false ? 1 : 0,
       tracksStock !== false ? 1 : 0,
-      catalogProductId || null
+      catalogProductId || null,
+      imageUrl || null,
+      nutriments ? JSON.stringify(nutriments) : null,
+      servingSize || null,
+      nutriscore || null
     );
     return db.prepare(`
       SELECT pm.*, pbc.name AS category_name

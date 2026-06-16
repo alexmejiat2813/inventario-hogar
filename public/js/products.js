@@ -136,16 +136,20 @@ function renderCard(p) {
   const taxLabel = p.is_taxable
     ? tSafe('productMaster.isTaxable','Aplica impuesto')
     : tSafe('catalog.noTax','Sin impuesto');
+  const imgHtml = p.image_url
+    ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" width="40" height="40"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>`;
+  const nsBadge = p.nutriscore
+    ? `<span class="pm-nutriscore pm-nutriscore--${esc(p.nutriscore.toLowerCase())}">${esc(p.nutriscore.toUpperCase())}</span>`
+    : '';
 
   return `<div class="pm-card" data-id="${p.id}">
-    <div class="pm-card-img">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" width="40" height="40"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
-    </div>
+    <div class="pm-card-img">${imgHtml}</div>
     <button class="pm-card-edit" data-id="${p.id}" aria-label="Editar">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
     </button>
     <div class="pm-card-body">
-      <span class="pm-cat-badge">${esc(catName)}</span>
+      <div class="pm-card-meta-row"><span class="pm-cat-badge">${esc(catName)}</span>${nsBadge}</div>
       <h3 class="pm-card-name">${esc(p.name)}</h3>
       ${p.brand ? `<span class="pm-card-brand">${esc(p.brand)}</span>` : ''}
     </div>
@@ -185,6 +189,7 @@ function openCreate() {
   document.getElementById('pm-field-category').innerHTML = buildCategoryOptions(null);
   document.getElementById('pm-btn-del').hidden = true;
   document.getElementById('pm-scan-hint').hidden = true;
+  document.getElementById('pm-nutrition-section').hidden = true;
   showModal();
 }
 
@@ -201,7 +206,49 @@ function openEdit(id) {
   document.getElementById('pm-field-category').innerHTML = buildCategoryOptions(p.default_category_id);
   document.getElementById('pm-btn-del').hidden = false;
   document.getElementById('pm-scan-hint').hidden = true;
+  renderNutritionSection(p);
   showModal();
+}
+
+function renderNutritionSection(p) {
+  const section = document.getElementById('pm-nutrition-section');
+  if (!p.nutriments && !p.nutriscore) { section.hidden = true; return; }
+  section.hidden = false;
+
+  const badge = document.getElementById('pm-nutriscore-badge');
+  if (p.nutriscore) {
+    badge.textContent = p.nutriscore.toUpperCase();
+    badge.className   = `pm-nutriscore pm-nutriscore--${p.nutriscore.toLowerCase()}`;
+    badge.hidden      = false;
+  } else {
+    badge.hidden = true;
+  }
+
+  const servingEl = document.getElementById('pm-nutrition-serving');
+  servingEl.textContent = p.serving_size
+    ? `${tSafe('productMaster.nutrition.serving','Por porción:')} ${p.serving_size}`
+    : '';
+
+  const tbody = document.querySelector('#pm-nutrition-table tbody');
+  if (!p.nutriments) { tbody.innerHTML = ''; return; }
+  let n;
+  try { n = typeof p.nutriments === 'string' ? JSON.parse(p.nutriments) : p.nutriments; }
+  catch { tbody.innerHTML = ''; return; }
+
+  const rows = [
+    ['Energía',           n['energy-kcal_100g'] != null ? `${Math.round(n['energy-kcal_100g'])} kcal` : null],
+    ['Grasas',            n['fat_100g']          != null ? `${n['fat_100g'].toFixed(1)} g`             : null],
+    ['· Saturadas',       n['saturated-fat_100g']!= null ? `${n['saturated-fat_100g'].toFixed(1)} g`   : null],
+    ['Carbohidratos',     n['carbohydrates_100g']!= null ? `${n['carbohydrates_100g'].toFixed(1)} g`   : null],
+    ['· Azúcares',        n['sugars_100g']        != null ? `${n['sugars_100g'].toFixed(1)} g`          : null],
+    ['Proteínas',         n['proteins_100g']      != null ? `${n['proteins_100g'].toFixed(1)} g`        : null],
+    ['Fibra',             n['fiber_100g']          != null ? `${n['fiber_100g'].toFixed(1)} g`           : null],
+    ['Sodio',             n['sodium_100g']         != null ? `${(n['sodium_100g']*1000).toFixed(0)} mg`  : null],
+  ];
+  tbody.innerHTML = rows
+    .filter(([,v]) => v != null)
+    .map(([l,v]) => `<tr><td>${l}</td><td>${v}</td><td class="pm-nutr-per100">/ 100g</td></tr>`)
+    .join('');
 }
 
 function showModal() {
