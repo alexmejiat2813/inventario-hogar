@@ -1097,6 +1097,11 @@
       if (s?.thresholds) {
         _warnPct = s.thresholds.alert_warn_pct ?? 0.60;
         _critPct = s.thresholds.alert_crit_pct ?? 0.85;
+        const currency = s.thresholds.currency || 'USD';
+        ['pb-currency-income', 'pb-currency-expense', 'pb-currency-balance'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.textContent = currency; el.hidden = false; }
+        });
       }
     } catch { /* non-fatal — keep defaults */ }
   }
