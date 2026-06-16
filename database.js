@@ -2273,7 +2273,7 @@ module.exports = {
   // Fuente única: personal_budget_categories (ya contiene histórico importado).
   getAllPersonalBudgetCategories(userId) {
     return db.prepare(
-      'SELECT name, flow_type FROM personal_budget_categories WHERE user_id = ? ORDER BY flow_type, name COLLATE NOCASE'
+      'SELECT id, name, flow_type FROM personal_budget_categories WHERE user_id = ? ORDER BY flow_type, name COLLATE NOCASE'
     ).all(userId);
   },
 

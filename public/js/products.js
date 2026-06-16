@@ -131,7 +131,9 @@ function render() {
 }
 
 function renderCard(p) {
-  const catName  = p.category_name || '—';
+  const catBadge = p.category_name
+    ? `<span class="pm-cat-badge">${esc(p.category_name)}</span>`
+    : '';
   const stockOn  = !!p.tracks_stock;
   const taxLabel = p.is_taxable
     ? tSafe('productMaster.isTaxable','Aplica impuesto')
@@ -150,7 +152,7 @@ function renderCard(p) {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
     </button>
     <div class="pm-card-body">
-      <div class="pm-card-meta-row"><span class="pm-cat-badge">${esc(catName)}</span>${nsBadge}</div>
+      ${catBadge || nsBadge ? `<div class="pm-card-meta-row">${catBadge}${nsBadge}</div>` : ''}
       <h3 class="pm-card-name">${esc(p.name)}</h3>
       ${p.brand ? `<span class="pm-card-brand">${esc(p.brand)}</span>` : ''}
     </div>
