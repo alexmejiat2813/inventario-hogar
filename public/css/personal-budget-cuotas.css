@@ -9,6 +9,11 @@
 .cq-summary { font-size: .78rem; color: #475569; }
 .cq-summary strong { color: #082F49; }
 
+@media (max-width: 480px) {
+  .cq-summary { display: flex; flex-direction: column; gap: .1rem; }
+  .cq-summary-sep { display: none; }
+}
+
 /* button — override global reset explícitamente */
 .cq-btn-add {
   -webkit-appearance: none; appearance: none;

@@ -1155,7 +1155,8 @@
     "editLocked": "Ce plan a déjà des paiements enregistrés : vous ne pouvez modifier que le nom, la catégorie et les notes.",
     "convertedFrom": "Saisi en {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
     "baseEquiv": "≈ {{total}} {{base}} total · {{per}} {{base}} par échéance",
-    "summary": "<strong>{{debt}} {{base}}</strong> de dettes · <strong>{{monthly}} {{base}}</strong>/mois en échéances",
+    "summaryDebt": "<strong>{{debt}} {{base}}</strong> de dettes",
+    "summaryMonthly": "<strong>{{monthly}} {{base}}</strong>/mois en échéances",
     "form": {
       "name": "Nom (ex : TV Samsung)",
       "total": "Montant total",

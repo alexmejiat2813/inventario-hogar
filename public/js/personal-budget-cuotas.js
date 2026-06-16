@@ -339,11 +339,14 @@ function updateSummary() {
       totalDebt += remaining * rate;
       if (paid < total) totalMonthly += (p.amount_per_installment || 0) * rate;
     });
-    el.innerHTML = I18N.t('installments.summary', {
-      debt: fmt(parseFloat(totalDebt.toFixed(2))),
-      monthly: fmt(parseFloat(totalMonthly.toFixed(2))),
-      base: esc(_baseCurrency)
-    });
+    el.innerHTML =
+      '<span class="cq-summary-debt">' + I18N.t('installments.summaryDebt', {
+        debt: fmt(parseFloat(totalDebt.toFixed(2))), base: esc(_baseCurrency)
+      }) + '</span>' +
+      '<span class="cq-summary-sep"> · </span>' +
+      '<span class="cq-summary-monthly">' + I18N.t('installments.summaryMonthly', {
+        monthly: fmt(parseFloat(totalMonthly.toFixed(2))), base: esc(_baseCurrency)
+      }) + '</span>';
     el.hidden = false;
   }).catch(function() { el.hidden = true; });
 }
