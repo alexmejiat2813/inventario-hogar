@@ -81,7 +81,8 @@
   overflow: hidden;
 }
 /* When card has a real photo: switch to 16:9 cover */
-.pm-card-img:has(img) {
+.pm-card-img:has(img),
+.pm-card-img--photo {
   height: auto;
   aspect-ratio: 16 / 9;
 }

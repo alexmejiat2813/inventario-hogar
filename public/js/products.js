@@ -136,7 +136,8 @@ function renderCard(p) {
   const taxLabel = p.is_taxable
     ? tSafe('productMaster.isTaxable','Aplica impuesto')
     : tSafe('catalog.noTax','Sin impuesto');
-  const imgHtml = p.image_url
+  const hasPhoto = !!p.image_url;
+  const imgHtml = hasPhoto
     ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`
     : `<svg viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" width="40" height="40"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>`;
   const nsBadge = p.nutriscore
@@ -144,7 +145,7 @@ function renderCard(p) {
     : '';
 
   return `<div class="pm-card" data-id="${p.id}">
-    <div class="pm-card-img">${imgHtml}</div>
+    <div class="pm-card-img${hasPhoto ? ' pm-card-img--photo' : ''}">${imgHtml}</div>
     <button class="pm-card-edit" data-id="${p.id}" aria-label="Editar">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
     </button>
