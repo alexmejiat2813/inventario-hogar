@@ -167,7 +167,7 @@ function updateCalcHint() {
     } else {
       hint.hidden = true;
     }
-  } catch(_) {}
+  } catch {}
 }
 
 function saveAddModal() {
