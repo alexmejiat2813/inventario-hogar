@@ -29,6 +29,17 @@ router.put('/budget-link', (req, res) => {
         return res.status(400).json({ error: 'Categoría desconocida', known: knownCategories });
       }
     }
+    if (enabled !== false) {
+      const inventory = db.getInventory(req.inventoryId);
+      const budgetSettings = db.getPersonalBudgetSettings(req.user.id);
+      if (inventory && inventory.currency !== budgetSettings.currency) {
+        return res.status(409).json({
+          error: `El inventario usa ${inventory.currency} y tu presupuesto usa ${budgetSettings.currency}. Igualá la divisa de uno de los dos en Configuración antes de enlazarlos.`,
+          inventory_currency: inventory.currency,
+          budget_currency: budgetSettings.currency,
+        });
+      }
+    }
     const link = db.setInventoryBudgetLink(req.user.id, req.inventoryId, {
       defaultCategory: default_category ?? null,
       enabled:         enabled !== false,

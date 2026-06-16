@@ -404,6 +404,9 @@ if (!pbCols.includes('due_date'))     db.exec('ALTER TABLE personal_budgets ADD 
 if (!pbCols.includes('flow_type'))    db.exec("ALTER TABLE personal_budgets ADD COLUMN flow_type TEXT NOT NULL DEFAULT 'expense'");
 if (!pbCols.includes('inventory_id')) db.exec('ALTER TABLE personal_budgets ADD COLUMN inventory_id INTEGER REFERENCES inventories(id) ON DELETE SET NULL');
 
+const pbsCols = db.prepare('PRAGMA table_info(personal_budget_settings)').all().map(c => c.name);
+if (!pbsCols.includes('currency')) db.exec("ALTER TABLE personal_budget_settings ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'");
+
 // Eliminar UNIQUE(user_id, category, month) de personal_budgets — permite
 // multiples flujos proyectados con la misma categoria en el mismo mes.
 const pbIndexes = db.prepare("PRAGMA index_list(personal_budgets)").all();
@@ -2239,6 +2242,14 @@ module.exports = {
         alert_crit_pct = excluded.alert_crit_pct,
         updated_at     = excluded.updated_at
     `).run(userId, warnPct, critPct);
+    return this.getPersonalBudgetSettings(userId);
+  },
+
+  updatePersonalBudgetCurrency(userId, currency) {
+    this.getPersonalBudgetSettings(userId); // asegura que la fila exista
+    db.prepare(`
+      UPDATE personal_budget_settings SET currency = ?, updated_at = datetime('now','localtime') WHERE user_id = ?
+    `).run(currency, userId);
     return this.getPersonalBudgetSettings(userId);
   },
 

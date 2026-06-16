@@ -21,6 +21,9 @@
   const elCritPct      = document.getElementById('pbs-crit-pct');
   const elThreshForm   = document.getElementById('pbs-thresholds-form');
 
+  const elCurrency     = document.getElementById('pbs-currency');
+  const elCurrencyForm = document.getElementById('pbs-currency-form');
+
   const elConfirmModal  = document.getElementById('pbs-confirm-modal');
   const elConfirmBody   = document.getElementById('pbs-confirm-body');
   const elConfirmOk     = document.getElementById('pbs-confirm-ok');
@@ -178,9 +181,20 @@
       if (s?.thresholds) {
         elWarnPct.value = Math.round((s.thresholds.alert_warn_pct ?? 0.60) * 100);
         elCritPct.value = Math.round((s.thresholds.alert_crit_pct ?? 0.85) * 100);
+        elCurrency.value = s.thresholds.currency || 'USD';
       }
     } catch { /* keep defaults */ }
   }
+
+  elCurrencyForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+      await apiFetch('PUT', '/api/personal-budget/settings/currency', { currency: elCurrency.value });
+      showToast('Divisa guardada.');
+    } catch (err) {
+      showToast(err.message || 'Error al guardar.', 'error');
+    }
+  });
 
   elThreshForm.addEventListener('submit', async e => {
     e.preventDefault();

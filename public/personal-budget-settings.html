@@ -134,8 +134,40 @@
             </div>
           </div>
 
-          <div style="display:flex;justify-content:flex-end;margin-top:.75rem">
+          <div class="pbs-form-footer">
             <button type="submit" class="btn btn-primary pbs-btn-sm" id="pbs-thresholds-save">Guardar umbrales</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ── Sección 4: Divisa ──────────────────────────────────── -->
+      <section class="pbs-section">
+        <div class="pbs-section-header">
+          <div>
+            <h2 class="pbs-section-title">Divisa</h2>
+            <p class="pbs-section-sub">Divisa base de tu Presupuesto Personal. Para enlazar un inventario, debe usar la misma divisa.</p>
+          </div>
+        </div>
+
+        <form id="pbs-currency-form" class="pbs-thresholds-form">
+          <div class="pbs-threshold-row">
+            <label class="pbs-threshold-label">
+              Divisa base
+              <span class="pbs-threshold-hint">Se usa para mostrar montos y para validar el enlace con inventarios</span>
+            </label>
+            <select class="form-input pbs-currency-select" id="pbs-currency">
+              <option value="USD">USD — Dólar estadounidense</option>
+              <option value="CAD">CAD — Dólar canadiense</option>
+              <option value="COP">COP — Peso colombiano</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="MXN">MXN — Peso mexicano</option>
+              <option value="BRL">BRL — Real brasileño</option>
+              <option value="GBP">GBP — Libra esterlina</option>
+            </select>
+          </div>
+
+          <div class="pbs-form-footer">
+            <button type="submit" class="btn btn-primary pbs-btn-sm" id="pbs-currency-save">Guardar divisa</button>
           </div>
         </form>
       </section>

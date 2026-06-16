@@ -1257,6 +1257,8 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 
 /* Thresholds */
 .pbs-thresholds-form { display: flex; flex-direction: column; gap: .75rem; }
+.pbs-form-footer { display: flex; justify-content: flex-end; margin-top: .75rem; }
+.pbs-currency-select { max-width: 220px; }
 .pbs-threshold-row {
   display: flex;
   align-items: center;

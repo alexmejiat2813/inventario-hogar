@@ -983,7 +983,7 @@ async function handleConfirm() {
         await apiFetch('PUT', '/api/purchases/budget-link', {
           default_category: budgetCategory,
           enabled: true,
-        }).catch(() => {});
+        }).catch((e) => showToast(e.message, 'error'));
       }
     } else if (_budgetSectionOpen && !setAsDefault && hadActiveLink) {
       await apiFetch('DELETE', '/api/purchases/budget-link').catch(() => {});

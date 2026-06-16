@@ -345,6 +345,15 @@ router.put('/settings/thresholds', (req, res) => {
   res.json(settings);
 });
 
+// PUT /api/personal-budget/settings/currency
+router.put('/settings/currency', (req, res) => {
+  const userId = req.user.id;
+  const currency = String(req.body.currency || '').toUpperCase();
+  if (!CURRENCY_RE.test(currency)) return res.status(400).json({ error: 'Divisa inválida.' });
+  const settings = db.updatePersonalBudgetCurrency(userId, currency);
+  res.json(settings);
+});
+
 // GET /api/personal-budget/categories
 router.get('/categories', (req, res) => {
   res.json(db.getPersonalBudgetCategories(req.user.id));
