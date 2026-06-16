@@ -15,6 +15,7 @@ const PRECACHE = [
   '/js/products.js',
   '/js/settings.js',
   '/js/shopping-list.js',
+  '/js/vendor/zxing.js',
   '/css/products.css',
   '/locales/es.json',
   '/locales/en.json',
@@ -72,9 +73,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(request)
         .then(resp => {
-          if (resp.ok) {
-            caches.open(CACHE).then(c => c.put(request, resp.clone()));
-          }
+          if (resp.ok) safePutInCache(request, resp);
           return resp;
         })
         .catch(() => caches.match(request))
@@ -96,7 +95,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(request)
         .then(resp => {
-          if (resp.ok) caches.open(CACHE).then(c => c.put(request, resp.clone()));
+          if (resp.ok) safePutInCache(request, resp);
           return resp;
         })
         .catch(() => caches.match(request))
@@ -110,7 +109,7 @@ self.addEventListener('fetch', e => {
       caches.match(request).then(cached => {
         if (cached) return cached;
         return fetch(request).then(resp => {
-          if (resp.ok) caches.open(CACHE).then(c => c.put(request, resp.clone()));
+          if (resp.ok) safePutInCache(request, resp);
           return resp;
         });
       })
@@ -124,7 +123,7 @@ self.addEventListener('fetch', e => {
       caches.open(CACHE).then(cache =>
         cache.match(request).then(cached => {
           const fresh = fetch(request).then(resp => {
-            if (resp.ok) cache.put(request, resp.clone());
+            if (resp.ok) safePutInCache(request, resp);
             return resp;
           });
           return cached || fresh;
@@ -138,12 +137,22 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     fetch(request)
       .then(resp => {
-        if (resp.ok) caches.open(CACHE).then(c => c.put(request, resp.clone()));
+        if (resp.ok) safePutInCache(request, resp);
         return resp;
       })
       .catch(() => caches.match(request))
   );
 });
+
+// Clona y cachea sin riesgo de tumbar la respuesta real si el clone()
+// falla (puede pasar en una ventana de carrera durante la activacion
+// de un SW nuevo) — el fetch a la pagina nunca debe verse afectado.
+function safePutInCache(request, resp) {
+  try {
+    const copy = resp.clone();
+    caches.open(CACHE).then(c => c.put(request, copy)).catch(() => {});
+  } catch {}
+}
 
 self.addEventListener('push', e => {
   if (!e.data) return;

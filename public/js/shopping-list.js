@@ -1683,33 +1683,24 @@ document.addEventListener('DOMContentLoaded', init);
   });
 
 // ── Barcode scanner for shopping list search ──────────────────
-const _slScanner = { active: false, stream: null, raf: null, detector: null };
+// Usa ZXing (vendored en /js/zxing.js) en vez de BarcodeDetector nativo:
+// BarcodeDetector solo existe en Chrome Android/ChromeOS, nunca en
+// desktop (Windows/Mac/Linux) ni en Firefox/Safari en ningun lado.
+const _slScanner = { active: false, reader: null };
 
 function closeSlScanner() {
   _slScanner.active = false;
-  if (_slScanner.raf)    { cancelAnimationFrame(_slScanner.raf); _slScanner.raf = null; }
-  if (_slScanner.stream) { _slScanner.stream.getTracks().forEach(t => t.stop()); _slScanner.stream = null; }
-  const vid = document.getElementById('sl-scanner-video');
-  if (vid) vid.srcObject = null;
+  if (_slScanner.reader) {
+    try { _slScanner.reader.reset(); } catch {}
+    _slScanner.reader = null;
+  }
   const overlay = document.getElementById('sl-scanner-overlay');
   if (overlay) overlay.hidden = true;
 }
 
-function slScanLoop(video) {
-  if (!_slScanner.active) return;
-  _slScanner.raf = requestAnimationFrame(async () => {
-    if (!_slScanner.active) return;
-    try {
-      const results = await _slScanner.detector.detect(video);
-      if (results.length > 0) { await onSlBarcodeDetected(results[0].rawValue); return; }
-    } catch {}
-    slScanLoop(video);
-  });
-}
-
 async function openSlScanner() {
   if (_slScanner.active) return;
-  if (!('BarcodeDetector' in window)) {
+  if (typeof ZXing === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
     showToast(tSafe('shopping.scannerUnsupported', 'Escáner no disponible en este dispositivo'), 'warn');
     return;
   }
@@ -1717,18 +1708,24 @@ async function openSlScanner() {
   const video   = document.getElementById('sl-scanner-video');
   const label   = document.getElementById('sl-scanner-label');
   try {
-    _slScanner.detector = new BarcodeDetector({
-      formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'],
-    });
-    _slScanner.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
-    });
-    video.srcObject = _slScanner.stream;
-    await video.play();
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+      ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
+      ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E,
+      ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39,
+      ZXing.BarcodeFormat.QR_CODE,
+    ]);
+    _slScanner.reader = new ZXing.BrowserMultiFormatReader(hints);
     _slScanner.active = true;
     overlay.hidden = false;
     if (label) label.textContent = tSafe('shopping.scannerHint', 'Apuntá al código de barras');
-    slScanLoop(video);
+    await _slScanner.reader.decodeFromConstraints(
+      { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+      video,
+      (result) => {
+        if (_slScanner.active && result) onSlBarcodeDetected(result.getText());
+      }
+    );
   } catch (err) {
     closeSlScanner();
     const msg = err?.name === 'NotAllowedError'

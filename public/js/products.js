@@ -27,7 +27,7 @@ let _categories = [];
 let _search     = '';
 let _editingId  = null;
 
-const _scanner = { stream: null, detector: null, raf: null, active: false };
+const _scanner = { reader: null, active: false };
 
 // ── Boot ───────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -334,36 +334,32 @@ function beep() {
   } catch {}
 }
 
-function closeScanner() {
-  _scanner.active = false;
-  if (_scanner.raf)    { cancelAnimationFrame(_scanner.raf); _scanner.raf = null; }
-  if (_scanner.stream) { _scanner.stream.getTracks().forEach(t => t.stop()); _scanner.stream = null; }
-  const vid = document.getElementById('pm-scanner-video');
-  if (vid) vid.srcObject = null;
-  const overlay = document.getElementById('pm-scanner-overlay');
-  if (overlay) overlay.hidden = true;
+function zxingHints() {
+  const hints = new Map();
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+    ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
+    ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E,
+    ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39,
+    ZXing.BarcodeFormat.QR_CODE,
+  ]);
+  return hints;
 }
 
-function scanLoop(video) {
-  if (!_scanner.active) return;
-  _scanner.raf = requestAnimationFrame(async () => {
-    if (!_scanner.active) return;
-    try {
-      const results = await _scanner.detector.detect(video);
-      if (results.length > 0) {
-        await onBarcodeDetected(results[0].rawValue);
-        return;
-      }
-    } catch {}
-    scanLoop(video);
-  });
+function closeScanner() {
+  _scanner.active = false;
+  if (_scanner.reader) {
+    try { _scanner.reader.reset(); } catch {}
+    _scanner.reader = null;
+  }
+  const overlay = document.getElementById('pm-scanner-overlay');
+  if (overlay) overlay.hidden = true;
 }
 
 async function openScanner() {
   if (_scanner.active) return;
 
-  // iOS / old browsers fallback: use file input with camera capture
-  if (!('BarcodeDetector' in window)) {
+  // Sin camara o sin ZXing cargado: fallback a foto con input de archivo
+  if (typeof ZXing === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
     document.getElementById('pm-camera-fallback').click();
     return;
   }
@@ -373,18 +369,17 @@ async function openScanner() {
   const label   = document.getElementById('pm-scanner-label');
 
   try {
-    _scanner.detector = new BarcodeDetector({
-      formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'],
-    });
-    _scanner.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
-    });
-    video.srcObject = _scanner.stream;
-    await video.play();
+    _scanner.reader = new ZXing.BrowserMultiFormatReader(zxingHints());
     _scanner.active = true;
     overlay.hidden  = false;
     if (label) label.textContent = tSafe('productMaster.scannerHint', 'Apuntá al código de barras');
-    scanLoop(video);
+    await _scanner.reader.decodeFromConstraints(
+      { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+      video,
+      (result) => {
+        if (_scanner.active && result) onBarcodeDetected(result.getText());
+      }
+    );
   } catch (err) {
     closeScanner();
     const msg = err?.name === 'NotAllowedError'
@@ -406,23 +401,19 @@ async function handleCameraFallback(e) {
   e.target.value = '';
   if (!file) return;
 
-  if (!('BarcodeDetector' in window)) {
+  if (typeof ZXing === 'undefined') {
     showToast(tSafe('productMaster.scannerUnsupported', 'Escáner no disponible — ingresá el código manualmente'), 'warn');
     return;
   }
+  const url    = URL.createObjectURL(file);
+  const reader = new ZXing.BrowserMultiFormatReader(zxingHints());
   try {
-    const bitmap   = await createImageBitmap(file);
-    const detector = new BarcodeDetector({
-      formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'],
-    });
-    const results = await detector.detect(bitmap);
-    if (results.length > 0) {
-      await onBarcodeDetected(results[0].rawValue);
-    } else {
-      showToast(tSafe('productMaster.scannerNotFound', 'No se detectó código — ingresalo manualmente'), 'warn');
-    }
+    const result = await reader.decodeFromImageUrl(url);
+    await onBarcodeDetected(result.getText());
   } catch {
-    showToast(tSafe('productMaster.scannerError', 'Error al procesar la imagen'), 'error');
+    showToast(tSafe('productMaster.scannerNotFound', 'No se detectó código — ingresalo manualmente'), 'warn');
+  } finally {
+    URL.revokeObjectURL(url);
   }
 }
 
