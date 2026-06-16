@@ -188,8 +188,8 @@ function setFieldsLocked(locked) {
 }
 
 function setConvertRowVisible(visible) {
-  var row = document.getElementById('f-convert-to').closest('.cq-field-row');
-  if (row) row.style.display = visible ? '' : 'none';
+  var field = document.getElementById('f-convert-to').closest('.cq-field');
+  if (field) field.style.display = visible ? '' : 'none';
 }
 
 function openAddModal() {
