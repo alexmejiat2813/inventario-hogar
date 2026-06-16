@@ -323,10 +323,10 @@
       try {
         const data = await apiFetch('GET', '/api/personal-budget/installments');
         state.plans = data || [];
-        render();
       } catch {
         showToast('Error al cargar cuotas', 'error');
       }
+      render();
     }
 
     async function loadTransactions() {
