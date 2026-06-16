@@ -2434,26 +2434,28 @@ module.exports = {
 
   // ── Installment Plans (Cuotas) ──────────────────────────────────────────────
   createInstallmentPlan(userId, { name, totalAmount, numInstallments, amountPerInstallment, startDate, category, notes }) {
-    const insertPlan = db.prepare(`
-      INSERT INTO installment_plans (user_id, name, total_amount, num_installments, amount_per_installment, start_date, category, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    const insertPayment = db.prepare(
-      'INSERT INTO installment_payments (plan_id, installment_number, due_date) VALUES (?, ?, ?)'
-    );
-    const run = db.transaction(() => {
-      const { lastInsertRowid } = insertPlan.run(userId, name, totalAmount, numInstallments, amountPerInstallment, startDate, category || null, notes || null);
+    db.prepare('BEGIN').run();
+    try {
+      const { lastInsertRowid } = db.prepare(`
+        INSERT INTO installment_plans (user_id, name, total_amount, num_installments, amount_per_installment, start_date, category, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(userId, name, totalAmount, numInstallments, amountPerInstallment, startDate, category || null, notes || null);
       const planId = Number(lastInsertRowid);
+      const insertPayment = db.prepare(
+        'INSERT INTO installment_payments (plan_id, installment_number, due_date) VALUES (?, ?, ?)'
+      );
       const [year, month, day] = startDate.split('-').map(Number);
       for (let i = 0; i < numInstallments; i++) {
         const d = new Date(year, month - 1 + i, day);
         const due = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         insertPayment.run(planId, i + 1, due);
       }
-      return planId;
-    });
-    const planId = run();
-    return this.getInstallmentPlanWithPayments(userId, planId);
+      db.prepare('COMMIT').run();
+      return this.getInstallmentPlanWithPayments(userId, planId);
+    } catch (err) {
+      db.prepare('ROLLBACK').run();
+      throw err;
+    }
   },
 
   getInstallmentPlans(userId) {
