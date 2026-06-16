@@ -52,6 +52,7 @@ function render() {
         '<p class="cq-empty-desc">' + esc(I18N.t('installments.emptyDesc')) + '</p>',
         '</div>'
       ].join('');
+      document.getElementById('cq-summary').hidden = true;
       return;
     }
 
@@ -147,6 +148,7 @@ function render() {
     });
 
     updateBaseEquivalents(el);
+    updateSummary();
 
   } catch(e) {
     console.error('render error:', e);
@@ -315,6 +317,35 @@ function updateBaseEquivalents(container) {
       });
     }).catch(function() {});
   });
+}
+
+function updateSummary() {
+  var el = document.getElementById('cq-summary');
+  if (!_plans.length) { el.hidden = true; return; }
+  var currencies = {};
+  _plans.forEach(function(p) { currencies[p.currency || 'USD'] = true; });
+  var keys = Object.keys(currencies);
+  Promise.all(keys.map(function(cur) {
+    return fetchFxRate(cur, _baseCurrency).then(function(rate) { return [cur, rate]; });
+  })).then(function(pairs) {
+    var rates = {};
+    pairs.forEach(function(pair) { rates[pair[0]] = pair[1]; });
+    var totalDebt = 0, totalMonthly = 0;
+    _plans.forEach(function(p) {
+      var rate      = rates[p.currency || 'USD'] || 1;
+      var total     = p.num_installments || 0;
+      var paid      = p.paid_count || 0;
+      var remaining = (total - paid) * (p.amount_per_installment || 0);
+      totalDebt += remaining * rate;
+      if (paid < total) totalMonthly += (p.amount_per_installment || 0) * rate;
+    });
+    el.innerHTML = I18N.t('installments.summary', {
+      debt: fmt(parseFloat(totalDebt.toFixed(2))),
+      monthly: fmt(parseFloat(totalMonthly.toFixed(2))),
+      base: esc(_baseCurrency)
+    });
+    el.hidden = false;
+  }).catch(function() { el.hidden = true; });
 }
 
 function saveAddModal() {

@@ -1156,6 +1156,7 @@
     "editLocked": "Esta cuota ya tiene pagos registrados: solo podés editar nombre, categoría y notas.",
     "convertedFrom": "Ingresado como {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
     "baseEquiv": "≈ {{total}} {{base}} total · {{per}} {{base}} por cuota",
+    "summary": "<strong>{{debt}} {{base}}</strong> en deudas · <strong>{{monthly}} {{base}}</strong>/mes en cuotas",
     "form": {
       "name": "Nombre (ej: TV Samsung)",
       "total": "Monto total",

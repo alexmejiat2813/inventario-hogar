@@ -1155,6 +1155,7 @@
     "editLocked": "This plan already has recorded payments: you can only edit name, category and notes.",
     "convertedFrom": "Entered as {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
     "baseEquiv": "≈ {{total}} {{base}} total · {{per}} {{base}} per installment",
+    "summary": "<strong>{{debt}} {{base}}</strong> in debt · <strong>{{monthly}} {{base}}</strong>/mo in installments",
     "form": {
       "name": "Name (e.g. Samsung TV)",
       "total": "Total amount",

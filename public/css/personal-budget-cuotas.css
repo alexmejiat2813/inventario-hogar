@@ -4,7 +4,10 @@
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.25rem; gap: .75rem;
 }
+.cq-toolbar-left { display: flex; flex-direction: column; gap: .15rem; }
 .cq-toolbar-title { font-size: 1.05rem; font-weight: 700; color: #082F49; }
+.cq-summary { font-size: .78rem; color: #475569; }
+.cq-summary strong { color: #082F49; }
 
 /* button — override global reset explícitamente */
 .cq-btn-add {
