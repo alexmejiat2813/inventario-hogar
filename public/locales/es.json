@@ -1131,5 +1131,43 @@
     "search": {
       "placeholder": "Buscar por categoría…"
     }
+  },
+  "installments": {
+    "title": "Cuotas",
+    "add": "Nueva cuota",
+    "empty": "No tenés cuotas registradas",
+    "emptyDesc": "Registrá tus compras en cuotas para hacer un seguimiento de los pagos pendientes",
+    "paid": "Pagada",
+    "pending": "Pendiente",
+    "pay": "Pagar",
+    "unPay": "Desmarcar",
+    "link": "Enlazar tx",
+    "unlink": "Desenlazar",
+    "remaining": "restante",
+    "installmentN": "Cuota",
+    "due": "Vence",
+    "paidOn": "Pagada el",
+    "delete": "Eliminar plan",
+    "deleteConfirm": "¿Eliminar este plan de cuotas? Se borrarán todos los registros de pago.",
+    "form": {
+      "name": "Nombre (ej: TV Samsung)",
+      "total": "Monto total",
+      "num": "Número de cuotas",
+      "amount": "Valor por cuota",
+      "start": "Fecha primera cuota",
+      "category": "Categoría (opcional)",
+      "notes": "Notas (opcional)",
+      "calc": "= {{amount}} por cuota",
+      "save": "Crear plan",
+      "cancel": "Cancelar"
+    },
+    "linkModal": {
+      "title": "Enlazar transacción existente",
+      "hint": "Seleccioná una transacción de gastos para enlazarla a esta cuota",
+      "select": "— Seleccionar transacción —",
+      "empty": "No hay transacciones de gasto disponibles",
+      "save": "Enlazar",
+      "cancel": "Cancelar"
+    }
   }
 }

@@ -1130,5 +1130,43 @@
     "search": {
       "placeholder": "Search by category…"
     }
+  },
+  "installments": {
+    "title": "Installments",
+    "add": "New installment plan",
+    "empty": "No installment plans yet",
+    "emptyDesc": "Track your installment purchases and pending payments",
+    "paid": "Paid",
+    "pending": "Pending",
+    "pay": "Pay",
+    "unPay": "Unmark",
+    "link": "Link tx",
+    "unlink": "Unlink",
+    "remaining": "remaining",
+    "installmentN": "Installment",
+    "due": "Due",
+    "paidOn": "Paid on",
+    "delete": "Delete plan",
+    "deleteConfirm": "Delete this installment plan? All payment records will be removed.",
+    "form": {
+      "name": "Name (e.g. Samsung TV)",
+      "total": "Total amount",
+      "num": "Number of installments",
+      "amount": "Amount per installment",
+      "start": "First installment date",
+      "category": "Category (optional)",
+      "notes": "Notes (optional)",
+      "calc": "= {{amount}} per installment",
+      "save": "Create plan",
+      "cancel": "Cancel"
+    },
+    "linkModal": {
+      "title": "Link existing transaction",
+      "hint": "Select an expense transaction to link to this installment",
+      "select": "— Select transaction —",
+      "empty": "No expense transactions available",
+      "save": "Link",
+      "cancel": "Cancel"
+    }
   }
 }

@@ -58,6 +58,10 @@ router.get('/personal-budget/settings', requireAuthPage, (req, res) =>
   res.sendFile(path.join(__dirname, '..', 'public', 'personal-budget-settings.html'))
 );
 
+router.get('/personal-budget/cuotas', requireAuthPage, (req, res) =>
+  res.sendFile(path.join(__dirname, '..', 'public', 'personal-budget-cuotas.html'))
+);
+
 router.get('/products', requireAuthPage, (req, res) =>
   res.sendFile(path.join(__dirname, '..', 'public', 'products.html'))
 );

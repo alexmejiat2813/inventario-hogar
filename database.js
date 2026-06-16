@@ -325,6 +325,34 @@ db.exec(`
     ON product_master(user_id, barcode) WHERE barcode IS NOT NULL;
 `);
 
+// ── Cuotas (Installment Plans) ────────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS installment_plans (
+    id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id                INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name                   TEXT    NOT NULL,
+    total_amount           REAL    NOT NULL,
+    num_installments       INTEGER NOT NULL,
+    amount_per_installment REAL    NOT NULL,
+    start_date             TEXT    NOT NULL,
+    category               TEXT,
+    notes                  TEXT,
+    created_at             TEXT    DEFAULT (datetime('now','localtime'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_installment_plans_user ON installment_plans(user_id);
+
+  CREATE TABLE IF NOT EXISTS installment_payments (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_id            INTEGER NOT NULL REFERENCES installment_plans(id) ON DELETE CASCADE,
+    installment_number INTEGER NOT NULL,
+    due_date           TEXT    NOT NULL,
+    paid_at            TEXT,
+    transaction_id     INTEGER REFERENCES personal_transactions(id) ON DELETE SET NULL,
+    UNIQUE(plan_id, installment_number)
+  );
+  CREATE INDEX IF NOT EXISTS idx_installment_payments_plan ON installment_payments(plan_id);
+`);
+
 // ── Migrations ────────────────────────────────────────────────────────────────
 // PRAGMA reads run outside any transaction — results drive the conditional ALTERs below.
 const invCols     = db.prepare('PRAGMA table_info(inventories)').all().map(c => c.name);
@@ -2402,6 +2430,86 @@ module.exports = {
       LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id
       WHERE pm.user_id = ? AND pm.barcode = ?
     `).get(userId, barcode);
+  },
+
+  // ── Installment Plans (Cuotas) ──────────────────────────────────────────────
+  createInstallmentPlan(userId, { name, totalAmount, numInstallments, amountPerInstallment, startDate, category, notes }) {
+    const insertPlan = db.prepare(`
+      INSERT INTO installment_plans (user_id, name, total_amount, num_installments, amount_per_installment, start_date, category, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const insertPayment = db.prepare(
+      'INSERT INTO installment_payments (plan_id, installment_number, due_date) VALUES (?, ?, ?)'
+    );
+    const run = db.transaction(() => {
+      const { lastInsertRowid } = insertPlan.run(userId, name, totalAmount, numInstallments, amountPerInstallment, startDate, category || null, notes || null);
+      const planId = Number(lastInsertRowid);
+      const [year, month, day] = startDate.split('-').map(Number);
+      for (let i = 0; i < numInstallments; i++) {
+        const d = new Date(year, month - 1 + i, day);
+        const due = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        insertPayment.run(planId, i + 1, due);
+      }
+      return planId;
+    });
+    const planId = run();
+    return this.getInstallmentPlanWithPayments(userId, planId);
+  },
+
+  getInstallmentPlans(userId) {
+    const plans = db.prepare(`
+      SELECT ip.*,
+        COUNT(ipy.id)                                             AS total_count,
+        SUM(CASE WHEN ipy.paid_at IS NOT NULL THEN 1 ELSE 0 END) AS paid_count
+      FROM installment_plans ip
+      LEFT JOIN installment_payments ipy ON ipy.plan_id = ip.id
+      WHERE ip.user_id = ?
+      GROUP BY ip.id
+      ORDER BY ip.created_at DESC
+    `).all(userId);
+    return plans.map(p => ({
+      ...p,
+      payments: db.prepare(`
+        SELECT ipy.*, pt.description AS tx_description, pt.amount AS tx_amount, pt.date AS tx_date
+        FROM installment_payments ipy
+        LEFT JOIN personal_transactions pt ON pt.id = ipy.transaction_id
+        WHERE ipy.plan_id = ? ORDER BY ipy.installment_number
+      `).all(p.id)
+    }));
+  },
+
+  getInstallmentPlanWithPayments(userId, planId) {
+    const p = db.prepare('SELECT * FROM installment_plans WHERE id = ? AND user_id = ?').get(planId, userId);
+    if (!p) return null;
+    p.payments = db.prepare(`
+      SELECT ipy.*, pt.description AS tx_description, pt.amount AS tx_amount, pt.date AS tx_date
+      FROM installment_payments ipy
+      LEFT JOIN personal_transactions pt ON pt.id = ipy.transaction_id
+      WHERE ipy.plan_id = ? ORDER BY ipy.installment_number
+    `).all(planId);
+    return p;
+  },
+
+  deleteInstallmentPlan(userId, planId) {
+    return db.prepare('DELETE FROM installment_plans WHERE id = ? AND user_id = ?').run(planId, userId).changes > 0;
+  },
+
+  payInstallment(userId, planId, num, paidAt, transactionId) {
+    const plan = db.prepare('SELECT id FROM installment_plans WHERE id = ? AND user_id = ?').get(planId, userId);
+    if (!plan) return false;
+    return db.prepare(`
+      UPDATE installment_payments SET paid_at = ?, transaction_id = ?
+      WHERE plan_id = ? AND installment_number = ?
+    `).run(paidAt, transactionId || null, planId, num).changes > 0;
+  },
+
+  unpayInstallment(userId, planId, num) {
+    const plan = db.prepare('SELECT id FROM installment_plans WHERE id = ? AND user_id = ?').get(planId, userId);
+    if (!plan) return false;
+    return db.prepare(`
+      UPDATE installment_payments SET paid_at = NULL, transaction_id = NULL
+      WHERE plan_id = ? AND installment_number = ?
+    `).run(planId, num).changes > 0;
   },
 
   backupTo(destPath) {

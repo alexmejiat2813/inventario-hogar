@@ -1409,3 +1409,13 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 }
 .pb-legend-item--active .pb-legend-cat { color: var(--accent); }
 
+/* ── Cuotas nav link (header) ── */
+.pb-cuotas-nav {
+  display: inline-flex; align-items: center; gap: .35rem;
+  color: #64748b; font-size: .8rem; font-weight: 500;
+  text-decoration: none; white-space: nowrap; flex-shrink: 0;
+  padding: .3rem .65rem; border-radius: 6px;
+  transition: background .15s, color .15s;
+}
+.pb-cuotas-nav:hover { background: #f1f5f9; color: #082F49; }
+

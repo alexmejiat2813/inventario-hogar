@@ -398,4 +398,62 @@ router.delete('/categories/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Installment Plans (Cuotas) ─────────────────────────────────────────────────
+router.get('/installments', (req, res) => {
+  try { res.json(db.getInstallmentPlans(req.user.id)); }
+  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener cuotas.' }); }
+});
+
+router.post('/installments', (req, res) => {
+  try {
+    const { name, totalAmount, numInstallments, amountPerInstallment, startDate, category, notes } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido.' });
+    if (!totalAmount || !numInstallments || !amountPerInstallment || !startDate)
+      return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+    const plan = db.createInstallmentPlan(req.user.id, {
+      name: name.trim(),
+      totalAmount: Number(totalAmount),
+      numInstallments: Number(numInstallments),
+      amountPerInstallment: Number(amountPerInstallment),
+      startDate,
+      category: category?.trim() || null,
+      notes: notes?.trim() || null,
+    });
+    res.status(201).json(plan);
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al crear cuota.' }); }
+});
+
+router.delete('/installments/:id', (req, res) => {
+  try {
+    const id = +req.params.id;
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'ID inválido.' });
+    const ok = db.deleteInstallmentPlan(req.user.id, id);
+    if (!ok) return res.status(404).json({ error: 'Plan no encontrado.' });
+    res.json({ ok: true });
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar cuota.' }); }
+});
+
+router.put('/installments/:planId/pay/:num', (req, res) => {
+  try {
+    const planId = +req.params.planId, num = +req.params.num;
+    if (!planId || !num) return res.status(400).json({ error: 'Parámetros inválidos.' });
+    const { paidAt, transactionId } = req.body;
+    const today = new Date();
+    const localDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const ok = db.payInstallment(req.user.id, planId, num, paidAt || localDate, transactionId ? Number(transactionId) : null);
+    if (!ok) return res.status(404).json({ error: 'Cuota no encontrada.' });
+    res.json({ ok: true });
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al pagar cuota.' }); }
+});
+
+router.delete('/installments/:planId/pay/:num', (req, res) => {
+  try {
+    const planId = +req.params.planId, num = +req.params.num;
+    if (!planId || !num) return res.status(400).json({ error: 'Parámetros inválidos.' });
+    const ok = db.unpayInstallment(req.user.id, planId, num);
+    if (!ok) return res.status(404).json({ error: 'Cuota no encontrada.' });
+    res.json({ ok: true });
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al desmarcar pago.' }); }
+});
+
 module.exports = router;

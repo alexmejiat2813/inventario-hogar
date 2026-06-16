@@ -1130,5 +1130,43 @@
     "search": {
       "placeholder": "Rechercher par catégorie…"
     }
+  },
+  "installments": {
+    "title": "Échéances",
+    "add": "Nouveau plan",
+    "empty": "Aucun plan d'échéances",
+    "emptyDesc": "Suivez vos achats à tempérament et les paiements en attente",
+    "paid": "Payé",
+    "pending": "En attente",
+    "pay": "Payer",
+    "unPay": "Décocher",
+    "link": "Lier tx",
+    "unlink": "Délier",
+    "remaining": "restant",
+    "installmentN": "Échéance",
+    "due": "Échéance",
+    "paidOn": "Payé le",
+    "delete": "Supprimer le plan",
+    "deleteConfirm": "Supprimer ce plan ? Tous les enregistrements de paiement seront supprimés.",
+    "form": {
+      "name": "Nom (ex : TV Samsung)",
+      "total": "Montant total",
+      "num": "Nombre d'échéances",
+      "amount": "Montant par échéance",
+      "start": "Date de la première échéance",
+      "category": "Catégorie (optionnel)",
+      "notes": "Notes (optionnel)",
+      "calc": "= {{amount}} par échéance",
+      "save": "Créer le plan",
+      "cancel": "Annuler"
+    },
+    "linkModal": {
+      "title": "Lier une transaction existante",
+      "hint": "Sélectionnez une dépense à lier à cette échéance",
+      "select": "— Sélectionner une transaction —",
+      "empty": "Aucune dépense disponible",
+      "save": "Lier",
+      "cancel": "Annuler"
+    }
   }
 }
