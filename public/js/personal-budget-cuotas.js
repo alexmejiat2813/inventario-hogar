@@ -106,10 +106,16 @@ function render() {
           amount: fmt(plan.original_amount), currency: plan.original_currency, rate: fmt(plan.exchange_rate), target: plan.currency
         })) + '</div>' : '',
         '</div></div>',
-        '<button class="cq-btn-delete" data-delete="' + plan.id + '" title="' + esc(I18N.t('installments.delete')) + '">',
+        '<div class="cq-card-actions">',
+        '<button class="cq-btn-icon" data-edit="' + plan.id + '" title="' + esc(I18N.t('installments.edit')) + '">',
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
+        '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+        '</svg></button>',
+        '<button class="cq-btn-icon cq-btn-delete" data-delete="' + plan.id + '" title="' + esc(I18N.t('installments.delete')) + '">',
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
         '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>',
         '</svg></button>',
+        '</div>',
         '</div>',
         '<div class="cq-progress-wrap">',
         '<div class="cq-progress-label"><span>' + paidCount + '/' + total + ' ' + esc(I18N.t('installments.paid').toLowerCase()) + '</span><span>' + pct + '%</span></div>',
@@ -171,9 +177,26 @@ function loadTransactions() {
     .catch(function() { _transactions = []; });
 }
 
-// ── modal add ──────────────────────────────────────────────────────────────
+// ── modal add/edit ────────────────────────────────────────────────────────
+var _editingPlanId = null;
+
+function setFieldsLocked(locked) {
+  ['f-total', 'f-num', 'f-currency'].forEach(function(id) {
+    document.getElementById(id).disabled = locked;
+  });
+  document.getElementById('f-locked-note').hidden = !locked;
+}
+
+function setConvertRowVisible(visible) {
+  var row = document.getElementById('f-convert-to').closest('.cq-field-row');
+  if (row) row.style.display = visible ? '' : 'none';
+}
+
 function openAddModal() {
   try {
+    _editingPlanId = null;
+    document.getElementById('modal-add-title').textContent = I18N.t('installments.add');
+    document.getElementById('modal-add-save').textContent = I18N.t('installments.form.save');
     document.getElementById('f-name').value = '';
     document.getElementById('f-total').value = '';
     document.getElementById('f-num').value = '';
@@ -184,9 +207,36 @@ function openAddModal() {
     document.getElementById('f-convert-to').value = '';
     document.getElementById('f-calc').hidden = true;
     document.getElementById('f-fx-hint').hidden = true;
+    setFieldsLocked(false);
+    setConvertRowVisible(true);
     document.getElementById('modal-add').hidden = false;
     setTimeout(function() { document.getElementById('f-name').focus(); }, 50);
   } catch(e) { console.error('openAddModal:', e); }
+}
+
+function openEditModal(planId) {
+  try {
+    var plan = _plans.find(function(p) { return p.id === planId; });
+    if (!plan) return;
+    var hasPaid = (plan.paid_count || 0) > 0;
+    _editingPlanId = planId;
+    document.getElementById('modal-add-title').textContent = I18N.t('installments.editTitle');
+    document.getElementById('modal-add-save').textContent = I18N.t('installments.editSave');
+    document.getElementById('f-name').value = plan.name;
+    document.getElementById('f-total').value = plan.total_amount;
+    document.getElementById('f-num').value = plan.num_installments;
+    document.getElementById('f-start').value = plan.start_date;
+    document.getElementById('f-category').value = plan.category || '';
+    document.getElementById('f-notes').value = plan.notes || '';
+    document.getElementById('f-currency').value = plan.currency || 'USD';
+    document.getElementById('f-convert-to').value = '';
+    document.getElementById('f-calc').hidden = true;
+    document.getElementById('f-fx-hint').hidden = true;
+    setFieldsLocked(hasPaid);
+    setConvertRowVisible(false);
+    document.getElementById('modal-add').hidden = false;
+    setTimeout(function() { document.getElementById('f-name').focus(); }, 50);
+  } catch(e) { console.error('openEditModal:', e); }
 }
 
 function updateCalcHint() {
@@ -245,6 +295,28 @@ function saveAddModal() {
     if (!name || !total || !num || !start) { showToast('Completá los campos obligatorios', 'error'); return; }
     var saveBtn = document.getElementById('modal-add-save');
     saveBtn.disabled = true;
+
+    if (_editingPlanId) {
+      var finalPerInst = parseFloat((total / num).toFixed(2));
+      apiFetch('PUT', '/api/personal-budget/installments/' + _editingPlanId, {
+        name: name,
+        totalAmount: total,
+        numInstallments: num,
+        amountPerInstallment: finalPerInst,
+        startDate: start,
+        category: category || null,
+        notes: notes || null,
+        currency: currency
+      }).then(function() {
+        document.getElementById('modal-add').hidden = true;
+        showToast('Plan actualizado');
+        return loadPlans();
+      }).catch(function(e) {
+        console.error('saveAddModal edit:', e);
+        showToast('Error al actualizar el plan', 'error');
+      }).then(function() { saveBtn.disabled = false; });
+      return;
+    }
 
     var needsConvert = convertTo && convertTo !== currency;
     (needsConvert ? fetchFxRate(currency, convertTo) : Promise.resolve(null))
@@ -353,8 +425,10 @@ document.getElementById('modal-link').onclick = function(e) { if (e.target === t
 document.getElementById('cq-list').onclick = function(e) {
   var btn = e.target.closest('[data-plan][data-num]');
   var del = e.target.closest('[data-delete]');
+  var edit = e.target.closest('[data-edit]');
   var toggle = e.target.closest('[data-toggle]');
   if (del) { deletePlan(Number(del.dataset.delete)); return; }
+  if (edit) { openEditModal(Number(edit.dataset.edit)); return; }
   if (toggle) {
     var payments = toggle.closest('.cq-card').querySelector('.cq-payments');
     var open = !payments.hidden;

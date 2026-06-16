@@ -2502,6 +2502,49 @@ module.exports = {
     return db.prepare('DELETE FROM installment_plans WHERE id = ? AND user_id = ?').run(planId, userId).changes > 0;
   },
 
+  updateInstallmentPlan(userId, planId, { name, totalAmount, numInstallments, amountPerInstallment, startDate, category, notes, currency, originalAmount, originalCurrency, exchangeRate }) {
+    const plan = db.prepare('SELECT id FROM installment_plans WHERE id = ? AND user_id = ?').get(planId, userId);
+    if (!plan) return null;
+    const hasPaid = db.prepare(
+      'SELECT 1 FROM installment_payments WHERE plan_id = ? AND paid_at IS NOT NULL LIMIT 1'
+    ).get(planId);
+
+    db.prepare('BEGIN').run();
+    try {
+      if (hasPaid) {
+        // Cuotas con pagos registrados: solo metadata, no se toca el monto/calendario.
+        db.prepare(`
+          UPDATE installment_plans SET name = ?, category = ?, notes = ? WHERE id = ? AND user_id = ?
+        `).run(name, category || null, notes || null, planId, userId);
+      } else {
+        db.prepare(`
+          UPDATE installment_plans
+          SET name = ?, total_amount = ?, num_installments = ?, amount_per_installment = ?,
+              start_date = ?, category = ?, notes = ?, currency = ?,
+              original_amount = ?, original_currency = ?, exchange_rate = ?
+          WHERE id = ? AND user_id = ?
+        `).run(name, totalAmount, numInstallments, amountPerInstallment, startDate, category || null, notes || null,
+          currency || 'USD', originalAmount ?? null, originalCurrency || null, exchangeRate ?? null, planId, userId);
+
+        db.prepare('DELETE FROM installment_payments WHERE plan_id = ?').run(planId);
+        const insertPayment = db.prepare(
+          'INSERT INTO installment_payments (plan_id, installment_number, due_date) VALUES (?, ?, ?)'
+        );
+        const [year, month, day] = startDate.split('-').map(Number);
+        for (let i = 0; i < numInstallments; i++) {
+          const d = new Date(year, month - 1 + i, day);
+          const due = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          insertPayment.run(planId, i + 1, due);
+        }
+      }
+      db.prepare('COMMIT').run();
+      return this.getInstallmentPlanWithPayments(userId, planId);
+    } catch (err) {
+      db.prepare('ROLLBACK').run();
+      throw err;
+    }
+  },
+
   payInstallment(userId, planId, num, paidAt, transactionId) {
     const plan = db.prepare('SELECT id FROM installment_plans WHERE id = ? AND user_id = ?').get(planId, userId);
     if (!plan) return false;

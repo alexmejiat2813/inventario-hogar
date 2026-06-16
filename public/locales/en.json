@@ -1149,6 +1149,10 @@
     "paidOn": "Paid on",
     "delete": "Delete plan",
     "deleteConfirm": "Delete this installment plan? All payment records will be removed.",
+    "edit": "Edit plan",
+    "editTitle": "Edit installment plan",
+    "editSave": "Save changes",
+    "editLocked": "This plan already has recorded payments: you can only edit name, category and notes.",
     "convertedFrom": "Entered as {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
     "form": {
       "name": "Name (e.g. Samsung TV)",

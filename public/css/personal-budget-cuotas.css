@@ -35,11 +35,13 @@
 }
 .cq-fx-note { font-size: .72rem; color: #94a3b8; margin-top: .15rem; }
 
-.cq-btn-delete {
+.cq-card-actions { display: flex; gap: .15rem; flex-shrink: 0; }
+.cq-btn-icon {
   -webkit-appearance: none; appearance: none;
   background: none; border: none; cursor: pointer; color: #94a3b8;
   padding: .25rem; border-radius: 4px; flex-shrink: 0;
 }
+.cq-btn-icon:hover { color: #082F49; background: #f1f5f9; }
 .cq-btn-delete:hover { color: #ef4444; background: #fef2f2; }
 
 /* progress */
@@ -128,6 +130,7 @@
 .cq-field input:focus, .cq-field select:focus { outline: none; border-color: #082F49; }
 .cq-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .cq-calc-hint { font-size: .78rem; color: #16a34a; font-weight: 600; }
+.cq-locked-note { font-size: .78rem; color: #a16207; background: #fef9c3; border-radius: 6px; padding: .5rem .65rem; }
 .cq-modal-foot {
   display: flex; gap: .6rem; justify-content: flex-end;
   padding: .85rem 1.25rem 1rem; border-top: 1px solid #f1f5f9;

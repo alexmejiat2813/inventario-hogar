@@ -1149,6 +1149,10 @@
     "paidOn": "Payé le",
     "delete": "Supprimer le plan",
     "deleteConfirm": "Supprimer ce plan ? Tous les enregistrements de paiement seront supprimés.",
+    "edit": "Modifier le plan",
+    "editTitle": "Modifier l'échéance",
+    "editSave": "Enregistrer les modifications",
+    "editLocked": "Ce plan a déjà des paiements enregistrés : vous ne pouvez modifier que le nom, la catégorie et les notes.",
     "convertedFrom": "Saisi en {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
     "form": {
       "name": "Nom (ex : TV Samsung)",

@@ -449,6 +449,35 @@ router.post('/installments', (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Error al crear cuota.' }); }
 });
 
+router.put('/installments/:id', (req, res) => {
+  try {
+    const id = +req.params.id;
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'ID inválido.' });
+    const { name, totalAmount, numInstallments, amountPerInstallment, startDate, category, notes,
+            currency, originalAmount, originalCurrency, exchangeRate } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido.' });
+    if (!totalAmount || !numInstallments || !amountPerInstallment || !startDate)
+      return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+    if (currency && !CURRENCY_RE.test(currency)) return res.status(400).json({ error: 'Divisa inválida.' });
+    if (originalCurrency && !CURRENCY_RE.test(originalCurrency)) return res.status(400).json({ error: 'Divisa de origen inválida.' });
+    const plan = db.updateInstallmentPlan(req.user.id, id, {
+      name: name.trim(),
+      totalAmount: Number(totalAmount),
+      numInstallments: Number(numInstallments),
+      amountPerInstallment: Number(amountPerInstallment),
+      startDate,
+      category: category?.trim() || null,
+      notes: notes?.trim() || null,
+      currency: currency || 'USD',
+      originalAmount: originalAmount != null ? Number(originalAmount) : null,
+      originalCurrency: originalCurrency || null,
+      exchangeRate: exchangeRate != null ? Number(exchangeRate) : null,
+    });
+    if (!plan) return res.status(404).json({ error: 'Plan no encontrado.' });
+    res.json(plan);
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Error al actualizar cuota.' }); }
+});
+
 router.delete('/installments/:id', (req, res) => {
   try {
     const id = +req.params.id;

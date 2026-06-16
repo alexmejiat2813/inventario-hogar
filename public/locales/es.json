@@ -1150,6 +1150,10 @@
     "paidOn": "Pagada el",
     "delete": "Eliminar plan",
     "deleteConfirm": "¿Eliminar este plan de cuotas? Se borrarán todos los registros de pago.",
+    "edit": "Editar plan",
+    "editTitle": "Editar cuota",
+    "editSave": "Guardar cambios",
+    "editLocked": "Esta cuota ya tiene pagos registrados: solo podés editar nombre, categoría y notas.",
     "convertedFrom": "Ingresado como {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
     "form": {
       "name": "Nombre (ej: TV Samsung)",

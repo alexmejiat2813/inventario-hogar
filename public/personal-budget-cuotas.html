@@ -69,10 +69,11 @@
   <div class="cq-overlay" id="modal-add" hidden>
     <div class="cq-modal">
       <div class="cq-modal-head">
-        <h2 class="cq-modal-title" data-i18n="installments.add">Nueva cuota</h2>
+        <h2 class="cq-modal-title" id="modal-add-title" data-i18n="installments.add">Nueva cuota</h2>
         <button class="cq-modal-close" id="modal-add-close">&#x2715;</button>
       </div>
       <div class="cq-modal-body">
+        <div class="cq-locked-note" id="f-locked-note" hidden data-i18n="installments.editLocked">Esta cuota ya tiene pagos registrados: solo podés editar nombre, categoría y notas.</div>
         <div class="cq-field">
           <label data-i18n="installments.form.name">Nombre *</label>
           <input type="text" id="f-name" placeholder="TV Samsung, Notebook...">
