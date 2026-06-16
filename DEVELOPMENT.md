@@ -254,6 +254,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 184 | feat | Equivalente en divisa base en cards de cuotas: si el plan está en divisa distinta a la base, muestra "≈ X BASE total / Y BASE por cuota" calculado en vivo (cubre planes viejos que nunca pasaron por conversión al crear). `loadBaseCurrency` ahora corre antes de `loadPlans` en el init. | `e5d9c2f` | ✅ |
 | 185 | feat | Resumen total deuda + cuota mensual junto al título "Cuotas": suma el restante de todos los planes y las cuotas mensuales activas (excluye planes ya pagados), convertido a la divisa base. | `ec5e56d` | ✅ |
 | 186 | fix | Resumen de cuotas se cortaba a mitad de palabra en pantallas chicas: splitteado en 2 spans, separador oculto y columna en ≤480px. | `77366a4` | ✅ |
+| 187 | UI | Cuotas usa todo el ancho en pantallas grandes (congruente con Presupuesto): `cq-wrap` max-width 720px→1600px, grid auto-fill 3-4 columnas desde 760px, mobile sin cambios. | `fd8dda6` | ✅ |
 
 ---
 
