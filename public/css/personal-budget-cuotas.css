@@ -1,5 +1,5 @@
 /* layout */
-.cq-wrap { max-width: 1600px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+.cq-wrap { max-width: 1600px; width: 100%; margin: 0 auto; padding: 1.25rem 1rem 4rem; box-sizing: border-box; }
 .cq-toolbar {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.25rem; gap: .75rem;
