@@ -93,7 +93,6 @@
         <!-- Ingresos -->
         <div class="pb-kpi-card pb-kpi-income pb-kpi-card--loading">
           <span class="pb-kpi-label" data-i18n="personalBudget.summary.income">Ingresos</span>
-          <span class="pb-kpi-currency" id="pb-currency-income" hidden></span>
           <span class="pb-kpi-real pb-kpi-real--income pb-skeleton-line pb-skeleton-value" id="pb-income-real">—</span>
           <span id="pb-income-trend" class="pb-kpi-trend" hidden></span>
           <span class="pb-kpi-sub pb-skeleton-line pb-skeleton-sub">
@@ -105,7 +104,6 @@
         <!-- Gastos -->
         <div class="pb-kpi-card pb-kpi-expense pb-kpi-card--loading">
           <span class="pb-kpi-label" data-i18n="personalBudget.summary.expense">Gastos</span>
-          <span class="pb-kpi-currency" id="pb-currency-expense" hidden></span>
           <span class="pb-kpi-real pb-kpi-real--expense pb-skeleton-line pb-skeleton-value" id="pb-expense-real">—</span>
           <span id="pb-expense-trend" class="pb-kpi-trend" hidden></span>
           <span class="pb-kpi-sub pb-skeleton-line pb-skeleton-sub">
@@ -118,7 +116,6 @@
         <div class="pb-kpi-card pb-kpi-balance pb-kpi-card--loading">
           <div class="pb-kpi-balance-header">
             <span class="pb-kpi-label" data-i18n="personalBudget.summary.balance">Balance</span>
-            <span class="pb-kpi-currency" id="pb-currency-balance" hidden></span>
             <span id="pb-deviation-badge" class="pb-deviation-badge" hidden></span>
           </div>
           <span class="pb-kpi-real" id="pb-balance-real">—</span>
@@ -164,7 +161,7 @@
               <span data-i18n="personalBudget.tabs.transactions">Transacciones del Mes</span>
             </button>
             <button class="pb-tab" data-tab="fixed" role="tab" aria-selected="false">
-              <span data-i18n="personalBudget.tabs.fixed">Flujos Proyectados</span>
+              <span data-i18n="personalBudget.tabs.fixed">Gastos Proyectados</span>
             </button>
           </div>
           <div class="pb-search-wrap">
@@ -227,6 +224,12 @@
 
         <!-- Panel: Gastos Fijos -->
         <div class="pb-tab-panel pb-tab-panel--hidden" id="pb-panel-fixed">
+          <div class="pb-fc-actions">
+            <button type="button" class="pb-btn-sm" id="pb-btn-freq-summary">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+              <span data-i18n="personalBudget.fixedList.freqSummaryBtn">Resumen por frecuencia</span>
+            </button>
+          </div>
           <div class="pb-table-scroll">
             <table class="pb-tx-table pb-fc-table">
               <thead>
@@ -251,9 +254,7 @@
                     </select>
                   </th>
                   <th data-i18n="personalBudget.fixedList.colDue">Vence</th>
-                  <th data-i18n="personalBudget.fixedList.colBiweekly">Quincena</th>
                   <th data-i18n="personalBudget.fixedList.colMonthly">Mensual</th>
-                  <th data-i18n="personalBudget.fixedList.colAnnual">Anual</th>
                 </tr>
               </thead>
               <tbody id="pb-fixed-costs-list"><!-- rendered by JS --></tbody>
@@ -265,6 +266,21 @@
 
     </div>
   </main>
+
+  <!-- ===== FREQUENCY SUMMARY MODAL ===== -->
+  <div id="pb-freq-summary-modal" class="pb-modal-overlay" hidden aria-modal="true" role="dialog">
+    <div class="pb-modal pb-modal--sm">
+      <div class="pb-modal-header">
+        <h2 class="pb-modal-title" data-i18n="personalBudget.fixedList.freqSummaryTitle">Resumen por frecuencia</h2>
+        <button class="pb-modal-close" id="pb-freq-summary-close" aria-label="Cerrar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pb-modal-body">
+        <table class="pb-freq-summary-table" id="pb-freq-summary-table"><!-- rendered by JS --></table>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== FORM MODAL ===== -->
   <div id="pb-form-modal" class="pb-modal-overlay" hidden aria-modal="true" role="dialog">

@@ -944,7 +944,7 @@
     "tabs": {
       "title": "Historique et Planification",
       "transactions": "Transactions du Mois",
-      "fixed": "Flux Projetés",
+      "fixed": "Dépenses Projetées",
       "subtotal": "Sous-total"
     },
     "summary": {
@@ -1037,7 +1037,10 @@
       "edit": "Modifier la charge fixe",
       "saveEdit": "Mettre à jour",
       "updated": "Charge fixe mise à jour",
-      "empty": "Aucune charge fixe configurée"
+      "empty": "Aucune charge fixe configurée",
+      "freqSummaryBtn": "Résumé par fréquence",
+      "freqSummaryTitle": "Résumé par fréquence",
+      "colNet": "Net"
     },
     "cashflow": {
       "title": "Net Projeté",

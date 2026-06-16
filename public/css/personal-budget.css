@@ -70,15 +70,11 @@
   letter-spacing: .08em;
   color: var(--text-muted);
 }
-.pb-kpi-currency {
-  font-size: .58rem;
-  font-weight: 700;
-  color: #0ea5e9;
-  background: #e0f2fe;
-  border-radius: 4px;
-  padding: .05rem .35rem;
-  margin-left: .35rem;
-  vertical-align: middle;
+.pb-kpi-unit {
+  font-size: .62em;
+  font-weight: 600;
+  margin-left: .25rem;
+  opacity: .75;
 }
 
 .pb-kpi-real {
@@ -279,13 +275,9 @@
 @media (max-width: 600px) {
   .pb-col-desc,
   .pb-col-inv  { display: none; }
-  /* Flujos: ocultar Vence, Quincena, Anual — queda Tipo·Categoría·Frecuencia·Mensual */
+  /* Flujos: ocultar Vence — queda Tipo·Categoría·Frecuencia·Mensual */
   .pb-fc-table th:nth-child(5),
-  .pb-fc-table td:nth-child(5),
-  .pb-fc-table th:nth-child(6),
-  .pb-fc-table td:nth-child(6),
-  .pb-fc-table th:nth-child(8),
-  .pb-fc-table td:nth-child(8) { display: none; }
+  .pb-fc-table td:nth-child(5) { display: none; }
 }
 @media (max-width: 480px) {
   .pb-tx-date  { display: none; }
@@ -609,15 +601,11 @@
 }
 .pb-fixed-freq-select:focus { outline: none; border-color: var(--text); }
 
-/* ── Fixed costs table — 8 cols: radio / tipo / cat / freq / due / biwkly / monthly / annual ── */
+/* ── Fixed costs table — 6 cols: radio / tipo / cat / freq / due / monthly ── */
 .pb-fc-table th,
 .pb-fc-table td { padding: .45rem .65rem; }
 .pb-fc-table th:nth-child(6),
-.pb-fc-table th:nth-child(7),
-.pb-fc-table th:nth-child(8),
-.pb-fc-table td:nth-child(6),
-.pb-fc-table td:nth-child(7),
-.pb-fc-table td:nth-child(8) { text-align: right; }
+.pb-fc-table td:nth-child(6) { text-align: right; }
 
 /* ── Type filter column header ── */
 .pb-col-type-filter { white-space: nowrap; }
@@ -1100,6 +1088,27 @@ tr.pb-row--selected td { background: var(--accent-bg); }
   transition: opacity .2s;
 }
 .pb-modal-overlay--visible { opacity: 1; }
+
+.pb-modal--sm { max-width: 380px; }
+
+.pb-fc-actions { display: flex; justify-content: flex-end; padding: .6rem 0; }
+.pb-btn-sm {
+  -webkit-appearance: none; appearance: none;
+  display: inline-flex; align-items: center; gap: .35rem;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: .35rem .7rem; font-size: .78rem; font-weight: 600;
+  cursor: pointer;
+}
+.pb-btn-sm:hover { background: var(--bg); }
+
+.pb-freq-summary-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.pb-freq-summary-table th, .pb-freq-summary-table td {
+  padding: .5rem .6rem; text-align: right; border-bottom: 1px solid var(--border);
+}
+.pb-freq-summary-table th:first-child, .pb-freq-summary-table td:first-child { text-align: left; }
+.pb-freq-summary-table thead th { font-size: .72rem; text-transform: uppercase; color: var(--text-muted); }
+.pb-freq-summary-table tfoot td { font-weight: 700; border-top: 2px solid var(--border); border-bottom: none; }
 
 .pb-modal {
   background: var(--surface);

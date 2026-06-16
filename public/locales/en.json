@@ -944,7 +944,7 @@
     "tabs": {
       "title": "History & Planning",
       "transactions": "Month Transactions",
-      "fixed": "Projected Flows",
+      "fixed": "Projected Expenses",
       "subtotal": "Subtotal"
     },
     "summary": {
@@ -1037,7 +1037,10 @@
       "edit": "Edit fixed expense",
       "saveEdit": "Update expense",
       "updated": "Fixed expense updated",
-      "empty": "No fixed expenses configured"
+      "empty": "No fixed expenses configured",
+      "freqSummaryBtn": "Summary by frequency",
+      "freqSummaryTitle": "Summary by frequency",
+      "colNet": "Net"
     },
     "cashflow": {
       "title": "Projected Net",

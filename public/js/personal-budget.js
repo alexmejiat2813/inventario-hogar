@@ -9,6 +9,7 @@
   let _range          = 1; // months to load
   let _warnPct        = 0.60;
   let _critPct        = 0.85;
+  let _currency       = 'USD';
   let _inventories    = [];
   let _editingFixedId = null;
   let _editingTxId    = null;
@@ -325,10 +326,10 @@
       card.querySelectorAll('.pb-skeleton-line').forEach(el => el.classList.remove('pb-skeleton-line', 'pb-skeleton-value', 'pb-skeleton-sub'));
     });
 
-    elIncomeReal.textContent  = fmt(income_real);
-    elExpenseReal.textContent = fmt(expense_real);
+    elIncomeReal.innerHTML  = `${fmt(income_real)} <span class="pb-kpi-unit">${_currency}</span>`;
+    elExpenseReal.innerHTML = `${fmt(expense_real)} <span class="pb-kpi-unit">${_currency}</span>`;
 
-    elBalanceReal.textContent = fmt(balance_real);
+    elBalanceReal.innerHTML   = `${fmt(balance_real)} <span class="pb-kpi-unit">${_currency}</span>`;
     elBalanceReal.className   = 'pb-kpi-real ' +
       (balance_real > 0 ? 'pb-kpi-real--positive' : balance_real < 0 ? 'pb-kpi-real--negative' : '');
 
@@ -597,7 +598,7 @@
 
     if (!items.length) {
       elFixedCostsList.innerHTML = `
-        <tr><td colspan="8">
+        <tr><td colspan="6">
           <div class="pb-empty-state">
             <div class="pb-empty-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -628,7 +629,7 @@
       const ft      = fc.flow_type || 'expense';
       const ftLabel = t(ft === 'income' ? 'personalBudget.form.typeIncome' : 'personalBudget.form.typeExpense');
       const ftClass = ft === 'income' ? 'pb-type-badge--income' : 'pb-type-badge--expense';
-      const { valQ, valM, valA } = itemPeriodValues(fc);
+      const { valM } = itemPeriodValues(fc);
       const color = ft === 'income' ? 'var(--success)' : 'var(--accent)';
       return `
       <tr data-flow="${ft}" data-freq="${escHtml(fc.frequency)}" data-category="${escHtml(fc.category.toLowerCase())}">
@@ -646,9 +647,7 @@
         </td>
         <td>${escHtml(fc.frequency)}</td>
         <td class="pb-tx-date">${fc.due_date || '—'}</td>
-        <td class="pb-tx-amount" style="color:${color}">${fmt(valQ)}</td>
         <td class="pb-tx-amount" style="color:${color}">${fmt(valM)}</td>
-        <td class="pb-tx-amount" style="color:${color}">${fmt(valA)}</td>
       </tr>`;
     }).join('');
 
@@ -689,7 +688,7 @@
       const allRows = elFixedCostsList.querySelectorAll('tr[data-flow]');
       if (allRows.length) {
         elFixedCostsList.querySelector('tr[data-flow]')?.closest('tbody')?.insertAdjacentHTML('beforeend', `
-          <tr id="pb-fc-no-results"><td colspan="8" style="text-align:center;color:var(--text-muted);padding:.75rem;font-size:.8rem">
+          <tr id="pb-fc-no-results"><td colspan="6" style="text-align:center;color:var(--text-muted);padding:.75rem;font-size:.8rem">
             Sin resultados para este filtro
           </td></tr>`);
       }
@@ -697,16 +696,12 @@
     }
     document.getElementById('pb-fc-no-results')?.remove();
 
-    let netQuincena = 0;
-    let netMensual  = 0;
-    let netAnual    = 0;
+    let netMensual = 0;
     visibleItems.forEach(fc => {
       const ft   = fc.flow_type || 'expense';
       const sign = ft === 'income' ? 1 : -1;
-      const { valQ, valM, valA } = itemPeriodValues(fc);
-      netQuincena += sign * valQ;
-      netMensual  += sign * valM;
-      netAnual    += sign * valA;
+      const { valM } = itemPeriodValues(fc);
+      netMensual += sign * valM;
     });
 
     function netColor(v) { return v >= 0 ? 'var(--success)' : 'var(--danger)'; }
@@ -715,15 +710,94 @@
     elFixedCostsFoot.innerHTML = `
       <tr class="pb-tfoot">
         <td></td>
-        <td class="pb-tfoot-label" colspan="2">${t('personalBudget.tabs.subtotal')}</td>
-        <td colspan="2"></td>
-        <td class="pb-tfoot-balance" style="color:${netColor(netQuincena)}">${fmt(netQuincena)}</td>
+        <td class="pb-tfoot-label" colspan="4">${t('personalBudget.tabs.subtotal')}</td>
         <td class="pb-tfoot-balance" style="color:${netColor(netMensual)}">${fmt(netMensual)}</td>
-        <td class="pb-tfoot-balance" style="color:${netColor(netAnual)}">${fmt(netAnual)}</td>
       </tr>`;
 
     computeAndRenderProj();
   }
+
+  // ── Resumen por frecuencia (popup) ─────────────────────────────────────────
+  const FREQ_ORDER = ['Mensual', 'Quincenal', 'Semestral', 'Anual', 'Bianual'];
+  const FREQ_I18N_KEY = {
+    Mensual: 'personalBudget.fixed.freqMonthly',
+    Quincenal: 'personalBudget.fixed.freqBiweekly',
+    Semestral: 'personalBudget.fixed.freqSemestral',
+    Anual: 'personalBudget.fixed.freqAnnual',
+    Bianual: 'personalBudget.fixed.freqBiannual',
+  };
+
+  function renderFreqSummary() {
+    const table = document.getElementById('pb-freq-summary-table');
+    if (!table) return;
+    const items = _lastFixedCosts || [];
+    const byFreq = {};
+    items.forEach(fc => {
+      const freq = fc.frequency || 'Mensual';
+      const ft   = fc.flow_type || 'expense';
+      const { valM } = itemPeriodValues(fc);
+      if (!byFreq[freq]) byFreq[freq] = { income: 0, expense: 0 };
+      byFreq[freq][ft === 'income' ? 'income' : 'expense'] += valM;
+    });
+
+    const freqs = FREQ_ORDER.filter(f => byFreq[f]);
+    if (!freqs.length) {
+      table.innerHTML = `<tr><td>${t('personalBudget.fixedList.empty')}</td></tr>`;
+      return;
+    }
+
+    let totalIncome = 0, totalExpense = 0;
+    const rows = freqs.map(freq => {
+      const { income, expense } = byFreq[freq];
+      totalIncome  += income;
+      totalExpense += expense;
+      return `
+        <tr>
+          <td>${t(FREQ_I18N_KEY[freq]) || freq}</td>
+          <td style="color:var(--success)">${fmt(income)}</td>
+          <td style="color:var(--accent)">${fmt(expense)}</td>
+          <td>${fmt(income - expense)}</td>
+        </tr>`;
+    }).join('');
+
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>${t('personalBudget.fixedList.colFrequency') || 'Frecuencia'}</th>
+          <th>${t('personalBudget.form.typeIncome')}</th>
+          <th>${t('personalBudget.form.typeExpense')}</th>
+          <th>${t('personalBudget.fixedList.colNet') || 'Neto'}</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr>
+          <td>${t('personalBudget.tabs.subtotal')}</td>
+          <td style="color:var(--success)">${fmt(totalIncome)}</td>
+          <td style="color:var(--accent)">${fmt(totalExpense)}</td>
+          <td>${fmt(totalIncome - totalExpense)}</td>
+        </tr>
+      </tfoot>`;
+  }
+
+  function openFreqSummaryModal() {
+    renderFreqSummary();
+    const modal = document.getElementById('pb-freq-summary-modal');
+    modal.hidden = false;
+    requestAnimationFrame(() => modal.classList.add('pb-modal-overlay--visible'));
+  }
+
+  function closeFreqSummaryModal() {
+    const modal = document.getElementById('pb-freq-summary-modal');
+    modal.classList.remove('pb-modal-overlay--visible');
+    setTimeout(() => { modal.hidden = true; }, 200);
+  }
+
+  document.getElementById('pb-btn-freq-summary')?.addEventListener('click', openFreqSummaryModal);
+  document.getElementById('pb-freq-summary-close')?.addEventListener('click', closeFreqSummaryModal);
+  document.getElementById('pb-freq-summary-modal')?.addEventListener('click', e => {
+    if (e.target.id === 'pb-freq-summary-modal') closeFreqSummaryModal();
+  });
 
   async function loadFixedCosts() {
     try {
@@ -1097,11 +1171,7 @@
       if (s?.thresholds) {
         _warnPct = s.thresholds.alert_warn_pct ?? 0.60;
         _critPct = s.thresholds.alert_crit_pct ?? 0.85;
-        const currency = s.thresholds.currency || 'USD';
-        ['pb-currency-income', 'pb-currency-expense', 'pb-currency-balance'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) { el.textContent = currency; el.hidden = false; }
-        });
+        _currency = s.thresholds.currency || 'USD';
       }
     } catch { /* non-fatal — keep defaults */ }
   }

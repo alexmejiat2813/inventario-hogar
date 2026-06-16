@@ -945,7 +945,7 @@
     "tabs": {
       "title": "Historial y Planificación",
       "transactions": "Transacciones del Mes",
-      "fixed": "Flujos Proyectados",
+      "fixed": "Gastos Proyectados",
       "subtotal": "Subtotal"
     },
     "summary": {
@@ -1038,7 +1038,10 @@
       "edit": "Editar gasto fijo",
       "saveEdit": "Actualizar gasto",
       "updated": "Gasto fijo actualizado",
-      "empty": "Sin gastos fijos configurados"
+      "empty": "Sin gastos fijos configurados",
+      "freqSummaryBtn": "Resumen por frecuencia",
+      "freqSummaryTitle": "Resumen por frecuencia",
+      "colNet": "Neto"
     },
     "cashflow": {
       "title": "Neto Proyectado",
