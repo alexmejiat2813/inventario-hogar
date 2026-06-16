@@ -1,5 +1,5 @@
 /* layout */
-.cq-wrap { max-width: 720px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+.cq-wrap { max-width: 1600px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
 .cq-toolbar {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.25rem; gap: .75rem;
@@ -28,6 +28,15 @@
 
 /* cards */
 .cq-plan-list { display: flex; flex-direction: column; gap: 1rem; }
+
+@media (min-width: 760px) {
+  .cq-plan-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
+}
 .cq-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
 .cq-card-head { padding: 1rem 1.25rem .75rem; border-bottom: 1px solid #f1f5f9; }
 .cq-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
@@ -104,7 +113,7 @@
 .cq-render-error { padding: 1rem; color: #ef4444; }
 
 /* empty */
-.cq-empty { text-align: center; padding: 4rem 1.5rem; color: #94a3b8; }
+.cq-empty { text-align: center; padding: 4rem 1.5rem; color: #94a3b8; grid-column: 1 / -1; }
 .cq-empty svg { margin: 0 auto 1rem; opacity: .35; }
 .cq-empty-title { font-size: 1rem; font-weight: 600; color: #475569; margin-bottom: .5rem; }
 .cq-empty-desc  { font-size: .88rem; max-width: 300px; margin: 0 auto; }
