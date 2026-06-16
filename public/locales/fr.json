@@ -128,7 +128,12 @@
       "saving": "Enregistrement…",
       "added": "Produit ajouté",
       "updated": "Produit mis à jour",
-      "deleted": "Produit supprimé"
+      "deleted": "Produit supprimé",
+      "linkMaster": "Lier aux Produits",
+      "linkMasterPlaceholder": "Non lié…",
+      "linked": "Produit lié",
+      "unlinked": "Lien supprimé",
+      "linkError": "Erreur lors du lien"
     },
     "access": {
       "title": "Gérer l'accès",

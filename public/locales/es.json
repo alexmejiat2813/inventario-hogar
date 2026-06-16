@@ -128,7 +128,12 @@
       "saving": "Guardando…",
       "added": "Producto agregado",
       "updated": "Producto actualizado",
-      "deleted": "Producto eliminado"
+      "deleted": "Producto eliminado",
+      "linkMaster": "Vincular a Productos",
+      "linkMasterPlaceholder": "Sin vincular…",
+      "linked": "Producto vinculado",
+      "unlinked": "Vínculo removido",
+      "linkError": "Error al vincular"
     },
     "access": {
       "title": "Gestionar acceso",

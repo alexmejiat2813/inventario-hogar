@@ -128,7 +128,12 @@
       "saving": "Saving…",
       "added": "Product added",
       "updated": "Product updated",
-      "deleted": "Product deleted"
+      "deleted": "Product deleted",
+      "linkMaster": "Link to Products",
+      "linkMasterPlaceholder": "Not linked…",
+      "linked": "Product linked",
+      "unlinked": "Link removed",
+      "linkError": "Error linking product"
     },
     "access": {
       "title": "Manage access",

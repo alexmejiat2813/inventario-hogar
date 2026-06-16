@@ -59,14 +59,16 @@ async function loadData() {
 }
 
 async function loadModalData() {
-  const [cats, units, catalog] = await Promise.all([
+  const [cats, units, catalog, master] = await Promise.all([
     apiFetch('GET', '/api/settings/categories'),
     apiFetch('GET', '/api/settings/units'),
     apiFetch('GET', '/api/catalog'),
+    apiFetch('GET', '/api/product-master'),
   ]);
   state.categories      = cats    || [];
   state.units           = units   || [];
   state.catalogProducts = catalog || [];
+  state.masterProducts  = master  || [];
 }
 
 function populateCatalogSelect() {
@@ -544,6 +546,34 @@ function setCategory(category) {
   renderProducts();
 }
 
+// ── Link master ───────────────────────────────────────────────
+
+function populateLinkMasterSelect(currentMasterId) {
+  const sel = document.getElementById('f-link-master');
+  if (!sel) return;
+  const placeholder = `<option value="">${t('inventory.modal.linkMasterPlaceholder')}</option>`;
+  sel.innerHTML = placeholder + (state.masterProducts || []).map(pm =>
+    `<option value="${pm.id}"${pm.id === currentMasterId ? ' selected' : ''}>${esc(pm.name)}${pm.brand ? ` — ${esc(pm.brand)}` : ''}</option>`
+  ).join('');
+}
+
+async function handleLinkMasterChange() {
+  const productId = parseInt(document.getElementById('product-id').value);
+  if (!productId) return;
+  const sel      = document.getElementById('f-link-master');
+  const masterId = sel.value ? parseInt(sel.value) : null;
+  try {
+    const updated = await apiFetch('PUT', `/api/products/${productId}/link-master`, { product_master_id: masterId });
+    const idx = state.products.findIndex(p => p.id === productId);
+    if (idx !== -1) state.products[idx].product_master_id = updated.product_master_id;
+    showToast(t(masterId ? 'inventory.modal.linked' : 'inventory.modal.unlinked'));
+  } catch {
+    showToast(t('inventory.modal.linkError'), 'error');
+    const current = state.products.find(p => p.id === productId)?.product_master_id || null;
+    populateLinkMasterSelect(current);
+  }
+}
+
 // ── Product modal ─────────────────────────────────────────────
 
 function setModalMode(mode) {
@@ -600,6 +630,9 @@ async function openModal(product = null, opts = {}) {
     document.getElementById('fg-store-prices').hidden = false;
     renderPriceChart(product.id);
     renderStorePrices(product.id);
+    // Link to product master
+    document.getElementById('fg-link-master').hidden = false;
+    populateLinkMasterSelect(product.product_master_id || null);
   } else {
     title.textContent = t('inventory.modal.addTitle');
     document.getElementById('product-id').value = '';
@@ -613,6 +646,7 @@ async function openModal(product = null, opts = {}) {
     document.getElementById('fg-photos').hidden = true;
     document.getElementById('fg-price-chart').hidden = true;
     document.getElementById('fg-store-prices').hidden = true;
+    document.getElementById('fg-link-master').hidden = true;
     state.editingProductId = null;
     state.existingPhotos   = [];
     state.pendingPhotos    = [];
@@ -1534,6 +1568,7 @@ function initEvents() {
   });
 
   document.getElementById('product-form').addEventListener('submit', handleFormSubmit);
+  document.getElementById('f-link-master').addEventListener('change', handleLinkMasterChange);
 
   document.getElementById('category-tabs').addEventListener('click', e => {
     const btn = e.target.closest('.tab-btn');
