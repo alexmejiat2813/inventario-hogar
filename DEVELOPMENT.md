@@ -253,6 +253,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 183 | feat | Conversión automática a divisa base en cuotas: se elimina selector manual "Convertir a" — la divisa destino siempre es la base configurada en Settings (`loadBaseCurrency`). Si "Moneda de la deuda" difiere, convierte solo al crear (no al editar). Hint visible bajo el selector con la divisa base activa. | `8a3cab9` | ✅ |
 | 184 | feat | Equivalente en divisa base en cards de cuotas: si el plan está en divisa distinta a la base, muestra "≈ X BASE total / Y BASE por cuota" calculado en vivo (cubre planes viejos que nunca pasaron por conversión al crear). `loadBaseCurrency` ahora corre antes de `loadPlans` en el init. | `e5d9c2f` | ✅ |
 | 185 | feat | Resumen total deuda + cuota mensual junto al título "Cuotas": suma el restante de todos los planes y las cuotas mensuales activas (excluye planes ya pagados), convertido a la divisa base. | `ec5e56d` | ✅ |
+| 186 | fix | Resumen de cuotas se cortaba a mitad de palabra en pantallas chicas: splitteado en 2 spans, separador oculto y columna en ≤480px. | `77366a4` | ✅ |
 
 ---
 
