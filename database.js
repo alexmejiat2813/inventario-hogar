@@ -794,6 +794,15 @@ const SEED = [
 ];
 
 module.exports = {
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+  healthCheck() {
+    db.prepare('SELECT 1').get();
+  },
+  close() {
+    db.exec('PRAGMA optimize');
+    db.close();
+  },
+
   // ── Users ──────────────────────────────────────────────────────────────────
   upsertUser({ google_id, name, email, photo }) {
     const existing = db.prepare('SELECT id FROM users WHERE google_id = ?').get(google_id);

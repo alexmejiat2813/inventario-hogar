@@ -109,6 +109,18 @@ app.get('/sw.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/sw.js'));
 });
 
+// Healthcheck — Fly.io lo usa para saber si la maquina esta viva de verdad
+// (no solo "el proceso responde", sino "puede leer la DB").
+app.get('/health', (req, res) => {
+  try {
+    db.healthCheck();
+    res.json({ ok: true, uptime: process.uptime() });
+  } catch (err) {
+    logger.error({ err }, 'healthcheck failed');
+    res.status(503).json({ ok: false });
+  }
+});
+
 // Cache version endpoint — SW la obtiene para versionar el CACHE
 app.get('/cache-version', (req, res) => {
   res.set('Cache-Control', 'no-cache');
@@ -183,9 +195,27 @@ app.use((err, req, res, next) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'Inventario Hogar started');
   });
+
+  // Fly.io manda SIGTERM al reciclar/parar la maquina. Cerrar el server
+  // primero (deja terminar requests en curso) y despues la DB (checkpoint
+  // del WAL) evita conexiones cortadas a la mitad y un WAL sucio al reiniciar.
+  let shuttingDown = false;
+  function shutdown(signal) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    logger.info({ signal }, 'Shutting down gracefully');
+    server.close(() => {
+      try { db.close(); } catch (err) { logger.error({ err }, 'db.close failed'); }
+      process.exit(0);
+    });
+    // Si algo queda colgado, no te quedes vivo para siempre
+    setTimeout(() => process.exit(1), 10000).unref();
+  }
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT',  () => shutdown('SIGINT'));
 }
 
 module.exports = app;
