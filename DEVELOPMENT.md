@@ -251,6 +251,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 181 | feat | Divisa base de Presupuesto Personal (item #179 resuelto, alcance acotado): sección "Divisa" en `/personal-budget/settings` (columna `currency` en `personal_budget_settings`). Inventario y Presupuesto siguen siendo independientes, pero al enlazarlos (`PUT /api/purchases/budget-link`) se bloquea con 409 si las divisas no coinciden, indicando cuál cambiar. Sin recálculo automático de montos históricos (decisión explícita: alcance simple, no tocar dinero histórico sin pedirlo). | `3d4431f` | ✅ |
 | 182 | fix | Editar cuota ocultaba selector de divisa: `setConvertRowVisible` ocultaba `.cq-field-row` completo (compartido por divisa + convertir-a) en vez de solo el campo convertir-a. | `67a59a6` | ✅ |
 | 183 | feat | Conversión automática a divisa base en cuotas: se elimina selector manual "Convertir a" — la divisa destino siempre es la base configurada en Settings (`loadBaseCurrency`). Si "Moneda de la deuda" difiere, convierte solo al crear (no al editar). Hint visible bajo el selector con la divisa base activa. | `8a3cab9` | ✅ |
+| 184 | feat | Equivalente en divisa base en cards de cuotas: si el plan está en divisa distinta a la base, muestra "≈ X BASE total / Y BASE por cuota" calculado en vivo (cubre planes viejos que nunca pasaron por conversión al crear). `loadBaseCurrency` ahora corre antes de `loadPlans` en el init. | `e5d9c2f` | ✅ |
 
 ---
 
