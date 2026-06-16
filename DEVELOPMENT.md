@@ -247,6 +247,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 176 | UI | Acordeón en filas de cuotas: pagos ocultos por defecto, botón "Ver cuotas" con flecha rotativa para expandir/colapsar por plan. Key `installments.toggle` ES/EN/FR. | — | ✅ |
 | 177 | fix | Barra de progreso cuotas real: CSP (`style-src 'self'`) bloqueaba `style="width:X%"` inline → fill quedaba siempre a ancho completo. Fix: `data-pct` + `el.style.width` vía JS post-render (mismo patrón que `dashboard.js`/`inventories.js`). También se quitó el último `style=""` inline restante (color "restante") por clase `.cq-remaining`. | `d951da5` | ✅ |
 | 178 | feat | Conversión de divisas en cuotas: selector "Moneda de la deuda" + "Convertir a" (CAD/COP/USD/EUR/MXN/BRL/GBP) en modal nueva cuota. Consulta `open.er-api.com` (sin API key) y guarda el plan ya convertido en la divisa destino. Columnas `currency`/`original_amount`/`original_currency`/`exchange_rate` en `installment_plans`. Ruta `GET /installments/fx-rate`. Card muestra badge de divisa + nota "Ingresado como X (tasa)". | `e5f4f52` | ✅ |
+| 180 | feat | Editar plan de cuotas: botón lápiz junto a eliminar, reusa modal en modo edición (PUT). Si ya hay pagos registrados, bloquea total/núm. cuotas/divisa (solo nombre/categoría/notas) para no romper el historial; sin pagos, edición completa regenera el calendario. | `1bab304` | ✅ |
 
 ---
 
