@@ -259,3 +259,9 @@
       color: #9F2F2D; background: white; transition: background .15s;
     }
     .btn-danger-outline:hover { background: #FDEBEC; }
+    .tax-cat-label { font-size: .8rem; color: #64748b; }
+    .tax-status { font-size: .75rem; font-weight: 700; }
+    .tax-status--active { color: #16a34a; }
+    .tax-status--inactive { color: #94a3b8; }
+    .tax-cat-checkbox-label { display: inline-flex; align-items: center; gap: .3rem; font-size: .85rem; font-weight: 600; cursor: pointer; }
+    .tax-cat-checkbox-label input { cursor: pointer; }

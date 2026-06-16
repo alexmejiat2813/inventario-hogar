@@ -364,3 +364,4 @@
     .toast--show  { opacity: 1; transform: translateY(0); }
     .toast-error  { background: #5C1A19; }
     .toast-success { background: #1C3E1F; }
+    .page-title-date { font-weight: 500; opacity: .85; }

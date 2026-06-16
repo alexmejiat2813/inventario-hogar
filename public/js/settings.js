@@ -233,12 +233,12 @@ function renderTaxes() {
     const cats = JSON.parse(tax.categories || '[]');
     const catLabel = cats.length ? cats.join(', ') : t('settings.taxes.allCategories');
     const statusLabel = tax.active ? t('settings.taxes.active') : t('settings.taxes.inactive');
-    const statusColor = tax.active ? '#16a34a' : '#94a3b8';
+    const statusClass = tax.active ? 'tax-status--active' : 'tax-status--inactive';
     return `<tr data-id="${tax.id}">
       <td><strong>${esc(tax.name)}</strong></td>
       <td>${tax.rate}%</td>
-      <td style="font-size:.8rem;color:#64748b;">${esc(catLabel)}</td>
-      <td><span style="font-size:.75rem;font-weight:700;color:${statusColor}">${statusLabel}</span></td>
+      <td class="tax-cat-label">${esc(catLabel)}</td>
+      <td><span class="tax-status ${statusClass}">${statusLabel}</span></td>
       <td>
         <div class="col-actions">
           <button class="btn btn-sm btn-edit" data-action="edit-tax" data-id="${tax.id}"
@@ -269,8 +269,8 @@ function openTaxModal(item = null) {
   const container = document.getElementById('tax-categories-checkboxes');
   container.innerHTML = state.categories.map(cat => {
     const checked = selectedCats.includes(cat.name) ? 'checked' : '';
-    return `<label style="display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem;font-weight:600;cursor:pointer;">
-      <input type="checkbox" name="tax-cat" value="${esc(cat.name)}" ${checked} style="cursor:pointer;">
+    return `<label class="tax-cat-checkbox-label">
+      <input type="checkbox" name="tax-cat" value="${esc(cat.name)}" ${checked}>
       ${esc(cat.emoji || '')} ${esc(cat.name)}
     </label>`;
   }).join('');

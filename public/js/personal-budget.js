@@ -494,7 +494,7 @@
           <td><span class="pb-type-badge pb-type-badge--${tx.type}">${typeLabel}</span></td>
           <td>${escHtml(tx.category)}</td>
           <td class="pb-tx-desc pb-col-desc">${escHtml(tx.description || '—')}</td>
-          <td class="pb-col-inv" style="color:var(--text-muted);font-size:.8rem">${escHtml(invName)}</td>
+          <td class="pb-col-inv">${escHtml(invName)}</td>
           <td class="pb-tx-amount pb-tx-amount--${tx.type} pb-col-amount">${sign}${fmt(tx.amount)}</td>
         </tr>`;
     }).join('');
@@ -527,7 +527,7 @@
 
     if (!_lastTransactions.length) {
       elTableWrap.innerHTML = `
-        <div class="empty-state" style="padding:2.5rem 1rem">
+        <div class="empty-state pb-empty-state">
           <div class="empty-icon">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <line x1="12" y1="1" x2="12" y2="23"/>
@@ -561,7 +561,7 @@
               <th class="pb-th-sortable" data-sort="category">${t('personalBudget.table.colCategory')}${sortIcon('category')}</th>
               <th class="pb-col-desc">${t('personalBudget.table.colDescription')}</th>
               <th class="pb-col-inv">${t('personalBudget.table.colInventory')}</th>
-              <th class="pb-th-sortable" data-sort="amount" style="text-align:right">${t('personalBudget.table.colAmount')}${sortIcon('amount')}</th>
+              <th class="pb-th-sortable pb-th-right" data-sort="amount">${t('personalBudget.table.colAmount')}${sortIcon('amount')}</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -609,7 +609,7 @@
             </div>
             <p class="pb-empty-title">${t('personalBudget.fixedList.empty')}</p>
             <p class="pb-empty-sub">${t('personalBudget.fixedList.emptySub') || 'Planifica tus ingresos y gastos recurrentes'}</p>
-            <button class="btn btn-primary" style="font-size:.8rem;padding:.35rem .9rem" id="pb-empty-add-flow">
+            <button class="btn btn-primary pb-btn-compact" id="pb-empty-add-flow">
               + ${t('personalBudget.fixedList.addFlow') || 'Agregar flujo'}
             </button>
           </div>
@@ -630,7 +630,7 @@
       const ftLabel = t(ft === 'income' ? 'personalBudget.form.typeIncome' : 'personalBudget.form.typeExpense');
       const ftClass = ft === 'income' ? 'pb-type-badge--income' : 'pb-type-badge--expense';
       const { valM } = itemPeriodValues(fc);
-      const color = ft === 'income' ? 'var(--success)' : 'var(--accent)';
+      const colorClass = ft === 'income' ? 'pb-amount--income' : 'pb-amount--expense';
       return `
       <tr data-flow="${ft}" data-freq="${escHtml(fc.frequency)}" data-category="${escHtml(fc.category.toLowerCase())}">
         <td class="pb-col-radio">
@@ -647,7 +647,7 @@
         </td>
         <td>${escHtml(fc.frequency)}</td>
         <td class="pb-tx-date">${fc.due_date || '—'}</td>
-        <td class="pb-tx-amount" style="color:${color}">${fmt(valM)}</td>
+        <td class="pb-tx-amount ${colorClass}">${fmt(valM)}</td>
       </tr>`;
     }).join('');
 
@@ -688,7 +688,7 @@
       const allRows = elFixedCostsList.querySelectorAll('tr[data-flow]');
       if (allRows.length) {
         elFixedCostsList.querySelector('tr[data-flow]')?.closest('tbody')?.insertAdjacentHTML('beforeend', `
-          <tr id="pb-fc-no-results"><td colspan="6" style="text-align:center;color:var(--text-muted);padding:.75rem;font-size:.8rem">
+          <tr id="pb-fc-no-results"><td colspan="6" class="pb-no-results-cell">
             Sin resultados para este filtro
           </td></tr>`);
       }
@@ -704,14 +704,14 @@
       netMensual += sign * valM;
     });
 
-    function netColor(v) { return v >= 0 ? 'var(--success)' : 'var(--danger)'; }
+    const netClass = netMensual >= 0 ? 'pb-amount--income' : 'pb-amount--danger';
 
     elFixedCostsFoot.hidden = false;
     elFixedCostsFoot.innerHTML = `
       <tr class="pb-tfoot">
         <td></td>
         <td class="pb-tfoot-label" colspan="4">${t('personalBudget.tabs.subtotal')}</td>
-        <td class="pb-tfoot-balance" style="color:${netColor(netMensual)}">${fmt(netMensual)}</td>
+        <td class="pb-tfoot-balance ${netClass}">${fmt(netMensual)}</td>
       </tr>`;
 
     computeAndRenderProj();
@@ -754,8 +754,8 @@
       return `
         <tr>
           <td>${t(FREQ_I18N_KEY[freq]) || freq}</td>
-          <td style="color:var(--success)">${fmt(income)}</td>
-          <td style="color:var(--accent)">${fmt(expense)}</td>
+          <td class="pb-amount--income">${fmt(income)}</td>
+          <td class="pb-amount--expense">${fmt(expense)}</td>
           <td>${fmt(income - expense)}</td>
         </tr>`;
     }).join('');
@@ -773,8 +773,8 @@
       <tfoot>
         <tr>
           <td>${t('personalBudget.tabs.subtotal')}</td>
-          <td style="color:var(--success)">${fmt(totalIncome)}</td>
-          <td style="color:var(--accent)">${fmt(totalExpense)}</td>
+          <td class="pb-amount--income">${fmt(totalIncome)}</td>
+          <td class="pb-amount--expense">${fmt(totalExpense)}</td>
           <td>${fmt(totalIncome - totalExpense)}</td>
         </tr>
       </tfoot>`;
@@ -962,11 +962,14 @@
     const legendEl = document.getElementById('pb-chart-legend');
     legendEl.innerHTML = sorted.slice(0, 7).map(([cat, amt], i) => `
       <div class="pb-legend-item pb-legend-item--clickable" data-cat="${escHtml(cat)}" title="Filtrar por ${escHtml(cat)}">
-        <span class="pb-legend-dot" style="background:${colors[i]}"></span>
+        <span class="pb-legend-dot" data-color="${colors[i]}"></span>
         <span class="pb-legend-cat">${escHtml(cat)}</span>
         <span class="pb-legend-pct">${Math.round(amt / grand * 100)}%</span>
         <span class="pb-legend-amt">${fmt(amt)}</span>
       </div>`).join('');
+    legendEl.querySelectorAll('.pb-legend-dot[data-color]').forEach(el => {
+      el.style.background = el.dataset.color;
+    });
     legendEl.querySelectorAll('.pb-legend-item--clickable').forEach(el => {
       el.addEventListener('click', () => {
         const cat = el.dataset.cat;

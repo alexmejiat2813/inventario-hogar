@@ -407,7 +407,7 @@ function renderProductCard(p) {
 
       <div class="progress-bar-wrap">
         <div class="progress-bar">
-          <div class="progress-fill" style="width:${pct}%;background-color:${color};"></div>
+          <div class="progress-fill" data-pct="${pct}" data-color="${color}"></div>
         </div>
         <span class="progress-pct">${Math.round(pct)}%</span>
       </div>
@@ -444,6 +444,11 @@ function renderProducts() {
   } else {
     empty.hidden = true;
     grid.innerHTML = list.map(renderProductCard).join('');
+    grid.querySelectorAll('.progress-fill[data-pct]').forEach(el => {
+      const pct = parseFloat(el.dataset.pct) || 0;
+      const color = el.dataset.color;
+      requestAnimationFrame(() => { el.style.width = pct + '%'; el.style.backgroundColor = color; });
+    });
   }
 }
 

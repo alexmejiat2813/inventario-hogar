@@ -115,7 +115,7 @@ function renderAll() {
   document.getElementById('edit-date').value = state.session.purchase_date;
 
   const titleEl = document.getElementById('page-title');
-  titleEl.innerHTML = `✏️ ${tSafe('purchaseEdit.title','Editar compra')} — <span style="font-weight:500;opacity:.85">${fmtDate(state.session.purchase_date)}</span>`;
+  titleEl.innerHTML = `✏️ ${tSafe('purchaseEdit.title','Editar compra')} — <span class="page-title-date">${fmtDate(state.session.purchase_date)}</span>`;
 
   renderItems();
   renderTaxes();
@@ -568,7 +568,7 @@ function initEvents() {
   document.getElementById('edit-date').addEventListener('change', e => {
     const titleEl = document.getElementById('page-title');
     if (titleEl && e.target.value) {
-      titleEl.innerHTML = `✏️ ${tSafe('purchaseEdit.title','Editar compra')} — <span style="font-weight:500;opacity:.85">${fmtDate(e.target.value)}</span>`;
+      titleEl.innerHTML = `✏️ ${tSafe('purchaseEdit.title','Editar compra')} — <span class="page-title-date">${fmtDate(e.target.value)}</span>`;
     }
   });
 

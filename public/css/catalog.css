@@ -140,6 +140,7 @@
       border-radius: 4px; font-size: .73rem; font-weight: 700;
       width: 100%; justify-content: center;
     }
+    .badge-in-inventory--disabled { background: #f1f5f9; color: #64748b; }
 
     /* ── Empty state ── */
     .empty-state {

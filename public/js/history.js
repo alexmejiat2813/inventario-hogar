@@ -206,8 +206,8 @@ function renderSessions() {
                 ${hasTotal ? fmtCurrency(session.total_amount, session.currency || currency) : '—'}
               </span>
               ${hasReceipt ? `<a class="session-receipt-icon" data-action="receipt" data-src="${esc(session.receipt_image)}" title="${tSafe('history.session.viewReceipt','Ver recibo')}">🧾</a>` : ''}
-              ${canEdit ? `<a class="session-receipt-icon" href="/purchase/${session.id}/edit" title="${tSafe('purchaseEdit.title','Editar compra')}" style="font-size:1rem;color:#94a3b8;">✏️</a>` : ''}
-              ${canEdit ? `<button class="session-receipt-icon" data-action="delete-session" data-id="${session.id}" title="${tSafe('history.deleteSession.btn','Eliminar')}" style="background:none;border:none;font-size:1rem;color:#94a3b8;padding:0;" aria-label="Eliminar compra">🗑️</button>` : ''}
+              ${canEdit ? `<a class="session-receipt-icon" href="/purchase/${session.id}/edit" title="${tSafe('purchaseEdit.title','Editar compra')}">✏️</a>` : ''}
+              ${canEdit ? `<button class="session-receipt-icon session-icon-btn" data-action="delete-session" data-id="${session.id}" title="${tSafe('history.deleteSession.btn','Eliminar')}" aria-label="Eliminar compra">🗑️</button>` : ''}
               <svg class="session-chevron ${isExpanded ? 'session-chevron--open' : ''}"
                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="6 9 12 15 18 9"/>
@@ -215,7 +215,7 @@ function renderSessions() {
             </div>
           </div>
           ${isExpanded ? `<div class="session-detail" id="detail-${session.id}">
-            <div style="color:#94a3b8;font-size:.85rem;padding:.5rem 0">…</div>
+            <div class="session-detail-placeholder">…</div>
           </div>` : ''}
         </div>`;
     });
@@ -298,9 +298,9 @@ async function loadDetail(sessionId) {
       html += `</div>`;
     });
 
-    detailEl.innerHTML = html || '<p style="color:#94a3b8;font-size:.85rem">—</p>';
+    detailEl.innerHTML = html || '<p class="session-detail-placeholder">—</p>';
   } catch (err) {
-    detailEl.innerHTML = `<p style="color:#dc2626;font-size:.85rem">${esc(err.message)}</p>`;
+    detailEl.innerHTML = `<p class="session-detail-error">${esc(err.message)}</p>`;
   }
 }
 

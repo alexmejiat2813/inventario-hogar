@@ -965,6 +965,7 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 .pb-progress-month {
   position: absolute;
   top: 0; left: 0;
+  width: 0;
   height: 100%;
   background: var(--text-muted);
   opacity: .35;
@@ -974,6 +975,7 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 .pb-progress-spent {
   position: absolute;
   top: 0; left: 0;
+  width: 0;
   height: 100%;
   background: var(--success);
   border-radius: 999px;
@@ -1090,6 +1092,19 @@ tr.pb-row--selected td { background: var(--accent-bg); }
 .pb-modal-overlay--visible { opacity: 1; }
 
 .pb-modal--sm { max-width: 380px; }
+
+.pbs-panel { max-width: 680px; }
+.pbs-confirm-body   { padding: .5rem 1.25rem 1rem; color: var(--text-muted); font-size: .875rem; }
+.pbs-confirm-footer { display: flex; gap: .5rem; justify-content: flex-end; padding: .75rem 1.25rem; }
+.pbs-empty-row--error { color: var(--danger); }
+
+.pb-amount--income  { color: var(--success); }
+.pb-amount--expense { color: var(--accent); }
+.pb-amount--danger  { color: var(--danger); }
+.pb-no-results-cell { text-align: center; color: var(--text-muted); padding: .75rem; font-size: .8rem; }
+.pb-empty-state      { padding: 2.5rem 1rem; }
+.pb-th-right          { text-align: right; }
+.pb-btn-compact        { font-size: .8rem; padding: .35rem .9rem; }
 
 .pb-fc-actions { display: flex; justify-content: flex-end; padding: .6rem 0; }
 .pb-btn-sm {

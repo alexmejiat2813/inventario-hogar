@@ -71,7 +71,7 @@
     <div class="inv-panel">
 
       <!-- Month selector + range -->
-      <div class="pb-month-bar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+      <div class="pb-month-bar">
         <span class="pb-month-title" data-i18n="personalBudget.title">Presupuesto Personal</span>
         <div class="pb-month-bar-right">
           <select id="pb-range" class="pb-month-input" aria-label="Rango">
@@ -125,8 +125,8 @@
           </span>
           <div class="pb-progress-wrap" id="pb-progress-wrap" hidden>
             <div class="pb-progress-track">
-              <div class="pb-progress-month" id="pb-progress-month" style="width:0%"></div>
-              <div class="pb-progress-spent" id="pb-progress-spent" style="width:0%"></div>
+              <div class="pb-progress-month" id="pb-progress-month"></div>
+              <div class="pb-progress-spent" id="pb-progress-spent"></div>
             </div>
             <div class="pb-progress-labels">
               <span id="pb-progress-label-month" class="pb-progress-label"></span>

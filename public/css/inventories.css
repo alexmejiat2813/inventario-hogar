@@ -288,6 +288,7 @@
       font-size: .75rem; color: #787774;
     }
     .inv-card-meta svg { flex-shrink: 0; }
+    .inv-card-owned-by { color: #94a3b8; }
 
     /* Resumen en la card */
     .inv-card-stats { display: flex; gap: .5rem; margin-top: .25rem; }

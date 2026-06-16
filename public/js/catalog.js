@@ -121,7 +121,7 @@ function renderCard(p) {
     ? `<div class="badge-in-inventory">✓ <span data-i18n="catalog.inInventory">${t('catalog.inInventory')}</span></div>`
     : (state.inventoryId
         ? `<button class="btn-add-inv" data-id="${p.id}" aria-label="${esc(name)}">${t('catalog.addToInventory')}</button>`
-        : `<div class="badge-in-inventory" style="background:#f1f5f9;color:#64748b">${t('catalog.addToInventory')}</div>`
+        : `<div class="badge-in-inventory badge-in-inventory--disabled">${t('catalog.addToInventory')}</div>`
       );
 
   return `

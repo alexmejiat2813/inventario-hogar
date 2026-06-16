@@ -218,7 +218,7 @@ function renderTable(container, items) {
   const sym = getCurrencySym();
   const autoRows = sorted.length
     ? sorted.map(renderTableRow).join('')
-    : '<tr><td colspan="9" style="text-align:center;padding:1.25rem;color:#B2B0AD;font-size:.85rem;">Todo el stock está al día ✓</td></tr>';
+    : '<tr><td colspan="9" class="sl-empty-cell">Todo el stock está al día ✓</td></tr>';
 
   const customRows = state.customItems.map(renderCustomRow).join('');
 
@@ -375,7 +375,7 @@ function renderCustomRow(item) {
           </span>
         </button>
       </td>
-      <td class="sl-td"><span style="color:#B2B0AD;font-size:.73rem;">—</span></td>
+      <td class="sl-td"><span class="sl-dash">—</span></td>
       <td class="sl-td">
         <span class="sl-name-wrap">
           <span class="sl-name${item.checked ? ' sl-name--done' : ''}">${esc(item.name)}</span>
@@ -384,8 +384,8 @@ function renderCustomRow(item) {
           </button>
         </span>
       </td>
-      <td class="sl-td sl-td--r sl-col-hide" style="color:#B2B0AD">—</td>
-      <td class="sl-td sl-td--r sl-col-hide" style="color:#B2B0AD">—</td>
+      <td class="sl-td sl-td--r sl-col-hide sl-dash">—</td>
+      <td class="sl-td sl-td--r sl-col-hide sl-dash">—</td>
       <td class="sl-td sl-field" data-label="Establecimiento">
         <select class="sl-sel" data-field="store" data-custom-id="${item.id}">${storeOptions}</select>
       </td>
@@ -400,7 +400,7 @@ function renderCustomRow(item) {
                value="${pd.unitPrice != null ? pd.unitPrice : ''}">
       </td>
       <td class="sl-td sl-td--r sl-field" data-label="Subtotal">
-        <div style="display:flex;align-items:center;justify-content:flex-end;gap:.4rem;">
+        <div class="sl-subtotal-row">
           <span class="sl-sub${sub != null ? ' sl-sub--pos' : ''}" data-subtotal="c${item.id}">${getSubtotalStr(pd)}</span>
           <button class="sl-del-btn" data-action="delete-custom" data-id="${item.id}" title="Eliminar item">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

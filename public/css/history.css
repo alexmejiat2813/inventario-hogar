@@ -172,6 +172,7 @@
       transition: color .12s;
     }
     .session-receipt-icon:hover { color: #082F49; }
+    .session-icon-btn { background: none; border: none; padding: 0; font: inherit; }
     .session-chevron { color: #B2B0AD; transition: transform .18s; flex-shrink: 0; }
     .session-chevron--open { transform: rotate(180deg); }
 

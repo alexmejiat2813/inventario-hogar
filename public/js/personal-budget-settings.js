@@ -170,7 +170,7 @@
       _categories = await apiFetch('GET', '/api/personal-budget/categories') || [];
       renderCategories();
     } catch {
-      elCatList.innerHTML = `<div class="pbs-empty-row" style="color:var(--danger)">Error al cargar categorías.</div>`;
+      elCatList.innerHTML = `<div class="pbs-empty-row pbs-empty-row--error">Error al cargar categorías.</div>`;
     }
   }
 

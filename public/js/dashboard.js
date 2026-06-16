@@ -172,10 +172,10 @@ function renderBudgetCard(summary) {
     <div class="dash-budget-card">
       <div class="dash-budget-header">
         <span class="dash-budget-label">${t('settings.budget.card.title')}</span>
-        <span class="dash-budget-pct" style="color:${barColor};">${pct}% ${t('settings.budget.card.used')}</span>
+        <span class="dash-budget-pct" id="dash-budget-pct">${pct}% ${t('settings.budget.card.used')}</span>
       </div>
       <div class="dash-budget-bar-track">
-        <div class="dash-budget-bar-fill" style="background:${barColor};"></div>
+        <div class="dash-budget-bar-fill" id="dash-budget-bar-fill"></div>
       </div>
       <div class="dash-budget-stats">
         <div class="dash-budget-stat">
@@ -184,16 +184,24 @@ function renderBudgetCard(summary) {
         </div>
         <div class="dash-budget-stat">
           <span class="dash-budget-stat-label">${t('settings.budget.card.spent')}</span>
-          <span class="dash-budget-stat-val" style="color:${barColor};">${fmt(spent)}</span>
+          <span class="dash-budget-stat-val" id="dash-budget-spent-val">${fmt(spent)}</span>
         </div>
         <div class="dash-budget-stat">
           <span class="dash-budget-stat-label">${t('settings.budget.card.available')}</span>
-          <span class="dash-budget-stat-val" style="color:${availColor};">${availFmt}</span>
+          <span class="dash-budget-stat-val" id="dash-budget-avail-val">${availFmt}</span>
         </div>
       </div>
     </div>`;
   const fillEl = wrap.querySelector('.dash-budget-bar-fill');
-  if (fillEl) requestAnimationFrame(() => { fillEl.style.width = barWidth + '%'; });
+  requestAnimationFrame(() => {
+    if (fillEl) { fillEl.style.width = barWidth + '%'; fillEl.style.background = barColor; }
+    const pctEl   = wrap.querySelector('#dash-budget-pct');
+    const spentEl = wrap.querySelector('#dash-budget-spent-val');
+    const availEl = wrap.querySelector('#dash-budget-avail-val');
+    if (pctEl)   pctEl.style.color   = barColor;
+    if (spentEl) spentEl.style.color = barColor;
+    if (availEl) availEl.style.color = availColor;
+  });
 }
 
 function renderDashSummary(summary) {
@@ -439,11 +447,15 @@ function renderTopProducts(topProducts) {
       <div class="dash-top-info">
         <div class="dash-top-name">${escHtml(p.product_name)}</div>
         <div class="dash-progress-wrap">
-          <div class="dash-progress-bar" style="width:${Math.round((qty(p) / max) * 100)}%"></div>
+          <div class="dash-progress-bar" data-pct="${Math.round((qty(p) / max) * 100)}"></div>
         </div>
       </div>
       <span class="dash-top-count">${qty(p)}${p.unit ? ' ' + escHtml(p.unit) : ''}</span>
     </div>`).join('');
+  list.querySelectorAll('.dash-progress-bar[data-pct]').forEach(el => {
+    const pct = parseFloat(el.dataset.pct) || 0;
+    requestAnimationFrame(() => { el.style.width = pct + '%'; });
+  });
 }
 
 function escHtml(str) {
