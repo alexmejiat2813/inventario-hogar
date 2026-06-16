@@ -78,6 +78,12 @@
   justify-content: center;
   border-bottom: 1px solid #f1f5f9;
   flex-shrink: 0;
+  overflow: hidden;
+}
+/* When card has a real photo: switch to 16:9 cover */
+.pm-card-img:has(img) {
+  height: auto;
+  aspect-ratio: 16 / 9;
 }
 
 .pm-card-edit {
@@ -100,7 +106,7 @@
 .pm-card-edit:hover { color: #082F49; background: #fff; border-color: #bfcdd9; }
 
 .pm-card-body {
-  padding: .75rem 1rem .5rem;
+  padding: 1rem 1.25rem .625rem;
   display: flex;
   flex-direction: column;
   gap: .25rem;
@@ -110,28 +116,34 @@
   font-weight: 600;
   color: #0369a1;
   background: #e0f2fe;
-  border-radius: 99px;
-  padding: .15rem .5rem;
+  border-radius: 4px;
+  padding: .2rem .5rem;
   align-self: flex-start;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  max-width: 160px;
+  line-height: 1.4;
 }
 .pm-card-name {
-  margin: 0;
+  margin: .2rem 0 0;
   font-size: .9375rem;
   font-weight: 700;
   color: #082F49;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.35;
 }
 .pm-card-brand {
   display: block;
-  font-size: .78rem;
+  font-size: .75rem;
   color: var(--text-muted, #94A3B8);
+  margin-top: .15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Chips */
@@ -139,20 +151,23 @@
   display: flex;
   flex-wrap: wrap;
   gap: .35rem;
-  padding: 0 1rem .625rem;
+  padding: .25rem 1.25rem .75rem;
+  min-height: 2.25rem; /* reserve space even when no chips */
 }
 .pm-chip {
   font-size: .7rem;
-  padding: .15rem .5rem;
-  border-radius: 99px;
+  padding: 0 .5rem;
+  height: 22px;
+  border-radius: 4px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   color: #475569;
   display: inline-flex;
   align-items: center;
   gap: .25rem;
+  white-space: nowrap;
 }
-.pm-chip--code { font-family: monospace; }
+.pm-chip--code { font-family: monospace; letter-spacing: -.01em; }
 .pm-chip--muted { color: #94a3b8; }
 
 /* Toggle row inside card */
@@ -160,13 +175,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: .5rem 1rem;
-  border-top: 1px solid #f1f5f9;
+  padding: .625rem 1.25rem;
+  border-top: 1px solid var(--border, #E2E8F0);
   margin-top: auto;
 }
 .pm-toggle-label-sm {
   font-size: .78rem;
-  color: var(--text-muted, #94A3B8);
+  font-weight: 500;
+  color: #64748b;
 }
 
 /* Toggle switch */
@@ -445,8 +461,8 @@
 .pm-card-img img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  padding: 8px;
+  object-fit: cover;
+  display: block;
 }
 
 /* Card meta row (category badge + nutriscore) */
