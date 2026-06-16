@@ -1163,8 +1163,7 @@
       "category": "Category (optional)",
       "notes": "Notes (optional)",
       "currency": "Debt currency",
-      "convertTo": "Convert to (optional)",
-      "noConvert": "— Don't convert —",
+      "baseHint": "Your budget is in {{base}} — choosing another currency converts automatically.",
       "calc": "= {{amount}} per installment",
       "save": "Create plan",
       "cancel": "Cancel"

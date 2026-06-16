@@ -131,6 +131,7 @@
 .cq-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .cq-calc-hint { font-size: .78rem; color: #16a34a; font-weight: 600; }
 .cq-locked-note { font-size: .78rem; color: #a16207; background: #fef9c3; border-radius: 6px; padding: .5rem .65rem; }
+.cq-base-hint { display: block; font-size: .72rem; color: #94a3b8; margin-top: .25rem; }
 .cq-modal-foot {
   display: flex; gap: .6rem; justify-content: flex-end;
   padding: .85rem 1.25rem 1rem; border-top: 1px solid #f1f5f9;

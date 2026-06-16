@@ -1164,8 +1164,7 @@
       "category": "Categoría (opcional)",
       "notes": "Notas (opcional)",
       "currency": "Moneda de la deuda",
-      "convertTo": "Convertir a (opcional)",
-      "noConvert": "— No convertir —",
+      "baseHint": "Tu presupuesto está en {{base}} — si elegís otra divisa se convierte automáticamente.",
       "calc": "= {{amount}} por cuota",
       "save": "Crear plan",
       "cancel": "Cancelar"

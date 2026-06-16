@@ -1163,8 +1163,7 @@
       "category": "Catégorie (optionnel)",
       "notes": "Notes (optionnel)",
       "currency": "Devise de la dette",
-      "convertTo": "Convertir en (optionnel)",
-      "noConvert": "— Ne pas convertir —",
+      "baseHint": "Votre budget est en {{base}} — choisir une autre devise convertit automatiquement.",
       "calc": "= {{amount}} par échéance",
       "save": "Créer le plan",
       "cancel": "Annuler"

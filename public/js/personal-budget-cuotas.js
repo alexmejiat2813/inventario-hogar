@@ -29,6 +29,13 @@ function fmtDate(d) {
 var _plans = [];
 var _transactions = [];
 var _linkCtx = null;
+var _baseCurrency = 'USD';
+
+function loadBaseCurrency() {
+  return apiFetch('GET', '/api/personal-budget/settings')
+    .then(function(data) { _baseCurrency = (data && data.thresholds && data.thresholds.currency) || 'USD'; })
+    .catch(function() { _baseCurrency = 'USD'; });
+}
 
 // ── render ─────────────────────────────────────────────────────────────────
 function render() {
@@ -187,9 +194,9 @@ function setFieldsLocked(locked) {
   document.getElementById('f-locked-note').hidden = !locked;
 }
 
-function setConvertRowVisible(visible) {
-  var field = document.getElementById('f-convert-to').closest('.cq-field');
-  if (field) field.style.display = visible ? '' : 'none';
+function updateBaseHint() {
+  var hint = document.getElementById('f-base-hint');
+  hint.textContent = I18N.t('installments.form.baseHint', { base: _baseCurrency });
 }
 
 function openAddModal() {
@@ -203,12 +210,11 @@ function openAddModal() {
     document.getElementById('f-start').value = new Date().toISOString().slice(0, 10);
     document.getElementById('f-category').selectedIndex = 0;
     document.getElementById('f-notes').value = '';
-    document.getElementById('f-currency').value = 'CAD';
-    document.getElementById('f-convert-to').value = '';
+    document.getElementById('f-currency').value = _baseCurrency;
     document.getElementById('f-calc').hidden = true;
     document.getElementById('f-fx-hint').hidden = true;
+    updateBaseHint();
     setFieldsLocked(false);
-    setConvertRowVisible(true);
     document.getElementById('modal-add').hidden = false;
     setTimeout(function() { document.getElementById('f-name').focus(); }, 50);
   } catch(e) { console.error('openAddModal:', e); }
@@ -229,11 +235,10 @@ function openEditModal(planId) {
     document.getElementById('f-category').value = plan.category || '';
     document.getElementById('f-notes').value = plan.notes || '';
     document.getElementById('f-currency').value = plan.currency || 'USD';
-    document.getElementById('f-convert-to').value = '';
     document.getElementById('f-calc').hidden = true;
     document.getElementById('f-fx-hint').hidden = true;
+    updateBaseHint();
     setFieldsLocked(hasPaid);
-    setConvertRowVisible(false);
     document.getElementById('modal-add').hidden = false;
     setTimeout(function() { document.getElementById('f-name').focus(); }, 50);
   } catch(e) { console.error('openEditModal:', e); }
@@ -261,9 +266,9 @@ function updateFxHint() {
   clearTimeout(_fxHintTimer);
   var hint = document.getElementById('f-fx-hint');
   var from = document.getElementById('f-currency').value;
-  var to   = document.getElementById('f-convert-to').value;
+  var to   = _baseCurrency;
   var total = parseFloat(document.getElementById('f-total').value);
-  if (!to || to === from || !(total > 0)) { hint.hidden = true; return; }
+  if (_editingPlanId || to === from || !(total > 0)) { hint.hidden = true; return; }
   _fxHintTimer = setTimeout(function() {
     fetchFxRate(from, to).then(function(rate) {
       if (!rate) { hint.hidden = true; return; }
@@ -291,7 +296,6 @@ function saveAddModal() {
     var category = document.getElementById('f-category').value.trim();
     var notes    = document.getElementById('f-notes').value.trim();
     var currency = document.getElementById('f-currency').value;
-    var convertTo = document.getElementById('f-convert-to').value;
     if (!name || !total || !num || !start) { showToast('Completá los campos obligatorios', 'error'); return; }
     var saveBtn = document.getElementById('modal-add-save');
     saveBtn.disabled = true;
@@ -318,8 +322,8 @@ function saveAddModal() {
       return;
     }
 
-    var needsConvert = convertTo && convertTo !== currency;
-    (needsConvert ? fetchFxRate(currency, convertTo) : Promise.resolve(null))
+    var needsConvert = currency !== _baseCurrency;
+    (needsConvert ? fetchFxRate(currency, _baseCurrency) : Promise.resolve(null))
       .then(function(rate) {
         var finalTotal   = needsConvert ? parseFloat((total * rate).toFixed(2)) : total;
         var finalPerInst = parseFloat((finalTotal / num).toFixed(2));
@@ -331,7 +335,7 @@ function saveAddModal() {
           startDate: start,
           category: category || null,
           notes: notes || null,
-          currency: needsConvert ? convertTo : currency,
+          currency: needsConvert ? _baseCurrency : currency,
           originalAmount: needsConvert ? total : null,
           originalCurrency: needsConvert ? currency : null,
           exchangeRate: needsConvert ? rate : null
@@ -418,7 +422,6 @@ document.getElementById('modal-link-save').onclick   = saveLinkModal;
 document.getElementById('f-total').oninput = function() { updateCalcHint(); updateFxHint(); };
 document.getElementById('f-num').oninput   = updateCalcHint;
 document.getElementById('f-currency').onchange    = updateFxHint;
-document.getElementById('f-convert-to').onchange  = updateFxHint;
 document.getElementById('modal-add').onclick  = function(e) { if (e.target === this) this.hidden = true; };
 document.getElementById('modal-link').onclick = function(e) { if (e.target === this) this.hidden = true; };
 
@@ -461,6 +464,6 @@ document.getElementById('btn-logout').onclick = function() {
       try { if (typeof initProfileMenu === 'function') initProfileMenu(); } catch(e) { console.error(e); }
       try { if (typeof loadProfileAvatar === 'function') loadProfileAvatar(); } catch(e) { console.error(e); }
     })
-    .then(function() { return Promise.all([loadCategories(), loadPlans()]); })
+    .then(function() { return Promise.all([loadCategories(), loadPlans(), loadBaseCurrency()]); })
     .catch(function(e) { console.error('init failed:', e); render(); });
 })();
