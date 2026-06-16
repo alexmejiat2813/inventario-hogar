@@ -1161,8 +1161,10 @@ function photoPopupStep(dir) {
 // ── Templates ─────────────────────────────────────────────────
 
 async function loadCustomItems() {
-  const items = await apiFetch('GET', '/api/shopping/custom');
-  state.customItems = items || [];
+  try {
+    const items = await apiFetch('GET', '/api/shopping/custom');
+    state.customItems = items || [];
+  } catch { state.customItems = []; }
 }
 
 async function loadTemplates() {
