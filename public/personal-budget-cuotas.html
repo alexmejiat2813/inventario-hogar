@@ -6,101 +6,91 @@
   <title>Cuotas</title>
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="/css/header.css">
-  <link rel="stylesheet" href="/css/personal-budget.css">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="apple-touch-icon" href="/icons/icon.svg">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#082F49">
   <style>
-    /* ── Cuotas page ── */
-    .cq-page { max-width: 720px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+    /* layout */
+    .cq-wrap { max-width: 720px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+    .cq-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.25rem; gap: .75rem;
+    }
+    .cq-toolbar-title { font-size: 1.05rem; font-weight: 700; color: #082F49; }
 
-    .cq-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; gap: .75rem; }
-    .cq-toolbar-title { font-size: 1.1rem; font-weight: 700; color: #082F49; }
+    /* button — override global reset explícitamente */
     .cq-btn-add {
-      display: inline-flex !important; align-items: center; gap: .4rem;
-      background: #082F49 !important; color: #fff !important; border: none; border-radius: 8px;
-      padding: .5rem 1rem; font-size: .85rem; font-weight: 600; cursor: pointer;
-      transition: background .15s;
+      -webkit-appearance: none; appearance: none;
+      display: inline-flex; align-items: center; gap: .4rem;
+      background-color: #082F49; color: #fff;
+      border: none; border-radius: 8px;
+      padding: .45rem .9rem; font-size: .85rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
     }
-    .cq-btn-add:hover { background: #0c4a6e !important; }
-    .cq-btn-action {
-      display: inline-flex !important; align-items: center;
-    }
+    .cq-btn-add:hover { background-color: #0c4a6e; }
+    .cq-btn-add svg { display: inline; vertical-align: middle; }
 
-    /* ── Plan cards ── */
+    /* cards */
     .cq-plan-list { display: flex; flex-direction: column; gap: 1rem; }
-
-    .cq-card {
-      background: #fff; border-radius: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.08);
-      overflow: hidden;
-    }
-    .cq-card-head {
-      padding: 1rem 1.25rem .75rem;
-      border-bottom: 1px solid #f1f5f9;
-    }
+    .cq-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
+    .cq-card-head { padding: 1rem 1.25rem .75rem; border-bottom: 1px solid #f1f5f9; }
     .cq-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
-    .cq-card-name { font-size: 1rem; font-weight: 700; color: #082F49; margin: 0; }
-    .cq-card-cat  { font-size: .75rem; color: #64748b; margin-top: .15rem; }
+    .cq-card-name { font-size: 1rem; font-weight: 700; color: #082F49; margin: 0 0 .15rem; }
+    .cq-card-cat  { font-size: .75rem; color: #64748b; }
     .cq-card-meta { font-size: .8rem; color: #475569; margin-top: .35rem; }
     .cq-card-meta strong { color: #082F49; }
 
     .cq-btn-delete {
+      -webkit-appearance: none; appearance: none;
       background: none; border: none; cursor: pointer; color: #94a3b8;
       padding: .25rem; border-radius: 4px; flex-shrink: 0;
-      transition: color .15s, background .15s;
     }
     .cq-btn-delete:hover { color: #ef4444; background: #fef2f2; }
 
-    /* progress bar */
+    /* progress */
     .cq-progress-wrap { margin-top: .75rem; }
     .cq-progress-label { display: flex; justify-content: space-between; font-size: .78rem; color: #64748b; margin-bottom: .3rem; }
     .cq-progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
-    .cq-progress-fill { height: 100%; background: #16a34a; border-radius: 3px; transition: width .3s; }
+    .cq-progress-fill { height: 100%; background: #16a34a; border-radius: 3px; }
 
-    /* installments list */
-    .cq-payments { padding: .5rem 0; }
+    /* payment rows */
+    .cq-payments { padding: .25rem 0; }
     .cq-payment-row {
-      display: grid;
-      grid-template-columns: 2rem 1fr auto auto;
-      align-items: center; gap: .5rem;
-      padding: .5rem 1.25rem;
-      border-bottom: 1px solid #f8fafc;
+      display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+      padding: .5rem 1.25rem; border-bottom: 1px solid #f8fafc;
       font-size: .82rem;
     }
     .cq-payment-row:last-child { border-bottom: none; }
-    .cq-payment-num { font-weight: 700; color: #94a3b8; text-align: center; }
-    .cq-payment-info { min-width: 0; }
-    .cq-payment-name { font-weight: 600; color: #334155; }
+    .cq-payment-num { font-weight: 700; color: #94a3b8; min-width: 1.5rem; text-align: center; flex-shrink: 0; }
+    .cq-payment-info { flex: 1; min-width: 0; }
+    .cq-payment-amt  { font-weight: 600; color: #334155; }
     .cq-payment-date { color: #94a3b8; font-size: .76rem; }
-    .cq-payment-tx   { color: #0ea5e9; font-size: .76rem; margin-top: .1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+    .cq-payment-tx   { color: #0ea5e9; font-size: .76rem; }
 
-    .cq-badge-paid    { background: #dcfce7; color: #16a34a; border-radius: 4px; padding: .15rem .45rem; font-size: .72rem; font-weight: 600; white-space: nowrap; }
-    .cq-badge-pending { background: #fef9c3; color: #a16207; border-radius: 4px; padding: .15rem .45rem; font-size: .72rem; font-weight: 600; white-space: nowrap; }
+    .cq-badge-paid    { background: #dcfce7; color: #16a34a; border-radius: 4px; padding: .15rem .45rem; font-size: .72rem; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+    .cq-badge-pending { background: #fef9c3; color: #a16207; border-radius: 4px; padding: .15rem .45rem; font-size: .72rem; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
 
     .cq-payment-actions { display: flex; gap: .3rem; flex-shrink: 0; }
-    .cq-btn-action {
-      border: 1px solid #e2e8f0; background: #fff; border-radius: 6px;
-      padding: .22rem .55rem; font-size: .73rem; cursor: pointer; white-space: nowrap;
-      transition: background .15s, border-color .15s;
+    .cq-btn-sm {
+      -webkit-appearance: none; appearance: none;
+      border-radius: 6px; padding: .22rem .55rem; font-size: .73rem;
+      cursor: pointer; white-space: nowrap; border: 1px solid #e2e8f0;
+      background: #fff; color: #475569;
     }
-    .cq-btn-action:hover { background: #f1f5f9; }
-    .cq-btn-action--pay   { border-color: #16a34a; color: #16a34a; }
-    .cq-btn-action--pay:hover { background: #f0fdf4; }
-    .cq-btn-action--unpay { border-color: #94a3b8; color: #64748b; }
-    .cq-btn-action--link  { border-color: #0ea5e9; color: #0ea5e9; }
-    .cq-btn-action--link:hover { background: #f0f9ff; }
-    .cq-btn-action--unlink { border-color: #f97316; color: #f97316; }
-    .cq-btn-action--unlink:hover { background: #fff7ed; }
+    .cq-btn-sm:hover { background: #f1f5f9; }
+    .cq-btn-sm--pay    { border-color: #16a34a; color: #16a34a; }
+    .cq-btn-sm--unpay  { border-color: #94a3b8; color: #64748b; }
+    .cq-btn-sm--link   { border-color: #0ea5e9; color: #0ea5e9; }
+    .cq-btn-sm--unlink { border-color: #f97316; color: #f97316; }
 
-    /* empty state */
+    /* empty */
     .cq-empty { text-align: center; padding: 4rem 1.5rem; color: #94a3b8; }
-    .cq-empty svg { margin-bottom: 1rem; opacity: .4; }
-    .cq-empty-title { font-size: 1.05rem; font-weight: 600; color: #475569; margin-bottom: .5rem; }
-    .cq-empty-desc  { font-size: .88rem; color: #94a3b8; max-width: 320px; margin: 0 auto; }
+    .cq-empty svg { margin: 0 auto 1rem; opacity: .35; }
+    .cq-empty-title { font-size: 1rem; font-weight: 600; color: #475569; margin-bottom: .5rem; }
+    .cq-empty-desc  { font-size: .88rem; max-width: 300px; margin: 0 auto; }
 
-    /* ── Modal ── */
+    /* modal */
     .cq-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.45);
       display: flex; align-items: center; justify-content: center;
@@ -109,69 +99,60 @@
     .cq-modal {
       background: #fff; border-radius: 14px;
       width: 100%; max-width: 440px; max-height: 90vh;
-      overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,.18);
+      overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,.2);
     }
     .cq-modal-head {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 1.1rem 1.25rem .9rem;
-      border-bottom: 1px solid #f1f5f9;
+      padding: 1rem 1.25rem .85rem; border-bottom: 1px solid #f1f5f9;
     }
     .cq-modal-title { font-size: 1rem; font-weight: 700; color: #082F49; margin: 0; }
     .cq-modal-close {
-      background: none; border: none; font-size: 1.2rem; cursor: pointer;
-      color: #94a3b8; padding: .2rem .4rem; border-radius: 4px;
+      -webkit-appearance: none; appearance: none;
+      background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8;
     }
-    .cq-modal-close:hover { color: #ef4444; }
-    .cq-modal-body { padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: .85rem; }
+    .cq-modal-body { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: .8rem; }
     .cq-field label { display: block; font-size: .78rem; font-weight: 600; color: #475569; margin-bottom: .3rem; }
-    .cq-field input, .cq-field select, .cq-field textarea {
-      width: 100%; box-sizing: border-box;
-      border: 1px solid #e2e8f0; border-radius: 7px;
-      padding: .5rem .75rem; font-size: .88rem; color: #1e293b;
-      background: #fff; transition: border-color .15s;
+    .cq-field input, .cq-field select {
+      width: 100%; box-sizing: border-box; border: 1px solid #e2e8f0;
+      border-radius: 7px; padding: .5rem .75rem; font-size: .88rem;
+      color: #1e293b; background: #fff;
     }
     .cq-field input:focus, .cq-field select:focus { outline: none; border-color: #082F49; }
     .cq-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-    .cq-calc-hint { font-size: .78rem; color: #16a34a; font-weight: 600; margin-top: .3rem; }
+    .cq-calc-hint { font-size: .78rem; color: #16a34a; font-weight: 600; }
     .cq-modal-foot {
       display: flex; gap: .6rem; justify-content: flex-end;
-      padding: .9rem 1.25rem 1.1rem;
-      border-top: 1px solid #f1f5f9;
+      padding: .85rem 1.25rem 1rem; border-top: 1px solid #f1f5f9;
     }
     .cq-btn-cancel {
+      -webkit-appearance: none; appearance: none;
       background: #f1f5f9; color: #475569; border: none; border-radius: 8px;
-      padding: .5rem 1rem; font-size: .85rem; font-weight: 600; cursor: pointer;
+      padding: .45rem .9rem; font-size: .85rem; font-weight: 600; cursor: pointer;
     }
     .cq-btn-save {
-      background: #082F49; color: #fff; border: none; border-radius: 8px;
-      padding: .5rem 1.1rem; font-size: .85rem; font-weight: 600; cursor: pointer;
+      -webkit-appearance: none; appearance: none;
+      background-color: #082F49; color: #fff; border: none; border-radius: 8px;
+      padding: .45rem 1rem; font-size: .85rem; font-weight: 600; cursor: pointer;
     }
     .cq-btn-save:disabled { opacity: .5; cursor: not-allowed; }
 
-    /* link modal hint */
-    .cq-link-hint { font-size: .8rem; color: #64748b; margin-bottom: .5rem; }
-
     @media (max-width: 480px) {
       .cq-field-row { grid-template-columns: 1fr; }
-      .cq-payment-row { grid-template-columns: 1.5rem 1fr; }
-      .cq-payment-actions { grid-column: 1 / -1; padding-left: 2rem; }
-      .cq-payment-row { grid-template-rows: auto auto; }
     }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
   <header class="header">
     <div class="header-inner">
       <div class="header-left">
-        <a href="/personal-budget" class="btn-back" title="Presupuesto">
+        <a href="/personal-budget" class="btn-back">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-          <span class="btn-back-label" data-i18n="personalBudget.title">Presupuesto Personal</span>
+          <span class="btn-back-label">Presupuesto</span>
         </a>
         <div class="header-brand">
           <div class="header-wordmark">IH</div>
-          <h1 class="header-title" data-i18n="installments.title">Cuotas</h1>
+          <h1 class="header-title">Cuotas</h1>
         </div>
       </div>
       <div class="header-right">
@@ -192,7 +173,7 @@
             <div class="dropdown-divider"></div>
             <button class="dropdown-item dropdown-item-danger" id="btn-logout">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              <span data-i18n="profile.logout">Cerrar sesión</span>
+              <span>Cerrar sesión</span>
             </button>
           </div>
         </div>
@@ -200,79 +181,80 @@
     </div>
   </header>
 
-  <!-- MAIN -->
-  <main class="cq-page">
-    <div class="cq-toolbar">
-      <span class="cq-toolbar-title" data-i18n="installments.title">Cuotas</span>
-      <button class="cq-btn-add" id="btn-add-plan">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span data-i18n="installments.add">Nueva cuota</span>
-      </button>
+  <main class="main">
+    <div class="cq-wrap">
+      <div class="cq-toolbar">
+        <span class="cq-toolbar-title">Cuotas</span>
+        <button class="cq-btn-add" id="btn-add-plan">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="display:inline;vertical-align:middle"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva cuota
+        </button>
+      </div>
+      <div id="cq-list" class="cq-plan-list"></div>
     </div>
-    <div id="cq-list" class="cq-plan-list"></div>
   </main>
 
-  <!-- MODAL: Nuevo plan -->
+  <!-- modal: nuevo plan -->
   <div class="cq-overlay" id="modal-add" hidden>
     <div class="cq-modal">
       <div class="cq-modal-head">
-        <h2 class="cq-modal-title" data-i18n="installments.add">Nueva cuota</h2>
-        <button class="cq-modal-close" id="modal-add-close">✕</button>
+        <h2 class="cq-modal-title">Nueva cuota</h2>
+        <button class="cq-modal-close" id="modal-add-close">&#x2715;</button>
       </div>
       <div class="cq-modal-body">
         <div class="cq-field">
-          <label data-i18n="installments.form.name">Nombre</label>
-          <input type="text" id="f-name" placeholder="TV Samsung, Notebook…">
+          <label>Nombre *</label>
+          <input type="text" id="f-name" placeholder="TV Samsung, Notebook...">
         </div>
         <div class="cq-field-row">
           <div class="cq-field">
-            <label data-i18n="installments.form.total">Monto total</label>
+            <label>Monto total *</label>
             <input type="number" id="f-total" min="0.01" step="0.01" placeholder="0.00">
           </div>
           <div class="cq-field">
-            <label data-i18n="installments.form.num">Nro. de cuotas</label>
+            <label>N&uacute;m. cuotas *</label>
             <input type="number" id="f-num" min="1" max="360" step="1" placeholder="12">
           </div>
         </div>
         <div class="cq-calc-hint" id="f-calc" hidden></div>
         <div class="cq-field">
-          <label data-i18n="installments.form.start">Fecha primera cuota</label>
+          <label>Fecha primera cuota *</label>
           <input type="date" id="f-start">
         </div>
         <div class="cq-field">
-          <label data-i18n="installments.form.category">Categoría (opcional)</label>
-          <input type="text" id="f-category" placeholder="Electrónica, Hogar…">
+          <label>Categor&iacute;a (opcional)</label>
+          <input type="text" id="f-category" placeholder="Electr&oacute;nica, Hogar...">
         </div>
         <div class="cq-field">
-          <label data-i18n="installments.form.notes">Notas (opcional)</label>
-          <input type="text" id="f-notes" placeholder="Banco BBVA, tarjeta Visa…">
+          <label>Notas (opcional)</label>
+          <input type="text" id="f-notes" placeholder="Banco, tarjeta...">
         </div>
       </div>
       <div class="cq-modal-foot">
-        <button class="cq-btn-cancel" id="modal-add-cancel" data-i18n="installments.form.cancel">Cancelar</button>
-        <button class="cq-btn-save" id="modal-add-save" data-i18n="installments.form.save">Crear plan</button>
+        <button class="cq-btn-cancel" id="modal-add-cancel">Cancelar</button>
+        <button class="cq-btn-save" id="modal-add-save">Crear plan</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: Enlazar transacción -->
+  <!-- modal: enlazar transacción -->
   <div class="cq-overlay" id="modal-link" hidden>
     <div class="cq-modal">
       <div class="cq-modal-head">
-        <h2 class="cq-modal-title" data-i18n="installments.linkModal.title">Enlazar transacción</h2>
-        <button class="cq-modal-close" id="modal-link-close">✕</button>
+        <h2 class="cq-modal-title">Enlazar transacci&oacute;n</h2>
+        <button class="cq-modal-close" id="modal-link-close">&#x2715;</button>
       </div>
       <div class="cq-modal-body">
-        <p class="cq-link-hint" data-i18n="installments.linkModal.hint">Seleccioná una transacción de gastos para enlazarla.</p>
+        <p style="font-size:.82rem;color:#64748b;margin:0">Seleccion&aacute; una transacci&oacute;n de gasto para enlazarla.</p>
         <div class="cq-field">
           <select id="f-link-tx">
-            <option value="" data-i18n="installments.linkModal.select">— Seleccionar transacción —</option>
+            <option value="">— Seleccionar transacci&oacute;n —</option>
           </select>
         </div>
       </div>
       <div class="cq-modal-foot">
-        <button class="cq-btn-cancel" id="modal-link-cancel" data-i18n="installments.linkModal.cancel">Cancelar</button>
-        <button class="cq-btn-save" id="modal-link-save" data-i18n="installments.linkModal.save">Enlazar</button>
+        <button class="cq-btn-cancel" id="modal-link-cancel">Cancelar</button>
+        <button class="cq-btn-save" id="modal-link-save">Enlazar</button>
       </div>
     </div>
   </div>
@@ -282,267 +264,310 @@
   <script src="/js/header.js"></script>
   <script src="/js/sw-register.js"></script>
   <script>
-  // ── helpers ────────────────────────────────────────────────────────────────
-  function esc(str) {
-    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  'use strict';
+
+  // ── utilidades ─────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-  function showToast(msg, type = 'success') {
-    const el = document.createElement('div');
-    el.className = `toast toast--${type}`;
-    el.textContent = msg;
-    document.body.appendChild(el);
-    requestAnimationFrame(() => el.classList.add('toast--show'));
-    setTimeout(() => { el.classList.remove('toast--show'); setTimeout(() => el.remove(), 300); }, 3000);
-  }
-  function tI(k) {
-    try { return (typeof I18N !== 'undefined') ? (I18N.t(k) || k) : k; } catch { return k; }
+  function showToast(msg, type) {
+    try {
+      const el = document.createElement('div');
+      el.className = 'toast toast--' + (type || 'success');
+      el.textContent = msg;
+      document.body.appendChild(el);
+      requestAnimationFrame(function() { el.classList.add('toast--show'); });
+      setTimeout(function() { el.classList.remove('toast--show'); setTimeout(function() { el.remove(); }, 300); }, 3000);
+    } catch(e) { console.error('toast error', e); }
   }
   function fmt(n) {
-    return typeof n === 'number' ? n.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+    return typeof n === 'number'
+      ? n.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : '—';
   }
   function fmtDate(d) {
     if (!d) return '—';
-    const [, m, day] = d.split('-');
-    return `${day}/${m}/${d.slice(0,4)}`;
+    var p = d.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
   }
 
-  // ── state ──────────────────────────────────────────────────────────────────
-  const state = { plans: [], transactions: [] };
-  let _linkCtx = null;
+  // ── estado ─────────────────────────────────────────────────────────────────
+  var _plans = [];
+  var _transactions = [];
+  var _linkCtx = null;
 
   // ── render ─────────────────────────────────────────────────────────────────
   function render() {
-    const el = document.getElementById('cq-list');
-    if (!el) return;
-    if (!state.plans.length) {
-      el.innerHTML = `
-        <div class="cq-empty">
-          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          <p class="cq-empty-title">${tI('installments.empty')}</p>
-          <p class="cq-empty-desc">${tI('installments.emptyDesc')}</p>
-        </div>`;
-      return;
-    }
-    el.innerHTML = state.plans.map(plan => {
-      const paidCount = plan.paid_count || 0;
-      const total = plan.num_installments;
-      const pct = total > 0 ? Math.round((paidCount / total) * 100) : 0;
-      const remaining = (total - paidCount) * plan.amount_per_installment;
-      const rows = (plan.payments || []).map(pay => {
-        const isPaid = !!pay.paid_at;
-        const badge = isPaid
-          ? `<span class="cq-badge-paid">${tI('installments.paid')}</span>`
-          : `<span class="cq-badge-pending">${tI('installments.pending')}</span>`;
-        const dateLabel = isPaid
-          ? `${tI('installments.paidOn')} ${fmtDate(pay.paid_at)}`
-          : `${tI('installments.due')} ${fmtDate(pay.due_date)}`;
-        const txLine = pay.transaction_id
-          ? `<div class="cq-payment-tx">${esc(pay.tx_description || '')} ${pay.tx_amount != null ? fmt(pay.tx_amount) : ''}</div>`
-          : '';
-        let actions = '';
-        if (isPaid) {
-          actions += `<button class="cq-btn-action cq-btn-action--unpay" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.unPay')}</button>`;
-          actions += pay.transaction_id
-            ? `<button class="cq-btn-action cq-btn-action--unlink" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.unlink')}</button>`
-            : `<button class="cq-btn-action cq-btn-action--link" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.link')}</button>`;
-        } else {
-          actions += `<button class="cq-btn-action cq-btn-action--pay" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.pay')}</button>`;
-          actions += `<button class="cq-btn-action cq-btn-action--link" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.link')}</button>`;
-        }
-        return `
-          <div class="cq-payment-row">
-            <span class="cq-payment-num">${pay.installment_number}</span>
-            <div class="cq-payment-info">
-              <div class="cq-payment-name">${fmt(plan.amount_per_installment)}</div>
-              <div class="cq-payment-date">${dateLabel}</div>
-              ${txLine}
-            </div>
-            ${badge}
-            <div class="cq-payment-actions">${actions}</div>
-          </div>`;
+    try {
+      var el = document.getElementById('cq-list');
+      if (!el) return;
+
+      if (!_plans.length) {
+        el.innerHTML = [
+          '<div class="cq-empty">',
+          '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">',
+          '<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+          '<p class="cq-empty-title">No tenés cuotas registradas</p>',
+          '<p class="cq-empty-desc">Registrá tus compras en cuotas para hacer un seguimiento de los pagos pendientes.</p>',
+          '</div>'
+        ].join('');
+        return;
+      }
+
+      el.innerHTML = _plans.map(function(plan) {
+        var paidCount = plan.paid_count || 0;
+        var total     = plan.num_installments || 0;
+        var pct       = total > 0 ? Math.round((paidCount / total) * 100) : 0;
+        var remaining = (total - paidCount) * (plan.amount_per_installment || 0);
+
+        var rows = (plan.payments || []).map(function(pay) {
+          var isPaid    = !!pay.paid_at;
+          var badge     = isPaid
+            ? '<span class="cq-badge-paid">Pagada</span>'
+            : '<span class="cq-badge-pending">Pendiente</span>';
+          var dateLabel = isPaid
+            ? 'Pagada el ' + fmtDate(pay.paid_at)
+            : 'Vence ' + fmtDate(pay.due_date);
+          var txLine = pay.transaction_id
+            ? '<div class="cq-payment-tx">🔗 ' + esc(pay.tx_description || '') + ' ' + (pay.tx_amount != null ? fmt(pay.tx_amount) : '') + '</div>'
+            : '';
+
+          var actions = '';
+          if (isPaid) {
+            actions += '<button class="cq-btn-sm cq-btn-sm--unpay" data-plan="' + plan.id + '" data-num="' + pay.installment_number + '">Desmarcar</button>';
+            actions += pay.transaction_id
+              ? '<button class="cq-btn-sm cq-btn-sm--unlink" data-plan="' + plan.id + '" data-num="' + pay.installment_number + '">Desenlazar</button>'
+              : '<button class="cq-btn-sm cq-btn-sm--link" data-plan="' + plan.id + '" data-num="' + pay.installment_number + '">Enlazar tx</button>';
+          } else {
+            actions += '<button class="cq-btn-sm cq-btn-sm--pay" data-plan="' + plan.id + '" data-num="' + pay.installment_number + '">Pagar</button>';
+            actions += '<button class="cq-btn-sm cq-btn-sm--link" data-plan="' + plan.id + '" data-num="' + pay.installment_number + '">Enlazar tx</button>';
+          }
+
+          return [
+            '<div class="cq-payment-row">',
+            '<span class="cq-payment-num">' + pay.installment_number + '</span>',
+            '<div class="cq-payment-info">',
+            '<div class="cq-payment-amt">' + fmt(plan.amount_per_installment) + '</div>',
+            '<div class="cq-payment-date">' + esc(dateLabel) + '</div>',
+            txLine,
+            '</div>',
+            badge,
+            '<div class="cq-payment-actions">' + actions + '</div>',
+            '</div>'
+          ].join('');
+        }).join('');
+
+        return [
+          '<div class="cq-card">',
+          '<div class="cq-card-head">',
+          '<div class="cq-card-top">',
+          '<div>',
+          '<h3 class="cq-card-name">' + esc(plan.name) + '</h3>',
+          plan.category ? '<div class="cq-card-cat">' + esc(plan.category) + '</div>' : '',
+          '<div class="cq-card-meta">',
+          '<strong>' + fmt(plan.total_amount) + '</strong> total &middot; ',
+          total + ' cuotas de <strong>' + fmt(plan.amount_per_installment) + '</strong>',
+          remaining > 0 ? ' &middot; <span style="color:#ef4444">' + fmt(remaining) + ' restante</span>' : '',
+          '</div></div>',
+          '<button class="cq-btn-delete" data-delete="' + plan.id + '" title="Eliminar plan">',
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
+          '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>',
+          '</svg></button>',
+          '</div>',
+          '<div class="cq-progress-wrap">',
+          '<div class="cq-progress-label"><span>' + paidCount + '/' + total + ' pagadas</span><span>' + pct + '%</span></div>',
+          '<div class="cq-progress-bar"><div class="cq-progress-fill" style="width:' + pct + '%"></div></div>',
+          '</div>',
+          '</div>',
+          '<div class="cq-payments">' + rows + '</div>',
+          '</div>'
+        ].join('');
       }).join('');
-      return `
-        <div class="cq-card">
-          <div class="cq-card-head">
-            <div class="cq-card-top">
-              <div>
-                <h3 class="cq-card-name">${esc(plan.name)}</h3>
-                ${plan.category ? `<div class="cq-card-cat">${esc(plan.category)}</div>` : ''}
-                <div class="cq-card-meta">
-                  <strong>${fmt(plan.total_amount)}</strong> total &middot;
-                  ${total} cuotas de <strong>${fmt(plan.amount_per_installment)}</strong>
-                  ${remaining > 0 ? ` &middot; <span style="color:#ef4444">${fmt(remaining)} restante</span>` : ''}
-                </div>
-              </div>
-              <button class="cq-btn-delete" data-delete="${plan.id}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-              </button>
-            </div>
-            <div class="cq-progress-wrap">
-              <div class="cq-progress-label"><span>${paidCount}/${total} pagadas</span><span>${pct}%</span></div>
-              <div class="cq-progress-bar"><div class="cq-progress-fill" style="width:${pct}%"></div></div>
-            </div>
-          </div>
-          <div class="cq-payments">${rows}</div>
-        </div>`;
-    }).join('');
+
+    } catch(e) {
+      console.error('render error:', e);
+      var el2 = document.getElementById('cq-list');
+      if (el2) el2.innerHTML = '<p style="padding:1rem;color:#ef4444">Error al mostrar cuotas. Recargá la página.</p>';
+    }
   }
 
   // ── API ────────────────────────────────────────────────────────────────────
-  async function loadPlans() {
-    try {
-      const data = await apiFetch('GET', '/api/personal-budget/installments');
-      state.plans = Array.isArray(data) ? data : [];
-    } catch { showToast('Error al cargar cuotas', 'error'); }
-    render();
+  function loadPlans() {
+    return apiFetch('GET', '/api/personal-budget/installments')
+      .then(function(data) { _plans = Array.isArray(data) ? data : []; })
+      .catch(function(e) { console.error('loadPlans:', e); showToast('Error al cargar cuotas', 'error'); _plans = []; })
+      .then(function() { render(); });
   }
 
-  async function loadTransactions() {
-    try {
-      const data = await apiFetch('GET', '/api/personal-budget/');
-      state.transactions = (data?.transactions || []).filter(tx => tx.type === 'expense');
-    } catch { state.transactions = []; }
+  function loadTransactions() {
+    return apiFetch('GET', '/api/personal-budget/')
+      .then(function(data) {
+        _transactions = (data && data.transactions ? data.transactions : []).filter(function(tx) { return tx.type === 'expense'; });
+      })
+      .catch(function() { _transactions = []; });
   }
 
   // ── modal add ──────────────────────────────────────────────────────────────
   function openAddModal() {
-    ['f-name','f-total','f-num','f-category','f-notes'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    document.getElementById('f-start').value = new Date().toISOString().slice(0,10);
-    document.getElementById('f-calc').hidden = true;
-    document.getElementById('modal-add').hidden = false;
-    document.getElementById('f-name').focus();
+    try {
+      document.getElementById('f-name').value = '';
+      document.getElementById('f-total').value = '';
+      document.getElementById('f-num').value = '';
+      document.getElementById('f-start').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('f-category').value = '';
+      document.getElementById('f-notes').value = '';
+      document.getElementById('f-calc').hidden = true;
+      document.getElementById('modal-add').hidden = false;
+      setTimeout(function() { document.getElementById('f-name').focus(); }, 50);
+    } catch(e) { console.error('openAddModal:', e); }
   }
 
   function updateCalcHint() {
-    const total = parseFloat(document.getElementById('f-total').value);
-    const num   = parseInt(document.getElementById('f-num').value);
-    const hint  = document.getElementById('f-calc');
-    if (total > 0 && num > 0) {
-      hint.textContent = `= ${fmt(parseFloat((total/num).toFixed(2)))} por cuota`;
-      hint.hidden = false;
-    } else { hint.hidden = true; }
+    try {
+      var total = parseFloat(document.getElementById('f-total').value);
+      var num   = parseInt(document.getElementById('f-num').value, 10);
+      var hint  = document.getElementById('f-calc');
+      if (total > 0 && num > 0) {
+        hint.textContent = '= ' + fmt(parseFloat((total / num).toFixed(2))) + ' por cuota';
+        hint.hidden = false;
+      } else {
+        hint.hidden = true;
+      }
+    } catch(e) {}
   }
 
-  async function saveAddModal() {
-    const name     = document.getElementById('f-name').value.trim();
-    const total    = parseFloat(document.getElementById('f-total').value);
-    const num      = parseInt(document.getElementById('f-num').value);
-    const start    = document.getElementById('f-start').value;
-    const category = document.getElementById('f-category').value.trim();
-    const notes    = document.getElementById('f-notes').value.trim();
-    if (!name || !total || !num || !start) { showToast('Completá los campos obligatorios', 'error'); return; }
-    const perInstall = parseFloat((total / num).toFixed(2));
-    const saveBtn = document.getElementById('modal-add-save');
-    saveBtn.disabled = true;
+  function saveAddModal() {
     try {
-      await apiFetch('POST', '/api/personal-budget/installments', {
-        name, totalAmount: total, numInstallments: num,
-        amountPerInstallment: perInstall, startDate: start,
-        category: category || null, notes: notes || null
-      });
-      document.getElementById('modal-add').hidden = true;
-      showToast('Plan creado');
-      await loadPlans();
-    } catch { showToast('Error al crear el plan', 'error'); }
-    finally { saveBtn.disabled = false; }
+      var name     = document.getElementById('f-name').value.trim();
+      var total    = parseFloat(document.getElementById('f-total').value);
+      var num      = parseInt(document.getElementById('f-num').value, 10);
+      var start    = document.getElementById('f-start').value;
+      var category = document.getElementById('f-category').value.trim();
+      var notes    = document.getElementById('f-notes').value.trim();
+      if (!name || !total || !num || !start) { showToast('Completá los campos obligatorios', 'error'); return; }
+      var perInstall = parseFloat((total / num).toFixed(2));
+      var saveBtn = document.getElementById('modal-add-save');
+      saveBtn.disabled = true;
+      apiFetch('POST', '/api/personal-budget/installments', {
+        name: name,
+        totalAmount: total,
+        numInstallments: num,
+        amountPerInstallment: perInstall,
+        startDate: start,
+        category: category || null,
+        notes: notes || null
+      }).then(function() {
+        document.getElementById('modal-add').hidden = true;
+        showToast('Plan creado');
+        return loadPlans();
+      }).catch(function(e) {
+        console.error('saveAddModal:', e);
+        showToast('Error al crear el plan', 'error');
+      }).then(function() { saveBtn.disabled = false; });
+    } catch(e) { console.error('saveAddModal sync error:', e); }
   }
 
   // ── modal link ─────────────────────────────────────────────────────────────
-  async function openLinkModal(planId, num) {
-    _linkCtx = { planId, num };
-    await loadTransactions();
-    const sel = document.getElementById('f-link-tx');
-    sel.innerHTML = `<option value="">— Seleccionar transacción —</option>`;
-    state.transactions.forEach(tx => {
-      sel.innerHTML += `<option value="${tx.id}">${fmtDate(tx.date)} · ${esc(tx.category)} · ${fmt(tx.amount)}${tx.description ? ' — ' + esc(tx.description) : ''}</option>`;
+  function openLinkModal(planId, num) {
+    _linkCtx = { planId: planId, num: num };
+    loadTransactions().then(function() {
+      var sel = document.getElementById('f-link-tx');
+      sel.innerHTML = '<option value="">— Seleccionar transacción —</option>';
+      if (!_transactions.length) {
+        sel.innerHTML += '<option disabled>Sin transacciones disponibles</option>';
+      } else {
+        _transactions.forEach(function(tx) {
+          sel.innerHTML += '<option value="' + tx.id + '">' + fmtDate(tx.date) + ' · ' + esc(tx.category) + ' · ' + fmt(tx.amount) + (tx.description ? ' — ' + esc(tx.description) : '') + '</option>';
+        });
+      }
+      document.getElementById('modal-link').hidden = false;
     });
-    if (!state.transactions.length) sel.innerHTML += `<option disabled>Sin transacciones disponibles</option>`;
-    document.getElementById('modal-link').hidden = false;
   }
 
-  async function saveLinkModal() {
+  function saveLinkModal() {
     if (!_linkCtx) return;
-    const txId = document.getElementById('f-link-tx').value;
-    const { planId, num } = _linkCtx;
-    try {
-      await apiFetch('PUT', `/api/personal-budget/installments/${planId}/pay/${num}`, { transactionId: txId ? Number(txId) : null });
+    var txId = document.getElementById('f-link-tx').value;
+    var planId = _linkCtx.planId;
+    var num = _linkCtx.num;
+    apiFetch('PUT', '/api/personal-budget/installments/' + planId + '/pay/' + num, {
+      transactionId: txId ? Number(txId) : null
+    }).then(function() {
       document.getElementById('modal-link').hidden = true;
-      await loadPlans();
-    } catch { showToast('Error al enlazar', 'error'); }
+      return loadPlans();
+    }).catch(function(e) {
+      console.error('saveLinkModal:', e);
+      showToast('Error al enlazar', 'error');
+    });
   }
 
   // ── plan actions ───────────────────────────────────────────────────────────
-  async function payInstallment(planId, num) {
-    try {
-      await apiFetch('PUT', `/api/personal-budget/installments/${planId}/pay/${num}`, {});
-      await loadPlans();
-    } catch { showToast('Error al pagar cuota', 'error'); }
+  function payInstallment(planId, num) {
+    apiFetch('PUT', '/api/personal-budget/installments/' + planId + '/pay/' + num, {})
+      .then(function() { return loadPlans(); })
+      .catch(function() { showToast('Error al pagar cuota', 'error'); });
   }
 
-  async function unpayInstallment(planId, num) {
-    try {
-      await apiFetch('DELETE', `/api/personal-budget/installments/${planId}/pay/${num}`);
-      await loadPlans();
-    } catch { showToast('Error al desmarcar', 'error'); }
+  function unpayInstallment(planId, num) {
+    apiFetch('DELETE', '/api/personal-budget/installments/' + planId + '/pay/' + num)
+      .then(function() { return loadPlans(); })
+      .catch(function() { showToast('Error al desmarcar', 'error'); });
   }
 
-  async function deletePlan(planId) {
+  function deletePlan(planId) {
     if (!confirm('¿Eliminar este plan? Se borrarán todos los registros de pago.')) return;
-    try {
-      await apiFetch('DELETE', `/api/personal-budget/installments/${planId}`);
-      await loadPlans();
-    } catch { showToast('Error al eliminar', 'error'); }
+    apiFetch('DELETE', '/api/personal-budget/installments/' + planId)
+      .then(function() { return loadPlans(); })
+      .catch(function() { showToast('Error al eliminar', 'error'); });
   }
 
-  async function unlinkTx(planId, num) {
-    try {
-      await apiFetch('PUT', `/api/personal-budget/installments/${planId}/pay/${num}`, { transactionId: null });
-      await loadPlans();
-    } catch { showToast('Error al desenlazar', 'error'); }
+  function unlinkTx(planId, num) {
+    apiFetch('PUT', '/api/personal-budget/installments/' + planId + '/pay/' + num, { transactionId: null })
+      .then(function() { return loadPlans(); })
+      .catch(function() { showToast('Error al desenlazar', 'error'); });
   }
 
-  // ── event listeners (síncronos, no dependen del init async) ───────────────
-  document.getElementById('btn-add-plan').onclick = openAddModal;
-  document.getElementById('modal-add-close').onclick  = () => { document.getElementById('modal-add').hidden = true; };
-  document.getElementById('modal-add-cancel').onclick = () => { document.getElementById('modal-add').hidden = true; };
+  // ── listeners (síncronos — no dependen de init async) ─────────────────────
+  document.getElementById('btn-add-plan').onclick    = openAddModal;
+  document.getElementById('modal-add-close').onclick  = function() { document.getElementById('modal-add').hidden = true; };
+  document.getElementById('modal-add-cancel').onclick = function() { document.getElementById('modal-add').hidden = true; };
   document.getElementById('modal-add-save').onclick   = saveAddModal;
-  document.getElementById('modal-link-close').onclick  = () => { document.getElementById('modal-link').hidden = true; };
-  document.getElementById('modal-link-cancel').onclick = () => { document.getElementById('modal-link').hidden = true; };
+  document.getElementById('modal-link-close').onclick  = function() { document.getElementById('modal-link').hidden = true; };
+  document.getElementById('modal-link-cancel').onclick = function() { document.getElementById('modal-link').hidden = true; };
   document.getElementById('modal-link-save').onclick   = saveLinkModal;
   document.getElementById('f-total').oninput = updateCalcHint;
   document.getElementById('f-num').oninput   = updateCalcHint;
+  document.getElementById('modal-add').onclick  = function(e) { if (e.target === this) this.hidden = true; };
+  document.getElementById('modal-link').onclick = function(e) { if (e.target === this) this.hidden = true; };
 
-  document.getElementById('modal-add').onclick  = e => { if (e.target === e.currentTarget) e.currentTarget.hidden = true; };
-  document.getElementById('modal-link').onclick = e => { if (e.target === e.currentTarget) e.currentTarget.hidden = true; };
-
-  document.getElementById('cq-list').onclick = async e => {
-    const btn = e.target.closest('[data-plan][data-num]');
-    const del = e.target.closest('[data-delete]');
-    if (del) { await deletePlan(Number(del.dataset.delete)); return; }
+  document.getElementById('cq-list').onclick = function(e) {
+    var btn = e.target.closest('[data-plan][data-num]');
+    var del = e.target.closest('[data-delete]');
+    if (del) { deletePlan(Number(del.dataset.delete)); return; }
     if (!btn) return;
-    const planId = Number(btn.dataset.plan);
-    const num    = Number(btn.dataset.num);
-    if (btn.classList.contains('cq-btn-action--pay'))    await payInstallment(planId, num);
-    if (btn.classList.contains('cq-btn-action--unpay'))  await unpayInstallment(planId, num);
-    if (btn.classList.contains('cq-btn-action--link'))   await openLinkModal(planId, num);
-    if (btn.classList.contains('cq-btn-action--unlink')) await unlinkTx(planId, num);
+    var planId = Number(btn.dataset.plan);
+    var num    = Number(btn.dataset.num);
+    var cls    = btn.className;
+    if (cls.indexOf('cq-btn-sm--pay')    >= 0) payInstallment(planId, num);
+    if (cls.indexOf('cq-btn-sm--unpay')  >= 0) unpayInstallment(planId, num);
+    if (cls.indexOf('cq-btn-sm--link')   >= 0) openLinkModal(planId, num);
+    if (cls.indexOf('cq-btn-sm--unlink') >= 0) unlinkTx(planId, num);
   };
 
-  document.getElementById('btn-logout')?.addEventListener('click', async () => {
-    await fetch('/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
-  });
+  document.getElementById('btn-logout').onclick = function() {
+    fetch('/auth/logout', { method: 'POST' }).then(function() { window.location.href = '/login'; });
+  };
 
-  // ── init async (no bloquea los listeners si falla) ─────────────────────────
-  (async () => {
-    try {
-      await I18N.init();
-      initProfileMenu();
-      await loadProfileAvatar();
-    } catch (e) { console.error('init error:', e); }
-    await loadPlans();
+  // ── init async ─────────────────────────────────────────────────────────────
+  (function init() {
+    Promise.resolve()
+      .then(function() { return I18N.init(); })
+      .catch(function(e) { console.error('I18N.init failed:', e); })
+      .then(function() {
+        try { initProfileMenu(); } catch(e) { console.error('initProfileMenu:', e); }
+        return loadProfileAvatar().catch(function(e) { console.error('loadProfileAvatar:', e); });
+      })
+      .then(function() { return loadPlans(); })
+      .catch(function(e) { console.error('init failed:', e); render(); });
   })();
   </script>
 </body>
