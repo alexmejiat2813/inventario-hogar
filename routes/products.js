@@ -63,12 +63,13 @@ router.post('/', requireEditorOrOwner, (req, res) => {
   try {
     const error = validateProduct(req.body);
     if (error) return res.status(400).json({ error });
-    const { name, category, current_qty, min_qty, unit, catalog_product_id, expiry_date } = req.body;
+    const { name, category, current_qty, min_qty, unit, catalog_product_id, expiry_date, product_master_id } = req.body;
     const product = db.create({
       name: name.trim(), category, current_qty: +current_qty,
       min_qty: +min_qty, unit, inventoryId: req.inventoryId,
       catalogProductId: catalog_product_id || null,
       expiry_date: expiry_date || null,
+      productMasterId: product_master_id || null,
     });
     db.audit(req.inventoryId, req.user.id, req.user.name, 'product.create', 'product', product.id,
       { name: product.name, category });
@@ -93,6 +94,19 @@ router.put('/:id', requireEditorOrOwner, (req, res) => {
       { name: name.trim() });
     res.json(updated);
   } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al actualizar el producto' }); }
+});
+
+// PUT /api/products/:id/link-master — vincula o desvincula un producto de stock con product_master
+router.put('/:id/link-master', requireEditorOrOwner, (req, res) => {
+  try {
+    const productId = parseInt(req.params.id);
+    if (!productId) return res.status(400).json({ error: 'ID inválido' });
+    const p = db.getById(productId);
+    if (!p || p.inventory_id !== req.inventoryId) return res.status(404).json({ error: 'Producto no encontrado' });
+    const masterId = req.body.product_master_id ? parseInt(req.body.product_master_id) : null;
+    db.linkMaster(productId, masterId);
+    res.json(db.getById(productId));
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al vincular producto' }); }
 });
 
 router.delete('/:id', requireEditorOrOwner, (req, res) => {

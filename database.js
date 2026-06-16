@@ -356,10 +356,12 @@ try {
   if (!itemCols.includes('tax_amount')) db.exec('ALTER TABLE purchase_items ADD COLUMN tax_amount REAL');
   if (!tplItemCols.includes('store_id'))   db.exec('ALTER TABLE list_template_items ADD COLUMN store_id INTEGER REFERENCES stores(id) ON DELETE SET NULL');
   if (!tplItemCols.includes('unit_price')) db.exec('ALTER TABLE list_template_items ADD COLUMN unit_price REAL');
-  if (!pmCols.includes('image_url'))    db.exec('ALTER TABLE product_master ADD COLUMN image_url TEXT');
-  if (!pmCols.includes('nutriments'))   db.exec('ALTER TABLE product_master ADD COLUMN nutriments TEXT');
-  if (!pmCols.includes('serving_size')) db.exec('ALTER TABLE product_master ADD COLUMN serving_size TEXT');
-  if (!pmCols.includes('nutriscore'))   db.exec('ALTER TABLE product_master ADD COLUMN nutriscore TEXT');
+  if (!pmCols.includes('image_url'))          db.exec('ALTER TABLE product_master ADD COLUMN image_url TEXT');
+  if (!pmCols.includes('nutriments'))         db.exec('ALTER TABLE product_master ADD COLUMN nutriments TEXT');
+  if (!pmCols.includes('serving_size'))       db.exec('ALTER TABLE product_master ADD COLUMN serving_size TEXT');
+  if (!pmCols.includes('nutriscore'))         db.exec('ALTER TABLE product_master ADD COLUMN nutriscore TEXT');
+  if (!productCols.includes('product_master_id'))
+    db.exec('ALTER TABLE products ADD COLUMN product_master_id INTEGER REFERENCES product_master(id) ON DELETE SET NULL');
   db.exec('COMMIT');
 } catch (err) { try { db.exec('ROLLBACK'); } catch {} throw err; }
 
@@ -906,10 +908,10 @@ module.exports = {
     return db.prepare('SELECT * FROM products WHERE id = ?').get(id);
   },
 
-  create({ name, category, current_qty, min_qty, unit, inventoryId, catalogProductId = null, expiry_date = null }) {
+  create({ name, category, current_qty, min_qty, unit, inventoryId, catalogProductId = null, expiry_date = null, productMasterId = null }) {
     const { lastInsertRowid } = db.prepare(
-      'INSERT INTO products (name, category, current_qty, min_qty, unit, inventory_id, catalog_product_id, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(name, category, current_qty, min_qty, unit, inventoryId, catalogProductId, expiry_date || null);
+      'INSERT INTO products (name, category, current_qty, min_qty, unit, inventory_id, catalog_product_id, expiry_date, product_master_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(name, category, current_qty, min_qty, unit, inventoryId, catalogProductId, expiry_date || null, productMasterId || null);
     return this.getById(lastInsertRowid);
   },
 
@@ -921,6 +923,12 @@ module.exports = {
       WHERE id=?
     `).run(name, category, current_qty, min_qty, unit, expiry_date || null, id);
     return changes > 0 ? this.getById(id) : null;
+  },
+
+  linkMaster(productId, masterId) {
+    return db.prepare(
+      "UPDATE products SET product_master_id = ?, updated_at = datetime('now','localtime') WHERE id = ?"
+    ).run(masterId || null, productId).changes > 0;
   },
 
   remove(id) {
@@ -1496,6 +1504,8 @@ module.exports = {
         SET current_qty = current_qty + ?,
             updated_at  = datetime('now','localtime')
         WHERE id = ? AND inventory_id = ?
+          AND (product_master_id IS NULL
+               OR EXISTS (SELECT 1 FROM product_master WHERE id = products.product_master_id AND tracks_stock = 1))
       `);
       const insCatalog = db.prepare(`
         INSERT OR IGNORE INTO catalog_products (name, category, default_unit, created_by)
@@ -1522,6 +1532,15 @@ module.exports = {
           const catName = cat?.category || 'Otros';
           const { lastInsertRowid: prodId } = insProduct.run(name, catName, inventoryId, cat?.id || null);
           resolvedProductId = prodId;
+          // Auto-link to product_master if one exists for this user+catalog entry
+          if (cat?.id) {
+            const pm = db.prepare(
+              'SELECT id FROM product_master WHERE user_id = ? AND catalog_product_id = ? LIMIT 1'
+            ).get(userId, cat.id);
+            if (pm) {
+              db.prepare("UPDATE products SET product_master_id = ? WHERE id = ?").run(pm.id, Number(prodId));
+            }
+          }
         }
 
         insItem.run(
@@ -1668,6 +1687,8 @@ module.exports = {
       const revertQty = db.prepare(`
         UPDATE products SET current_qty = current_qty - ?, updated_at = datetime('now','localtime')
         WHERE id = ? AND inventory_id = ?
+          AND (product_master_id IS NULL
+               OR EXISTS (SELECT 1 FROM product_master WHERE id = products.product_master_id AND tracks_stock = 1))
       `);
       oldItems.forEach(oi => {
         if (oi.product_id && oi.quantity_bought > 0) {
@@ -1686,6 +1707,8 @@ module.exports = {
       const applyQty = db.prepare(`
         UPDATE products SET current_qty = current_qty + ?, updated_at = datetime('now','localtime')
         WHERE id = ? AND inventory_id = ?
+          AND (product_master_id IS NULL
+               OR EXISTS (SELECT 1 FROM product_master WHERE id = products.product_master_id AND tracks_stock = 1))
       `);
       items.forEach(item => {
         const base = (item.quantityBought != null && item.unitPrice != null)

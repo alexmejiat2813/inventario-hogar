@@ -234,7 +234,8 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 164 | fix | Orden menú inconsistente: tab bar de `index.html` tenía Productos al final → movido a posición 2 (Dashboard → Productos → Stock → Compras → Historial). Drawer de `products.html` reordenado igual con Productos activo entre Dashboard y Stock. | `9d2540e` | ✅ |
 | 165 | fix | SW v2 + bump 1.1.6: forzar reinstalación del service worker para limpiar caches viejos de menús. | `a7045dc` | ✅ |
 | 166 | chore | Renombrar "Maestro de Productos" → "Productos" en locales ES/EN/FR, products.html (title/breadcrumb/drawer) y fallbacks en products.js. | `257a7a2` | ✅ |
-| 167 | feat | Foto de producto + Nutriscore + tabla nutricional desde Open Food Facts: 4 cols nuevas en `product_master` (image_url, nutriments, serving_size, nutriscore), OFF fetch ampliado, card muestra foto real o SVG placeholder, badge Nutriscore A-E con colores, sección nutricional colapsable en modal (energía, grasas, carbohidratos, azúcares, proteínas, fibra, sodio / 100g). i18n ES/EN/FR. Bump v1.1.8. | — | ✅ |
+| 167 | feat | Foto de producto + Nutriscore + tabla nutricional desde Open Food Facts: 4 cols nuevas en `product_master` (image_url, nutriments, serving_size, nutriscore), OFF fetch ampliado, card muestra foto real o SVG placeholder, badge Nutriscore A-E con colores, sección nutricional colapsable en modal (energía, grasas, carbohidratos, azúcares, proteínas, fibra, sodio / 100g). i18n ES/EN/FR. Bump v1.1.8. | `3a6a477` | ✅ |
+| 168 | feat | Opción A — FK `product_master_id` en `products`: migración, `products.create()` acepta `productMasterId`, nueva `db.linkMaster()`, `updQty`/`revertQty`/`applyQty` respetan `tracks_stock` (subquery), auto-link por `catalog_product_id` en flujo `saveToCatalog`, endpoint `PUT /api/products/:id/link-master`. Bump v1.1.9. | — | ✅ |
 
 ---
 
