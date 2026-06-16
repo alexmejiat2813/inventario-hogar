@@ -282,308 +282,266 @@
   <script src="/js/header.js"></script>
   <script src="/js/sw-register.js"></script>
   <script>
-  (async () => {
-    await I18N.init();
-    initProfileMenu();
-    await loadProfileAvatar();
+  // ── helpers ────────────────────────────────────────────────────────────────
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function showToast(msg, type = 'success') {
+    const el = document.createElement('div');
+    el.className = `toast toast--${type}`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('toast--show'));
+    setTimeout(() => { el.classList.remove('toast--show'); setTimeout(() => el.remove(), 300); }, 3000);
+  }
+  function tI(k) {
+    try { return (typeof I18N !== 'undefined') ? (I18N.t(k) || k) : k; } catch { return k; }
+  }
+  function fmt(n) {
+    return typeof n === 'number' ? n.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+  }
+  function fmtDate(d) {
+    if (!d) return '—';
+    const [, m, day] = d.split('-');
+    return `${day}/${m}/${d.slice(0,4)}`;
+  }
 
-    function esc(str) {
-      return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // ── state ──────────────────────────────────────────────────────────────────
+  const state = { plans: [], transactions: [] };
+  let _linkCtx = null;
+
+  // ── render ─────────────────────────────────────────────────────────────────
+  function render() {
+    const el = document.getElementById('cq-list');
+    if (!el) return;
+    if (!state.plans.length) {
+      el.innerHTML = `
+        <div class="cq-empty">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          <p class="cq-empty-title">${tI('installments.empty')}</p>
+          <p class="cq-empty-desc">${tI('installments.emptyDesc')}</p>
+        </div>`;
+      return;
     }
-
-    function showToast(message, type = 'success') {
-      const el = document.createElement('div');
-      el.className = `toast toast--${type}`;
-      el.textContent = message;
-      document.body.appendChild(el);
-      requestAnimationFrame(() => el.classList.add('toast--show'));
-      setTimeout(() => { el.classList.remove('toast--show'); setTimeout(() => el.remove(), 300); }, 3000);
-    }
-
-    const t = k => I18N.t ? I18N.t(k) : (window._i18n?.[k] || k);
-    const tI = k => {
-      const parts = k.split('.');
-      let obj = (typeof I18N !== 'undefined' && I18N.data) ? I18N.data : {};
-      for (const p of parts) { obj = obj?.[p]; if (obj == null) break; }
-      return obj || k;
-    };
-
-    let state = { plans: [], transactions: [] };
-    let _linkCtx = null; // { planId, num }
-
-    // ── helpers ────────────────────────────────────────────────────────────────
-    function fmt(n) {
-      return typeof n === 'number' ? n.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
-    }
-    function fmtDate(d) {
-      if (!d) return '—';
-      const [y, m, day] = d.split('-');
-      return `${day}/${m}/${y}`;
-    }
-
-    // ── load ───────────────────────────────────────────────────────────────────
-    async function loadPlans() {
-      try {
-        const data = await apiFetch('GET', '/api/personal-budget/installments');
-        state.plans = data || [];
-      } catch {
-        showToast('Error al cargar cuotas', 'error');
-      }
-      render();
-    }
-
-    async function loadTransactions() {
-      try {
-        const data = await apiFetch('GET', '/api/personal-budget/');
-        state.transactions = (data?.transactions || []).filter(tx => tx.type === 'expense');
-      } catch {
-        state.transactions = [];
-      }
-    }
-
-    // ── render ─────────────────────────────────────────────────────────────────
-    function render() {
-      const el = document.getElementById('cq-list');
-      if (!state.plans.length) {
-        el.innerHTML = `
-          <div class="cq-empty">
-            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            <p class="cq-empty-title">${tI('installments.empty')}</p>
-            <p class="cq-empty-desc">${tI('installments.emptyDesc')}</p>
-          </div>`;
-        return;
-      }
-
-      el.innerHTML = state.plans.map(plan => {
-        const paidCount = plan.paid_count || 0;
-        const total = plan.total_count || plan.num_installments;
-        const pct = total > 0 ? Math.round((paidCount / total) * 100) : 0;
-        const remaining = (plan.num_installments - paidCount) * plan.amount_per_installment;
-
-        const rows = (plan.payments || []).map(pay => {
-          const isPaid = !!pay.paid_at;
-          const badge = isPaid
-            ? `<span class="cq-badge-paid">${tI('installments.paid')}</span>`
-            : `<span class="cq-badge-pending">${tI('installments.pending')}</span>`;
-          const dateLabel = isPaid
-            ? `${tI('installments.paidOn')} ${fmtDate(pay.paid_at)}`
-            : `${tI('installments.due')} ${fmtDate(pay.due_date)}`;
-          const txLine = pay.transaction_id
-            ? `<div class="cq-payment-tx">🔗 ${pay.tx_description || ''} ${pay.tx_amount != null ? fmt(pay.tx_amount) : ''}</div>`
-            : '';
-
-          let actions = '';
-          if (isPaid) {
-            actions += `<button class="cq-btn-action cq-btn-action--unpay" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.unPay')}</button>`;
-            if (pay.transaction_id) {
-              actions += `<button class="cq-btn-action cq-btn-action--unlink" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.unlink')}</button>`;
-            } else {
-              actions += `<button class="cq-btn-action cq-btn-action--link" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.link')}</button>`;
-            }
-          } else {
-            actions += `<button class="cq-btn-action cq-btn-action--pay" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.pay')}</button>`;
-            actions += `<button class="cq-btn-action cq-btn-action--link" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.link')}</button>`;
-          }
-
-          return `
-            <div class="cq-payment-row">
-              <span class="cq-payment-num">${pay.installment_number}</span>
-              <div class="cq-payment-info">
-                <div class="cq-payment-name">${fmt(pay.amount != null ? pay.amount : plan.amount_per_installment)}</div>
-                <div class="cq-payment-date">${dateLabel}</div>
-                ${txLine}
-              </div>
-              ${badge}
-              <div class="cq-payment-actions">${actions}</div>
-            </div>`;
-        }).join('');
-
+    el.innerHTML = state.plans.map(plan => {
+      const paidCount = plan.paid_count || 0;
+      const total = plan.num_installments;
+      const pct = total > 0 ? Math.round((paidCount / total) * 100) : 0;
+      const remaining = (total - paidCount) * plan.amount_per_installment;
+      const rows = (plan.payments || []).map(pay => {
+        const isPaid = !!pay.paid_at;
+        const badge = isPaid
+          ? `<span class="cq-badge-paid">${tI('installments.paid')}</span>`
+          : `<span class="cq-badge-pending">${tI('installments.pending')}</span>`;
+        const dateLabel = isPaid
+          ? `${tI('installments.paidOn')} ${fmtDate(pay.paid_at)}`
+          : `${tI('installments.due')} ${fmtDate(pay.due_date)}`;
+        const txLine = pay.transaction_id
+          ? `<div class="cq-payment-tx">${esc(pay.tx_description || '')} ${pay.tx_amount != null ? fmt(pay.tx_amount) : ''}</div>`
+          : '';
+        let actions = '';
+        if (isPaid) {
+          actions += `<button class="cq-btn-action cq-btn-action--unpay" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.unPay')}</button>`;
+          actions += pay.transaction_id
+            ? `<button class="cq-btn-action cq-btn-action--unlink" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.unlink')}</button>`
+            : `<button class="cq-btn-action cq-btn-action--link" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.link')}</button>`;
+        } else {
+          actions += `<button class="cq-btn-action cq-btn-action--pay" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.pay')}</button>`;
+          actions += `<button class="cq-btn-action cq-btn-action--link" data-plan="${plan.id}" data-num="${pay.installment_number}">${tI('installments.link')}</button>`;
+        }
         return `
-          <div class="cq-card">
-            <div class="cq-card-head">
-              <div class="cq-card-top">
-                <div>
-                  <h3 class="cq-card-name">${esc(plan.name)}</h3>
-                  ${plan.category ? `<div class="cq-card-cat">${esc(plan.category)}</div>` : ''}
-                  <div class="cq-card-meta">
-                    <strong>${fmt(plan.total_amount)}</strong> total ·
-                    ${plan.num_installments} cuotas de <strong>${fmt(plan.amount_per_installment)}</strong>
-                    ${remaining > 0 ? ` · <span style="color:#ef4444">${fmt(remaining)} ${tI('installments.remaining')}</span>` : ''}
-                  </div>
-                </div>
-                <button class="cq-btn-delete" data-delete="${plan.id}" title="${tI('installments.delete')}">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                </button>
-              </div>
-              <div class="cq-progress-wrap">
-                <div class="cq-progress-label">
-                  <span>${paidCount}/${total} pagadas</span>
-                  <span>${pct}%</span>
-                </div>
-                <div class="cq-progress-bar"><div class="cq-progress-fill" style="width:${pct}%"></div></div>
-              </div>
+          <div class="cq-payment-row">
+            <span class="cq-payment-num">${pay.installment_number}</span>
+            <div class="cq-payment-info">
+              <div class="cq-payment-name">${fmt(plan.amount_per_installment)}</div>
+              <div class="cq-payment-date">${dateLabel}</div>
+              ${txLine}
             </div>
-            <div class="cq-payments">${rows}</div>
+            ${badge}
+            <div class="cq-payment-actions">${actions}</div>
           </div>`;
       }).join('');
-    }
+      return `
+        <div class="cq-card">
+          <div class="cq-card-head">
+            <div class="cq-card-top">
+              <div>
+                <h3 class="cq-card-name">${esc(plan.name)}</h3>
+                ${plan.category ? `<div class="cq-card-cat">${esc(plan.category)}</div>` : ''}
+                <div class="cq-card-meta">
+                  <strong>${fmt(plan.total_amount)}</strong> total &middot;
+                  ${total} cuotas de <strong>${fmt(plan.amount_per_installment)}</strong>
+                  ${remaining > 0 ? ` &middot; <span style="color:#ef4444">${fmt(remaining)} restante</span>` : ''}
+                </div>
+              </div>
+              <button class="cq-btn-delete" data-delete="${plan.id}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </button>
+            </div>
+            <div class="cq-progress-wrap">
+              <div class="cq-progress-label"><span>${paidCount}/${total} pagadas</span><span>${pct}%</span></div>
+              <div class="cq-progress-bar"><div class="cq-progress-fill" style="width:${pct}%"></div></div>
+            </div>
+          </div>
+          <div class="cq-payments">${rows}</div>
+        </div>`;
+    }).join('');
+  }
 
-    // ── actions ────────────────────────────────────────────────────────────────
-    async function payInstallment(planId, num) {
-      try {
-        await apiFetch('PUT', `/api/personal-budget/installments/${planId}/pay/${num}`, {});
-        await loadPlans();
-      } catch { showToast('Error al pagar cuota', 'error'); }
-    }
+  // ── API ────────────────────────────────────────────────────────────────────
+  async function loadPlans() {
+    try {
+      const data = await apiFetch('GET', '/api/personal-budget/installments');
+      state.plans = Array.isArray(data) ? data : [];
+    } catch { showToast('Error al cargar cuotas', 'error'); }
+    render();
+  }
 
-    async function unpayInstallment(planId, num) {
-      try {
-        await apiFetch('DELETE', `/api/personal-budget/installments/${planId}/pay/${num}`);
-        await loadPlans();
-      } catch { showToast('Error al desmarcar cuota', 'error'); }
-    }
+  async function loadTransactions() {
+    try {
+      const data = await apiFetch('GET', '/api/personal-budget/');
+      state.transactions = (data?.transactions || []).filter(tx => tx.type === 'expense');
+    } catch { state.transactions = []; }
+  }
 
-    async function deletePlan(planId) {
-      if (!confirm(tI('installments.deleteConfirm'))) return;
-      try {
-        await apiFetch('DELETE', `/api/personal-budget/installments/${planId}`);
-        await loadPlans();
-      } catch { showToast('Error al eliminar plan', 'error'); }
-    }
+  // ── modal add ──────────────────────────────────────────────────────────────
+  function openAddModal() {
+    ['f-name','f-total','f-num','f-category','f-notes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('f-start').value = new Date().toISOString().slice(0,10);
+    document.getElementById('f-calc').hidden = true;
+    document.getElementById('modal-add').hidden = false;
+    document.getElementById('f-name').focus();
+  }
 
-    async function openLinkModal(planId, num) {
-      _linkCtx = { planId, num };
-      await loadTransactions();
-      const sel = document.getElementById('f-link-tx');
-      sel.innerHTML = `<option value="">${tI('installments.linkModal.select')}</option>`;
-      if (!state.transactions.length) {
-        sel.innerHTML += `<option disabled>${tI('installments.linkModal.empty')}</option>`;
-      } else {
-        state.transactions.forEach(tx => {
-          sel.innerHTML += `<option value="${tx.id}">${fmtDate(tx.date)} · ${esc(tx.category)} · ${fmt(tx.amount)}${tx.description ? ' — ' + esc(tx.description) : ''}</option>`;
-        });
-      }
-      document.getElementById('modal-link').hidden = false;
-    }
+  function updateCalcHint() {
+    const total = parseFloat(document.getElementById('f-total').value);
+    const num   = parseInt(document.getElementById('f-num').value);
+    const hint  = document.getElementById('f-calc');
+    if (total > 0 && num > 0) {
+      hint.textContent = `= ${fmt(parseFloat((total/num).toFixed(2)))} por cuota`;
+      hint.hidden = false;
+    } else { hint.hidden = true; }
+  }
 
-    async function saveLinkModal() {
-      const sel = document.getElementById('f-link-tx');
-      const txId = sel.value ? Number(sel.value) : null;
-      if (!_linkCtx) return;
-      const { planId, num } = _linkCtx;
-      try {
-        await apiFetch('PUT', `/api/personal-budget/installments/${planId}/pay/${num}`, { transactionId: txId });
-        document.getElementById('modal-link').hidden = true;
-        await loadPlans();
-      } catch { showToast('Error al enlazar transacción', 'error'); }
-    }
-
-    async function unlinkTx(planId, num) {
-      try {
-        await apiFetch('PUT', `/api/personal-budget/installments/${planId}/pay/${num}`, { transactionId: null });
-        await loadPlans();
-      } catch { showToast('Error al desenlazar', 'error'); }
-    }
-
-    // ── add plan modal ─────────────────────────────────────────────────────────
-    function openAddModal() {
-      document.getElementById('f-name').value = '';
-      document.getElementById('f-total').value = '';
-      document.getElementById('f-num').value = '';
-      document.getElementById('f-start').value = new Date().toISOString().slice(0, 10);
-      document.getElementById('f-category').value = '';
-      document.getElementById('f-notes').value = '';
-      document.getElementById('f-calc').hidden = true;
-      document.getElementById('modal-add').hidden = false;
-      document.getElementById('f-name').focus();
-    }
-
-    function updateCalcHint() {
-      const total = parseFloat(document.getElementById('f-total').value);
-      const num = parseInt(document.getElementById('f-num').value);
-      const hint = document.getElementById('f-calc');
-      if (total > 0 && num > 0) {
-        const per = (total / num).toFixed(2);
-        hint.textContent = `= ${fmt(parseFloat(per))} por cuota`;
-        hint.hidden = false;
-      } else {
-        hint.hidden = true;
-      }
-    }
-
-    async function saveAddModal() {
-      const name     = document.getElementById('f-name').value.trim();
-      const total    = parseFloat(document.getElementById('f-total').value);
-      const num      = parseInt(document.getElementById('f-num').value);
-      const start    = document.getElementById('f-start').value;
-      const category = document.getElementById('f-category').value.trim();
-      const notes    = document.getElementById('f-notes').value.trim();
-
-      if (!name || !total || !num || !start) {
-        showToast('Completá los campos obligatorios', 'error'); return;
-      }
-      const perInstall = parseFloat((total / num).toFixed(2));
-      const btn = document.getElementById('modal-add-save');
-      btn.disabled = true;
-      try {
-        await apiFetch('POST', '/api/personal-budget/installments', {
-          name, totalAmount: total, numInstallments: num,
-          amountPerInstallment: perInstall, startDate: start,
-          category: category || null, notes: notes || null
-        });
-        document.getElementById('modal-add').hidden = true;
-        await loadPlans();
-        showToast('Plan creado correctamente');
-      } catch {
-        showToast('Error al crear el plan', 'error');
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    // ── events ─────────────────────────────────────────────────────────────────
-    document.getElementById('btn-add-plan').addEventListener('click', openAddModal);
-    document.getElementById('modal-add-close').addEventListener('click',  () => document.getElementById('modal-add').hidden = true);
-    document.getElementById('modal-add-cancel').addEventListener('click', () => document.getElementById('modal-add').hidden = true);
-    document.getElementById('modal-add-save').addEventListener('click',   saveAddModal);
-    document.getElementById('modal-link-close').addEventListener('click',  () => document.getElementById('modal-link').hidden = true);
-    document.getElementById('modal-link-cancel').addEventListener('click', () => document.getElementById('modal-link').hidden = true);
-    document.getElementById('modal-link-save').addEventListener('click',   saveLinkModal);
-
-    document.getElementById('f-total').addEventListener('input', updateCalcHint);
-    document.getElementById('f-num').addEventListener('input',   updateCalcHint);
-
-    // close overlays on backdrop click
-    ['modal-add', 'modal-link'].forEach(id => {
-      document.getElementById(id).addEventListener('click', e => {
-        if (e.target === e.currentTarget) e.currentTarget.hidden = true;
+  async function saveAddModal() {
+    const name     = document.getElementById('f-name').value.trim();
+    const total    = parseFloat(document.getElementById('f-total').value);
+    const num      = parseInt(document.getElementById('f-num').value);
+    const start    = document.getElementById('f-start').value;
+    const category = document.getElementById('f-category').value.trim();
+    const notes    = document.getElementById('f-notes').value.trim();
+    if (!name || !total || !num || !start) { showToast('Completá los campos obligatorios', 'error'); return; }
+    const perInstall = parseFloat((total / num).toFixed(2));
+    const saveBtn = document.getElementById('modal-add-save');
+    saveBtn.disabled = true;
+    try {
+      await apiFetch('POST', '/api/personal-budget/installments', {
+        name, totalAmount: total, numInstallments: num,
+        amountPerInstallment: perInstall, startDate: start,
+        category: category || null, notes: notes || null
       });
+      document.getElementById('modal-add').hidden = true;
+      showToast('Plan creado');
+      await loadPlans();
+    } catch { showToast('Error al crear el plan', 'error'); }
+    finally { saveBtn.disabled = false; }
+  }
+
+  // ── modal link ─────────────────────────────────────────────────────────────
+  async function openLinkModal(planId, num) {
+    _linkCtx = { planId, num };
+    await loadTransactions();
+    const sel = document.getElementById('f-link-tx');
+    sel.innerHTML = `<option value="">— Seleccionar transacción —</option>`;
+    state.transactions.forEach(tx => {
+      sel.innerHTML += `<option value="${tx.id}">${fmtDate(tx.date)} · ${esc(tx.category)} · ${fmt(tx.amount)}${tx.description ? ' — ' + esc(tx.description) : ''}</option>`;
     });
+    if (!state.transactions.length) sel.innerHTML += `<option disabled>Sin transacciones disponibles</option>`;
+    document.getElementById('modal-link').hidden = false;
+  }
 
-    // delegation for pay/unpay/link/unlink/delete
-    document.getElementById('cq-list').addEventListener('click', async e => {
-      const btn = e.target.closest('[data-plan][data-num]');
-      const del = e.target.closest('[data-delete]');
+  async function saveLinkModal() {
+    if (!_linkCtx) return;
+    const txId = document.getElementById('f-link-tx').value;
+    const { planId, num } = _linkCtx;
+    try {
+      await apiFetch('PUT', `/api/personal-budget/installments/${planId}/pay/${num}`, { transactionId: txId ? Number(txId) : null });
+      document.getElementById('modal-link').hidden = true;
+      await loadPlans();
+    } catch { showToast('Error al enlazar', 'error'); }
+  }
 
-      if (del) { await deletePlan(Number(del.dataset.delete)); return; }
-      if (!btn) return;
+  // ── plan actions ───────────────────────────────────────────────────────────
+  async function payInstallment(planId, num) {
+    try {
+      await apiFetch('PUT', `/api/personal-budget/installments/${planId}/pay/${num}`, {});
+      await loadPlans();
+    } catch { showToast('Error al pagar cuota', 'error'); }
+  }
 
-      const planId = Number(btn.dataset.plan);
-      const num    = Number(btn.dataset.num);
+  async function unpayInstallment(planId, num) {
+    try {
+      await apiFetch('DELETE', `/api/personal-budget/installments/${planId}/pay/${num}`);
+      await loadPlans();
+    } catch { showToast('Error al desmarcar', 'error'); }
+  }
 
-      if (btn.classList.contains('cq-btn-action--pay'))    await payInstallment(planId, num);
-      if (btn.classList.contains('cq-btn-action--unpay'))  await unpayInstallment(planId, num);
-      if (btn.classList.contains('cq-btn-action--link'))   await openLinkModal(planId, num);
-      if (btn.classList.contains('cq-btn-action--unlink')) await unlinkTx(planId, num);
-    });
+  async function deletePlan(planId) {
+    if (!confirm('¿Eliminar este plan? Se borrarán todos los registros de pago.')) return;
+    try {
+      await apiFetch('DELETE', `/api/personal-budget/installments/${planId}`);
+      await loadPlans();
+    } catch { showToast('Error al eliminar', 'error'); }
+  }
 
-    // logout
-    document.getElementById('btn-logout')?.addEventListener('click', async () => {
-      await fetch('/auth/logout', { method: 'POST' });
-      window.location.href = '/login';
-    });
+  async function unlinkTx(planId, num) {
+    try {
+      await apiFetch('PUT', `/api/personal-budget/installments/${planId}/pay/${num}`, { transactionId: null });
+      await loadPlans();
+    } catch { showToast('Error al desenlazar', 'error'); }
+  }
 
-    // ── init ───────────────────────────────────────────────────────────────────
+  // ── event listeners (síncronos, no dependen del init async) ───────────────
+  document.getElementById('btn-add-plan').onclick = openAddModal;
+  document.getElementById('modal-add-close').onclick  = () => { document.getElementById('modal-add').hidden = true; };
+  document.getElementById('modal-add-cancel').onclick = () => { document.getElementById('modal-add').hidden = true; };
+  document.getElementById('modal-add-save').onclick   = saveAddModal;
+  document.getElementById('modal-link-close').onclick  = () => { document.getElementById('modal-link').hidden = true; };
+  document.getElementById('modal-link-cancel').onclick = () => { document.getElementById('modal-link').hidden = true; };
+  document.getElementById('modal-link-save').onclick   = saveLinkModal;
+  document.getElementById('f-total').oninput = updateCalcHint;
+  document.getElementById('f-num').oninput   = updateCalcHint;
+
+  document.getElementById('modal-add').onclick  = e => { if (e.target === e.currentTarget) e.currentTarget.hidden = true; };
+  document.getElementById('modal-link').onclick = e => { if (e.target === e.currentTarget) e.currentTarget.hidden = true; };
+
+  document.getElementById('cq-list').onclick = async e => {
+    const btn = e.target.closest('[data-plan][data-num]');
+    const del = e.target.closest('[data-delete]');
+    if (del) { await deletePlan(Number(del.dataset.delete)); return; }
+    if (!btn) return;
+    const planId = Number(btn.dataset.plan);
+    const num    = Number(btn.dataset.num);
+    if (btn.classList.contains('cq-btn-action--pay'))    await payInstallment(planId, num);
+    if (btn.classList.contains('cq-btn-action--unpay'))  await unpayInstallment(planId, num);
+    if (btn.classList.contains('cq-btn-action--link'))   await openLinkModal(planId, num);
+    if (btn.classList.contains('cq-btn-action--unlink')) await unlinkTx(planId, num);
+  };
+
+  document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    await fetch('/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  });
+
+  // ── init async (no bloquea los listeners si falla) ─────────────────────────
+  (async () => {
+    try {
+      await I18N.init();
+      initProfileMenu();
+      await loadProfileAvatar();
+    } catch (e) { console.error('init error:', e); }
     await loadPlans();
   })();
   </script>
