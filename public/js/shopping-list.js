@@ -243,6 +243,9 @@ function renderTable(container, items) {
              placeholder="${tSafe('shopping.searchPlaceholder','Buscar artículo…')}"
              value="${esc(_searchTerm)}" autocomplete="off" spellcheck="false">
       ${_searchTerm ? `<button class="sl-search-clear" id="sl-search-clear" aria-label="Limpiar">×</button>` : ''}
+      <button class="sl-scan-btn" id="sl-scan-btn" type="button" aria-label="${tSafe('shopping.scanBarcode','Buscar por código de barras')}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </button>
     </div>
     <div class="sl-wrap">
       <table class="sl-table">
@@ -292,6 +295,7 @@ function renderTable(container, items) {
       applySearchFilter();
     });
   }
+  document.getElementById('sl-scan-btn')?.addEventListener('click', openSlScanner);
   applySearchFilter();
 }
 
@@ -1649,6 +1653,8 @@ document.addEventListener('DOMContentLoaded', init);
     window.open('https://wa.me/?text=' + encodeURIComponent(buildExportText()), '_blank');
   });
 
+  document.getElementById('sl-scanner-close')?.addEventListener('click', closeSlScanner);
+
   document.getElementById('export-copy').addEventListener('click', function () {
     closeMenu();
     var text = buildExportText();
@@ -1673,4 +1679,88 @@ document.addEventListener('DOMContentLoaded', init);
       document.body.removeChild(ta);
     }
   });
+
+// ── Barcode scanner for shopping list search ──────────────────
+const _slScanner = { active: false, stream: null, raf: null, detector: null };
+
+function closeSlScanner() {
+  _slScanner.active = false;
+  if (_slScanner.raf)    { cancelAnimationFrame(_slScanner.raf); _slScanner.raf = null; }
+  if (_slScanner.stream) { _slScanner.stream.getTracks().forEach(t => t.stop()); _slScanner.stream = null; }
+  const vid = document.getElementById('sl-scanner-video');
+  if (vid) vid.srcObject = null;
+  const overlay = document.getElementById('sl-scanner-overlay');
+  if (overlay) overlay.hidden = true;
+}
+
+function slScanLoop(video) {
+  if (!_slScanner.active) return;
+  _slScanner.raf = requestAnimationFrame(async () => {
+    if (!_slScanner.active) return;
+    try {
+      const results = await _slScanner.detector.detect(video);
+      if (results.length > 0) { await onSlBarcodeDetected(results[0].rawValue); return; }
+    } catch {}
+    slScanLoop(video);
+  });
+}
+
+async function openSlScanner() {
+  if (_slScanner.active) return;
+  if (!('BarcodeDetector' in window)) {
+    showToast(tSafe('shopping.scannerUnsupported', 'Escáner no disponible en este dispositivo'), 'warn');
+    return;
+  }
+  const overlay = document.getElementById('sl-scanner-overlay');
+  const video   = document.getElementById('sl-scanner-video');
+  const label   = document.getElementById('sl-scanner-label');
+  try {
+    _slScanner.detector = new BarcodeDetector({
+      formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'],
+    });
+    _slScanner.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+    });
+    video.srcObject = _slScanner.stream;
+    await video.play();
+    _slScanner.active = true;
+    overlay.hidden = false;
+    if (label) label.textContent = tSafe('shopping.scannerHint', 'Apuntá al código de barras');
+    slScanLoop(video);
+  } catch (err) {
+    closeSlScanner();
+    const msg = err?.name === 'NotAllowedError'
+      ? tSafe('shopping.scannerDenied', 'Permiso de cámara denegado')
+      : tSafe('shopping.scannerError',  'No se pudo activar la cámara');
+    showToast(msg, 'warn');
+  }
+}
+
+async function onSlBarcodeDetected(barcode) {
+  closeSlScanner();
+  try {
+    const res  = await apiFetch('GET', `/api/product-master/lookup?barcode=${encodeURIComponent(barcode)}`);
+    const name = res?.name?.trim();
+    if (!name) {
+      showToast(tSafe('shopping.scanNotInList', 'Código no encontrado en tu catálogo'), 'warn');
+      return;
+    }
+    _searchTerm = name;
+    const input = document.getElementById('shopping-search-input');
+    if (input) input.value = name;
+    applySearchFilter();
+    const visible = [...document.querySelectorAll('#shopping-list .sl-row[data-name]')]
+      .filter(tr => !tr.hidden);
+    if (visible.length === 0) {
+      showToast(`"${name}" ${tSafe('shopping.scanNotInList','no está en la lista')}`, 'warn');
+    } else {
+      visible[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      visible[0].classList.add('sl-row--highlight');
+      setTimeout(() => visible[0].classList.remove('sl-row--highlight'), 1800);
+    }
+  } catch {
+    showToast(tSafe('shopping.scannerError', 'Error al buscar el código'), 'error');
+  }
+}
+
 })();

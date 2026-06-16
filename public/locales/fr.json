@@ -199,6 +199,12 @@
     "title": "Liste de courses",
     "searchPlaceholder": "Rechercher un article…",
     "searchEmpty": "Aucun article trouvé",
+    "scanBarcode": "Rechercher par code-barres",
+    "scannerHint": "Pointez vers le code-barres",
+    "scannerDenied": "Permission caméra refusée",
+    "scannerError": "Impossible d'activer la caméra",
+    "scannerUnsupported": "Scanner non disponible sur cet appareil",
+    "scanNotInList": "n'est pas dans la liste",
     "clear": "Effacer",
     "registerBtn": "Enregistrer l'achat",
     "export": {

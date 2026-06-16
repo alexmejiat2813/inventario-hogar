@@ -199,6 +199,12 @@
     "title": "Shopping list",
     "searchPlaceholder": "Search item…",
     "searchEmpty": "No items found",
+    "scanBarcode": "Search by barcode",
+    "scannerHint": "Point at the barcode",
+    "scannerDenied": "Camera permission denied",
+    "scannerError": "Could not activate camera",
+    "scannerUnsupported": "Scanner not available on this device",
+    "scanNotInList": "not in the list",
     "clear": "Clear",
     "registerBtn": "Register purchase",
     "export": {

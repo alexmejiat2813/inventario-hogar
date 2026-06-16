@@ -199,6 +199,12 @@
     "title": "Lista de compras",
     "searchPlaceholder": "Buscar artículo…",
     "searchEmpty": "No se encontraron artículos",
+    "scanBarcode": "Buscar por código de barras",
+    "scannerHint": "Apuntá al código de barras",
+    "scannerDenied": "Permiso de cámara denegado",
+    "scannerError": "No se pudo activar la cámara",
+    "scannerUnsupported": "Escáner no disponible en este dispositivo",
+    "scanNotInList": "no está en la lista",
     "clear": "Limpiar",
     "registerBtn": "Registrar compra",
     "export": {

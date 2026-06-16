@@ -324,6 +324,22 @@
     </div>
   </div>
 
+  <!-- Scanner overlay — barcode search in shopping list -->
+  <div class="pm-scanner-overlay" id="sl-scanner-overlay" hidden>
+    <div class="pm-scanner-box">
+      <video id="sl-scanner-video" class="pm-scanner-video" autoplay muted playsinline></video>
+      <div class="pm-scanner-frame">
+        <span class="pm-corner pm-corner--tl"></span>
+        <span class="pm-corner pm-corner--tr"></span>
+        <span class="pm-corner pm-corner--bl"></span>
+        <span class="pm-corner pm-corner--br"></span>
+        <div class="pm-scanner-line"></div>
+      </div>
+      <p class="pm-scanner-label" id="sl-scanner-label">Apuntá al código de barras</p>
+      <button class="pm-scanner-close" id="sl-scanner-close">✕ Cancelar</button>
+    </div>
+  </div>
+
   <div class="mob-overlay" id="mob-overlay"></div>
   <aside class="mob-drawer" id="mob-drawer" aria-hidden="true">
     <div class="mob-dhead">

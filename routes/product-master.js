@@ -70,6 +70,20 @@ router.delete('/:id', (req, res) => {
   }
 });
 
+// GET /api/product-master/lookup?barcode=X — read-only lookup, no side effects
+router.get('/lookup', (req, res) => {
+  const { barcode } = req.query;
+  if (!barcode?.trim()) return res.status(400).json({ error: 'Código requerido' });
+  try {
+    const product = db.findProductMasterByBarcode(req.user.id, barcode.trim());
+    if (!product) return res.json({ found: false });
+    res.json({ found: true, id: product.id, name: product.name, brand: product.brand });
+  } catch (err) {
+    logger.error({ err }, 'lookup failed');
+    res.status(500).json({ error: 'Error al buscar' });
+  }
+});
+
 // POST /api/product-master/scan-register
 // 1. Si barcode existe en maestro del usuario → devuelve el registro
 // 2. Si no → consulta Open Food Facts, registra y devuelve
