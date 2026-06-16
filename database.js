@@ -1064,7 +1064,14 @@ module.exports = {
   },
 
   deleteUnit(id) {
-    return db.prepare('DELETE FROM units WHERE id = ?').run(id).changes > 0;
+    const unit = this.getUnit(id);
+    if (!unit) return { error: 'not_found' };
+    const used =
+      db.prepare('SELECT 1 AS x FROM products        WHERE unit = ? LIMIT 1').get(unit.name) ||
+      db.prepare('SELECT 1 AS x FROM catalog_products WHERE default_unit = ? LIMIT 1').get(unit.name);
+    if (used) return { error: 'in_use' };
+    db.prepare('DELETE FROM units WHERE id = ?').run(id);
+    return { ok: true };
   },
 
   // ── Catalog ────────────────────────────────────────────────────────────────

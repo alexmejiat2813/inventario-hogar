@@ -672,6 +672,7 @@
       "colType": "Type",
       "colActions": "Actions",
       "empty": "Aucune unité",
+      "inUse": "Impossible de supprimer : des produits utilisent cette unité. Renommez-la pour fusionner.",
       "types": {
         "peso": "Poids",
         "volumen": "Volume",

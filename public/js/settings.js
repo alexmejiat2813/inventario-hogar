@@ -603,7 +603,12 @@ async function deleteUnit(id, name) {
     toast(t('settings.units.modal.deleted'), 'info');
     state.units = await api('GET', '/api/settings/units');
     renderUnits();
-  } catch (err) { toast(err.message, 'error'); }
+  } catch (err) {
+    const msg = err.message === 'unit_in_use'
+      ? t('settings.units.inUse')
+      : err.message;
+    toast(msg, 'error');
+  }
 }
 
 // ── Store modal ───────────────────────────────────────────────────────────────

@@ -80,8 +80,9 @@ router.delete('/units/:id', (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
-    const ok = db.deleteUnit(id);
-    if (!ok) return res.status(404).json({ error: 'Unidad no encontrada' });
+    const result = db.deleteUnit(id);
+    if (result.error === 'not_found') return res.status(404).json({ error: 'Unidad no encontrada' });
+    if (result.error === 'in_use')    return res.status(409).json({ error: 'unit_in_use' });
     res.json({ message: 'Unidad eliminada' });
   } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar la unidad' }); }
 });

@@ -672,6 +672,7 @@
       "colType": "Type",
       "colActions": "Actions",
       "empty": "No units",
+      "inUse": "Can't delete: products are using this unit. Rename it to merge instead.",
       "types": {
         "peso": "Weight",
         "volumen": "Volume",
