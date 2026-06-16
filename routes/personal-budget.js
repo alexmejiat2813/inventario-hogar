@@ -401,7 +401,7 @@ router.delete('/categories/:id', (req, res) => {
 // ── Installment Plans (Cuotas) ─────────────────────────────────────────────────
 router.get('/installments', (req, res) => {
   try { res.json(db.getInstallmentPlans(req.user.id)); }
-  catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener cuotas.' }); }
+  catch (err) { console.error(err); res.status(500).json({ error: 'Error al obtener cuotas.' }); }
 });
 
 router.post('/installments', (req, res) => {
@@ -420,7 +420,7 @@ router.post('/installments', (req, res) => {
       notes: notes?.trim() || null,
     });
     res.status(201).json(plan);
-  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al crear cuota.' }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Error al crear cuota.' }); }
 });
 
 router.delete('/installments/:id', (req, res) => {
@@ -430,7 +430,7 @@ router.delete('/installments/:id', (req, res) => {
     const ok = db.deleteInstallmentPlan(req.user.id, id);
     if (!ok) return res.status(404).json({ error: 'Plan no encontrado.' });
     res.json({ ok: true });
-  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al eliminar cuota.' }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Error al eliminar cuota.' }); }
 });
 
 router.put('/installments/:planId/pay/:num', (req, res) => {
@@ -443,7 +443,7 @@ router.put('/installments/:planId/pay/:num', (req, res) => {
     const ok = db.payInstallment(req.user.id, planId, num, paidAt || localDate, transactionId ? Number(transactionId) : null);
     if (!ok) return res.status(404).json({ error: 'Cuota no encontrada.' });
     res.json({ ok: true });
-  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al pagar cuota.' }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Error al pagar cuota.' }); }
 });
 
 router.delete('/installments/:planId/pay/:num', (req, res) => {
@@ -453,7 +453,7 @@ router.delete('/installments/:planId/pay/:num', (req, res) => {
     const ok = db.unpayInstallment(req.user.id, planId, num);
     if (!ok) return res.status(404).json({ error: 'Cuota no encontrada.' });
     res.json({ ok: true });
-  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al desmarcar pago.' }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Error al desmarcar pago.' }); }
 });
 
 module.exports = router;
