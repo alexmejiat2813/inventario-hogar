@@ -7,6 +7,7 @@ const MONTH_RE    = /^\d{4}-\d{2}$/;
 const DATE_RE     = /^\d{4}-\d{2}-\d{2}$/;
 const DUE_DATE_RE = /^(\d{1,2}|\d{4}-\d{2}-\d{2})$/;
 const VALID_FREQ  = ['Mensual', 'Quincenal', 'Semestral', 'Anual', 'Bianual'];
+const CURRENCY_RE = /^[A-Z]{3}$/;
 
 // GET /api/personal-budget?month=YYYY-MM
 router.get('/', (req, res) => {
@@ -404,12 +405,33 @@ router.get('/installments', (req, res) => {
   catch (err) { console.error(err); res.status(500).json({ error: 'Error al obtener cuotas.' }); }
 });
 
+// GET /installments/fx-rate?from=CAD&to=COP — tasa de cambio actual (open.er-api.com, sin key)
+router.get('/installments/fx-rate', async (req, res) => {
+  try {
+    const from = String(req.query.from || '').toUpperCase();
+    const to   = String(req.query.to   || '').toUpperCase();
+    if (!CURRENCY_RE.test(from) || !CURRENCY_RE.test(to))
+      return res.status(400).json({ error: 'Divisas inválidas.' });
+    if (from === to) return res.json({ rate: 1 });
+
+    const resp = await fetch(`https://open.er-api.com/v6/latest/${from}`);
+    if (!resp.ok) return res.status(502).json({ error: 'No se pudo consultar el tipo de cambio.' });
+    const data = await resp.json();
+    const rate = data?.rates?.[to];
+    if (!rate) return res.status(404).json({ error: `No hay tasa disponible para ${from} → ${to}.` });
+    res.json({ rate });
+  } catch (err) { console.error(err); res.status(502).json({ error: 'Error al consultar el tipo de cambio.' }); }
+});
+
 router.post('/installments', (req, res) => {
   try {
-    const { name, totalAmount, numInstallments, amountPerInstallment, startDate, category, notes } = req.body;
+    const { name, totalAmount, numInstallments, amountPerInstallment, startDate, category, notes,
+            currency, originalAmount, originalCurrency, exchangeRate } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido.' });
     if (!totalAmount || !numInstallments || !amountPerInstallment || !startDate)
       return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+    if (currency && !CURRENCY_RE.test(currency)) return res.status(400).json({ error: 'Divisa inválida.' });
+    if (originalCurrency && !CURRENCY_RE.test(originalCurrency)) return res.status(400).json({ error: 'Divisa de origen inválida.' });
     const plan = db.createInstallmentPlan(req.user.id, {
       name: name.trim(),
       totalAmount: Number(totalAmount),
@@ -418,6 +440,10 @@ router.post('/installments', (req, res) => {
       startDate,
       category: category?.trim() || null,
       notes: notes?.trim() || null,
+      currency: currency || 'USD',
+      originalAmount: originalAmount != null ? Number(originalAmount) : null,
+      originalCurrency: originalCurrency || null,
+      exchangeRate: exchangeRate != null ? Number(exchangeRate) : null,
     });
     res.status(201).json(plan);
   } catch (err) { console.error(err); res.status(500).json({ error: 'Error al crear cuota.' }); }

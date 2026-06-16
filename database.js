@@ -362,6 +362,7 @@ const userCols    = db.prepare('PRAGMA table_info(users)').all().map(c => c.name
 const itemCols    = db.prepare('PRAGMA table_info(purchase_items)').all().map(c => c.name);
 const tplItemCols = db.prepare('PRAGMA table_info(list_template_items)').all().map(c => c.name);
 const pmCols      = db.prepare('PRAGMA table_info(product_master)').all().map(c => c.name);
+const ipCols      = db.prepare('PRAGMA table_info(installment_plans)').all().map(c => c.name);
 
 db.exec('BEGIN');
 try {
@@ -390,6 +391,10 @@ try {
   if (!pmCols.includes('nutriscore'))         db.exec('ALTER TABLE product_master ADD COLUMN nutriscore TEXT');
   if (!productCols.includes('product_master_id'))
     db.exec('ALTER TABLE products ADD COLUMN product_master_id INTEGER REFERENCES product_master(id) ON DELETE SET NULL');
+  if (!ipCols.includes('currency'))          db.exec("ALTER TABLE installment_plans ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'");
+  if (!ipCols.includes('original_amount'))   db.exec('ALTER TABLE installment_plans ADD COLUMN original_amount REAL');
+  if (!ipCols.includes('original_currency')) db.exec('ALTER TABLE installment_plans ADD COLUMN original_currency TEXT');
+  if (!ipCols.includes('exchange_rate'))     db.exec('ALTER TABLE installment_plans ADD COLUMN exchange_rate REAL');
   db.exec('COMMIT');
 } catch (err) { try { db.exec('ROLLBACK'); } catch {} throw err; }
 
@@ -2433,13 +2438,14 @@ module.exports = {
   },
 
   // ── Installment Plans (Cuotas) ──────────────────────────────────────────────
-  createInstallmentPlan(userId, { name, totalAmount, numInstallments, amountPerInstallment, startDate, category, notes }) {
+  createInstallmentPlan(userId, { name, totalAmount, numInstallments, amountPerInstallment, startDate, category, notes, currency, originalAmount, originalCurrency, exchangeRate }) {
     db.prepare('BEGIN').run();
     try {
       const { lastInsertRowid } = db.prepare(`
-        INSERT INTO installment_plans (user_id, name, total_amount, num_installments, amount_per_installment, start_date, category, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(userId, name, totalAmount, numInstallments, amountPerInstallment, startDate, category || null, notes || null);
+        INSERT INTO installment_plans (user_id, name, total_amount, num_installments, amount_per_installment, start_date, category, notes, currency, original_amount, original_currency, exchange_rate)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(userId, name, totalAmount, numInstallments, amountPerInstallment, startDate, category || null, notes || null,
+        currency || 'USD', originalAmount ?? null, originalCurrency || null, exchangeRate ?? null);
       const planId = Number(lastInsertRowid);
       const insertPayment = db.prepare(
         'INSERT INTO installment_payments (plan_id, installment_number, due_date) VALUES (?, ?, ?)'

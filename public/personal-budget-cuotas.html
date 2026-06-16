@@ -87,6 +87,34 @@
             <input type="number" id="f-num" min="1" max="360" step="1" placeholder="12">
           </div>
         </div>
+        <div class="cq-field-row">
+          <div class="cq-field">
+            <label data-i18n="installments.form.currency">Moneda de la deuda</label>
+            <select id="f-currency">
+              <option value="CAD">CAD — Dólar canadiense</option>
+              <option value="COP">COP — Peso colombiano</option>
+              <option value="USD">USD — Dólar estadounidense</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="MXN">MXN — Peso mexicano</option>
+              <option value="BRL">BRL — Real brasileño</option>
+              <option value="GBP">GBP — Libra esterlina</option>
+            </select>
+          </div>
+          <div class="cq-field">
+            <label data-i18n="installments.form.convertTo">Convertir a (opcional)</label>
+            <select id="f-convert-to">
+              <option value="" data-i18n="installments.form.noConvert">— No convertir —</option>
+              <option value="CAD">CAD — Dólar canadiense</option>
+              <option value="COP">COP — Peso colombiano</option>
+              <option value="USD">USD — Dólar estadounidense</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="MXN">MXN — Peso mexicano</option>
+              <option value="BRL">BRL — Real brasileño</option>
+              <option value="GBP">GBP — Libra esterlina</option>
+            </select>
+          </div>
+        </div>
+        <div class="cq-calc-hint" id="f-fx-hint" hidden></div>
         <div class="cq-calc-hint" id="f-calc" hidden></div>
         <div class="cq-field">
           <label data-i18n="installments.form.start">Fecha primera cuota *</label>

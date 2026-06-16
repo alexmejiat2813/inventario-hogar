@@ -1149,6 +1149,7 @@
     "paidOn": "Paid on",
     "delete": "Delete plan",
     "deleteConfirm": "Delete this installment plan? All payment records will be removed.",
+    "convertedFrom": "Entered as {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
     "form": {
       "name": "Name (e.g. Samsung TV)",
       "total": "Total amount",
@@ -1157,6 +1158,9 @@
       "start": "First installment date",
       "category": "Category (optional)",
       "notes": "Notes (optional)",
+      "currency": "Debt currency",
+      "convertTo": "Convert to (optional)",
+      "noConvert": "— Don't convert —",
       "calc": "= {{amount}} per installment",
       "save": "Create plan",
       "cancel": "Cancel"

@@ -1149,6 +1149,7 @@
     "paidOn": "Payé le",
     "delete": "Supprimer le plan",
     "deleteConfirm": "Supprimer ce plan ? Tous les enregistrements de paiement seront supprimés.",
+    "convertedFrom": "Saisi en {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
     "form": {
       "name": "Nom (ex : TV Samsung)",
       "total": "Montant total",
@@ -1157,6 +1158,9 @@
       "start": "Date de la première échéance",
       "category": "Catégorie (optionnel)",
       "notes": "Notes (optionnel)",
+      "currency": "Devise de la dette",
+      "convertTo": "Convertir en (optionnel)",
+      "noConvert": "— Ne pas convertir —",
       "calc": "= {{amount}} par échéance",
       "save": "Créer le plan",
       "cancel": "Annuler"

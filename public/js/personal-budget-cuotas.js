@@ -96,12 +96,15 @@ function render() {
         '<div class="cq-card-head">',
         '<div class="cq-card-top">',
         '<div>',
-        '<h3 class="cq-card-name">' + esc(plan.name) + '</h3>',
+        '<h3 class="cq-card-name">' + esc(plan.name) + ' <span class="cq-currency-badge">' + esc(plan.currency || 'USD') + '</span></h3>',
         plan.category ? '<div class="cq-card-cat">' + esc(plan.category) + '</div>' : '',
         '<div class="cq-card-meta">',
-        '<strong>' + fmt(plan.total_amount) + '</strong> total &middot; ',
-        total + ' cuotas de <strong>' + fmt(plan.amount_per_installment) + '</strong>',
-        remaining > 0 ? ' &middot; <span class="cq-remaining">' + fmt(remaining) + ' ' + esc(I18N.t('installments.remaining')) + '</span>' : '',
+        '<strong>' + fmt(plan.total_amount) + ' ' + esc(plan.currency || 'USD') + '</strong> total &middot; ',
+        total + ' cuotas de <strong>' + fmt(plan.amount_per_installment) + ' ' + esc(plan.currency || 'USD') + '</strong>',
+        remaining > 0 ? ' &middot; <span class="cq-remaining">' + fmt(remaining) + ' ' + esc(plan.currency || 'USD') + ' ' + esc(I18N.t('installments.remaining')) + '</span>' : '',
+        plan.original_currency ? '<div class="cq-fx-note">' + esc(I18N.t('installments.convertedFrom', {
+          amount: fmt(plan.original_amount), currency: plan.original_currency, rate: fmt(plan.exchange_rate), target: plan.currency
+        })) + '</div>' : '',
         '</div></div>',
         '<button class="cq-btn-delete" data-delete="' + plan.id + '" title="' + esc(I18N.t('installments.delete')) + '">',
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
@@ -177,7 +180,10 @@ function openAddModal() {
     document.getElementById('f-start').value = new Date().toISOString().slice(0, 10);
     document.getElementById('f-category').selectedIndex = 0;
     document.getElementById('f-notes').value = '';
+    document.getElementById('f-currency').value = 'CAD';
+    document.getElementById('f-convert-to').value = '';
     document.getElementById('f-calc').hidden = true;
+    document.getElementById('f-fx-hint').hidden = true;
     document.getElementById('modal-add').hidden = false;
     setTimeout(function() { document.getElementById('f-name').focus(); }, 50);
   } catch(e) { console.error('openAddModal:', e); }
@@ -197,6 +203,35 @@ function updateCalcHint() {
   } catch {}
 }
 
+// ── conversión de divisas ────────────────────────────────────────────────────
+var _fxRateCache = {};
+var _fxHintTimer = null;
+
+function updateFxHint() {
+  clearTimeout(_fxHintTimer);
+  var hint = document.getElementById('f-fx-hint');
+  var from = document.getElementById('f-currency').value;
+  var to   = document.getElementById('f-convert-to').value;
+  var total = parseFloat(document.getElementById('f-total').value);
+  if (!to || to === from || !(total > 0)) { hint.hidden = true; return; }
+  _fxHintTimer = setTimeout(function() {
+    fetchFxRate(from, to).then(function(rate) {
+      if (!rate) { hint.hidden = true; return; }
+      hint.textContent = '= ' + fmt(parseFloat((total * rate).toFixed(2))) + ' ' + to +
+        ' (1 ' + from + ' = ' + fmt(rate) + ' ' + to + ')';
+      hint.hidden = false;
+    }).catch(function() { hint.hidden = true; });
+  }, 400);
+}
+
+function fetchFxRate(from, to) {
+  if (from === to) return Promise.resolve(1);
+  var key = from + '_' + to;
+  if (_fxRateCache[key]) return Promise.resolve(_fxRateCache[key]);
+  return apiFetch('GET', '/api/personal-budget/installments/fx-rate?from=' + from + '&to=' + to)
+    .then(function(data) { _fxRateCache[key] = data.rate; return data.rate; });
+}
+
 function saveAddModal() {
   try {
     var name     = document.getElementById('f-name').value.trim();
@@ -205,26 +240,39 @@ function saveAddModal() {
     var start    = document.getElementById('f-start').value;
     var category = document.getElementById('f-category').value.trim();
     var notes    = document.getElementById('f-notes').value.trim();
+    var currency = document.getElementById('f-currency').value;
+    var convertTo = document.getElementById('f-convert-to').value;
     if (!name || !total || !num || !start) { showToast('Completá los campos obligatorios', 'error'); return; }
-    var perInstall = parseFloat((total / num).toFixed(2));
     var saveBtn = document.getElementById('modal-add-save');
     saveBtn.disabled = true;
-    apiFetch('POST', '/api/personal-budget/installments', {
-      name: name,
-      totalAmount: total,
-      numInstallments: num,
-      amountPerInstallment: perInstall,
-      startDate: start,
-      category: category || null,
-      notes: notes || null
-    }).then(function() {
-      document.getElementById('modal-add').hidden = true;
-      showToast('Plan creado');
-      return loadPlans();
-    }).catch(function(e) {
-      console.error('saveAddModal:', e);
-      showToast('Error al crear el plan', 'error');
-    }).then(function() { saveBtn.disabled = false; });
+
+    var needsConvert = convertTo && convertTo !== currency;
+    (needsConvert ? fetchFxRate(currency, convertTo) : Promise.resolve(null))
+      .then(function(rate) {
+        var finalTotal   = needsConvert ? parseFloat((total * rate).toFixed(2)) : total;
+        var finalPerInst = parseFloat((finalTotal / num).toFixed(2));
+        return apiFetch('POST', '/api/personal-budget/installments', {
+          name: name,
+          totalAmount: finalTotal,
+          numInstallments: num,
+          amountPerInstallment: finalPerInst,
+          startDate: start,
+          category: category || null,
+          notes: notes || null,
+          currency: needsConvert ? convertTo : currency,
+          originalAmount: needsConvert ? total : null,
+          originalCurrency: needsConvert ? currency : null,
+          exchangeRate: needsConvert ? rate : null
+        });
+      })
+      .then(function() {
+        document.getElementById('modal-add').hidden = true;
+        showToast('Plan creado');
+        return loadPlans();
+      }).catch(function(e) {
+        console.error('saveAddModal:', e);
+        showToast('Error al crear el plan o al consultar el tipo de cambio', 'error');
+      }).then(function() { saveBtn.disabled = false; });
   } catch(e) { console.error('saveAddModal sync error:', e); }
 }
 
@@ -295,8 +343,10 @@ document.getElementById('modal-add-save').onclick   = saveAddModal;
 document.getElementById('modal-link-close').onclick  = function() { document.getElementById('modal-link').hidden = true; };
 document.getElementById('modal-link-cancel').onclick = function() { document.getElementById('modal-link').hidden = true; };
 document.getElementById('modal-link-save').onclick   = saveLinkModal;
-document.getElementById('f-total').oninput = updateCalcHint;
+document.getElementById('f-total').oninput = function() { updateCalcHint(); updateFxHint(); };
 document.getElementById('f-num').oninput   = updateCalcHint;
+document.getElementById('f-currency').onchange    = updateFxHint;
+document.getElementById('f-convert-to').onchange  = updateFxHint;
 document.getElementById('modal-add').onclick  = function(e) { if (e.target === this) this.hidden = true; };
 document.getElementById('modal-link').onclick = function(e) { if (e.target === this) this.hidden = true; };
 

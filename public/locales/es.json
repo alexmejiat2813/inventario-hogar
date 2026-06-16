@@ -1150,6 +1150,7 @@
     "paidOn": "Pagada el",
     "delete": "Eliminar plan",
     "deleteConfirm": "¿Eliminar este plan de cuotas? Se borrarán todos los registros de pago.",
+    "convertedFrom": "Ingresado como {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
     "form": {
       "name": "Nombre (ej: TV Samsung)",
       "total": "Monto total",
@@ -1158,6 +1159,9 @@
       "start": "Fecha primera cuota",
       "category": "Categoría (opcional)",
       "notes": "Notas (opcional)",
+      "currency": "Moneda de la deuda",
+      "convertTo": "Convertir a (opcional)",
+      "noConvert": "— No convertir —",
       "calc": "= {{amount}} por cuota",
       "save": "Crear plan",
       "cancel": "Cancelar"
