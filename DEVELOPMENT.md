@@ -238,6 +238,9 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 168 | feat | Opción A — FK `product_master_id` en `products`: migración, `products.create()` acepta `productMasterId`, nueva `db.linkMaster()`, `updQty`/`revertQty`/`applyQty` respetan `tracks_stock` (subquery), auto-link por `catalog_product_id` en flujo `saveToCatalog`, endpoint `PUT /api/products/:id/link-master`. Bump v1.1.9. | `c52bd23` | ✅ |
 | 169 | feat | UI vinculación stock↔maestro: selector en modal de stock, `populateLinkMasterSelect`, `handleLinkMasterChange` (PUT /:id/link-master + toast + update state sin reload), `loadModalData` carga product_master, i18n ES/EN/FR. Bump v1.2.0. | `12ab3ec` | ✅ |
 | 170 | feat | Búsqueda por código de barras en lista de compras: botón cámara en barra de búsqueda, scanner overlay (reutiliza CSS de products), `GET /api/product-master/lookup?barcode=X` (sin side effects), `openSlScanner`/`onSlBarcodeDetected` → filtra lista + scroll + highlight `.sl-row--highlight`. i18n ES/EN/FR. Bump v1.2.1. | — | ✅ |
+| 171 | UI | Refinamiento estético tarjetas /products: foto 16:9 con `:has(img)`, 2-line clamp nombre, chips uniformes 22px altura, toggle row con borde superior, nutriscore badge en meta-row, más padding en body. Bump v1.2.2. | `[sesión anterior]` | ✅ |
+| 172 | fix | Alineación header /products + foto pequeña: `header-left+header-back` → `btn-back` directo en `header-inner`; agregar `btn-back-label "Inventarios"` para igualar layout de Stock; clase JS `pm-card-img--photo` como fallback a `:has(img)` para aspect-ratio 16:9. Bump v1.2.3. | `fd41cbf`, `94fb5dd` | ✅ |
+| 173 | fix | Orden drawer Productos: movido a posición 2 (Dashboard → Productos → Stock → Compras → Historial) en `history.html`, `catalog.html` y `shopping-list.html`. `index.html` y `products.html` ya lo tenían correcto. | `a4305d4` | ✅ |
 
 ---
 
