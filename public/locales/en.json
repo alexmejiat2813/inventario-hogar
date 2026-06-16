@@ -1143,6 +1143,7 @@
     "link": "Link tx",
     "unlink": "Unlink",
     "remaining": "remaining",
+    "toggle": "View installments",
     "installmentN": "Installment",
     "due": "Due",
     "paidOn": "Paid on",

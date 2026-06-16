@@ -112,8 +112,12 @@ function render() {
         '<div class="cq-progress-label"><span>' + paidCount + '/' + total + ' ' + esc(I18N.t('installments.paid').toLowerCase()) + '</span><span>' + pct + '%</span></div>',
         '<div class="cq-progress-bar"><div class="cq-progress-fill" style="width:' + pct + '%"></div></div>',
         '</div>',
+        '<button class="cq-toggle" data-toggle="' + plan.id + '" aria-expanded="false">',
+        '<span>' + esc(I18N.t('installments.toggle') || 'Ver cuotas') + '</span>',
+        '<svg class="cq-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
+        '</button>',
         '</div>',
-        '<div class="cq-payments">' + rows + '</div>',
+        '<div class="cq-payments" hidden>' + rows + '</div>',
         '</div>'
       ].join('');
     }).join('');
@@ -294,7 +298,16 @@ document.getElementById('modal-link').onclick = function(e) { if (e.target === t
 document.getElementById('cq-list').onclick = function(e) {
   var btn = e.target.closest('[data-plan][data-num]');
   var del = e.target.closest('[data-delete]');
+  var toggle = e.target.closest('[data-toggle]');
   if (del) { deletePlan(Number(del.dataset.delete)); return; }
+  if (toggle) {
+    var payments = toggle.closest('.cq-card').querySelector('.cq-payments');
+    var open = !payments.hidden;
+    payments.hidden = open;
+    toggle.setAttribute('aria-expanded', String(!open));
+    toggle.classList.toggle('cq-toggle--open', !open);
+    return;
+  }
   if (!btn) return;
   var planId = Number(btn.dataset.plan);
   var num    = Number(btn.dataset.num);

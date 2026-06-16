@@ -1144,6 +1144,7 @@
     "link": "Enlazar tx",
     "unlink": "Desenlazar",
     "remaining": "restante",
+    "toggle": "Ver cuotas",
     "installmentN": "Cuota",
     "due": "Vence",
     "paidOn": "Pagada el",

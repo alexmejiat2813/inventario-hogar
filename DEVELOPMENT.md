@@ -243,6 +243,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 173 | fix | Orden drawer Productos: movido a posición 2 (Dashboard → Productos → Stock → Compras → Historial) en `history.html`, `catalog.html` y `shopping-list.html`. `index.html` y `products.html` ya lo tenían correcto. | `a4305d4` | ✅ |
 | 174 | feat | Módulo Cuotas: tablas `installment_plans`+`installment_payments`, 6 métodos DB, 5 rutas API en `personal-budget.js`, página `/personal-budget/cuotas` con plan cards + barras de progreso + filas por cuota (pagar/desmarcar/enlazar tx/desenlazar) + modal nueva cuota + modal enlazar transacción. Link desde header de personal-budget.html. i18n ES/EN/FR. | — | ✅ |
 | 175 | fix | CSP bloqueaba cuotas: `<style>` e `<script>` inline violaban `style-src 'self'` + `script-src 'self'`. Fix: extraer a `public/css/personal-budget-cuotas.css` y `public/js/personal-budget-cuotas.js`. Init defensivo con `typeof` guards en `initProfileMenu`/`loadProfileAvatar`. Strings dinámicos via `I18N.t()`, labels estáticos con `data-i18n`. | — | ✅ |
+| 176 | UI | Acordeón en filas de cuotas: pagos ocultos por defecto, botón "Ver cuotas" con flecha rotativa para expandir/colapsar por plan. Barra de progreso ya calculaba bien `paid_count/total` desde backend (sin bug real). Key `installments.toggle` ES/EN/FR. | — | ✅ |
 
 ---
 

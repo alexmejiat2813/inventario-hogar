@@ -41,6 +41,18 @@
 .cq-progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
 .cq-progress-fill { height: 100%; background: #16a34a; border-radius: 3px; }
 
+/* toggle */
+.cq-toggle {
+  -webkit-appearance: none; appearance: none;
+  display: flex; align-items: center; gap: .35rem;
+  width: 100%; margin-top: .6rem; padding: .35rem 0 0;
+  background: none; border: none; border-top: 1px dashed #e2e8f0;
+  font-size: .78rem; font-weight: 600; color: #475569; cursor: pointer;
+}
+.cq-toggle:hover { color: #082F49; }
+.cq-toggle-arrow { transition: transform .2s ease; }
+.cq-toggle--open .cq-toggle-arrow { transform: rotate(180deg); }
+
 /* payment rows */
 .cq-payments { padding: .25rem 0; }
 .cq-payment-row {

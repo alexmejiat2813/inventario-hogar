@@ -1143,6 +1143,7 @@
     "link": "Lier tx",
     "unlink": "Délier",
     "remaining": "restant",
+    "toggle": "Voir les échéances",
     "installmentN": "Échéance",
     "due": "Échéance",
     "paidOn": "Payé le",
