@@ -112,6 +112,9 @@ function render() {
         plan.original_currency ? '<div class="cq-fx-note">' + esc(I18N.t('installments.convertedFrom', {
           amount: fmt(plan.original_amount), currency: plan.original_currency, rate: fmt(plan.exchange_rate), target: plan.currency
         })) + '</div>' : '',
+        (plan.currency || 'USD') !== _baseCurrency
+          ? '<div class="cq-base-equiv" data-equiv-currency="' + esc(plan.currency || 'USD') + '" data-equiv-total="' + plan.total_amount + '" data-equiv-per="' + plan.amount_per_installment + '" data-equiv-remaining="' + remaining + '" hidden></div>'
+          : '',
         '</div></div>',
         '<div class="cq-card-actions">',
         '<button class="cq-btn-icon" data-edit="' + plan.id + '" title="' + esc(I18N.t('installments.edit')) + '">',
@@ -142,6 +145,8 @@ function render() {
       var pct = parseFloat(fillEl.dataset.pct) || 0;
       requestAnimationFrame(function() { fillEl.style.width = pct + '%'; });
     });
+
+    updateBaseEquivalents(el);
 
   } catch(e) {
     console.error('render error:', e);
@@ -285,6 +290,31 @@ function fetchFxRate(from, to) {
   if (_fxRateCache[key]) return Promise.resolve(_fxRateCache[key]);
   return apiFetch('GET', '/api/personal-budget/installments/fx-rate?from=' + from + '&to=' + to)
     .then(function(data) { _fxRateCache[key] = data.rate; return data.rate; });
+}
+
+function updateBaseEquivalents(container) {
+  var nodes = container.querySelectorAll('.cq-base-equiv[data-equiv-currency]');
+  if (!nodes.length) return;
+  var byCurrency = {};
+  nodes.forEach(function(node) {
+    var cur = node.dataset.equivCurrency;
+    (byCurrency[cur] = byCurrency[cur] || []).push(node);
+  });
+  Object.keys(byCurrency).forEach(function(cur) {
+    fetchFxRate(cur, _baseCurrency).then(function(rate) {
+      byCurrency[cur].forEach(function(node) {
+        var total     = parseFloat(node.dataset.equivTotal) * rate;
+        var per       = parseFloat(node.dataset.equivPer) * rate;
+        var remaining = parseFloat(node.dataset.equivRemaining) * rate;
+        node.textContent = I18N.t('installments.baseEquiv', {
+          total: fmt(parseFloat(total.toFixed(2))),
+          per: fmt(parseFloat(per.toFixed(2))),
+          base: _baseCurrency
+        }) + (remaining > 0 ? ' (' + fmt(parseFloat(remaining.toFixed(2))) + ' ' + _baseCurrency + ' ' + I18N.t('installments.remaining') + ')' : '');
+        node.hidden = false;
+      });
+    }).catch(function() {});
+  });
 }
 
 function saveAddModal() {
@@ -464,6 +494,7 @@ document.getElementById('btn-logout').onclick = function() {
       try { if (typeof initProfileMenu === 'function') initProfileMenu(); } catch(e) { console.error(e); }
       try { if (typeof loadProfileAvatar === 'function') loadProfileAvatar(); } catch(e) { console.error(e); }
     })
-    .then(function() { return Promise.all([loadCategories(), loadPlans(), loadBaseCurrency()]); })
+    .then(function() { return loadBaseCurrency(); })
+    .then(function() { return Promise.all([loadCategories(), loadPlans()]); })
     .catch(function(e) { console.error('init failed:', e); render(); });
 })();

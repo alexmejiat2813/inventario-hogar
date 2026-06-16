@@ -1155,6 +1155,7 @@
     "editSave": "Guardar cambios",
     "editLocked": "Esta cuota ya tiene pagos registrados: solo podés editar nombre, categoría y notas.",
     "convertedFrom": "Ingresado como {{amount}} {{currency}} (1 {{currency}} = {{rate}} {{target}})",
+    "baseEquiv": "≈ {{total}} {{base}} total · {{per}} {{base}} por cuota",
     "form": {
       "name": "Nombre (ej: TV Samsung)",
       "total": "Monto total",
