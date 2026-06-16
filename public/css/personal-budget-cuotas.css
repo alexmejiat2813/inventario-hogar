@@ -27,6 +27,7 @@
 .cq-card-cat  { font-size: .75rem; color: #64748b; }
 .cq-card-meta { font-size: .8rem; color: #475569; margin-top: .35rem; }
 .cq-card-meta strong { color: #082F49; }
+.cq-remaining { color: #ef4444; }
 
 .cq-btn-delete {
   -webkit-appearance: none; appearance: none;
@@ -82,6 +83,8 @@
 .cq-btn-sm--unpay  { border-color: #94a3b8; color: #64748b; }
 .cq-btn-sm--link   { border-color: #0ea5e9; color: #0ea5e9; }
 .cq-btn-sm--unlink { border-color: #f97316; color: #f97316; }
+
+.cq-render-error { padding: 1rem; color: #ef4444; }
 
 /* empty */
 .cq-empty { text-align: center; padding: 4rem 1.5rem; color: #94a3b8; }

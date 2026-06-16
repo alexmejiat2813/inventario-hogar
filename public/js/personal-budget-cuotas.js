@@ -101,7 +101,7 @@ function render() {
         '<div class="cq-card-meta">',
         '<strong>' + fmt(plan.total_amount) + '</strong> total &middot; ',
         total + ' cuotas de <strong>' + fmt(plan.amount_per_installment) + '</strong>',
-        remaining > 0 ? ' &middot; <span style="color:#ef4444">' + fmt(remaining) + ' ' + esc(I18N.t('installments.remaining')) + '</span>' : '',
+        remaining > 0 ? ' &middot; <span class="cq-remaining">' + fmt(remaining) + ' ' + esc(I18N.t('installments.remaining')) + '</span>' : '',
         '</div></div>',
         '<button class="cq-btn-delete" data-delete="' + plan.id + '" title="' + esc(I18N.t('installments.delete')) + '">',
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
@@ -110,7 +110,7 @@ function render() {
         '</div>',
         '<div class="cq-progress-wrap">',
         '<div class="cq-progress-label"><span>' + paidCount + '/' + total + ' ' + esc(I18N.t('installments.paid').toLowerCase()) + '</span><span>' + pct + '%</span></div>',
-        '<div class="cq-progress-bar"><div class="cq-progress-fill" style="width:' + pct + '%"></div></div>',
+        '<div class="cq-progress-bar"><div class="cq-progress-fill" data-pct="' + pct + '"></div></div>',
         '</div>',
         '<button class="cq-toggle" data-toggle="' + plan.id + '" aria-expanded="false">',
         '<span>' + esc(I18N.t('installments.toggle') || 'Ver cuotas') + '</span>',
@@ -122,10 +122,15 @@ function render() {
       ].join('');
     }).join('');
 
+    el.querySelectorAll('.cq-progress-fill[data-pct]').forEach(function(fillEl) {
+      var pct = parseFloat(fillEl.dataset.pct) || 0;
+      requestAnimationFrame(function() { fillEl.style.width = pct + '%'; });
+    });
+
   } catch(e) {
     console.error('render error:', e);
     var el2 = document.getElementById('cq-list');
-    if (el2) el2.innerHTML = '<p style="padding:1rem;color:#ef4444">Error al mostrar cuotas. Recargá la página.</p>';
+    if (el2) el2.innerHTML = '<p class="cq-render-error">Error al mostrar cuotas. Recargá la página.</p>';
   }
 }
 
