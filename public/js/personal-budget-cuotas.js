@@ -126,6 +126,24 @@ function render() {
 }
 
 // ── API ────────────────────────────────────────────────────────────────────
+function loadCategories() {
+  return apiFetch('GET', '/api/personal-budget/expense-categories')
+    .then(function(data) {
+      var sel = document.getElementById('f-category');
+      var current = sel.value;
+      sel.innerHTML = '<option value="">— Sin categoría —</option>';
+      (Array.isArray(data) ? data : []).forEach(function(cat) {
+        var name = typeof cat === 'string' ? cat : (cat.name || cat);
+        var opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      sel.value = current;
+    })
+    .catch(function() {});
+}
+
 function loadPlans() {
   return apiFetch('GET', '/api/personal-budget/installments')
     .then(function(data) { _plans = Array.isArray(data) ? data : []; })
@@ -148,7 +166,7 @@ function openAddModal() {
     document.getElementById('f-total').value = '';
     document.getElementById('f-num').value = '';
     document.getElementById('f-start').value = new Date().toISOString().slice(0, 10);
-    document.getElementById('f-category').value = '';
+    document.getElementById('f-category').selectedIndex = 0;
     document.getElementById('f-notes').value = '';
     document.getElementById('f-calc').hidden = true;
     document.getElementById('modal-add').hidden = false;
@@ -301,6 +319,6 @@ document.getElementById('btn-logout').onclick = function() {
       try { if (typeof initProfileMenu === 'function') initProfileMenu(); } catch(e) { console.error(e); }
       try { if (typeof loadProfileAvatar === 'function') loadProfileAvatar(); } catch(e) { console.error(e); }
     })
-    .then(function() { return loadPlans(); })
+    .then(function() { return Promise.all([loadCategories(), loadPlans()]); })
     .catch(function(e) { console.error('init failed:', e); render(); });
 })();
