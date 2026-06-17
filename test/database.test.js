@@ -1148,6 +1148,55 @@ describe('getPersonalTransactions / DynamicStats — filtro por rango de mes (#2
   });
 });
 
+// ── Alertas de desvío de presupuesto personal (#122) ────────────
+
+describe('getPersonalBudgetAlert — niveles de desvío', () => {
+  const MONTH = '2026-09';
+  function setup(incomeProjected, expenseReal) {
+    const userId = makeUser().id;
+    if (incomeProjected > 0) {
+      db.addPersonalBudget(userId, { category: 'Sueldo', amount: incomeProjected, month: MONTH, flow_type: 'income' });
+    }
+    if (expenseReal > 0) {
+      db.addPersonalTransaction(userId, {
+        inventoryId: null, type: 'expense', category: 'Gasto', amount: expenseReal,
+        description: null, date: MONTH + '-10',
+      });
+    }
+    return userId;
+  }
+
+  test('sin presupuesto proyectado → level null', () => {
+    const userId = setup(0, 100);
+    const a = db.getPersonalBudgetAlert(userId, MONTH);
+    assert.equal(a.level, null);
+    assert.equal(a.income_projected, 0);
+  });
+
+  test('bajo el umbral warn → null', () => {
+    const userId = setup(1000, 500); // 50% < 60%
+    assert.equal(db.getPersonalBudgetAlert(userId, MONTH).level, null);
+  });
+
+  test('entre warn y crit → warn', () => {
+    const userId = setup(1000, 700); // 70% (>=60, <85)
+    const a = db.getPersonalBudgetAlert(userId, MONTH);
+    assert.equal(a.level, 'warn');
+    assert.equal(a.pct, 70);
+  });
+
+  test('al/por encima de crit → critical', () => {
+    const userId = setup(1000, 900); // 90% >= 85
+    assert.equal(db.getPersonalBudgetAlert(userId, MONTH).level, 'critical');
+  });
+
+  test('respeta umbrales personalizados', () => {
+    const userId = setup(1000, 450); // 45%
+    db.updatePersonalBudgetThresholds(userId, { warnPct: 0.40, critPct: 0.90 });
+    assert.equal(db.getPersonalBudgetAlert(userId, MONTH).level, 'warn');
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {

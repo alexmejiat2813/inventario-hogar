@@ -115,6 +115,14 @@ router.post('/send-alerts', async (req, res) => {
         }
       }
 
+      // Desvio del presupuesto personal contra los umbrales warn/crit del usuario
+      const pbAlert = db.getPersonalBudgetAlert(sub.user_id);
+      if (pbAlert.level === 'critical') {
+        alerts.push({ title: 'Presupuesto personal', body: `Gastaste ${pbAlert.pct}% de tu presupuesto del mes` });
+      } else if (pbAlert.level === 'warn') {
+        alerts.push({ title: 'Presupuesto personal', body: `Vas en ${pbAlert.pct}% de tu presupuesto del mes` });
+      }
+
       // Enviar push para cada alerta
       if (alerts.length > 0) {
         try {

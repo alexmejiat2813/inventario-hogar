@@ -2287,6 +2287,29 @@ module.exports = {
     return this.getPersonalBudgetSettings(userId);
   },
 
+  // Evalua el desvio del gasto real del mes contra los umbrales warn/crit del
+  // usuario. ratio = expense_real / income_projected (mismo denominador que el
+  // dashboard). Devuelve { level, pct, expense_real, income_projected } donde
+  // level es 'critical' | 'warn' | null. null tambien si no hay presupuesto
+  // proyectado (sin denominador no hay desvio que medir).
+  getPersonalBudgetAlert(userId, month) {
+    const m = month || new Date().toISOString().slice(0, 7);
+    const settings = this.getPersonalBudgetSettings(userId);
+    const { expense_real } = this.getPersonalBudgetDynamicStats(userId, m);
+    const income_projected = this.getPersonalBudgets(userId, m)
+      .filter(b => (b.flow_type || 'expense') === 'income')
+      .reduce((s, b) => s + b.amount, 0);
+
+    if (income_projected <= 0) {
+      return { level: null, pct: 0, expense_real, income_projected: 0 };
+    }
+    const ratio = expense_real / income_projected;
+    const level = ratio >= settings.alert_crit_pct ? 'critical'
+                : ratio >= settings.alert_warn_pct ? 'warn'
+                : null;
+    return { level, pct: Math.round(ratio * 100), expense_real, income_projected };
+  },
+
   updatePersonalBudgetCurrency(userId, currency) {
     this.getPersonalBudgetSettings(userId); // asegura que la fila exista
     db.prepare(`

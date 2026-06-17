@@ -111,7 +111,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 
 | # | Tarea | Descripción | Importancia | Dificultad | Estado |
 |---|-------|-------------|-------------|------------|--------|
-| 122 | Alertas proactivas de desvío presupuestario | Los umbrales warn/critical ya existen en `personal_budget_settings`. Falta el job que compare gasto actual vs umbral y dispare notificación push/in-app. Usar el cron de Fly o `setInterval` en startup. Sin esto el 80% del valor de los umbrales no se usa. | Crítica | Baja | ⬜ |
+| 122 | Alertas proactivas de desvío presupuestario | Los umbrales warn/critical ya existen en `personal_budget_settings`. Falta el job que compare gasto actual vs umbral y dispare notificación push/in-app. Usar el cron de Fly o `setInterval` en startup. Sin esto el 80% del valor de los umbrales no se usa. | Crítica | Baja | ✅ |
 | 123 | Editar categoría de `personal_transaction` existente | PUT ya existe en la ruta. Falta inline-edit en la columna CATEGORIA de la tabla. El usuario no puede corregir una categoría mal asignada sin borrar y recrear. | Alta | Baja | ⬜ |
 | 124 | Columna `budget_category` en historial de compras | La integración M:N existe en DB pero es invisible en `/historial`. Agregar columna filtrable por `budget_category` en `getPurchaseSessions` y en la UI de historial. | Alta | Baja | ⬜ |
 | 125 | Proyección fin de mes como KPI principal | El hint de proyección ya existe pero está escondido bajo la barra de progreso. En la segunda mitad del mes debería ser el número más prominente del dashboard (KPI card propio con color semáforo). | Alta | Baja | ⬜ |
