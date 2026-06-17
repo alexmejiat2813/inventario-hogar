@@ -607,11 +607,20 @@
 }
 .pb-fixed-freq-select:focus { outline: none; border-color: var(--text); }
 
-/* ── Fixed costs table — 6 cols: radio / tipo / cat / freq / due / monthly ── */
+/* ── Fixed costs table — 6 cols: radio / tipo / cat / freq / due / monthly ──
+   Col widths: 1=radio(36px) 2=tipo(6rem) 3=cat(flexible) 4=freq(7rem)
+               5=vence(5rem) 6=mensual(7.5rem)
+   table-layout:fixed (inherited from .pb-tx-table) uses th widths.
+   Col 3 has no explicit width → takes all remaining space (#226). ── */
 .pb-fc-table th,
 .pb-fc-table td { padding: .45rem .65rem; }
+.pb-fc-table th:nth-child(2) { width: 6rem; }
+.pb-fc-table th:nth-child(4) { width: 7rem; }
+.pb-fc-table th:nth-child(5) { width: 5rem; }
 .pb-fc-table th:nth-child(6),
-.pb-fc-table td:nth-child(6) { text-align: right; }
+.pb-fc-table td:nth-child(6) { width: 7.5rem; text-align: right; }
+/* tfoot balance must not be clipped by .pb-tx-table td ellipsis rule (#227) */
+.pb-fc-table tfoot td { overflow: visible; text-overflow: clip; white-space: nowrap; }
 
 /* ── Type filter column header ── */
 .pb-col-type-filter { white-space: nowrap; }
