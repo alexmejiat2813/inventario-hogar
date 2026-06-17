@@ -95,7 +95,7 @@
     .data-table tr:hover td { background: #FBFBFA; }
     .table-wrap {
       background: white; border-radius: 8px;
-      border: 1px solid #EAEAEA; overflow: hidden;
+      border: 1px solid #EAEAEA; overflow-x: auto; -webkit-overflow-scrolling: touch;
     }
     .col-emoji { font-size: 1.1rem; }
     .col-actions { display: flex; gap: .5rem; justify-content: flex-end; }

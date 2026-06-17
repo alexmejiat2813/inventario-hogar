@@ -459,7 +459,7 @@
     }
     .confirm-subtotal-row--discount { color: #b91c1c; font-weight: 600; }
     .sl-discount-wrap {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
       gap: .75rem; margin-top: .75rem;
       padding: .5rem .75rem;
       border: 1px solid #E2E8F0; border-radius: 6px;
