@@ -71,6 +71,29 @@ Mantén actualizado el valor "Próximo ID disponible" tras agregar ítems.
 
 ---
 
+## Plan de trabajo por olas (impacto ÷ riesgo) (claude)
+
+Orden de ejecución definido 2026-06-18. Primero correctitud/seguridad de bajo
+riesgo, luego pulido UI, y al final arquitectura (requiere plan formal).
+
+- **Ola 1 — Correctitud backend (Alta/Baja):** #208 (`category_id` al editar),
+  #210 (`/api/backup` secret), #209 (ruta divergente editar compra), #211
+  (`strftime` en compras). Aislados y testeables. ← en ejecución.
+- **Ola 2 — Seguridad cache SW:** #224 (APIs autenticadas cacheadas por URL),
+  #225 (login HTML cacheado), #223 (precache incompleto). Cluster en `sw.js`.
+- **Ola 3 — Robustez runtime frontend:** #216 primero (lint `no-undef`+globals,
+  multiplicador), luego #213, #214, #215, #217, #212, #218, #219.
+- **Ola 4 — UI/layout:** #226+#227 (tabla Gastos Proyectados, juntos), #220,
+  #221, #222, #192 (a11y).
+- **Ola 5 — Arquitectura (requiere `/plan`):** #199 (extraer servicios de
+  `database.js`), #207 (render helpers frontend). Alto blast radius.
+- **Ola 6 — Infra/durabilidad:** #128 (Litestream backup), #70 (minificación).
+- **Ola 7 — Requiere dispositivo:** #45 (foto→Dashboard Android).
+- **P5 — Roadmap producto (decisión de negocio):** #129, #130, #131, #132, #74,
+  #75, #76, #133.
+
+---
+
 ## Stack
 
 - **Backend:** Node.js + Express 4 + SQLite (`node:sqlite` built-in) + Passport (Google OAuth)
