@@ -152,6 +152,35 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 
 ## Trabajo completado (P4 — Calidad + Mejoras detectadas)
 
+### Sesión 2026-06-17 — Arquitectura P2 + Quick wins
+
+Tests: 80 → 196. Helpers nuevos: `lib/budget-category.js`, `lib/validators.js`,
+`lib/route-inventory.js`, `lib/openapi.js`, `lib/http-client.js`,
+`public/js/lib/purchase-totals.js`, `public/js/lib/lazy-chart.js`.
+
+| # | Commit | Resumen |
+|---|--------|---------|
+| 118 | `a7997ea` | auto-registro de categoría cuando lista vacía |
+| 119 | `54294b8` | tests borde `updatePurchaseSession` |
+| 120 | `e9910e4` | resolver de categoría → `lib/budget-category.js` + 8 tests |
+| 121 | `555cfa4` | aislamiento por usuario en migración histórica + 2 tests |
+| 200 | `4b9d266` | `lib/validators.js`, dedup validación POST/PUT |
+| 203/127 | `3378a18` | índices SQLite + reescritura `strftime`→rango |
+| 201 | `20cd27e` | OpenAPI contrato vivo generado desde rutas + anti-drift |
+| 202 | `eba2677` | `lib/http-client.js` (timeout/retry/cache) para OFF+FX |
+| 205 | `e3c52a5` | flujos HTTP autenticados con sesión forjada (10 tests) |
+| 204 | `7d557b6` | math de totales → `purchase-totals.js` (purchase-edit) |
+| 206 | `6a842ae` | shopping-list usa `PurchaseTotals` compartido |
+| 122 | `c176ec3` | alertas de desvío de presupuesto personal en cron |
+| 123 | `b5cc3c0` | inline-edit de categoría en tabla de transacciones |
+| 124 | `d607241` | `budget_category` visible y filtrable en historial |
+| 125 | `c412c8e` | proyección fin de mes como KPI prominente con semáforo |
+| 126 | `965b656` | hardening auto-preselect categoría en modal compra |
+| 69 | `a12fc6e` | lazy load on-demand de Chart.js |
+
+Validado en vivo con sesión forjada (HTTP): `/api/me`, #124 endpoints+filtro,
+#123 PUT categoría, #125 markup KPI, #69 lazy-chart servido sin eager.
+
 | # | Tarea | Descripción | Commit | Estado |
 |---|-------|-------------|--------|--------|
 | 15 | Tests | 37 tests con node:test — 25 unit (DB layer) + 12 smoke (HTTP). Regresión P0 incluida. | `7609244` | ✅ |
