@@ -792,10 +792,19 @@ function renderTaxSection() {
 
   const checkedItems  = state.items.filter(i => i.checked);
   const checkedCustom = state.customItems.filter(i => i.checked);
-  const subtotal = [
-    ...checkedItems.map(i => calcSubtotal(state.purchaseData[i.id] || {}) || 0),
-    ...checkedCustom.map(i => calcSubtotal(state.purchaseData['c' + i.id] || {}) || 0),
-  ].reduce((s, v) => s + v, 0);
+  // Adapt each checked line's subtotal into a {quantityBought:1, unitPrice} item
+  // so the shared PurchaseTotals math (parity with backend) drives the totals.
+  const totalsItems = [
+    ...checkedItems.map(i => ({ quantityBought: 1, unitPrice: calcSubtotal(state.purchaseData[i.id] || {}) || 0 })),
+    ...checkedCustom.map(i => ({ quantityBought: 1, unitPrice: calcSubtotal(state.purchaseData['c' + i.id] || {}) || 0 })),
+  ];
+  const discTypeNow  = document.getElementById('sl-discount-type')?.value  || 'fixed';
+  const discValueNow = parseFloat(document.getElementById('sl-discount-value')?.value) || 0;
+  const totals = PurchaseTotals.computePurchaseTotals({
+    items: totalsItems, taxes: state.taxes, selectedTaxIds: state.selectedTaxIds,
+    discountType: discTypeNow, discountValue: discValueNow,
+  });
+  const subtotal = totals.subtotal;
 
   const sym = getCurrencySym();
   let html = '';
@@ -816,10 +825,7 @@ function renderTaxSection() {
   }
 
   if (subtotal > 0) {
-    const totalTax = state.taxes
-      .filter(tx => state.selectedTaxIds.includes(tx.id))
-      .reduce((s, tx) => s + subtotal * tx.rate / 100, 0);
-    const grand = subtotal + totalTax;
+    const totalTax = totals.totalTax;
 
     html += `<div class="confirm-totals-wrap">`;
     if (totalTax > 0) {
@@ -837,10 +843,8 @@ function renderTaxSection() {
           </div>`;
         });
     }
-    const discType  = document.getElementById('sl-discount-type')?.value  || 'fixed';
-    const discValue = parseFloat(document.getElementById('sl-discount-value')?.value) || 0;
-    const discAmt   = discType === 'percentage' ? grand * (discValue / 100) : discValue;
-    const netTotal  = Math.max(0, grand - discAmt);
+    const discAmt   = totals.discountAmount;
+    const netTotal  = totals.total;
 
     if (discAmt > 0) {
       html += `<div class="confirm-subtotal-row confirm-subtotal-row--discount">
