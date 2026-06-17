@@ -4,6 +4,73 @@
 
 ---
 
+## Gobernanza de DEVELOPMENT.md (control de cambios)
+
+Reglas obligatorias para **cualquier** autor (Claude o Codex) que edite este archivo.
+
+1. **Atribución de autoría.** Al final de la celda "Descripción" del ítem (sin
+   romper el formato de tabla markdown ni crear columnas nuevas), agregar entre
+   paréntesis: `(claude)` si se opera como modelo en chat, `(codex)` si se opera
+   como extensión/automatización local. Al editar una entrada de otro autor,
+   conservar su atribución y sumar la propia: ej. `(claude) (codex: ajuste 2026-06-18)`.
+
+2. **Numeración (regla mecánica).** El ID de un ítem nuevo = (máximo ID numérico
+   existente en **todo** el archivo, incluyendo pendientes y "Trabajo completado") + 1.
+   Antes de asignar, buscar ese número en todo el archivo y confirmar que no existe.
+   Prohibido reutilizar, duplicar, reiniciar o renumerar IDs. Si se detecta una
+   colisión previa, anotarla como observación y dejar que el autor original decida.
+
+3. **Integridad de estado.** Solo cambiar el Estado (⬜/🔄/✅) de ítems realmente
+   trabajados. No marcar ✅ ni editar ítems ajenos sin evidencia. Antes de agregar
+   un hallazgo, validarlo contra el código real (`archivo:línea`); nada especulativo.
+
+4. **Alcance.** No modificar otras líneas de código de la app al registrar bitácora.
+   Preservar el formato de tabla (columnas, orden, separadores).
+
+> Próximo ID disponible: **228** (mantener este valor actualizado al agregar ítems). (claude)
+
+### Prompt para Codex
+
+```
+Actúa como Ingeniero de Software Principal y Administrador de Configuración.
+Antes de cualquier registro en 'DEVELOPMENT.md', lee la sección
+"Gobernanza de DEVELOPMENT.md" y cúmplela al pie de la letra.
+
+Reglas obligatorias:
+1. ATRIBUCIÓN: agrega '(codex)' al final de la celda Descripción del ítem que
+   registres/edites, sin romper la tabla markdown. Si editas algo de Claude,
+   conserva '(claude)' y suma '(codex: <nota>)'.
+2. NUMERACIÓN: el ID de un ítem nuevo = (máximo ID numérico existente en TODO el
+   archivo, pendientes + completados) + 1. Busca el número candidato en todo el
+   archivo y confirma que no existe. Prohibido reutilizar, duplicar, reiniciar o
+   renumerar IDs de Claude. Si hay colisión previa, anótala como observación; no
+   la corrijas silenciosamente.
+3. ESTADO: solo cambia ⬜/🔄/✅ de ítems que trabajaste; no toques estado ajeno.
+   Valida cada hallazgo contra el código (archivo:línea) antes de registrarlo.
+4. ALCANCE: no modifiques ninguna otra línea de código de la app; solo
+   'DEVELOPMENT.md', preservando el formato de tabla.
+
+Confirma que entendiste y muestra: (a) el próximo ID que asignarías ahora,
+calculado según la regla 2; (b) una fila de ejemplo con tu atribución '(codex)'.
+```
+
+### Prompt para Claude
+
+```
+Al editar 'DEVELOPMENT.md', cumple la sección "Gobernanza de DEVELOPMENT.md":
+1. ATRIBUCIÓN: agrega '(claude)' al final de la celda Descripción del ítem que
+   registres/edites, sin romper la tabla. Conserva atribuciones previas de codex.
+2. NUMERACIÓN: ID nuevo = (máximo ID en TODO el archivo, pendientes + completados)
+   + 1; verifica que no exista antes de usarlo. No reutilices ni renumeres IDs de
+   codex; si hay colisión, anótala, no la pises.
+3. ESTADO: solo cambia ⬜/🔄/✅ de lo que trabajaste; valida hallazgos contra
+   código (archivo:línea) antes de agregarlos.
+4. ALCANCE: el registro de bitácora se limita a 'DEVELOPMENT.md'.
+Mantén actualizado el valor "Próximo ID disponible" tras agregar ítems.
+```
+
+---
+
 ## Stack
 
 - **Backend:** Node.js + Express 4 + SQLite (`node:sqlite` built-in) + Passport (Google OAuth)
