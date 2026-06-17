@@ -853,6 +853,155 @@ describe('personal_budget_settings — umbrales', () => {
   });
 });
 
+// ── createPurchaseSession — descuentos e isTaxable ────────────
+
+describe('createPurchaseSession — descuentos e isTaxable', () => {
+  test('descuento fixed reduce total_amount', () => {
+    const { inv, userId } = makeInventory();
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'A', quantityBought: 2, unitPrice: 100, unit: 'u', productId: null, storeId: null }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+      discountType: 'fixed', discountValue: 30,
+    });
+    // subtotal 200 − 30 = 170
+    assert.ok(Math.abs(session.total_amount - 170) < 0.01,
+      `esperado 170, obtenido ${session.total_amount}`);
+  });
+
+  test('descuento percentage reduce total_amount', () => {
+    const { inv, userId } = makeInventory();
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'B', quantityBought: 1, unitPrice: 200, unit: 'u', productId: null, storeId: null }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+      discountType: 'percentage', discountValue: 10,
+    });
+    // subtotal 200 − 10% = 180
+    assert.ok(Math.abs(session.total_amount - 180) < 0.01,
+      `esperado 180, obtenido ${session.total_amount}`);
+  });
+
+  test('descuento mayor al total no produce total negativo', () => {
+    const { inv, userId } = makeInventory();
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'C', quantityBought: 1, unitPrice: 50, unit: 'u', productId: null, storeId: null }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+      discountType: 'fixed', discountValue: 9999,
+    });
+    assert.equal(session.total_amount, 0);
+  });
+
+  test('isTaxable=false excluye item del tax base con taxIds', () => {
+    const { inv, userId } = makeInventory();
+    const tax = db.createTaxType({ inventoryId: inv.id, name: 'IVA21', rate: 21, categories: [], active: true });
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [
+        { productName: 'Gravado',   quantityBought: 1, unitPrice: 100, unit: 'u', isTaxable: true  },
+        { productName: 'Exento',    quantityBought: 1, unitPrice: 100, unit: 'u', isTaxable: false },
+      ],
+      taxIds: [tax.id], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    // solo el primero tributa: IVA 21% de 100 = 21
+    assert.ok(Math.abs(session.total_tax - 21) < 0.01,
+      `esperado total_tax ~21, obtenido ${session.total_tax}`);
+    assert.ok(Math.abs(session.total_amount - 221) < 0.01,
+      `esperado total_amount ~221, obtenido ${session.total_amount}`);
+  });
+});
+
+// ── updatePurchaseSession — edge cases ────────────────────────
+
+describe('updatePurchaseSession — edge cases', () => {
+  test('sessionId de otro inventario retorna null (IDOR guard)', () => {
+    const { inv: inv1, userId } = makeInventory();
+    const { inv: inv2 } = makeInventory(userId);
+    const session = db.createPurchaseSession({
+      inventoryId: inv1.id, userId,
+      items: [{ productName: 'X', quantityBought: 1, unitPrice: 10, unit: 'u' }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    const result = db.updatePurchaseSession(session.id, inv2.id, {
+      purchaseDate: today(),
+      items: [{ productName: 'X', quantityBought: 1, unitPrice: 10, unit: 'u' }],
+      taxIds: [],
+    });
+    assert.equal(result, null);
+  });
+
+  test('stock revert + re-apply correcto al cambiar cantidad', () => {
+    const { inv, userId } = makeInventory();
+    const prod = db.create({ name: 'Arroz', category: 'Alimentos', current_qty: 0, min_qty: 0, unit: 'kg', inventoryId: inv.id });
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Arroz', productId: prod.id, quantityBought: 5, unitPrice: 10, unit: 'kg', storeId: null }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    assert.equal(db.getById(prod.id).current_qty, 5);
+    db.updatePurchaseSession(session.id, inv.id, {
+      purchaseDate: today(),
+      items: [{ productName: 'Arroz', productId: prod.id, quantityBought: 3, unitPrice: 10, unit: 'kg', storeId: null }],
+      taxIds: [],
+    });
+    // debe revertir 5 y aplicar 3 → final = 3
+    assert.equal(db.getById(prod.id).current_qty, 3,
+      `esperado 3, obtenido ${db.getById(prod.id).current_qty}`);
+  });
+
+  test('totalAmount→0 en update elimina personal_transaction existente', () => {
+    const { inv, userId } = makeInventory();
+    db.createPersonalBudgetCategory(userId, { name: 'BorrarTx', flowType: 'expense' });
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'X', quantityBought: 1, unitPrice: 50, unit: 'u' }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+      budgetCategory: 'BorrarTx',
+    });
+    // hay tx vinculada
+    let txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    assert.equal(txs.filter(t => t.source_purchase_session_id === session.id).length, 1);
+
+    // actualizar a monto 0
+    db.updatePurchaseSession(session.id, inv.id, {
+      purchaseDate: today(),
+      items: [{ productName: 'X', quantityBought: 1, unitPrice: 0, unit: 'u' }],
+      taxIds: [],
+      budgetCategory: 'BorrarTx',
+    });
+    txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    assert.equal(txs.filter(t => t.source_purchase_session_id === session.id).length, 0,
+      'tx debe eliminarse cuando totalAmount es 0');
+  });
+
+  test('update con category en sesion sin tx previa inserta nueva personal_transaction', () => {
+    const { inv, userId } = makeInventory();
+    db.createPersonalBudgetCategory(userId, { name: 'NuevaCat', flowType: 'expense' });
+    // crear sin budgetCategory → sin tx
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Y', quantityBought: 1, unitPrice: 80, unit: 'u' }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+    });
+    let txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    assert.equal(txs.filter(t => t.source_purchase_session_id === session.id).length, 0);
+
+    // actualizar pasando budgetCategory por primera vez
+    db.updatePurchaseSession(session.id, inv.id, {
+      purchaseDate: today(),
+      items: [{ productName: 'Y', quantityBought: 1, unitPrice: 80, unit: 'u' }],
+      taxIds: [],
+      budgetCategory: 'NuevaCat',
+      userId,
+    });
+    txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    const linked = txs.filter(t => t.source_purchase_session_id === session.id);
+    assert.equal(linked.length, 1, 'debe insertar tx al agregar category en update');
+    assert.ok(Math.abs(linked[0].amount - 80) < 0.001);
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {
