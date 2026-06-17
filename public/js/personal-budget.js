@@ -371,28 +371,50 @@
 
     // Proyección fin de mes: (gastoActual / díasTranscurridos) * díasDelMes
     const elProjectionHint = document.getElementById('pb-projection-hint');
+    const elProjectionCard = document.getElementById('pb-projection-card');
+    const elProjectionVal  = document.getElementById('pb-projection-value');
+    const elProjectionSub  = document.getElementById('pb-projection-sub');
     if (elProjectionHint && _range === 1) {
       const today   = new Date();
       const daysInM = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
       const elapsed = today.getDate();
       if (elapsed > 0 && expense_real > 0) {
         const projected = (expense_real / elapsed) * daysInM;
+        const ratio = income_projected > 0 ? projected / income_projected : 0;
+        const sem = !income_projected ? ''
+                  : ratio >= _critPct ? 'critical'
+                  : ratio >= _warnPct ? 'warn'
+                  : 'safe';
+
+        // Hint inline (compat) bajo la barra de progreso
         elProjectionHint.textContent = t('personalBudget.projection.hint', { amount: fmt(projected) });
-        // Semaphore: compare projection against income_projected (budget limit)
-        let hintMod = '';
-        if (income_projected > 0) {
-          const ratio = projected / income_projected;
-          hintMod = ratio >= _critPct ? 'pb-projection-hint--critical'
-                  : ratio >= _warnPct ? 'pb-projection-hint--warn'
-                  : 'pb-projection-hint--safe';
-        }
-        elProjectionHint.className = `pb-projection-hint${hintMod ? ' ' + hintMod : ''}`;
+        elProjectionHint.className = `pb-projection-hint${sem ? ' pb-projection-hint--' + sem : ''}`;
         elProjectionHint.hidden = false;
+
+        // KPI card prominente — destacado en la 2da mitad del mes
+        if (elProjectionCard && elProjectionVal) {
+          const secondHalf = elapsed > daysInM / 2;
+          elProjectionVal.innerHTML = `${fmt(projected)} <span class="pb-kpi-unit">${_currency}</span>`;
+          elProjectionCard.className = 'pb-kpi-card pb-kpi-projection'
+            + (sem ? ' pb-kpi-projection--' + sem : '')
+            + (secondHalf ? ' pb-kpi-projection--emphasis' : '');
+          if (elProjectionSub) {
+            if (income_projected > 0) {
+              elProjectionSub.textContent = t('personalBudget.projection.vsBudget', { pct: Math.round(ratio * 100) });
+              elProjectionSub.hidden = false;
+            } else {
+              elProjectionSub.hidden = true;
+            }
+          }
+          elProjectionCard.hidden = false;
+        }
       } else {
         elProjectionHint.hidden = true;
+        if (elProjectionCard) elProjectionCard.hidden = true;
       }
-    } else if (elProjectionHint) {
-      elProjectionHint.hidden = true;
+    } else {
+      if (elProjectionHint) elProjectionHint.hidden = true;
+      if (elProjectionCard) elProjectionCard.hidden = true;
     }
 
     computeAndRenderProj();

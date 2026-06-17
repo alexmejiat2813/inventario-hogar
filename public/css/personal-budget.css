@@ -1025,6 +1025,21 @@ tr.pb-row--selected td { background: var(--accent-bg); }
   font-weight: 600;
 }
 
+/* KPI card de proyección fin de mes (#125) */
+.pb-kpi-projection { border-left: 4px solid var(--border, #e5e7eb); }
+.pb-kpi-projection--safe     { border-left-color: var(--success); }
+.pb-kpi-projection--warn     { border-left-color: #F59E0B; }
+.pb-kpi-projection--critical { border-left-color: var(--danger); }
+.pb-kpi-projection--safe     .pb-kpi-real { color: var(--success); }
+.pb-kpi-projection--warn     .pb-kpi-real { color: #B45309; }
+.pb-kpi-projection--critical .pb-kpi-real { color: var(--danger); }
+/* Segunda mitad del mes: la proyección pasa a ser el número dominante */
+.pb-kpi-projection--emphasis {
+  grid-column: 1 / -1;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.pb-kpi-projection--emphasis .pb-kpi-real { font-size: 2rem; font-weight: 800; }
+
 /* ── Table row fade microinteraction ── */
 .pb-tx-table tbody tr,
 .pb-fc-table tbody tr {

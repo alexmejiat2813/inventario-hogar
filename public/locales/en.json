@@ -1131,7 +1131,9 @@
       "spent": "Spent {{pct}}%"
     },
     "projection": {
-      "hint": "Month-end projection: {{amount}}"
+      "hint": "Month-end projection: {{amount}}",
+      "label": "Month-end projection",
+      "vsBudget": "{{pct}}% of budget"
     },
     "search": {
       "placeholder": "Search by category…"

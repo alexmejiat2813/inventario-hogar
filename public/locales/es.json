@@ -1132,7 +1132,9 @@
       "spent": "Gasto {{pct}}%"
     },
     "projection": {
-      "hint": "Proyección fin de mes: {{amount}}"
+      "hint": "Proyección fin de mes: {{amount}}",
+      "label": "Proyección fin de mes",
+      "vsBudget": "{{pct}}% del presupuesto"
     },
     "search": {
       "placeholder": "Buscar por categoría…"
