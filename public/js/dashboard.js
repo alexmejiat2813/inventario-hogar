@@ -249,7 +249,7 @@ function renderDashSummary(summary) {
     </div>`;
 }
 
-function renderMonthlyChart(monthlySpend) {
+async function renderMonthlyChart(monthlySpend) {
   const wrap = document.getElementById('dash-monthly-wrap');
   wrap.innerHTML = '';
 
@@ -262,6 +262,7 @@ function renderMonthlyChart(monthlySpend) {
   canvas.id = 'chart-monthly';
   wrap.appendChild(canvas);
 
+  await window.ensureChart({ datalabels: true });
   if (_chartMonthly) { _chartMonthly.destroy(); _chartMonthly = null; }
 
   const lang = catLang();
@@ -309,7 +310,7 @@ function renderMonthlyChart(monthlySpend) {
   });
 }
 
-function renderCategoryChart(byCategory) {
+async function renderCategoryChart(byCategory) {
   const wrap = document.getElementById('dash-cat-wrap');
   wrap.innerHTML = '';
 
@@ -323,6 +324,7 @@ function renderCategoryChart(byCategory) {
   canvas.id = 'chart-category';
   wrap.appendChild(canvas);
 
+  await window.ensureChart({ datalabels: true });
   if (_chartCategory) { _chartCategory.destroy(); _chartCategory = null; }
 
   const catTotal = filled.reduce((sum, c) => sum + c.total, 0);
@@ -373,7 +375,7 @@ function renderCategoryChart(byCategory) {
   });
 }
 
-function renderStoreChart(byStore) {
+async function renderStoreChart(byStore) {
   const wrap = document.getElementById('dash-store-wrap');
   wrap.innerHTML = '';
 
@@ -387,6 +389,7 @@ function renderStoreChart(byStore) {
   canvas.id = 'chart-store';
   wrap.appendChild(canvas);
 
+  await window.ensureChart({ datalabels: true });
   if (_chartStore) { _chartStore.destroy(); _chartStore = null; }
 
   const storeTotal = filled.reduce((sum, s) => sum + s.total, 0);

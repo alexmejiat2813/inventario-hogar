@@ -969,7 +969,7 @@
     }
   }
 
-  function renderDonut(transactions) {
+  async function renderDonut(transactions) {
     const expenses = transactions.filter(tx => tx.type === 'expense');
     const chartCard = document.getElementById('pb-chart-card');
     if (!expenses.length) {
@@ -1011,6 +1011,7 @@
     const colors = sorted.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
 
     const canvas = document.getElementById('pb-donut-canvas');
+    await window.ensureChart();
     if (_donutChart) { _donutChart.destroy(); _donutChart = null; }
     document.getElementById('pb-donut-skeleton')?.remove();
     _donutChart = new Chart(canvas, {

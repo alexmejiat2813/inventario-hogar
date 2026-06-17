@@ -130,7 +130,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 
 | # | Tarea | Descripción | Importancia | Dificultad | Estado |
 |---|-------|-------------|-------------|------------|--------|
-| 69 | Chart.js lazy load | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a script condicional. | Baja | Baja | ⬜ |
+| 69 | Chart.js lazy load | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a script condicional. | Baja | Baja | ✅ |
 | 70 | Minificación JS/CSS | Build step con `esbuild` para minificar antes del deploy. ~20-30% adicional sobre gzip. Requiere ajustar CI y rutas de assets. | Media | Media | ⬜ |
 | 127 | Índice compuesto `(user_id, date, type)` en `personal_transactions` | Resuelto junto con #203: índice `idx_personal_tx_user_type_date(user_id, type, date)` (orden equality-first para las sumas income/expense) + reescritura de `strftime` a rango. Verificado SEARCH USING INDEX vía EXPLAIN QUERY PLAN. | Media | Baja | ✅ |
 | 128 | Litestream → R2/S3 backup SQLite | Fly volumes no son S3. Un crash del volumen = pérdida total de datos. Litestream replica WAL continuamente. Diferencia entre "perdimos todo" y "restauramos en 2 minutos". | Alta | Media | ⬜ |

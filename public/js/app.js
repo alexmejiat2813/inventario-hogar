@@ -1011,6 +1011,7 @@ async function renderPriceChart(productId) {
     canvas.id = 'chart-price-history';
     wrap.appendChild(canvas);
 
+    await window.ensureChart({ datalabels: true });
     if (_priceChart) { _priceChart.destroy(); _priceChart = null; }
 
     _priceChart = new Chart(canvas, {
