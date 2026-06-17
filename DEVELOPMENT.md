@@ -262,6 +262,21 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 
 ## Trabajo completado (P4 — Calidad + Mejoras detectadas)
 
+### Sesión 2026-06-18 — Gobernanza + Olas 1-2 (claude)
+
+Gobernanza de DEVELOPMENT.md establecida (atribución + numeración mecánica).
+Hallazgos Codex validados y registrados (#208-#211, #226-#227). Plan por olas.
+
+- **Ola 1 — Correctitud backend:** #208 (`category_id` al editar compra),
+  #210 (`/api/backup` alcanzable por secret), #209 (paridad ruta `/inventories`
+  editar compra: dejaba caer el descuento), #211 (filtros de mes a rango,
+  EXPLAIN confirma índice). Pusheada + desplegada.
+- **Ola 2 — Seguridad cache SW:** #224 (purga `/api/` en logout/cambio de
+  inventario, evita fuga entre usuarios), #225 (no cachear navegación
+  redirigida a login), #223 (precache de shell completo + install resiliente).
+
+Tests: 196 → 202. Sin errores de lint.
+
 ### Sesión 2026-06-17 — Arquitectura P2 + Quick wins
 
 Tests: 80 → 196. Helpers nuevos: `lib/budget-category.js`, `lib/validators.js`,
