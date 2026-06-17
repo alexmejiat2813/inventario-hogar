@@ -27,7 +27,7 @@ Reglas obligatorias para **cualquier** autor (Claude o Codex) que edite este arc
 4. **Alcance.** No modificar otras líneas de código de la app al registrar bitácora.
    Preservar el formato de tabla (columnas, orden, separadores).
 
-> Próximo ID disponible: **228** (mantener este valor actualizado al agregar ítems). (claude)
+> Próximo ID disponible: **232** (mantener este valor actualizado al agregar ítems). (claude) (codex: actualizado al registrar auditoría /products 2026-06-17; smoke dinámico 2026-06-17)
 
 ### Prompt para Codex
 
@@ -203,6 +203,10 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 217 | Definir contrato explícito para `apiFetch` en 401/null | `apiFetch()` redirige a `/login` y retorna `null` en 401. Varios consumidores asumen objeto/array devuelto y podrían mutar estado o renderizar con `null` si la navegación se retrasa o falla. Decidir contrato único: lanzar error autenticación, cortar flujo con helper central, o exigir null-check en callers críticos. | Media | Baja | ✅ (claude: contrato formalizado y documentado en utils.js — 2xx→datos, 401→navega a /login y devuelve null, resto→throw; callers null-checkean el caso 401 transitorio) |
 | 218 | Degradación parcial en cargas iniciales frontend | Varias vistas cargan datos con `Promise.all()` en el init; si un endpoint secundario falla, se cancela toda la carga de la vista aunque datos primarios estén disponibles. Revisar por vista qué llamadas deben ser críticas y cuáles pueden degradar con estado vacío/toast. | Media | Media | ⬜ (claude: diferido — refactor por vista sin red de tests in-browser, mismo perfil de riesgo que #207; conviene hacerlo junto con verificación manual por vista) |
 | 219 | Null guards en bindings DOM de scripts de página | Algunos scripts enlazan eventos o leen refs DOM al inicio asumiendo que el HTML no cambia (`personal-budget.js`, `personal-budget-settings.js`, partes de `personal-budget-cuotas.js`). Hoy funciona por orden de scripts al final del body, pero una ref faltante puede abortar toda la vista. Agregar guards donde el elemento no sea estrictamente obligatorio. | Baja | Baja | ⬜ (claude: diferido — hardening defensivo por vista, mejor junto con #207/#218 y verificación manual) |
+| 228 | Validar propiedad de categoría en Maestro de Productos | Auditoría `/products`: `POST/PUT /api/product-master` aceptan `defaultCategoryId` del cliente sin comprobar que pertenezca a `req.user.id` (`routes/product-master.js:22`, `routes/product-master.js:42`); `product_master.default_category_id` referencia `personal_budget_categories(id)` globalmente y los JOINs no filtran `pbc.user_id` (`database.js:317`, `database.js:2467`, `database.js:2520`). Riesgo de asociar/ver nombre de categoría ajena si se envía un ID de otro usuario. (codex) | Alta | Baja | ⬜ |
+| 229 | Normalizar `null` de `apiFetch` en `/products` | Auditoría `/products`: `apiFetch` retorna `null` en 401 tras redirigir (`public/js/utils.js:15`), pero `loadProducts()` asigna directamente ese retorno a `_products` (`public/js/products.js:57`) y `render()` asume array (`public/js/products.js:78`, `public/js/products.js:85`). Una sesión expirada puede provocar error runtime antes de completar la navegación. (codex) | Media | Baja | ⬜ |
+| 230 | Mostrar conflicto de barcode real en UI `/products` | Auditoría `/products`: backend devuelve 409 con mensaje de barcode duplicado (`routes/product-master.js:30`, `routes/product-master.js:51`), pero `apiFetch` lanza solo `data.error` sin status (`public/js/utils.js:19`) y `saveProduct()` busca `err.message.includes('409')` (`public/js/products.js:298`), por lo que cae en "Error al guardar" en vez del mensaje específico. (codex) | Baja | Baja | ⬜ |
+| 231 | Responder 400 en IDs inválidos de `/api/products/:id` | Smoke dinámico autenticado sobre DB temporal confirmó que `GET /api/products/abc` responde 404 "Producto no encontrado" en vez de 400, porque `routes/products.js:55` usa `parseInt(req.params.id)` sin validar `NaN` antes de `db.getById`. Las rutas de imágenes/precios ya tienen guard explícito; conviene alinear `GET/PUT/DELETE /api/products/:id`. (codex) | Baja | Baja | ⬜ |
 | 220 | Revisar tablas de Settings en móvil 375-430 | Auditoría UI/layout detectó que `settings.css` usa `.table-wrap { overflow: hidden }` sin scroll horizontal ni modo tarjeta para tablas generadas dinámicamente (`categories`, `units`, `catalog`, `stores`, `taxes`, `reset-history`). En 375-430px las columnas de acciones pueden quedar recortadas. | Media | Baja | ⬜ |
 | 221 | Convertir tablas densas de Presupuesto a patrón móvil más robusto | `personal-budget.css` mantiene `pb-tx-table`/`pb-fc-table` como tabla fija y solo oculta columnas en <=600/480px. En 375-430px puede funcionar por truncado, pero sacrifica información y tiene riesgo de celdas comprimidas; evaluar card-mode o filas expandibles para transacciones/flujos. | Media | Media | ⬜ |
 | 222 | Revisar controles flex en modales pequeños | Auditoría UI/layout detectó filas flex con controles de texto/acción que dependen de compresión en 375-430px: descuento en confirmación de compra (`shopping-list.css`) y acciones de pagos de cuotas (`personal-budget-cuotas.css`). No bloquea el flujo, pero puede generar wrap irregular o botones estrechos con textos largos/i18n. | Baja | Baja | ⬜ |
@@ -274,8 +278,14 @@ Hallazgos Codex validados y registrados (#208-#211, #226-#227). Plan por olas.
 - **Ola 2 — Seguridad cache SW:** #224 (purga `/api/` en logout/cambio de
   inventario, evita fuga entre usuarios), #225 (no cachear navegación
   redirigida a login), #223 (precache de shell completo + install resiliente).
+- **Ola 3 — Robustez runtime frontend:** #216 (`no-undef` activado en lint
+  frontend con globals de app — atrapó un acoplamiento real al instante),
+  #212 (`I18N.init()` resiliente, cubre todas las vistas), #213 (products.js
+  init), #214 (`res.ok` en uploads de foto), #215 (logout con try/catch),
+  #217 (contrato `apiFetch` documentado). #218/#219 diferidos (hardening por
+  vista, perfil de riesgo de #207).
 
-Tests: 196 → 202. Sin errores de lint.
+Tests: 196 → 202. Sin errores de lint (0 no-undef tras #216).
 
 ### Sesión 2026-06-17 — Arquitectura P2 + Quick wins
 
