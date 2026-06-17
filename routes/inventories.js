@@ -2,6 +2,8 @@
 const db      = require('../database');
 const logger   = require('../logger');
 const { requireMember, requireOwner, requireEditorOrOwner } = require('../middleware/inventory');
+const { resolveBudgetCategory } = require('../lib/budget-category');
+const { normalizeDiscount } = require('../lib/validators');
 
 const router = express.Router();
 
@@ -200,12 +202,30 @@ router.put('/:id/purchases/:purchaseId', requireMember, requireEditorOrOwner, (r
   try {
     const purchaseId = parseInt(req.params.purchaseId);
     if (isNaN(purchaseId)) return res.status(400).json({ error: 'ID inválido' });
-    const { purchase_date, items, tax_ids } = req.body;
+    const { purchase_date, items, tax_ids, budget_category, discount_type, discount_value } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
+
+    // Paridad con PUT /api/purchases/:sessionId (camino canónico): resolver
+    // categoría de presupuesto + descuento + userId. Antes esta ruta los
+    // ignoraba y el descuento se perdía silenciosamente al editar (#209).
+    let resolvedBudgetCategory = null;
+    if (budget_category) {
+      const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
+      const resolved = resolveBudgetCategory(budget_category, knownCategories);
+      resolvedBudgetCategory = resolved.category;
+      if (resolved.autoRegister && resolved.category) {
+        db.ensurePersonalBudgetCategory(req.user.id, resolved.category, 'expense');
+      }
+    }
+    const discount = normalizeDiscount(discount_type, discount_value);
     const session = db.updatePurchaseSession(purchaseId, req.inventoryId, {
-      purchaseDate: purchase_date,
+      purchaseDate:   purchase_date,
       items,
-      taxIds: tax_ids || [],
+      taxIds:         tax_ids || [],
+      budgetCategory: resolvedBudgetCategory,
+      userId:         req.user.id,
+      discountType:   discount.type,
+      discountValue:  discount.value,
     });
     if (!session) return res.status(404).json({ error: 'Sesión no encontrada' });
     res.json(session);

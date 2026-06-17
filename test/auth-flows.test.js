@@ -144,6 +144,32 @@ describe('flujo de compra con presupuesto', () => {
     assert.ok(txs.some(t => t.source_purchase_session_id === session.id), 'tx personal vinculada');
   });
 
+  test('editar por ruta /inventories aplica descuento (paridad #209)', async () => {
+    const user = makeUser('InvEdit');
+    const inv  = db.createInventory('CasaInv', user.id);
+    const cookie = await authCookie(user, inv.id);
+    const create = await req('POST', '/api/purchases', {
+      cookie,
+      body: { items: [{ productName: 'Q', quantityBought: 1, unitPrice: 100, unit: 'u' }], purchase_date: '2026-06-16' },
+    });
+    const session = await create.json();
+    assert.equal(session.total_amount, 100);
+
+    // editar con descuento fijo 30 por la ruta que usa el frontend (purchase-edit)
+    const edit = await req('PUT', `/api/inventories/${inv.id}/purchases/${session.id}`, {
+      cookie,
+      body: {
+        purchase_date: '2026-06-16',
+        items: [{ productName: 'Q', quantityBought: 1, unitPrice: 100, unit: 'u' }],
+        tax_ids: [], discount_type: 'fixed', discount_value: 30,
+      },
+    });
+    assert.equal(edit.status, 200);
+    const updated = await edit.json();
+    assert.ok(Math.abs(updated.total_amount - 70) < 0.01,
+      `descuento debe aplicarse, esperado 70, obtenido ${updated.total_amount}`);
+  });
+
   test('owner edita la compra (PUT) y cambia el monto', async () => {
     const user = makeUser('Editor');
     const inv  = db.createInventory('Casa2', user.id);
