@@ -127,9 +127,10 @@ app.get('/cache-version', (req, res) => {
   res.type('text/plain').send(`ih-v${CACHE_VERSION}`);
 });
 
-// OpenAPI spec endpoint
+// OpenAPI spec endpoint — generated from the mounted routes (living contract)
+const { buildSpec } = require('./lib/openapi');
 app.get('/openapi.json', (req, res) => {
-  res.sendFile(path.join(__dirname, 'openapi.json'));
+  res.json(buildSpec(app));
 });
 
 // ── Rate limiting ──────────────────────────────────────────────────────────────
