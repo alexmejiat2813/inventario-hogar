@@ -1,8 +1,8 @@
 'use strict';
 const express = require('express');
-const https   = require('https');
 const db      = require('../database');
 const logger  = require('../logger');
+const { fetchJson } = require('../lib/http-client');
 
 const router = express.Router();
 
@@ -87,48 +87,46 @@ router.get('/lookup', (req, res) => {
 // POST /api/product-master/scan-register
 // 1. Si barcode existe en maestro del usuario → devuelve el registro
 // 2. Si no → consulta Open Food Facts, registra y devuelve
-router.post('/scan-register', (req, res) => {
+router.post('/scan-register', async (req, res) => {
   const { barcode } = req.body;
   if (!barcode?.trim()) return res.status(400).json({ error: 'Código de barras requerido' });
+  const code = barcode.trim();
 
   try {
     // Step 1: local lookup
-    const existing = db.findProductMasterByBarcode(req.user.id, barcode.trim());
+    const existing = db.findProductMasterByBarcode(req.user.id, code);
     if (existing) return res.json({ source: 'local', product: existing });
 
-    // Step 2: Open Food Facts lookup
-    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode.trim())}.json?fields=product_name,brands,categories_tags,image_front_url,nutriments,serving_size,nutriscore_grade`;
-    https.get(url, { headers: { 'User-Agent': 'InventarioHogar/1.0' } }, (offRes) => {
-      let raw = '';
-      offRes.on('data', chunk => { raw += chunk; });
-      offRes.on('end', () => {
-        try {
-          const data = JSON.parse(raw);
-          if (data.status !== 1 || !data.product) {
-            // Not found in OFF — return stub for frontend to fill
-            return res.json({ source: 'unknown', barcode: barcode.trim(), product: null });
-          }
-          const p = data.product;
-          const name  = p.product_name?.trim() || barcode.trim();
-          const brand = p.brands?.split(',')[0]?.trim() || null;
-          const created = db.createProductMaster(req.user.id, {
-            name, barcode: barcode.trim(), brand,
-            isTaxable: true, tracksStock: true,
-            imageUrl:    p.image_front_url || null,
-            nutriments:  p.nutriments      || null,
-            servingSize: p.serving_size    || null,
-            nutriscore:  p.nutriscore_grade || null,
-          });
-          res.status(201).json({ source: 'openfoodfacts', product: created });
-        } catch (parseErr) {
-          logger.error({ parseErr }, 'OFF parse failed');
-          res.json({ source: 'unknown', barcode: barcode.trim(), product: null });
-        }
-      });
-    }).on('error', (netErr) => {
-      logger.error({ netErr }, 'OFF fetch failed');
-      res.json({ source: 'unknown', barcode: barcode.trim(), product: null });
+    // Step 2: Open Food Facts lookup — timeout 5s so a slow upstream can't hang
+    // the request; cache 1h per barcode (OFF data is effectively static).
+    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name,brands,categories_tags,image_front_url,nutriments,serving_size,nutriscore_grade`;
+    let data;
+    try {
+      ({ data } = await fetchJson(url, {
+        timeoutMs: 5000, retries: 1, cacheTtlMs: 60 * 60 * 1000,
+        headers: { 'User-Agent': 'InventarioHogar/1.0' },
+      }));
+    } catch (netErr) {
+      logger.error({ netErr: netErr.message, kind: netErr.kind }, 'OFF fetch failed');
+      return res.json({ source: 'unknown', barcode: code, product: null });
+    }
+
+    if (data?.status !== 1 || !data.product) {
+      // Not found in OFF — return stub for frontend to fill
+      return res.json({ source: 'unknown', barcode: code, product: null });
+    }
+    const p = data.product;
+    const name  = p.product_name?.trim() || code;
+    const brand = p.brands?.split(',')[0]?.trim() || null;
+    const created = db.createProductMaster(req.user.id, {
+      name, barcode: code, brand,
+      isTaxable: true, tracksStock: true,
+      imageUrl:    p.image_front_url || null,
+      nutriments:  p.nutriments      || null,
+      servingSize: p.serving_size    || null,
+      nutriscore:  p.nutriscore_grade || null,
     });
+    res.status(201).json({ source: 'openfoodfacts', product: created });
   } catch (err) {
     logger.error({ err }, 'scan-register failed');
     res.status(500).json({ error: 'Error en registro por escáner' });

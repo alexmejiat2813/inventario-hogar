@@ -5,6 +5,7 @@ const {
   isBlankCategory, trimCategory, parseAmount, normalizeCurrency, isValidCurrency,
   VALID_FREQUENCIES,
 } = require('../lib/validators');
+const { fetchJson } = require('../lib/http-client');
 
 const router = express.Router();
 
@@ -424,9 +425,11 @@ router.get('/installments/fx-rate', async (req, res) => {
       return res.status(400).json({ error: 'Divisas inválidas.' });
     if (from === to) return res.json({ rate: 1 });
 
-    const resp = await fetch(`https://open.er-api.com/v6/latest/${from}`);
-    if (!resp.ok) return res.status(502).json({ error: 'No se pudo consultar el tipo de cambio.' });
-    const data = await resp.json();
+    // Rates move slowly — cache 10 min, 5s timeout, 1 retry on timeout/network.
+    const { status, data } = await fetchJson(`https://open.er-api.com/v6/latest/${from}`, {
+      timeoutMs: 5000, retries: 1, cacheTtlMs: 10 * 60 * 1000,
+    });
+    if (status < 200 || status >= 300) return res.status(502).json({ error: 'No se pudo consultar el tipo de cambio.' });
     const rate = data?.rates?.[to];
     if (!rate) return res.status(404).json({ error: `No hay tasa disponible para ${from} → ${to}.` });
     res.json({ rate });
