@@ -1274,6 +1274,22 @@ describe('getPurchaseSessions — filtro budget_category', () => {
     const cats = db.getPurchaseBudgetCategories(inv.id);
     assert.deepEqual(cats, ['Farmacia', 'Mercado'], 'distinct ordenadas, sin null');
   });
+
+  test('filtro por mes usa rango medio-abierto (#211)', () => {
+    const { inv, userId } = makeInventory();
+    const mk = (date) => db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'X', quantityBought: 1, unitPrice: 10, unit: 'u' }],
+      taxIds: [], currency: 'USD', purchaseDate: date, receiptImage: null,
+    });
+    mk('2026-03-01'); // primer dia
+    mk('2026-03-31'); // ultimo dia
+    mk('2026-02-28'); // mes anterior
+    mk('2026-04-01'); // mes siguiente
+    const marzo = db.getPurchaseSessions(inv.id, { month: '2026-03' });
+    assert.equal(marzo.length, 2, 'solo las 2 de marzo, bordes inclusivos/exclusivos');
+    assert.ok(marzo.every(s => s.purchase_date.startsWith('2026-03')));
+  });
 });
 
 // ── Cleanup ────────────────────────────────────────────────────

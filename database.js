@@ -1859,7 +1859,11 @@ module.exports = {
       WHERE ps.inventory_id = ?
     `;
     const params = [inventoryId];
-    if (month)   { sql += ` AND strftime('%Y-%m', ps.purchase_date) = ?`; params.push(month); }
+    if (month) {
+      // Rango medio-abierto en vez de strftime() para poder usar idx_psessions_inv_date (#211)
+      const r = monthRange(month);
+      if (r) { sql += ` AND ps.purchase_date >= ? AND ps.purchase_date < ?`; params.push(r.start, r.next); }
+    }
     if (storeId) {
       sql += ` AND ps.id IN (SELECT DISTINCT session_id FROM purchase_items WHERE store_id = ?)`;
       params.push(storeId);
@@ -1926,15 +1930,18 @@ module.exports = {
     const { total }    = db.prepare('SELECT COUNT(*) AS total    FROM products WHERE inventory_id = ?').get(inventoryId);
     const { critical } = db.prepare('SELECT COUNT(*) AS critical FROM products WHERE inventory_id = ? AND current_qty < min_qty').get(inventoryId);
 
+    // Rango medio-abierto en vez de strftime() para usar idx_psessions_inv_date (#211)
+    const thisR = monthRange(thisMonthStr);
+    const lastR = monthRange(lastMonthStr);
     const { amount: thisMonth }  = db.prepare(`
       SELECT COALESCE(SUM(total_amount),0) AS amount FROM purchase_sessions
-      WHERE inventory_id = ? AND strftime('%Y-%m', purchase_date) = ?
-    `).get(inventoryId, thisMonthStr);
+      WHERE inventory_id = ? AND purchase_date >= ? AND purchase_date < ?
+    `).get(inventoryId, thisR.start, thisR.next);
 
     const { amount: lastMonthAmt } = db.prepare(`
       SELECT COALESCE(SUM(total_amount),0) AS amount FROM purchase_sessions
-      WHERE inventory_id = ? AND strftime('%Y-%m', purchase_date) = ?
-    `).get(inventoryId, lastMonthStr);
+      WHERE inventory_id = ? AND purchase_date >= ? AND purchase_date < ?
+    `).get(inventoryId, lastR.start, lastR.next);
 
     let variation = null;
     if (lastMonthAmt > 0) variation = Math.round(((thisMonth - lastMonthAmt) / lastMonthAmt) * 100);
