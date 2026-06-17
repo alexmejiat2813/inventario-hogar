@@ -90,7 +90,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | # | Tarea | Descripción | Importancia | Dificultad | Estado |
 |---|-------|-------------|-------------|------------|--------|
 | 119 | Tests `updatePurchaseSession` casos borde | Cubrir: (a) totalAmount 0→>0 crea personal_transaction, (b) totalAmount >0→0 elimina personal_transaction, (c) edición sin budgetCategory no toca personal_transactions. Sin estos tests los bugs #115/#116 pueden resurgir sin detección. | Crítica | Baja | ✅ |
-| 120 | Test categoría desconocida + knownCategories vacío vs populado | Verificar comportamiento exacto del resolver en `routes/purchases.js`: categoría desconocida con categorías registradas → 'Otros'; sin categorías registradas → pasa y auto-registra. | Alta | Baja | ⬜ |
+| 120 | Test categoría desconocida + knownCategories vacío vs populado | Verificar comportamiento exacto del resolver en `routes/purchases.js`: categoría desconocida con categorías registradas → 'Otros'; sin categorías registradas → pasa y auto-registra. | Alta | Baja | ✅ |
 | 121 | Test migración histórica — fallo en mitad de forEach | Verificar que si la migración falla para el usuario N, los usuarios N+1..M no se ven afectados y la DB no queda con transacción abierta. | Alta | Media | ⬜ |
 
 ### P2 — Arquitectura y calidad detectada en auditoría

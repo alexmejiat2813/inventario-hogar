@@ -4,6 +4,7 @@ const fs      = require('fs');
 const db      = require('../database');
 const logger   = require('../logger');
 const { requireEditorOrOwner } = require('../middleware/inventory');
+const { resolveBudgetCategory } = require('../lib/budget-category');
 const { uploadReceipt, uploadFilePath, checkMagicBytes, cleanupFiles } = require('../middleware/upload');
 
 const router = express.Router();
@@ -92,27 +93,14 @@ router.post('/', requireEditorOrOwner, (req, res) => {
     // Sanitize + validate budgetCategory against user's known expense categories.
     // Protects analytics from broken strings sent directly to the API.
     let resolvedBudgetCategory = null;
-    let budgetCategoryStatus = null; // 'accepted' | 'unvalidated' | 'degraded'
-    if (effectiveBudgetCategory && typeof effectiveBudgetCategory === 'string') {
-      const sanitized = effectiveBudgetCategory.replace(/[\r\n\t]/g, ' ').trim().slice(0, 100);
-      if (sanitized) {
-        const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
-        if (!knownCategories.length) {
-          // New user with no categories yet — accept and auto-register so the
-          // next purchase finds it in the known list (no silent bypass).
-          resolvedBudgetCategory = sanitized;
-          budgetCategoryStatus = 'accepted';
-          db.ensurePersonalBudgetCategory(req.user.id, sanitized, 'expense');
-        } else {
-          const matched = knownCategories.find(c => c.toLowerCase() === sanitized.toLowerCase());
-          if (matched) {
-            resolvedBudgetCategory = matched; // canonical casing from DB
-            budgetCategoryStatus = 'accepted';
-          } else {
-            resolvedBudgetCategory = 'Otros';
-            budgetCategoryStatus = 'degraded';
-          }
-        }
+    let budgetCategoryStatus = null; // 'accepted' | 'degraded' | null
+    if (effectiveBudgetCategory) {
+      const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
+      const resolved = resolveBudgetCategory(effectiveBudgetCategory, knownCategories);
+      resolvedBudgetCategory = resolved.category;
+      budgetCategoryStatus   = resolved.status;
+      if (resolved.autoRegister && resolved.category) {
+        db.ensurePersonalBudgetCategory(req.user.id, resolved.category, 'expense');
       }
     }
 
@@ -157,23 +145,13 @@ router.put('/:sessionId', requireEditorOrOwner, (req, res) => {
 
     let resolvedBudgetCategory = null;
     let budgetCategoryStatus = null;
-    if (budget_category && typeof budget_category === 'string') {
-      const sanitized = budget_category.replace(/[\r\n\t]/g, ' ').trim().slice(0, 100);
-      if (sanitized) {
-        const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
-        if (!knownCategories.length) {
-          resolvedBudgetCategory = sanitized;
-          budgetCategoryStatus = 'unvalidated';
-        } else {
-          const matched = knownCategories.find(c => c.toLowerCase() === sanitized.toLowerCase());
-          if (matched) {
-            resolvedBudgetCategory = matched;
-            budgetCategoryStatus = 'accepted';
-          } else {
-            resolvedBudgetCategory = 'Otros';
-            budgetCategoryStatus = 'degraded';
-          }
-        }
+    if (budget_category) {
+      const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
+      const resolved = resolveBudgetCategory(budget_category, knownCategories);
+      resolvedBudgetCategory = resolved.category;
+      budgetCategoryStatus   = resolved.status;
+      if (resolved.autoRegister && resolved.category) {
+        db.ensurePersonalBudgetCategory(req.user.id, resolved.category, 'expense');
       }
     }
 
