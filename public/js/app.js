@@ -791,9 +791,12 @@ async function handleFormSubmit(e) {
       const fd = new FormData();
       state.pendingPhotos.forEach(p => fd.append('photos', p.file));
       try {
-        await fetch(`/api/products/${uploadId}/images`, { method: 'POST', body: fd });
+        const up = await fetch(`/api/products/${uploadId}/images`, { method: 'POST', body: fd });
+        if (!up.ok) throw new Error(`upload ${up.status}`);
         showToast(t('inventory.photos.uploaded') || 'Foto(s) guardada(s)');
-      } catch { /* non-fatal */ }
+      } catch {
+        showToast(t('inventory.photos.uploadError') || 'No se pudieron guardar las fotos', 'error');
+      }
       state.pendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
       state.pendingPhotos = [];
     }
@@ -1470,7 +1473,7 @@ function initEvents() {
   });
   document.getElementById('btn-logout').addEventListener('click', async () => {
     closeProfileDropdown();
-    await fetch('/auth/logout', { method: 'POST' });
+    try { await fetch('/auth/logout', { method: 'POST' }); } catch { /* red: redirigir igual */ }
     purgeApiCache();
     window.location.href = '/login';
   });

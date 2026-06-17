@@ -515,7 +515,9 @@ document.getElementById('cq-list').onclick = function(e) {
 };
 
 document.getElementById('btn-logout').onclick = function() {
-  fetch('/auth/logout', { method: 'POST' }).then(function() { purgeApiCache(); window.location.href = '/login'; });
+  fetch('/auth/logout', { method: 'POST' })
+    .catch(function() { /* red: redirigir igual */ })
+    .then(function() { purgeApiCache(); window.location.href = '/login'; });
 };
 
 // ── init async ─────────────────────────────────────────────────────────────

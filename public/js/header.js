@@ -59,7 +59,7 @@ function initProfileMenu() {
   const logout = document.getElementById('btn-logout');
   if (logout) logout.addEventListener('click', async () => {
     menu.hidden = true;
-    await fetch('/auth/logout', { method: 'POST' });
+    try { await fetch('/auth/logout', { method: 'POST' }); } catch { /* red: redirigir igual */ }
     purgeApiCache();
     window.location.href = '/login';
   });

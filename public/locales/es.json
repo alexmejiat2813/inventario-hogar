@@ -190,6 +190,7 @@
       "maxSize": "Tamaño máximo 5MB por foto",
       "deleted": "Foto eliminada",
       "uploaded": "Foto(s) guardada(s)",
+      "uploadError": "No se pudieron guardar las fotos",
       "camera": "Cámara",
       "gallery": "Galería"
     }
@@ -467,6 +468,7 @@
   },
   "catalog": {
     "title": "Catálogo de productos",
+    "photoUploadError": "No se pudieron guardar las fotos",
     "search": "Buscar en el catálogo...",
     "add": "Agregar al catálogo",
     "back": "Inventario",

@@ -31,6 +31,9 @@ const _scanner = { reader: null, active: false };
 
 // ── Boot ───────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // i18n primero pero resiliente: si /locales/{lang}.json falla (red/SW/cache)
+  // no debe abortar el wiring de la vista (#213, #212).
+  if (typeof I18N !== 'undefined' && I18N.init) await I18N.init().catch(() => {});
   await Promise.all([loadCategories(), loadProducts()]);
   wireEvents();
   render();

@@ -274,8 +274,12 @@ async function handleAddToInventory(e) {
       const fd = new FormData();
       state.pendingPhotos.forEach(p => fd.append('photos', p.file));
       try {
-        await fetch(`/api/products/${productId}/images`, { method: 'POST', body: fd });
-      } catch { /* non-fatal: photos failed but product was added */ }
+        const up = await fetch(`/api/products/${productId}/images`, { method: 'POST', body: fd });
+        if (!up.ok) throw new Error(`upload ${up.status}`);
+      } catch {
+        // non-fatal: el producto se agregó pero las fotos no
+        toast(t('catalog.photoUploadError'), 'error');
+      }
       state.pendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
       state.pendingPhotos = [];
     }

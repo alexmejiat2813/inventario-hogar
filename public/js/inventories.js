@@ -457,7 +457,7 @@ function initEvents() {
   // Logout
   document.getElementById('btn-logout').addEventListener('click', async () => {
     closeProfileDropdown();
-    await fetch('/auth/logout', { method: 'POST' });
+    try { await fetch('/auth/logout', { method: 'POST' }); } catch { /* red: redirigir igual */ }
     purgeApiCache();
     window.location.href = '/login';
   });

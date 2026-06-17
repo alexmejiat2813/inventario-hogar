@@ -190,6 +190,7 @@
       "maxSize": "Taille maximale 5 Mo par photo",
       "deleted": "Photo supprimée",
       "uploaded": "Photo(s) enregistrée(s)",
+      "uploadError": "Impossible d'enregistrer les photos",
       "camera": "Caméra",
       "gallery": "Galerie"
     }
@@ -466,6 +467,7 @@
   },
   "catalog": {
     "title": "Catalogue de produits",
+    "photoUploadError": "Impossible d'enregistrer les photos",
     "search": "Rechercher dans le catalogue...",
     "add": "Ajouter au catalogue",
     "back": "Inventaire",

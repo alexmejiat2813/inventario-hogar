@@ -190,6 +190,7 @@
       "maxSize": "Maximum file size 5MB per photo",
       "deleted": "Photo deleted",
       "uploaded": "Photo(s) saved",
+      "uploadError": "Could not save the photos",
       "camera": "Camera",
       "gallery": "Gallery"
     }
@@ -466,6 +467,7 @@
   },
   "catalog": {
     "title": "Product catalog",
+    "photoUploadError": "Could not save the photos",
     "search": "Search the catalog...",
     "add": "Add to catalog",
     "back": "Inventory",

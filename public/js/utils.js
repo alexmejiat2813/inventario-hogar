@@ -1,6 +1,13 @@
 /* Shared utilities — loaded before every page script */
 /* eslint-disable no-unused-vars -- globals used by other page scripts via script tag */
 
+// Contrato único (#217):
+//   - Éxito (2xx JSON)  → devuelve los datos parseados.
+//   - 401              → navega a /login y devuelve `null` (sesión perdida).
+//   - Cualquier otro    → lanza Error (los callers deben usar try/catch).
+// Por el caso 401 el retorno puede ser `null`: los consumidores que iteren o
+// accedan a propiedades deben null-checkear (patrón `(await apiFetch(...)) || []`
+// o `?.`). El 401 ya dispara navegación, así que el null es transitorio.
 async function apiFetch(method, url, body) {
   const opts = { method, headers: { 'Content-Type': 'application/json' } };
   if (body !== undefined) opts.body = JSON.stringify(body);

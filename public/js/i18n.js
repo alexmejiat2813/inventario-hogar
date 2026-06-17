@@ -67,8 +67,13 @@ const I18N = (() => {
     const saved   = localStorage.getItem('lang');
     const browser = navigator.language?.split('-')[0];
     const lang    = LANGS.includes(saved) ? saved : LANGS.includes(browser) ? browser : 'es';
-    await load(lang);
-    apply();
+    // Resiliente: si /locales/{lang}.json falla (red/SW/cache), NO rechazar —
+    // así la vista que hace `await I18N.init()` no aborta su wiring (#212).
+    // Si no se cargó, se conserva el texto por defecto del HTML (no se pisa con keys).
+    let loaded = false;
+    try { await load(lang); loaded = true; }
+    catch (e) { console.error('i18n: no se pudo cargar el locale, usando texto por defecto:', e.message); }
+    if (loaded) apply();
     document.addEventListener('click', e => {
       const btn = e.target.closest('.lang-btn[data-lang]');
       if (btn) set(btn.dataset.lang);
