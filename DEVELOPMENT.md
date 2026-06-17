@@ -103,7 +103,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 202 | Capa HTTP para integraciones externas con timeout/cache | Open Food Facts y FX dependen de red externa desde request handlers. Agregar cliente con timeout, retry limitado, cache corta y tests con mocks para evitar requests colgados o lentos. | Alta | Media | ✅ |
 | 203 | Hardening de performance SQLite | Agregar índices faltantes detectados (`personal_transactions(user_id,date,type)`, `installment_payments(plan_id,paid_at)`, búsquedas case-insensitive frecuentes) y revisar queries con `strftime` que impiden usar índices por rango. | Media | Baja | ✅ |
 | 204 | Modularizar JS frontend por vista | `app.js`, `shopping-list.js` y `personal-budget.js` mezclan estado, API, render y eventos. Extraer clientes API y render helpers por vista para bajar riesgo de regresión y facilitar tests de lógica pura. | Media | Media | ⬜ |
-| 205 | Añadir pruebas HTTP autenticadas de flujos críticos | Los smoke tests cubren auth básica, pero faltan flujos con sesión real: compra con presupuesto, edición de compra, cuotas, product-master y permisos owner/editor/reader. | Alta | Media | ⬜ |
+| 205 | Añadir pruebas HTTP autenticadas de flujos críticos | Los smoke tests cubren auth básica, pero faltan flujos con sesión real: compra con presupuesto, edición de compra, cuotas, product-master y permisos owner/editor/reader. | Alta | Media | ✅ |
 
 ### P3 — Features de alto impacto inmediato
 
