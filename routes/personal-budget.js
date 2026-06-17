@@ -1,20 +1,21 @@
 const express = require('express');
 const db      = require('../database');
+const {
+  isValidMonth, isValidDate, isValidDueDate, isValidFrequency, isValidFlowType,
+  isBlankCategory, trimCategory, parseAmount, normalizeCurrency, isValidCurrency,
+  VALID_FREQUENCIES,
+} = require('../lib/validators');
 
 const router = express.Router();
 
-const MONTH_RE    = /^\d{4}-\d{2}$/;
-const DATE_RE     = /^\d{4}-\d{2}-\d{2}$/;
-const DUE_DATE_RE = /^(\d{1,2}|\d{4}-\d{2}-\d{2})$/;
-const VALID_FREQ  = ['Mensual', 'Quincenal', 'Semestral', 'Anual', 'Bianual'];
-const CURRENCY_RE = /^[A-Z]{3}$/;
+const VALID_FREQ = VALID_FREQUENCIES; // re-export for error messages below
 
 // GET /api/personal-budget?month=YYYY-MM
 router.get('/', (req, res) => {
   const userId = req.user.id;
   const month  = req.query.month || new Date().toISOString().slice(0, 7);
 
-  if (!MONTH_RE.test(month)) {
+  if (!isValidMonth(month)) {
     return res.status(400).json({ error: 'Parámetro month inválido. Usar YYYY-MM.' });
   }
 
@@ -51,30 +52,30 @@ router.post('/budget', (req, res) => {
   const userId = req.user.id;
   const { category, amount, month, frequency, due_date, flow_type } = req.body;
 
-  if (!category || typeof category !== 'string' || !category.trim()) {
+  if (isBlankCategory(category)) {
     return res.status(400).json({ error: 'category es requerida.' });
   }
-  if (amount == null || isNaN(+amount) || +amount < 0) {
+  if (!parseAmount(amount, { allowZero: true }).valid) {
     return res.status(400).json({ error: 'amount debe ser un número >= 0.' });
   }
   const m = month || new Date().toISOString().slice(0, 7);
-  if (!MONTH_RE.test(m)) {
+  if (!isValidMonth(m)) {
     return res.status(400).json({ error: 'month inválido. Usar YYYY-MM.' });
   }
   const freq = frequency || 'Mensual';
-  if (!VALID_FREQ.includes(freq)) {
+  if (!isValidFrequency(freq)) {
     return res.status(400).json({ error: `frequency debe ser: ${VALID_FREQ.join(', ')}.` });
   }
-  if (due_date && !DUE_DATE_RE.test(due_date)) {
+  if (due_date && !isValidDueDate(due_date)) {
     return res.status(400).json({ error: 'due_date debe ser "DD" (día del mes) o "YYYY-MM-DD".' });
   }
   const ft = flow_type || 'expense';
-  if (!['income', 'expense'].includes(ft)) {
+  if (!isValidFlowType(ft)) {
     return res.status(400).json({ error: 'flow_type debe ser "income" o "expense".' });
   }
 
   const { inventoryId } = req.body;
-  const trimmedCat = category.trim();
+  const trimmedCat = trimCategory(category);
   const budget = db.addPersonalBudget(userId, {
     category: trimmedCat, amount, month: m, frequency: freq,
     due_date: due_date || null, flow_type: ft,
@@ -90,20 +91,20 @@ router.post('/transaction', (req, res) => {
   const userId = req.user.id;
   const { inventoryId, type, category, amount, description, date } = req.body;
 
-  if (!['income', 'expense'].includes(type)) {
+  if (!isValidFlowType(type)) {
     return res.status(400).json({ error: 'type debe ser "income" o "expense".' });
   }
-  if (!category || typeof category !== 'string' || !category.trim()) {
+  if (isBlankCategory(category)) {
     return res.status(400).json({ error: 'category es requerida.' });
   }
-  if (!amount || isNaN(+amount) || +amount <= 0) {
+  if (!parseAmount(amount, { allowZero: false }).valid) {
     return res.status(400).json({ error: 'amount debe ser un número positivo.' });
   }
-  if (!date || !DATE_RE.test(date)) {
+  if (!isValidDate(date)) {
     return res.status(400).json({ error: 'date inválida. Usar YYYY-MM-DD.' });
   }
 
-  const trimmedCat = category.trim();
+  const trimmedCat = trimCategory(category);
   const transaction = db.addPersonalTransaction(userId, {
     inventoryId: inventoryId || null,
     type,
@@ -151,27 +152,27 @@ router.put('/budget/:id', (req, res) => {
     return res.status(400).json({ error: 'ID inválido.' });
   }
   const { category, amount, month, frequency, due_date, flow_type, inventoryId } = req.body;
-  if (!category || typeof category !== 'string' || !category.trim()) {
+  if (isBlankCategory(category)) {
     return res.status(400).json({ error: 'category es requerida.' });
   }
-  if (amount == null || isNaN(+amount) || +amount < 0) {
+  if (!parseAmount(amount, { allowZero: true }).valid) {
     return res.status(400).json({ error: 'amount debe ser un número >= 0.' });
   }
   const m = month || new Date().toISOString().slice(0, 7);
-  if (!MONTH_RE.test(m)) return res.status(400).json({ error: 'month inválido. Usar YYYY-MM.' });
+  if (!isValidMonth(m)) return res.status(400).json({ error: 'month inválido. Usar YYYY-MM.' });
   const freq = frequency || 'Mensual';
-  if (!VALID_FREQ.includes(freq)) {
+  if (!isValidFrequency(freq)) {
     return res.status(400).json({ error: `frequency debe ser: ${VALID_FREQ.join(', ')}.` });
   }
-  if (due_date && !DUE_DATE_RE.test(due_date)) {
+  if (due_date && !isValidDueDate(due_date)) {
     return res.status(400).json({ error: 'due_date debe ser "DD" o "YYYY-MM-DD".' });
   }
   const ft = flow_type || 'expense';
-  if (!['income', 'expense'].includes(ft)) {
+  if (!isValidFlowType(ft)) {
     return res.status(400).json({ error: 'flow_type debe ser "income" o "expense".' });
   }
   const updated = db.updatePersonalBudget(req.user.id, id, {
-    category: category.trim(), amount, month: m, frequency: freq,
+    category: trimCategory(category), amount, month: m, frequency: freq,
     due_date: due_date || null, flow_type: ft,
     inventory_id: inventoryId ? +inventoryId : null,
   });
@@ -278,22 +279,22 @@ router.put('/transaction/:id', (req, res) => {
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ error: 'ID inválido.' });
   }
-  if (!['income', 'expense'].includes(type)) {
+  if (!isValidFlowType(type)) {
     return res.status(400).json({ error: 'type debe ser "income" o "expense".' });
   }
-  if (!category || typeof category !== 'string' || !category.trim()) {
+  if (isBlankCategory(category)) {
     return res.status(400).json({ error: 'category es requerida.' });
   }
-  if (!amount || isNaN(+amount) || +amount <= 0) {
+  if (!parseAmount(amount, { allowZero: false }).valid) {
     return res.status(400).json({ error: 'amount debe ser un número positivo.' });
   }
-  if (!date || !DATE_RE.test(date)) {
+  if (!isValidDate(date)) {
     return res.status(400).json({ error: 'date inválida. Usar YYYY-MM-DD.' });
   }
 
   const updated = db.updatePersonalTransaction(userId, id, {
     type,
-    category: category.trim(),
+    category: trimCategory(category),
     amount,
     description,
     date,
@@ -348,8 +349,8 @@ router.put('/settings/thresholds', (req, res) => {
 // PUT /api/personal-budget/settings/currency
 router.put('/settings/currency', (req, res) => {
   const userId = req.user.id;
-  const currency = String(req.body.currency || '').toUpperCase();
-  if (!CURRENCY_RE.test(currency)) return res.status(400).json({ error: 'Divisa inválida.' });
+  const currency = normalizeCurrency(req.body.currency);
+  if (!isValidCurrency(currency)) return res.status(400).json({ error: 'Divisa inválida.' });
   const settings = db.updatePersonalBudgetCurrency(userId, currency);
   res.json(settings);
 });
@@ -417,9 +418,9 @@ router.get('/installments', (req, res) => {
 // GET /installments/fx-rate?from=CAD&to=COP — tasa de cambio actual (open.er-api.com, sin key)
 router.get('/installments/fx-rate', async (req, res) => {
   try {
-    const from = String(req.query.from || '').toUpperCase();
-    const to   = String(req.query.to   || '').toUpperCase();
-    if (!CURRENCY_RE.test(from) || !CURRENCY_RE.test(to))
+    const from = normalizeCurrency(req.query.from);
+    const to   = normalizeCurrency(req.query.to);
+    if (!isValidCurrency(from) || !isValidCurrency(to))
       return res.status(400).json({ error: 'Divisas inválidas.' });
     if (from === to) return res.json({ rate: 1 });
 
@@ -439,8 +440,8 @@ router.post('/installments', (req, res) => {
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido.' });
     if (!totalAmount || !numInstallments || !amountPerInstallment || !startDate)
       return res.status(400).json({ error: 'Faltan campos obligatorios.' });
-    if (currency && !CURRENCY_RE.test(currency)) return res.status(400).json({ error: 'Divisa inválida.' });
-    if (originalCurrency && !CURRENCY_RE.test(originalCurrency)) return res.status(400).json({ error: 'Divisa de origen inválida.' });
+    if (currency && !isValidCurrency(currency)) return res.status(400).json({ error: 'Divisa inválida.' });
+    if (originalCurrency && !isValidCurrency(originalCurrency)) return res.status(400).json({ error: 'Divisa de origen inválida.' });
     const plan = db.createInstallmentPlan(req.user.id, {
       name: name.trim(),
       totalAmount: Number(totalAmount),
@@ -467,8 +468,8 @@ router.put('/installments/:id', (req, res) => {
     if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido.' });
     if (!totalAmount || !numInstallments || !amountPerInstallment || !startDate)
       return res.status(400).json({ error: 'Faltan campos obligatorios.' });
-    if (currency && !CURRENCY_RE.test(currency)) return res.status(400).json({ error: 'Divisa inválida.' });
-    if (originalCurrency && !CURRENCY_RE.test(originalCurrency)) return res.status(400).json({ error: 'Divisa de origen inválida.' });
+    if (currency && !isValidCurrency(currency)) return res.status(400).json({ error: 'Divisa inválida.' });
+    if (originalCurrency && !isValidCurrency(originalCurrency)) return res.status(400).json({ error: 'Divisa de origen inválida.' });
     const plan = db.updateInstallmentPlan(req.user.id, id, {
       name: name.trim(),
       totalAmount: Number(totalAmount),

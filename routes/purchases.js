@@ -1,10 +1,10 @@
 ﻿const express = require('express');
-const path    = require('path');
 const fs      = require('fs');
 const db      = require('../database');
 const logger   = require('../logger');
 const { requireEditorOrOwner } = require('../middleware/inventory');
 const { resolveBudgetCategory } = require('../lib/budget-category');
+const { isValidDate, normalizeDiscount } = require('../lib/validators');
 const { uploadReceipt, uploadFilePath, checkMagicBytes, cleanupFiles } = require('../middleware/upload');
 
 const router = express.Router();
@@ -75,7 +75,7 @@ router.post('/', requireEditorOrOwner, (req, res) => {
   try {
     const { items, currency, purchase_date, tax_ids, budget_category, discount_type, discount_value } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'No hay productos' });
-    if (!purchase_date || !/^\d{4}-\d{2}-\d{2}$/.test(purchase_date)) {
+    if (!isValidDate(purchase_date)) {
       return res.status(400).json({ error: 'purchase_date es requerida (YYYY-MM-DD).' });
     }
 
@@ -104,6 +104,7 @@ router.post('/', requireEditorOrOwner, (req, res) => {
       }
     }
 
+    const discount = normalizeDiscount(discount_type, discount_value);
     const session = db.createPurchaseSession({
       inventoryId:    req.inventoryId,
       userId:         req.user.id,
@@ -113,8 +114,8 @@ router.post('/', requireEditorOrOwner, (req, res) => {
       purchaseDate:   purchase_date,
       receiptImage:   null,
       budgetCategory: resolvedBudgetCategory,
-      discountType:   discount_type  || 'fixed',
-      discountValue:  +(discount_value) || 0,
+      discountType:   discount.type,
+      discountValue:  discount.value,
     });
     db.audit(req.inventoryId, req.user.id, req.user.name, 'purchase.create', 'purchase', session.id,
       { total_amount: session.total_amount, currency: session.currency, item_count: items.length });
@@ -155,14 +156,15 @@ router.put('/:sessionId', requireEditorOrOwner, (req, res) => {
       }
     }
 
+    const discount = normalizeDiscount(discount_type, discount_value);
     const session = db.updatePurchaseSession(sessionId, req.inventoryId, {
       purchaseDate:   purchase_date,
       items,
       taxIds:         tax_ids || [],
       budgetCategory: resolvedBudgetCategory,
       userId:         req.user.id,
-      discountType:   discount_type  || 'fixed',
-      discountValue:  +(discount_value) || 0,
+      discountType:   discount.type,
+      discountValue:  discount.value,
     });
     if (!session) return res.status(404).json({ error: 'Sesión no encontrada' });
     res.json({ ...session, budget_category_status: budgetCategoryStatus });
