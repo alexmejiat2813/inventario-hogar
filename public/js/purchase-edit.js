@@ -396,35 +396,17 @@ function renderReceipt() {
 function calcTotals() {
   syncItemsFromDOM();
 
-  const subtotal = state.items.reduce((acc, item) => {
-    return acc + (item.quantityBought || 0) * (item.unitPrice || 0);
-  }, 0);
-  const taxableSubtotal = state.items.reduce((acc, item) => {
-    if (item.isTaxable === false) return acc;
-    return acc + (item.quantityBought || 0) * (item.unitPrice || 0);
-  }, 0);
-
   const taxIds = getSelectedTaxIds();
-  let totalTax = 0;
-  const breakdown = [];
-  taxIds.forEach(taxId => {
-    const tax = state.taxes.find(tx => tx.id === taxId);
-    if (tax) {
-      const amt = taxableSubtotal * (tax.rate / 100);
-      totalTax += amt;
-      breakdown.push({ taxId: tax.id, taxName: tax.name, taxRate: tax.rate, taxAmount: amt });
-    }
-  });
-
-  const grossTotal    = subtotal + totalTax;
   const discountType  = document.getElementById('discount-type')?.value || 'fixed';
   const discountValue = parseFloat(document.getElementById('discount-value')?.value) || 0;
-  const discountAmt   = discountType === 'percentage'
-    ? grossTotal * (discountValue / 100)
-    : discountValue;
-  const total = Math.max(0, grossTotal - discountAmt);
 
-  return { subtotal, totalTax, grossTotal, discountAmt, discountType, discountValue, total, breakdown, taxIds };
+  const { subtotal, totalTax, breakdown, grossTotal, discountAmount } =
+    PurchaseTotals.computePurchaseTotals({
+      items: state.items, taxes: state.taxes, selectedTaxIds: taxIds, discountType, discountValue,
+    });
+
+  return { subtotal, totalTax, grossTotal, discountAmt: discountAmount, discountType, discountValue,
+           total: Math.max(0, grossTotal - discountAmount), breakdown, taxIds };
 }
 
 function updateTotals() {
