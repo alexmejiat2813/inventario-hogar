@@ -77,7 +77,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 115 | `updatePurchaseSession` sin compensación 0→>0 | RESUELTO en `7f06392` — reescritura con UPSERT/DELETE logic detecta fila existente y crea si no existe. | Crítica | Baja | ✅ |
 | 116 | `updatePurchaseSession` sin compensación >0→0 | RESUELTO en `7f06392` — mismo bloque: si `totalAmount === 0` y existe tx, DELETE. | Alta | Baja | ✅ |
 | 117 | Categoría desconocida degradada a 'Otros' sin notificar al cliente | RESUELTO en `73d92d0` — match case-insensitive en POST y PUT (find+toLowerCase) usa nombre canónico de la BD; toast ámbar diferido 600ms cuando `budget_category_status === 'degraded'`. | Alta | Baja | ✅ |
-| 118 | Bypass de validación categoría cuando `knownCategories` está vacío | `routes/purchases.js:41`: si el usuario no tiene categorías registradas, cualquier string pasa directo a DB. Fix: si `knownCategories.length === 0` guardar igualmente (comportamiento correcto para nuevos usuarios) pero marcar `source='purchase'` y registrar en `personal_budget_categories` vía `ensurePersonalBudgetCategory`. | Media | Baja | 🔄 En progreso |
+| 118 | Bypass de validación categoría cuando `knownCategories` está vacío | `routes/purchases.js:41`: si el usuario no tiene categorías registradas, cualquier string pasa directo a DB. Fix: si `knownCategories.length === 0` guardar igualmente (comportamiento correcto para nuevos usuarios) pero marcar `source='purchase'` y registrar en `personal_budget_categories` vía `ensurePersonalBudgetCategory`. | Media | Baja | ✅ |
 
 ### P1 — Bugs conocidos
 

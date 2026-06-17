@@ -98,9 +98,11 @@ router.post('/', requireEditorOrOwner, (req, res) => {
       if (sanitized) {
         const knownCategories = db.getPersonalBudgetExpenseCategories(req.user.id);
         if (!knownCategories.length) {
-          // No categories configured yet — accept as-is but flag it
+          // New user with no categories yet — accept and auto-register so the
+          // next purchase finds it in the known list (no silent bypass).
           resolvedBudgetCategory = sanitized;
-          budgetCategoryStatus = 'unvalidated';
+          budgetCategoryStatus = 'accepted';
+          db.ensurePersonalBudgetCategory(req.user.id, sanitized, 'expense');
         } else {
           const matched = knownCategories.find(c => c.toLowerCase() === sanitized.toLowerCase());
           if (matched) {
