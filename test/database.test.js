@@ -1292,6 +1292,44 @@ describe('getPurchaseSessions — filtro budget_category', () => {
   });
 });
 
+// ── Product Master — IDOR ownership (#228) ──────────────────────
+
+describe('product master — IDOR category ownership (#228)', () => {
+  test('userOwnsCategory retorna true para categoria propia y false para ajena', () => {
+    const u1 = makeUser().id;
+    const u2 = makeUser().id;
+    const cat = db.createPersonalBudgetCategory(u1, { name: 'CatPropia', flowType: 'expense' }).category;
+    assert.equal(db.userOwnsCategory(u1, cat.id), true);
+    assert.equal(db.userOwnsCategory(u2, cat.id), false);
+  });
+
+  test('JOIN no expone category_name de otro usuario aunque default_category_id sea ajeno', () => {
+    const u1 = makeUser().id;
+    const u2 = makeUser().id;
+    // u1 crea una categoria y un producto
+    const cat1 = db.createPersonalBudgetCategory(u1, { name: 'CatU1', flowType: 'expense' }).category;
+    // u2 intenta crear producto con el ID de la categoria de u1 (inyeccion simulada)
+    const pm = db.createProductMaster(u2, {
+      name: 'ProdU2', defaultCategoryId: cat1.id,
+      isTaxable: true, tracksStock: true,
+    });
+    // El JOIN filtra por pbc.user_id = pm.user_id → category_name debe ser null
+    assert.equal(pm.category_name, null,
+      'category_name no debe exponer datos de otro usuario');
+  });
+
+  test('getProductMaster oculta category_name de categoria ajena', () => {
+    const u1 = makeUser().id;
+    const u2 = makeUser().id;
+    const cat1 = db.createPersonalBudgetCategory(u1, { name: 'CatPrivada', flowType: 'expense' }).category;
+    db.createProductMaster(u2, { name: 'ProdInjected', defaultCategoryId: cat1.id, isTaxable: true, tracksStock: true });
+    const list = db.getProductMaster(u2);
+    const pm = list.find(p => p.name === 'ProdInjected');
+    assert.ok(pm, 'el producto existe');
+    assert.equal(pm.category_name, null, 'category_name no debe filtrar por JOIN a categoria ajena');
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {

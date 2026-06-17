@@ -2464,7 +2464,7 @@ module.exports = {
     return db.prepare(`
       SELECT pm.*, pbc.name AS category_name
       FROM product_master pm
-      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id
+      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id AND pbc.user_id = pm.user_id
       WHERE pm.user_id = ?
       ORDER BY pm.name COLLATE NOCASE ASC
     `).all(userId);
@@ -2493,7 +2493,7 @@ module.exports = {
     return db.prepare(`
       SELECT pm.*, pbc.name AS category_name
       FROM product_master pm
-      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id
+      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id AND pbc.user_id = pm.user_id
       WHERE pm.id = ?
     `).get(Number(lastInsertRowid));
   },
@@ -2517,7 +2517,7 @@ module.exports = {
     return db.prepare(`
       SELECT pm.*, pbc.name AS category_name
       FROM product_master pm
-      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id
+      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id AND pbc.user_id = pm.user_id
       WHERE pm.id = ? AND pm.user_id = ?
     `).get(id, userId);
   },
@@ -2532,9 +2532,15 @@ module.exports = {
     return db.prepare(`
       SELECT pm.*, pbc.name AS category_name
       FROM product_master pm
-      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id
+      LEFT JOIN personal_budget_categories pbc ON pbc.id = pm.default_category_id AND pbc.user_id = pm.user_id
       WHERE pm.user_id = ? AND pm.barcode = ?
     `).get(userId, barcode);
+  },
+
+  userOwnsCategory(userId, categoryId) {
+    return !!db.prepare(
+      'SELECT 1 FROM personal_budget_categories WHERE id = ? AND user_id = ?'
+    ).get(categoryId, userId);
   },
 
   // ── Installment Plans (Cuotas) ──────────────────────────────────────────────

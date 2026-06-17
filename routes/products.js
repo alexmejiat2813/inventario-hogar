@@ -52,7 +52,9 @@ router.get('/export', (req, res) => {
 
 router.get('/:id', (req, res) => {
   try {
-    const p = db.getById(parseInt(req.params.id));
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const p = db.getById(id);
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     res.json(p);
@@ -79,13 +81,15 @@ router.post('/', requireEditorOrOwner, (req, res) => {
 
 router.put('/:id', requireEditorOrOwner, (req, res) => {
   try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
     const error = validateProduct(req.body);
     if (error) return res.status(400).json({ error });
-    const p = db.getById(parseInt(req.params.id));
+    const p = db.getById(id);
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
     const { name, category, current_qty, min_qty, unit, expiry_date } = req.body;
-    const updated = db.update(parseInt(req.params.id), {
+    const updated = db.update(id, {
       name: name.trim(), category,
       current_qty: +current_qty, min_qty: +min_qty,
       unit, expiry_date: expiry_date || null,
@@ -111,10 +115,12 @@ router.put('/:id/link-master', requireEditorOrOwner, (req, res) => {
 
 router.delete('/:id', requireEditorOrOwner, (req, res) => {
   try {
-    const p = db.getById(parseInt(req.params.id));
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const p = db.getById(id);
     if (!p) return res.status(404).json({ error: 'Producto no encontrado' });
     if (p.inventory_id !== req.inventoryId) return res.status(403).json({ error: 'Sin acceso' });
-    db.remove(parseInt(req.params.id));
+    db.remove(id);
     db.audit(req.inventoryId, req.user.id, req.user.name, 'product.delete', 'product', p.id,
       { name: p.name });
     res.json({ message: 'Producto eliminado' });

@@ -21,6 +21,9 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
   const { name, barcode, brand, defaultCategoryId, isTaxable, tracksStock, catalogProductId } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+  if (defaultCategoryId && !db.userOwnsCategory(req.user.id, defaultCategoryId)) {
+    return res.status(400).json({ error: 'Categoría inválida' });
+  }
   try {
     const product = db.createProductMaster(req.user.id, {
       name, barcode, brand, defaultCategoryId, isTaxable, tracksStock, catalogProductId,
@@ -41,6 +44,9 @@ router.put('/:id', (req, res) => {
   if (!id) return res.status(400).json({ error: 'ID inválido' });
   const { name, barcode, brand, defaultCategoryId, isTaxable, tracksStock } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+  if (defaultCategoryId && !db.userOwnsCategory(req.user.id, defaultCategoryId)) {
+    return res.status(400).json({ error: 'Categoría inválida' });
+  }
   try {
     const product = db.updateProductMaster(id, req.user.id, {
       name, barcode, brand, defaultCategoryId, isTaxable, tracksStock,

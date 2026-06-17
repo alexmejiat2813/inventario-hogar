@@ -54,7 +54,7 @@ async function loadInvName() {
 
 async function loadProducts() {
   try {
-    _products = await apiFetch('GET', '/api/product-master');
+    _products = (await apiFetch('GET', '/api/product-master')) ?? [];
   } catch {
     _products = [];
   }
@@ -295,7 +295,7 @@ async function saveProduct() {
     closeModal();
     render();
   } catch (err) {
-    const msg = err?.message?.includes('409')
+    const msg = err?.status === 409
       ? tSafe('productMaster.errorDup','Ya existe un producto con ese código de barras')
       : 'Error al guardar';
     showToast(msg, 'error');

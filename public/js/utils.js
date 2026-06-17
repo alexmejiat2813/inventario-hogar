@@ -16,7 +16,7 @@ async function apiFetch(method, url, body) {
   const ct = res.headers.get('content-type') || '';
   if (!ct.includes('application/json')) throw new Error(`Error ${res.status}`);
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error en el servidor');
+  if (!res.ok) throw Object.assign(new Error(data.error || 'Error en el servidor'), { status: res.status });
   return data;
 }
 
