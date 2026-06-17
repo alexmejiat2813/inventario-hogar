@@ -670,8 +670,12 @@ async function showConfirmModal() {
       budgetSection.innerHTML = `<p class="confirm-budget-no-cats-hint">${tSafe('shopping.register.budgetNoCats', 'Configurá categorías en Presupuesto Personal para vincular compras automáticamente.')}</p>`;
     }
 
-    // Priority: server-stored link default_category > localStorage per-store
-    const preferredCat = activeLink?.default_category || savedCat || '';
+    // Priority: server-stored link default_category > localStorage per-store.
+    // Solo se auto-preselecciona si la categoría sigue existiendo (evita abrir
+    // el panel con un valor vacío cuando la categoría guardada fue borrada).
+    const availableCats = Array.isArray(cats) ? cats : [];
+    const rawPreferred  = activeLink?.default_category || savedCat || '';
+    const preferredCat  = availableCats.includes(rawPreferred) ? rawPreferred : '';
 
     if (preferredCat) {
       budgetSelect.value = preferredCat;
