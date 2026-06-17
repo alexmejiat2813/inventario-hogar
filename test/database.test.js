@@ -1029,6 +1029,51 @@ describe('updatePurchaseSession — edge cases', () => {
     assert.ok(Math.abs(linked[0].amount - 60) < 0.001);
   });
 
+  test('update setea category_id en la tx vinculada (#208)', () => {
+    const { inv, userId } = makeInventory();
+    const cat = db.createPersonalBudgetCategory(userId, { name: 'ConId', flowType: 'expense' }).category;
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'X', quantityBought: 1, unitPrice: 50, unit: 'u' }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+      budgetCategory: 'ConId',
+    });
+    // editar cantidad → la tx se sincroniza; category_id no debe quedar NULL
+    db.updatePurchaseSession(session.id, inv.id, {
+      purchaseDate: today(),
+      items: [{ productName: 'X', quantityBought: 2, unitPrice: 50, unit: 'u' }],
+      taxIds: [],
+      budgetCategory: 'ConId',
+      userId,
+    });
+    const tx = db.getPersonalTransactions(userId, today().slice(0, 7))
+      .find(t => t.source_purchase_session_id === session.id);
+    assert.ok(tx, 'tx vinculada existe');
+    assert.equal(tx.category_id, cat.id, 'category_id debe resolverse, no quedar NULL');
+  });
+
+  test('update que inserta tx nueva tambien setea category_id (#208)', () => {
+    const { inv, userId } = makeInventory();
+    const cat = db.createPersonalBudgetCategory(userId, { name: 'NuevaConId', flowType: 'expense' }).category;
+    // crear con monto 0 → tx omitida (sin tx previa)
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Z', quantityBought: 1, unitPrice: 0, unit: 'u' }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+      budgetCategory: 'NuevaConId',
+    });
+    db.updatePurchaseSession(session.id, inv.id, {
+      purchaseDate: today(),
+      items: [{ productName: 'Z', quantityBought: 1, unitPrice: 60, unit: 'u' }],
+      taxIds: [],
+      budgetCategory: 'NuevaConId',
+      userId,
+    });
+    const tx = db.getPersonalTransactions(userId, today().slice(0, 7))
+      .find(t => t.source_purchase_session_id === session.id);
+    assert.equal(tx.category_id, cat.id, 'INSERT en update debe setear category_id');
+  });
+
   test('update sin budgetCategory preserva tx vinculada existente', () => {
     const { inv, userId } = makeInventory();
     db.createPersonalBudgetCategory(userId, { name: 'Preservar', flowType: 'expense' });

@@ -1812,19 +1812,24 @@ module.exports = {
 
       if (totalAmount > 0 && resolvedCategory && resolvedUserId) {
         const invName = db.prepare('SELECT name FROM inventories WHERE id = ?').get(inventoryId)?.name || '';
+        // Resolver category_id por (user_id, name) igual que createPurchaseSession,
+        // para no dejar la tx vinculada con category_id=NULL al editar (#208).
+        const catRow = db.prepare(
+          'SELECT id FROM personal_budget_categories WHERE user_id = ? AND name = ? LIMIT 1'
+        ).get(resolvedUserId, resolvedCategory);
         if (existingTx) {
           db.prepare(`
             UPDATE personal_transactions
-            SET amount = ?, date = ?, category = ?, description = ?
+            SET amount = ?, date = ?, category = ?, category_id = ?, description = ?
             WHERE id = ?
-          `).run(totalAmount, purchaseDate, resolvedCategory,
+          `).run(totalAmount, purchaseDate, resolvedCategory, catRow?.id || null,
                  `Compra Automatizada Inventario: ${invName}`, existingTx.id);
         } else {
           db.prepare(`
             INSERT INTO personal_transactions
-              (user_id, inventory_id, type, category, amount, description, date, source, source_purchase_session_id)
-            VALUES (?, ?, 'expense', ?, ?, ?, ?, 'purchase', ?)
-          `).run(resolvedUserId, inventoryId, resolvedCategory, totalAmount,
+              (user_id, inventory_id, type, category, category_id, amount, description, date, source, source_purchase_session_id)
+            VALUES (?, ?, 'expense', ?, ?, ?, ?, ?, 'purchase', ?)
+          `).run(resolvedUserId, inventoryId, resolvedCategory, catRow?.id || null, totalAmount,
                  `Compra Automatizada Inventario: ${invName}`, purchaseDate, sessionId);
         }
       } else if (totalAmount === 0 && existingTx) {
