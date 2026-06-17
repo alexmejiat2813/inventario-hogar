@@ -154,6 +154,11 @@ app.use('/api', createRateLimiter({
 app.use(require('./routes/auth'));
 app.use(require('./routes/pages'));
 
+// Backup: montado ANTES del guard global de /api porque tiene su propia auth
+// (header X-Backup-Secret para cron externo, o sesión admin). Si quedara detrás
+// de requireAuthApi, un cron sin cookie recibiría 401 antes de validar el secret (#210).
+app.use('/api/backup', require('./routes/backup'));
+
 // ── API: all routes require authentication ─────────────────────────────────────
 app.use('/api', requireAuthApi);
 
@@ -180,7 +185,6 @@ app.use('/api/stores',    require('./routes/stores'));
 app.use('/api/purchases', require('./routes/purchases'));
 app.use('/api/budget',    require('./routes/budget'));
 app.use('/api/settings',  require('./routes/settings'));
-app.use('/api/backup',   require('./routes/backup'));
 
 // ── API 404 ────────────────────────────────────────────────────────────────────
 app.use('/api', (req, res) => {
