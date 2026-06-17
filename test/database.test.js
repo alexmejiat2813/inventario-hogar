@@ -1056,6 +1056,65 @@ describe('updatePurchaseSession — edge cases', () => {
   });
 });
 
+// ── Migración histórica de categorías — aislamiento por usuario ──
+
+describe('runBudgetCategoryMigration — aislamiento por usuario (#121)', () => {
+  test('fallo en un usuario no afecta a los demas ni deja transaccion abierta', () => {
+    const raw = db._rawDb;
+    const userA = makeUser().id; // va a fallar
+    const userB = makeUser().id; // debe migrar ok
+    const month = today().slice(0, 7);
+
+    // Datos historicos (addPersonalBudget no toca personal_budget_categories)
+    db.addPersonalBudget(userA, { category: 'POISON',     amount: 10, month, flow_type: 'expense' });
+    db.addPersonalBudget(userB, { category: 'GoodCatXYZ', amount: 20, month, flow_type: 'expense' });
+
+    // Trigger que aborta el INSERT de la categoria POISON dentro de la tx de userA,
+    // simulando un fallo en mitad del forEach de la migracion.
+    raw.exec(`
+      CREATE TEMP TRIGGER poison_guard BEFORE INSERT ON personal_budget_categories
+      WHEN NEW.name = 'POISON'
+      BEGIN SELECT RAISE(ABORT, 'poison'); END;
+    `);
+
+    let result;
+    try {
+      result = db.runBudgetCategoryMigration([userA, userB]);
+    } finally {
+      raw.exec('DROP TRIGGER IF EXISTS poison_guard');
+    }
+
+    // userA fallo, userB migro — la migracion no aborta completa
+    assert.equal(result.failed, 1, 'userA debe contar como fallo');
+    assert.equal(result.migrated, 1, 'userB debe migrar pese al fallo de userA');
+
+    // userB tiene su categoria migrada
+    const catsB = db.getPersonalBudgetCategories(userB).map(c => c.name);
+    assert.ok(catsB.includes('GoodCatXYZ'), 'categoria de userB debe migrarse');
+
+    // userA hizo rollback — POISON no quedo a medias
+    const catsA = db.getPersonalBudgetCategories(userA).map(c => c.name);
+    assert.ok(!catsA.includes('POISON'), 'categoria de userA debe haber hecho rollback');
+
+    // No quedo transaccion abierta: un BEGIN/COMMIT nuevo no debe tirar
+    // "cannot start a transaction within a transaction".
+    assert.doesNotThrow(() => { raw.exec('BEGIN'); raw.exec('COMMIT'); },
+      'la DB no debe quedar con una transaccion abierta');
+  });
+
+  test('es idempotente — segunda corrida no duplica ni falla', () => {
+    const user = makeUser().id;
+    const month = today().slice(0, 7);
+    db.addPersonalBudget(user, { category: 'Idempotente', amount: 5, month, flow_type: 'expense' });
+
+    db.runBudgetCategoryMigration([user]);
+    db.runBudgetCategoryMigration([user]);
+
+    const cats = db.getPersonalBudgetCategories(user).filter(c => c.name === 'Idempotente');
+    assert.equal(cats.length, 1, 'no debe duplicar la categoria en corridas repetidas');
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {

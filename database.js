@@ -741,17 +741,26 @@ const CATALOG_SEED = [
 // ── Migración: importar categorías históricas a personal_budget_categories ─────
 // Corre para TODOS los usuarios con datos — INSERT OR IGNORE deduplicacion via
 // el indice unico creado arriba. Idempotente en multiples deploys.
-{
+// Migra las categorías históricas de los usuarios indicados (o de todos los que
+// tienen datos si se omite). Cada usuario corre en su propia transacción: un
+// fallo en el usuario N hace ROLLBACK solo de ese usuario, se loguea y se sigue
+// con N+1 — nunca deja una transacción abierta ni aborta la migración completa.
+// Idempotente (INSERT OR IGNORE vía índice único). Exportada para test #121.
+function runBudgetCategoryMigration(userIds) {
   const insHistorical = db.prepare(
     'INSERT OR IGNORE INTO personal_budget_categories (user_id, name, flow_type) VALUES (?, ?, ?)'
   );
-  const usersWithData = db.prepare(`
-    SELECT DISTINCT user_id FROM personal_budgets
-    UNION
-    SELECT DISTINCT user_id FROM personal_transactions WHERE source = 'manual'
-  `).all();
+  const users = userIds
+    ? userIds.map(id => ({ user_id: id }))
+    : db.prepare(`
+        SELECT DISTINCT user_id FROM personal_budgets
+        UNION
+        SELECT DISTINCT user_id FROM personal_transactions WHERE source = 'manual'
+      `).all();
 
-  usersWithData.forEach(({ user_id }) => {
+  let migrated = 0;
+  let failed = 0;
+  users.forEach(({ user_id }) => {
     db.exec('BEGIN');
     try {
       db.prepare(`
@@ -766,12 +775,17 @@ const CATALOG_SEED = [
         if (r.name?.trim()) insHistorical.run(user_id, r.name.trim(), r.flow_type);
       });
       db.exec('COMMIT');
+      migrated++;
     } catch (err) {
       db.exec('ROLLBACK');
+      failed++;
       console.error(`[migration] failed to seed budget categories for user ${user_id}:`, err.message);
     }
   });
+  return { migrated, failed };
 }
+
+runBudgetCategoryMigration();
 
 // ── Default seed products (applied when a new user registers) ─────────────────
 const SEED = [
@@ -798,6 +812,9 @@ module.exports = {
   healthCheck() {
     db.prepare('SELECT 1').get();
   },
+  // Exposed for migration regression tests (#121).
+  runBudgetCategoryMigration,
+  _rawDb: db,
   close() {
     db.exec('PRAGMA optimize');
     db.close();
