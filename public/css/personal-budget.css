@@ -234,6 +234,12 @@
 .pb-tx-amount--income  { color: var(--success); }
 .pb-tx-amount--expense { color: var(--danger);  }
 
+/* Inline-edit de categoría (#123) */
+.pb-cat-cell { cursor: pointer; border-radius: 4px; }
+.pb-cat-cell:hover { background: var(--surface-2, rgba(0,0,0,0.04)); }
+.pb-cat-cell:focus-visible { outline: 2px solid var(--accent, #4f46e5); outline-offset: -2px; }
+.pb-cat-inline-select { width: 100%; font: inherit; padding: 2px 4px; }
+
 .pb-tx-desc {
   color: var(--text-muted);
   font-size: .8rem;

@@ -464,6 +464,60 @@
   }
 
   // ── Render transactions table ──────────────────────────────────────────────
+  // Inline-edit de la categoría de una transacción (#123). Reemplaza la celda
+  // por un <select> de categorías del mismo flujo y persiste vía PUT.
+  function startInlineCategoryEdit(cell) {
+    if (cell.querySelector('select')) return;
+    const current = cell.dataset.category;
+    const flow    = cell.dataset.type;
+    const names   = _allBudgetCats.filter(c => c.flow_type === flow).map(c => c.name);
+    if (!names.includes(current)) names.unshift(current);
+
+    const sel = document.createElement('select');
+    sel.className = 'pb-cat-inline-select';
+    sel.innerHTML = names.map(n => `<option value="${escHtml(n)}"${n === current ? ' selected' : ''}>${escHtml(n)}</option>`).join('');
+    cell.textContent = '';
+    cell.appendChild(sel);
+    sel.focus();
+
+    let done = false;
+    const cancel = () => { if (done) return; done = true; cell.textContent = current; };
+    const commit = async () => {
+      if (done) return;
+      const next = sel.value;
+      if (next === current) return cancel();
+      done = true;
+      try {
+        await apiFetch('PUT', `/api/personal-budget/transaction/${cell.dataset.id}`, {
+          type:        cell.dataset.type,
+          category:    next,
+          amount:      Number(cell.dataset.amount),
+          description: cell.dataset.desc || null,
+          date:        cell.dataset.date,
+          inventoryId: cell.dataset.inv ? Number(cell.dataset.inv) : null,
+        });
+        cell.dataset.category = next;
+        cell.textContent = next;
+        load(); // refresca totales y donut con la nueva categoría
+      } catch {
+        cell.textContent = current;
+      }
+    };
+    sel.addEventListener('change', commit);
+    sel.addEventListener('blur', cancel);
+    sel.addEventListener('keydown', e => { if (e.key === 'Escape') cancel(); });
+  }
+
+  elTableWrap.addEventListener('click', e => {
+    const cell = e.target.closest('.pb-cat-cell');
+    if (cell) startInlineCategoryEdit(cell);
+  });
+  elTableWrap.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const cell = e.target.closest('.pb-cat-cell');
+    if (cell) { e.preventDefault(); startInlineCategoryEdit(cell); }
+  });
+
   function _renderTableRows(transactions) {
     const tbody = elTableWrap.querySelector('tbody');
     if (!tbody) return;
@@ -492,7 +546,11 @@
           </td>
           <td class="pb-tx-date">${tx.date}</td>
           <td><span class="pb-type-badge pb-type-badge--${tx.type}">${typeLabel}</span></td>
-          <td>${escHtml(tx.category)}</td>
+          <td class="pb-cat-cell" tabindex="0" role="button"
+            title="${t('personalBudget.table.editCategory', 'Click para cambiar categoría')}"
+            data-id="${tx.id}" data-type="${tx.type}" data-amount="${tx.amount}"
+            data-date="${tx.date}" data-desc="${escHtml(tx.description || '')}"
+            data-inv="${tx.inventory_id || ''}" data-category="${escHtml(tx.category)}">${escHtml(tx.category)}</td>
           <td class="pb-tx-desc pb-col-desc">${escHtml(tx.description || '—')}</td>
           <td class="pb-col-inv">${escHtml(invName)}</td>
           <td class="pb-tx-amount pb-tx-amount--${tx.type} pb-col-amount">${sign}${fmt(tx.amount)}</td>

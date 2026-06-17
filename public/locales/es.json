@@ -1009,6 +1009,7 @@
       "noInventory": "—",
       "deleteConfirm": "¿Eliminar esta transacción?",
       "deleted": "Transacción eliminada",
+      "editCategory": "Click para cambiar categoría",
       "loadMore": "Cargar más",
       "emptyCta": "Registrar primer movimiento"
     },
