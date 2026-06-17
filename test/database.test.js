@@ -1115,6 +1115,39 @@ describe('runBudgetCategoryMigration — aislamiento por usuario (#121)', () => 
   });
 });
 
+// ── Filtrado mensual por rango de fechas (índices, #203) ─────────
+
+describe('getPersonalTransactions / DynamicStats — filtro por rango de mes (#203)', () => {
+  test('incluye bordes del mes y excluye meses adyacentes', () => {
+    const userId = makeUser().id;
+    const tx = (date, type, amount) => db.addPersonalTransaction(userId, {
+      inventoryId: null, type, category: 'X', amount, description: null, date,
+    });
+    // Mes objetivo: 2026-06
+    tx('2026-06-01', 'expense', 10);  // primer dia (incluido)
+    tx('2026-06-30', 'income', 100);  // ultimo dia (incluido)
+    tx('2026-05-31', 'expense', 999); // mes anterior (excluido)
+    tx('2026-07-01', 'income', 999);  // mes siguiente (excluido)
+
+    const txs = db.getPersonalTransactions(userId, '2026-06');
+    const dates = txs.map(t => t.date).sort();
+    assert.deepEqual(dates, ['2026-06-01', '2026-06-30'],
+      'solo las dos transacciones dentro del mes');
+
+    const stats = db.getPersonalBudgetDynamicStats(userId, '2026-06');
+    assert.ok(Math.abs(stats.income_real - 100) < 0.001, 'ingreso del mes');
+    assert.ok(Math.abs(stats.expense_real - 10) < 0.001, 'gasto del mes');
+    assert.ok(Math.abs(stats.balance_real - 90) < 0.001, 'balance del mes');
+  });
+
+  test('mes invalido retorna vacio / ceros sin throw', () => {
+    const userId = makeUser().id;
+    assert.deepEqual(db.getPersonalTransactions(userId, '2026-6'), []);
+    assert.deepEqual(db.getPersonalBudgetDynamicStats(userId, 'bad'),
+      { income_real: 0, expense_real: 0, balance_real: 0 });
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {

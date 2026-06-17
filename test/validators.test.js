@@ -118,6 +118,27 @@ describe('parseAmount', () => {
   });
 });
 
+describe('monthRange', () => {
+  test('mes normal devuelve rango medio-abierto [start, next)', () => {
+    assert.deepEqual(v.monthRange('2026-06'), { start: '2026-06-01', next: '2026-07-01' });
+  });
+
+  test('diciembre cruza el año', () => {
+    assert.deepEqual(v.monthRange('2026-12'), { start: '2026-12-01', next: '2027-01-01' });
+  });
+
+  test('enero', () => {
+    assert.deepEqual(v.monthRange('2026-01'), { start: '2026-01-01', next: '2026-02-01' });
+  });
+
+  test('mes invalido retorna null', () => {
+    assert.equal(v.monthRange('2026-6'), null);
+    assert.equal(v.monthRange('2026-06-01'), null);
+    assert.equal(v.monthRange(''), null);
+    assert.equal(v.monthRange(null), null);
+  });
+});
+
 describe('normalizeDiscount', () => {
   test('defaults a fixed/0', () => {
     assert.deepEqual(v.normalizeDiscount(undefined, undefined), { type: 'fixed', value: 0 });

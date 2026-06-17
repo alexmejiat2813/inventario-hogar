@@ -101,7 +101,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 200 | Centralizar validación/sanitización de compras y presupuesto | La normalización de categorías, fechas, montos, divisas y descuentos está duplicada en rutas. Crear helpers puros testeables para evitar divergencias entre POST/PUT y entre compras/presupuesto. | Alta | Baja | ✅ |
 | 201 | OpenAPI como contrato vivo | `openapi.json` no refleja todas las rutas actuales (`product-master`, cuotas, budget-link, FX, backup). Actualizar spec y agregar smoke test que compare rutas montadas vs spec mínima. | Media | Media | ⬜ |
 | 202 | Capa HTTP para integraciones externas con timeout/cache | Open Food Facts y FX dependen de red externa desde request handlers. Agregar cliente con timeout, retry limitado, cache corta y tests con mocks para evitar requests colgados o lentos. | Alta | Media | ⬜ |
-| 203 | Hardening de performance SQLite | Agregar índices faltantes detectados (`personal_transactions(user_id,date,type)`, `installment_payments(plan_id,paid_at)`, búsquedas case-insensitive frecuentes) y revisar queries con `strftime` que impiden usar índices por rango. | Media | Baja | ⬜ |
+| 203 | Hardening de performance SQLite | Agregar índices faltantes detectados (`personal_transactions(user_id,date,type)`, `installment_payments(plan_id,paid_at)`, búsquedas case-insensitive frecuentes) y revisar queries con `strftime` que impiden usar índices por rango. | Media | Baja | ✅ |
 | 204 | Modularizar JS frontend por vista | `app.js`, `shopping-list.js` y `personal-budget.js` mezclan estado, API, render y eventos. Extraer clientes API y render helpers por vista para bajar riesgo de regresión y facilitar tests de lógica pura. | Media | Media | ⬜ |
 | 205 | Añadir pruebas HTTP autenticadas de flujos críticos | Los smoke tests cubren auth básica, pero faltan flujos con sesión real: compra con presupuesto, edición de compra, cuotas, product-master y permisos owner/editor/reader. | Alta | Media | ⬜ |
 
@@ -130,7 +130,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 |---|-------|-------------|-------------|------------|--------|
 | 69 | Chart.js lazy load | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a script condicional. | Baja | Baja | ⬜ |
 | 70 | Minificación JS/CSS | Build step con `esbuild` para minificar antes del deploy. ~20-30% adicional sobre gzip. Requiere ajustar CI y rutas de assets. | Media | Media | ⬜ |
-| 127 | Índice compuesto `(user_id, date, type)` en `personal_transactions` | Las queries de presupuesto mensual hacen scan por `user_id` solo. Con 5k+ filas empieza a notarse. `CREATE INDEX IF NOT EXISTS idx_pt_user_date_type ON personal_transactions(user_id, date, type)`. | Media | Baja | ⬜ |
+| 127 | Índice compuesto `(user_id, date, type)` en `personal_transactions` | Resuelto junto con #203: índice `idx_personal_tx_user_type_date(user_id, type, date)` (orden equality-first para las sumas income/expense) + reescritura de `strftime` a rango. Verificado SEARCH USING INDEX vía EXPLAIN QUERY PLAN. | Media | Baja | ✅ |
 | 128 | Litestream → R2/S3 backup SQLite | Fly volumes no son S3. Un crash del volumen = pérdida total de datos. Litestream replica WAL continuamente. Diferencia entre "perdimos todo" y "restauramos en 2 minutos". | Alta | Media | ⬜ |
 
 ### P5 — Features roadmap futuro

@@ -1,5 +1,6 @@
 const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
+const { monthRange } = require('./lib/validators');
 
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'inventario.db');
 const db = new DatabaseSync(DB_PATH);
@@ -277,6 +278,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_push_subs_user             ON push_subscriptions(user_id);
   CREATE INDEX IF NOT EXISTS idx_personal_budgets_user_month  ON personal_budgets(user_id, month);
   CREATE INDEX IF NOT EXISTS idx_personal_tx_user_date        ON personal_transactions(user_id, date);
+  CREATE INDEX IF NOT EXISTS idx_personal_tx_user_type_date   ON personal_transactions(user_id, type, date);
   CREATE INDEX IF NOT EXISTS idx_pb_plans_user               ON personal_budget_plans(user_id);
   CREATE INDEX IF NOT EXISTS idx_pb_plan_cats_plan           ON personal_budget_plan_categories(plan_id);
   CREATE INDEX IF NOT EXISTS idx_pb_categories_user          ON personal_budget_categories(user_id);
@@ -351,6 +353,7 @@ db.exec(`
     UNIQUE(plan_id, installment_number)
   );
   CREATE INDEX IF NOT EXISTS idx_installment_payments_plan ON installment_payments(plan_id);
+  CREATE INDEX IF NOT EXISTS idx_installment_payments_plan_paid ON installment_payments(plan_id, paid_at);
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -2178,13 +2181,16 @@ module.exports = {
   },
 
   getPersonalTransactions(userId, month) {
+    const range = monthRange(month);
+    if (!range) return [];
+    // Half-open range [start, next) uses idx_personal_tx_user_date; strftime() would force a scan.
     return db.prepare(`
       SELECT t.*, i.name AS inventory_name
       FROM personal_transactions t
       LEFT JOIN inventories i ON i.id = t.inventory_id
-      WHERE t.user_id = ? AND strftime('%Y-%m', t.date) = ?
+      WHERE t.user_id = ? AND t.date >= ? AND t.date < ?
       ORDER BY t.date DESC, t.created_at DESC
-    `).all(userId, month);
+    `).all(userId, range.start, range.next);
   },
 
   addPersonalTransaction(userId, { inventoryId, type, category, amount, description, date }) {
@@ -2223,16 +2229,19 @@ module.exports = {
   },
 
   getPersonalBudgetDynamicStats(userId, month) {
+    const range = monthRange(month);
+    if (!range) return { income_real: 0, expense_real: 0, balance_real: 0 };
+    // type equality + date range hits idx_personal_tx_user_type_date.
     const incomeRow = db.prepare(`
       SELECT COALESCE(SUM(amount), 0) AS total
       FROM personal_transactions
-      WHERE user_id = ? AND type = 'income' AND strftime('%Y-%m', date) = ?
-    `).get(userId, month);
+      WHERE user_id = ? AND type = 'income' AND date >= ? AND date < ?
+    `).get(userId, range.start, range.next);
     const expenseRow = db.prepare(`
       SELECT COALESCE(SUM(amount), 0) AS total
       FROM personal_transactions
-      WHERE user_id = ? AND type = 'expense' AND strftime('%Y-%m', date) = ?
-    `).get(userId, month);
+      WHERE user_id = ? AND type = 'expense' AND date >= ? AND date < ?
+    `).get(userId, range.start, range.next);
     const income_real  = incomeRow.total;
     const expense_real = expenseRow.total;
     return { income_real, expense_real, balance_real: income_real - expense_real };
