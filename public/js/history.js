@@ -12,6 +12,8 @@ const state = {
   summary:         [],
   filterMonth:     '',
   filterStore:     '',
+  filterBudgetCategory: '',
+  budgetCategories: [],
   expanded:        new Set(),
   deleteSessionId: null,
 };
@@ -75,6 +77,7 @@ async function loadAll() {
   loadProfileAvatar();
 
   populateStoreFilter();
+  await populateBudgetCategoryFilter();
   renderSummary();
   await loadSessions();
 }
@@ -85,6 +88,7 @@ async function loadSessions() {
   const params = new URLSearchParams();
   if (state.filterMonth) params.set('month', state.filterMonth);
   if (state.filterStore) params.set('store_id', state.filterStore);
+  if (state.filterBudgetCategory) params.set('budget_category', state.filterBudgetCategory);
 
   const sessions = await apiFetch('GET', '/api/purchases?' + params.toString());
   state.sessions = sessions || [];
@@ -116,6 +120,22 @@ function populateStoreFilter() {
     const opt = document.createElement('option');
     opt.value = s.id;
     opt.textContent = (s.emoji ? s.emoji + ' ' : '') + s.name;
+    sel.appendChild(opt);
+  });
+}
+
+async function populateBudgetCategoryFilter() {
+  const sel = document.getElementById('filter-budget-category');
+  if (!sel) return;
+  state.budgetCategories = await apiFetch('GET', '/api/purchases/budget-categories') || [];
+  // Sin categorías de presupuesto en el historial: ocultar el filtro entero.
+  if (!state.budgetCategories.length) { sel.hidden = true; return; }
+  sel.hidden = false;
+  sel.innerHTML = `<option value="">${tSafe('history.filter.allCategories','Todas las categorías')}</option>`;
+  state.budgetCategories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
     sel.appendChild(opt);
   });
 }
@@ -155,7 +175,7 @@ function renderSessions() {
   const emptyEl    = document.getElementById('empty-state');
   const filtersRow = document.getElementById('filters-row');
 
-  filtersRow.hidden = state.sessions.length === 0 && !state.filterMonth && !state.filterStore;
+  filtersRow.hidden = state.sessions.length === 0 && !state.filterMonth && !state.filterStore && !state.filterBudgetCategory;
 
   if (!state.sessions.length) {
     listEl.innerHTML = '';
@@ -199,7 +219,7 @@ function renderSessions() {
           <div class="session-header" data-action="toggle" data-id="${session.id}">
             <div>
               <div class="session-date">${fmtDate(session.purchase_date)}</div>
-              <div class="session-meta">${itemCount} ${productLabel} · ${esc(session.user_name || '')}</div>
+              <div class="session-meta">${itemCount} ${productLabel} · ${esc(session.user_name || '')}${session.budget_category ? ` · <span class="session-budget-cat">${esc(session.budget_category)}</span>` : ''}</div>
             </div>
             <div class="session-right">
               <span class="${hasTotal ? 'session-total' : 'session-total--zero'}">
@@ -516,6 +536,10 @@ function initEvents() {
   // Filters
   document.getElementById('filter-month').addEventListener('change', e => {
     state.filterMonth = e.target.value;
+    loadSessions();
+  });
+  document.getElementById('filter-budget-category')?.addEventListener('change', e => {
+    state.filterBudgetCategory = e.target.value;
     loadSessions();
   });
   document.getElementById('filter-store').addEventListener('change', e => {

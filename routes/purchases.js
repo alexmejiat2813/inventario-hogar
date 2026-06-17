@@ -63,12 +63,20 @@ router.get('/summary', (req, res) => {
 
 router.get('/', (req, res) => {
   try {
-    const { month, store_id } = req.query;
+    const { month, store_id, budget_category } = req.query;
     res.json(db.getPurchaseSessions(req.inventoryId, {
-      month:   month    || null,
-      storeId: store_id ? parseInt(store_id) : null,
+      month:          month    || null,
+      storeId:        store_id ? parseInt(store_id) : null,
+      budgetCategory: budget_category || null,
     }));
   } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener historial' }); }
+});
+
+// GET /api/purchases/budget-categories — categorías de presupuesto del historial
+router.get('/budget-categories', (req, res) => {
+  try {
+    res.json(db.getPurchaseBudgetCategories(req.inventoryId));
+  } catch (err) { logger.error({ err }, 'route error'); res.status(500).json({ error: 'Error al obtener categorías' }); }
 });
 
 router.post('/', requireEditorOrOwner, (req, res) => {

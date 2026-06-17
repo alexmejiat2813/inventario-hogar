@@ -542,7 +542,8 @@
     },
     "filter": {
       "allMonths": "All months",
-      "allStores": "All stores"
+      "allStores": "All stores",
+      "allCategories": "All categories"
     },
     "summary": {
       "thisMonth": "This month",

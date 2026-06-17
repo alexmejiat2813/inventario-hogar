@@ -1197,6 +1197,40 @@ describe('getPersonalBudgetAlert — niveles de desvío', () => {
   });
 });
 
+// ── Filtro por budget_category en historial (#124) ──────────────
+
+describe('getPurchaseSessions — filtro budget_category', () => {
+  function purchase(inv, userId, cat) {
+    return db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'X', quantityBought: 1, unitPrice: 10, unit: 'u' }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+      budgetCategory: cat,
+    });
+  }
+
+  test('filtra sesiones por budget_category y lista las categorías presentes', () => {
+    const { inv, userId } = makeInventory();
+    db.createPersonalBudgetCategory(userId, { name: 'Mercado', flowType: 'expense' });
+    db.createPersonalBudgetCategory(userId, { name: 'Farmacia', flowType: 'expense' });
+    purchase(inv, userId, 'Mercado');
+    purchase(inv, userId, 'Mercado');
+    purchase(inv, userId, 'Farmacia');
+    purchase(inv, userId, null); // sin categoría
+
+    const all = db.getPurchaseSessions(inv.id, {});
+    assert.equal(all.length, 4);
+    assert.ok(all.every(s => 'budget_category' in s), 'expone la columna budget_category');
+
+    const mercado = db.getPurchaseSessions(inv.id, { budgetCategory: 'Mercado' });
+    assert.equal(mercado.length, 2);
+    assert.ok(mercado.every(s => s.budget_category === 'Mercado'));
+
+    const cats = db.getPurchaseBudgetCategories(inv.id);
+    assert.deepEqual(cats, ['Farmacia', 'Mercado'], 'distinct ordenadas, sin null');
+  });
+});
+
 // ── Cleanup ────────────────────────────────────────────────────
 
 after(() => {

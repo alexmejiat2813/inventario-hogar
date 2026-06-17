@@ -542,7 +542,8 @@
     },
     "filter": {
       "allMonths": "Tous les mois",
-      "allStores": "Tous les établissements"
+      "allStores": "Tous les établissements",
+      "allCategories": "Toutes les catégories"
     },
     "summary": {
       "thisMonth": "Ce mois",

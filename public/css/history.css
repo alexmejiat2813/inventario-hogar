@@ -164,6 +164,11 @@
     .session-header:hover { background: #F1F5F9; }
     .session-date { font-size: .875rem; font-weight: 600; color: #082F49; }
     .session-meta { font-size: .75rem; color: #787774; margin-top: .1rem; }
+    .session-budget-cat {
+      display: inline-block; padding: 0 .4rem; border-radius: 999px;
+      background: var(--accent-soft, rgba(79,70,229,.12));
+      color: var(--accent, #4f46e5); font-weight: 600; font-size: .7rem;
+    }
     .session-right { margin-left: auto; display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
     .session-total { font-size: .95rem; font-weight: 700; color: #082F49; }
     .session-total--zero { color: #B2B0AD; font-size: .875rem; }

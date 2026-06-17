@@ -1842,10 +1842,11 @@ module.exports = {
     }
   },
 
-  getPurchaseSessions(inventoryId, { month, storeId } = {}) {
+  getPurchaseSessions(inventoryId, { month, storeId, budgetCategory } = {}) {
     let sql = `
       SELECT ps.id, ps.purchase_date, ps.total_amount, ps.currency,
              ps.receipt_image, ps.subtotal_before_tax, ps.total_tax, ps.tax_breakdown,
+             ps.budget_category,
              ps.created_at, u.name AS user_name,
              (SELECT COUNT(*) FROM purchase_items WHERE session_id = ps.id) AS item_count
       FROM purchase_sessions ps
@@ -1858,8 +1859,19 @@ module.exports = {
       sql += ` AND ps.id IN (SELECT DISTINCT session_id FROM purchase_items WHERE store_id = ?)`;
       params.push(storeId);
     }
+    if (budgetCategory) { sql += ` AND ps.budget_category = ?`; params.push(budgetCategory); }
     sql += ` ORDER BY ps.purchase_date DESC, ps.created_at DESC`;
     return db.prepare(sql).all(...params);
+  },
+
+  // Categorias de presupuesto distintas presentes en el historial de un
+  // inventario (para poblar el filtro del historial).
+  getPurchaseBudgetCategories(inventoryId) {
+    return db.prepare(`
+      SELECT DISTINCT budget_category FROM purchase_sessions
+      WHERE inventory_id = ? AND budget_category IS NOT NULL AND budget_category != ''
+      ORDER BY budget_category
+    `).all(inventoryId).map(r => r.budget_category);
   },
 
   getPurchaseSession(id) {
