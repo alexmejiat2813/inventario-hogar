@@ -1000,6 +1000,60 @@ describe('updatePurchaseSession — edge cases', () => {
     assert.equal(linked.length, 1, 'debe insertar tx al agregar category en update');
     assert.ok(Math.abs(linked[0].amount - 80) < 0.001);
   });
+
+  test('totalAmount 0→>0 en update crea personal_transaction (compensacion #115)', () => {
+    const { inv, userId } = makeInventory();
+    db.createPersonalBudgetCategory(userId, { name: 'CrearTx', flowType: 'expense' });
+    // crear con category pero monto 0 → tx omitida
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'Z', quantityBought: 1, unitPrice: 0, unit: 'u' }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+      budgetCategory: 'CrearTx',
+    });
+    assert.equal(session.budget_tx_omitted, true);
+    let txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    assert.equal(txs.filter(t => t.source_purchase_session_id === session.id).length, 0);
+
+    // subir el monto en update → debe crear la tx vinculada
+    db.updatePurchaseSession(session.id, inv.id, {
+      purchaseDate: today(),
+      items: [{ productName: 'Z', quantityBought: 1, unitPrice: 60, unit: 'u' }],
+      taxIds: [],
+      budgetCategory: 'CrearTx',
+      userId,
+    });
+    txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    const linked = txs.filter(t => t.source_purchase_session_id === session.id);
+    assert.equal(linked.length, 1, 'debe crear tx cuando totalAmount pasa de 0 a >0');
+    assert.ok(Math.abs(linked[0].amount - 60) < 0.001);
+  });
+
+  test('update sin budgetCategory preserva tx vinculada existente', () => {
+    const { inv, userId } = makeInventory();
+    db.createPersonalBudgetCategory(userId, { name: 'Preservar', flowType: 'expense' });
+    const session = db.createPurchaseSession({
+      inventoryId: inv.id, userId,
+      items: [{ productName: 'W', quantityBought: 1, unitPrice: 40, unit: 'u' }],
+      taxIds: [], currency: 'USD', purchaseDate: today(), receiptImage: null,
+      budgetCategory: 'Preservar',
+    });
+    let txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    assert.equal(txs.filter(t => t.source_purchase_session_id === session.id).length, 1);
+
+    // editar cantidad sin pasar budgetCategory → tx debe seguir vinculada y reflejar nuevo monto
+    db.updatePurchaseSession(session.id, inv.id, {
+      purchaseDate: today(),
+      items: [{ productName: 'W', quantityBought: 3, unitPrice: 40, unit: 'u' }],
+      taxIds: [],
+      userId,
+    });
+    txs = db.getPersonalTransactions(userId, today().slice(0, 7));
+    const linked = txs.filter(t => t.source_purchase_session_id === session.id);
+    assert.equal(linked.length, 1, 'tx no debe eliminarse al editar sin budgetCategory');
+    assert.equal(linked[0].category, 'Preservar', 'categoria original preservada');
+    assert.ok(Math.abs(linked[0].amount - 120) < 0.001, 'monto actualizado');
+  });
 });
 
 // ── Cleanup ────────────────────────────────────────────────────
