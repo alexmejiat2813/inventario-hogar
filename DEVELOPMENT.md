@@ -76,13 +76,14 @@ Mantén actualizado el valor "Próximo ID disponible" tras agregar ítems.
 Orden de ejecución definido 2026-06-18. Primero correctitud/seguridad de bajo
 riesgo, luego pulido UI, y al final arquitectura (requiere plan formal).
 
-- **Ola 1 — Correctitud backend (Alta/Baja):** #208 (`category_id` al editar),
-  #210 (`/api/backup` secret), #209 (ruta divergente editar compra), #211
-  (`strftime` en compras). Aislados y testeables. ← en ejecución.
-- **Ola 2 — Seguridad cache SW:** #224 (APIs autenticadas cacheadas por URL),
-  #225 (login HTML cacheado), #223 (precache incompleto). Cluster en `sw.js`.
-- **Ola 3 — Robustez runtime frontend:** #216 primero (lint `no-undef`+globals,
-  multiplicador), luego #213, #214, #215, #217, #212, #218, #219.
+- **Ola 1 — Correctitud backend (Alta/Baja):** #208, #210, #209, #211. ✅
+- **Ola 2 — Seguridad cache SW:** #224, #225, #223. ✅
+- **Ola 3 — Robustez runtime frontend:** #216, #212, #213, #214, #215, #217.
+  #218/#219 diferidos. ✅
+- **Ola 3.5 — Correcciones auditoría Codex `/products` (Alta→Baja/Baja):**
+  #228 (IDOR `defaultCategoryId` sin ownership check — seguridad, primero),
+  #229 (null guard `apiFetch` en `products.js`), #230 (409 barcode conflict
+  no llega al usuario), #231 (400 en IDs inválidos `/:id`). ← siguiente.
 - **Ola 4 — UI/layout:** #226+#227 (tabla Gastos Proyectados, juntos), #220,
   #221, #222, #192 (a11y).
 - **Ola 5 — Arquitectura (requiere `/plan`):** #199 (extraer servicios de
