@@ -223,6 +223,7 @@ async function loadUser() {
 async function enterInventory(id) {
   try {
     await apiFetch('POST', `/api/inventories/${id}/enter`);
+    purgeApiCache(); // cambio de inventario: no servir datos del anterior offline (#224)
     window.location.href = '/inventory';
   } catch (err) {
     showToast(err.message, 'error');
@@ -457,6 +458,7 @@ function initEvents() {
   document.getElementById('btn-logout').addEventListener('click', async () => {
     closeProfileDropdown();
     await fetch('/auth/logout', { method: 'POST' });
+    purgeApiCache();
     window.location.href = '/login';
   });
 

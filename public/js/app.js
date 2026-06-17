@@ -1471,6 +1471,7 @@ function initEvents() {
   document.getElementById('btn-logout').addEventListener('click', async () => {
     closeProfileDropdown();
     await fetch('/auth/logout', { method: 'POST' });
+    purgeApiCache();
     window.location.href = '/login';
   });
   document.querySelectorAll('.dropdown-item[href="/settings"]').forEach(link => {

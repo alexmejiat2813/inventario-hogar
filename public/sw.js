@@ -2,10 +2,34 @@
 let CACHE = 'ih-v1'; // Default; actualizado en install event
 
 const PRECACHE = [
+  // CSS (todas las vistas)
   '/css/styles.css',
   '/css/header.css',
+  '/css/products.css',
+  '/css/admin.css',
+  '/css/catalog.css',
+  '/css/cropper.css',
+  '/css/history.css',
+  '/css/inventories.css',
+  '/css/login.css',
+  '/css/personal-budget.css',
+  '/css/personal-budget-cuotas.css',
+  '/css/purchase-edit.css',
+  '/css/settings.css',
+  '/css/shopping-list.css',
+  '/css/shortcuts.css',
+  // JS compartido
   '/js/i18n.js',
+  '/js/utils.js',
+  '/js/header.js',
+  '/js/shortcuts.js',
+  '/js/mob-drawer.js',
+  '/js/back-to-top.js',
+  '/js/sw-register.js',
   '/js/cropper.js',
+  '/js/lib/lazy-chart.js',
+  '/js/lib/purchase-totals.js',
+  // JS por vista
   '/js/app.js',
   '/js/dashboard.js',
   '/js/catalog.js',
@@ -15,8 +39,13 @@ const PRECACHE = [
   '/js/products.js',
   '/js/settings.js',
   '/js/shopping-list.js',
+  '/js/admin.js',
+  '/js/login.js',
+  '/js/personal-budget.js',
+  '/js/personal-budget-cuotas.js',
+  '/js/personal-budget-settings.js',
   '/js/vendor/zxing.js',
-  '/css/products.css',
+  // i18n + estáticos
   '/locales/es.json',
   '/locales/en.json',
   '/locales/fr.json',
@@ -42,7 +71,9 @@ self.addEventListener('install', e => {
       .then(version => { CACHE = version; return version; })
       .catch(() => CACHE) // Fallback si el endpoint falla
       .then(cache => caches.open(cache))
-      .then(c => c.addAll(PRECACHE))
+      // Precache resiliente: un asset faltante/renombrado no debe abortar la
+      // instalación entera (addAll es atómico y rompe con un solo 404). (#223)
+      .then(c => Promise.allSettled(PRECACHE.map(u => c.add(u))))
       .then(() => self.skipWaiting())
   );
 });
@@ -133,14 +164,32 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // HTML navigation: network-first, fall back to cached shell
+  // HTML navigation: network-first, fall back to cached shell.
+  // No cachear respuestas redirigidas (p. ej. ruta protegida → /login): si no,
+  // queda una página de login pegada bajo la URL protegida y se sirve offline. (#225)
   e.respondWith(
     fetch(request)
       .then(resp => {
-        if (resp.ok) safePutInCache(request, resp);
+        if (resp.ok && !resp.redirected) safePutInCache(request, resp);
         return resp;
       })
       .catch(() => caches.match(request))
+  );
+});
+
+// Purga del cache de respuestas /api/ — invocado por la página en logout o
+// cambio de inventario, para no servir datos del usuario/inventario anterior
+// en un fallback offline (navegador compartido). (#224)
+self.addEventListener('message', e => {
+  if (e.data?.type !== 'PURGE_API_CACHE') return;
+  e.waitUntil(
+    caches.open(CACHE).then(cache =>
+      cache.keys().then(reqs => Promise.all(
+        reqs
+          .filter(r => new URL(r.url).pathname.startsWith('/api/'))
+          .map(r => cache.delete(r))
+      ))
+    )
   );
 });
 

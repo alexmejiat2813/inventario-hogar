@@ -60,6 +60,7 @@ function initProfileMenu() {
   if (logout) logout.addEventListener('click', async () => {
     menu.hidden = true;
     await fetch('/auth/logout', { method: 'POST' });
+    purgeApiCache();
     window.location.href = '/login';
   });
 

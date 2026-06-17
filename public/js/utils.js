@@ -22,3 +22,10 @@ function curSym(c) { return CURRENCY_SYMBOLS[c] || '$'; }
 
 const MAX_PHOTOS     = 5;
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+
+// Pide al Service Worker purgar el cache de respuestas /api/ (logout / cambio
+// de inventario), para no servir datos del usuario/inventario anterior offline.
+function purgeApiCache() {
+  try { navigator.serviceWorker?.controller?.postMessage({ type: 'PURGE_API_CACHE' }); }
+  catch { /* noop */ }
+}
