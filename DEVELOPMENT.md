@@ -82,8 +82,7 @@ riesgo, luego pulido UI, y al final arquitectura (requiere plan formal).
   #218/#219 diferidos. ✅
 - **Ola 3.5 — Correcciones auditoría Codex `/products` (Alta→Baja/Baja):**
   #228, #229, #230, #231. ✅
-- **Ola 4 — UI/layout:** #226+#227 (tabla Gastos Proyectados, juntos), #220,
-  #221, #222, #192 (a11y).
+- **Ola 4 — UI/layout:** #226+#227, #220, #221, #222, #192. ✅
 - **Ola 5 — Arquitectura (requiere `/plan`):** #199 (extraer servicios de
   `database.js`), #207 (render helpers frontend). Alto blast radius.
 - **Ola 6 — Infra/durabilidad:** #128 (Litestream backup), #70 (minificación).
@@ -230,7 +229,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 196 | feat | Escáner de código de barras reescrito con ZXing (vendored en `public/js/vendor/zxing.js`): `BarcodeDetector` nativo no existe en ningún navegador desktop ni en Firefox/Safari, solo Chrome Android/ChromeOS. Ahora funciona en cualquier navegador con cámara, en `shopping-list.js` y `products.js` (cámara en vivo + fallback foto estática). | `d3d1c5c` | ✅ |
 | 194 | fix | Categoría de producto (Productos) nunca se guardaba: `getAllPersonalBudgetCategories()` no seleccionaba `id`, el select del modal generaba `<option value="undefined">` y `parseInt` daba NaN → siempre se guardaba `null`. Fix: agregar `id` al SELECT. Badge de categoría en card no se renderiza cuando no hay dato (antes mostraba pill vacío/poco visible). | `7554731` | ✅ |
 | 193 | fix | Tab "Productos" en orden incorrecto en nav desktop (catalog/shopping-list/history/purchase-edit): aparecía al final en vez de entre Dashboard y Stock (drawer móvil ya estaba bien desde #164/#172/#173, faltaba el desktop). Vista /products más angosta que el resto (`max-width:860px` vs `1600px` global): igualado + grid a 3-4 columnas desde 760px. | `68e2c27` | ✅ |
-| 192 | Accesibilidad/UX pendiente de auditoría #191 | Sin verificar línea por línea, reportado por subagentes: `:focus-visible` inconsistente en inputs/botones, `aria-label` faltante en botones de ícono (cerrar modal, login Google, checkmark idioma), touch targets <44px en mobile (`.btn-cart` ~34px), breakpoints faltantes <360px en login/settings/admin, colores hardcodeados sin variables CSS, estados loading/empty/error inconsistentes entre vistas. | Media | Media | ⬜ |
+| 192 | Accesibilidad/UX pendiente de auditoría #191 | Sin verificar línea por línea, reportado por subagentes: `:focus-visible` inconsistente en inputs/botones, `aria-label` faltante en botones de ícono (cerrar modal, login Google, checkmark idioma), touch targets <44px en mobile (`.btn-cart` ~34px), breakpoints faltantes <360px en login/settings/admin, colores hardcodeados sin variables CSS, estados loading/empty/error inconsistentes entre vistas. | Media | Media | ✅ (claude: `aria-label="Cerrar"` en 14 botones close sin label (catalog/history/inventories/cuotas/settings/index); regla global `button:focus-visible { outline: 2px solid #0EA5E9 }` en header.css — restaura anillo de teclado sin afectar mouse; btn-cart ya era 44px; breakpoints <360 y colores hardcodeados diferidos por alcance) |
 | 126 | Pre-selección automática categoría en modal compra | Si `localStorage` tiene `pb_cat_store_${dominantStore}`, expandir el panel de presupuesto automáticamente y marcar toggle ON. Hoy el toggle es OFF por defecto — el usuario tiene que hacer 2 clics extra para el caso 90%. | Media | Baja | ✅ |
 
 ### P4 — Performance

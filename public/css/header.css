@@ -258,3 +258,16 @@
 }
 .back-to-top.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .back-to-top:hover { background: #0EA5E9; }
+
+/* ── Accesibilidad: focus-visible para navegación por teclado (#192) ──
+   Los :focus { outline: none } por vista ocultan el outline en mouse
+   y teclado. Restauramos el anillo solo para teclado globalmente. ── */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #0EA5E9;
+  outline-offset: 2px;
+}
