@@ -251,9 +251,9 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 
 | # | Tarea | Descripción | Importancia | Dificultad | Estado |
 |---|-------|-------------|-------------|------------|--------|
-| 74 | Escáner de códigos de barras | Cámara ya integrada. Agregar librería de decode (ej. `zxing-js`) para identificar/agregar productos escaneando el código. | Media | Alta | ⬜ |
+| 74 | Escáner de códigos de barras | Obsoleto — ZXing implementado en #196: `BarcodeDetector` nativo reemplazado por ZXing vendored (`public/js/vendor/zxing.js`), funciona en todos los navegadores con cámara, en `shopping-list.js` y `products.js`. (claude) | Media | Alta | ✅ |
 | 75 | Sugerencia de reposición inteligente | Predecir cuándo se acaba un producto basándose en historial de compras y consumo promedio. Requiere análisis de `purchase_sessions` + `purchase_items`. | Media | Alta | ⬜ |
-| 76 | Modo oscuro | CSS variables ya están parcialmente preparadas. Agregar `prefers-color-scheme: dark` + toggle manual. | Baja | Media | ⬜ |
+| 76 | Modo oscuro | `[data-theme="dark"]` en `styles.css` + overrides en `header.css`, `settings.css`, `catalog.css`, `login.css`, `personal-budget-cuotas.css`. Anti-FOUC inline script en los 13 HTML. Tab "Apariencia" en settings con 3 opciones (Auto/Claro/Oscuro), persiste en `localStorage`. (claude) | Baja | Media | ✅ |
 | 129 | Presupuesto próximo mes auto-generado | Basado en promedio 3 meses anteriores por categoría. El usuario abre enero y ya tiene una propuesta — solo ajusta. Elimina la planificación desde cero cada mes. | Alta | Media | ⬜ |
 | 130 | Reporte mensual PDF/imagen compartible | Resumen "cómo quedó el mes" — distribución de gastos, balance, desvíos. Para hogares con dos personas que gestionan juntas: transparencia sin que ambos abran la app. | Alta | Media | ⬜ |
 | 131 | Importación CSV de banco | El 90% de usuarios latinoamericanos no tiene Plaid. CSV de Bancolombia/BBVA/Banorte con mapeo de columnas es el 80% del valor de un aggregador con el 5% de la complejidad. Idempotencia: `external_tx_id` UNIQUE por usuario. | Alta | Alta | ⬜ |

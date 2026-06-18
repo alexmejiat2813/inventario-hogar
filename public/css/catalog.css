@@ -293,3 +293,21 @@
       border-radius: 4px; margin-bottom: .875rem;
     }
     .btn-save--danger { background: #9F2F2D; }
+
+    /* ── Dark mode ── */
+    [data-theme="dark"] body { background: #0F172A; color: #E2E8F0; }
+    [data-theme="dark"] .card,
+    [data-theme="dark"] .modal,
+    [data-theme="dark"] .cat-card { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .form-input,
+    [data-theme="dark"] .form-select,
+    [data-theme="dark"] .search-input { background: #0F172A; color: #E2E8F0; border-color: #334155; }
+    [data-theme="dark"] .form-label,
+    [data-theme="dark"] .modal-title { color: #E2E8F0; }
+    [data-theme="dark"] .btn-cancel { background: #1E293B; color: #94A3B8; border-color: #334155; }
+    [data-theme="dark"] .modal-close { background: #0F172A; border-color: #334155; color: #94A3B8; }
+    [data-theme="dark"] .cat-card-name,
+    [data-theme="dark"] .item-name { color: #E2E8F0; }
+    [data-theme="dark"] .item-sub,
+    [data-theme="dark"] .cat-count { color: #94A3B8; }
+    [data-theme="dark"] .delete-warn { background: #3B1F0A; border-color: #6B3A0A; color: #FCD34D; }

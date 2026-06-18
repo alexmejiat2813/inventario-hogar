@@ -639,7 +639,8 @@
       "currency": "Currency",
       "taxes": "Taxes",
       "budget": "Budget",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "appearance": "Appearance"
     },
     "categories": {
       "title": "Categories",
@@ -919,6 +920,13 @@
       "today": "Expires today",
       "tomorrow": "Tomorrow",
       "inDays": "In {{n}} days"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "hint": "Choose the app theme.",
+      "auto": "Automatic",
+      "light": "Light",
+      "dark": "Dark"
     }
   },
   "notifications": {

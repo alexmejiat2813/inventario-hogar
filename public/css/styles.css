@@ -1752,3 +1752,34 @@ a { color: inherit; text-decoration: none; }
 .photos-nav:hover { background: rgba(0,0,0,.7); }
 .photos-nav--prev { left: .5rem; }
 .photos-nav--next { right: .5rem; }
+
+/* ── Dark mode ──────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:           #0F172A;
+  --surface:      #1E293B;
+  --border:       #334155;
+  --text:         #E2E8F0;
+  --text-muted:   #94A3B8;
+  --text-light:   #64748B;
+
+  --accent-bg:    #0C2D48;
+  --cta-bg:       #431407;
+  --danger-bg:    #450A0A;
+  --success-bg:   #042F2E;
+  --warn-bg:      #3B1F0A;
+
+  --c-alimentos-bg:     #3A1A00; --c-alimentos-fg:     #FCA57D;
+  --c-aseo-bg:          #0C2520; --c-aseo-fg:          #5EEAD4;
+  --c-alacena-bg:       #14280A; --c-alacena-fg:       #86EFAC;
+  --c-bebidas-bg:       #1E1040; --c-bebidas-fg:       #C4B5FD;
+  --c-otros-bg:         #1E1E1E; --c-otros-fg:         #A8A29E;
+  --c-aseo-personal-bg: #3B0A28; --c-aseo-personal-fg: #F9A8D4;
+  --c-aseo-hogar-bg:    #042730; --c-aseo-hogar-fg:    #67E8F9;
+  --c-cat-default-bg:   #1E1E1E; --c-cat-default-fg:   #A8A29E;
+}
+
+/* imágenes: reducir brillo en dark para no quemar la vista */
+[data-theme="dark"] img:not([src=""]):not([src="#"]) {
+  filter: brightness(.9) saturate(.9);
+}
+[data-theme="dark"] .pm-card-img img { filter: brightness(.85) saturate(.85); }

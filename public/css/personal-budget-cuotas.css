@@ -170,3 +170,20 @@
 @media (max-width: 480px) {
   .cq-field-row { grid-template-columns: 1fr; }
 }
+
+/* ── Dark mode ── */
+[data-theme="dark"] .cq-toolbar-title,
+[data-theme="dark"] .cq-plan-name,
+[data-theme="dark"] .cq-payment-desc { color: #E2E8F0; }
+[data-theme="dark"] .cq-summary,
+[data-theme="dark"] .cq-plan-meta,
+[data-theme="dark"] .cq-payment-meta { color: #94A3B8; }
+[data-theme="dark"] .cq-plan-card,
+[data-theme="dark"] .cq-modal-inner { background: #1E293B; border-color: #334155; }
+[data-theme="dark"] .cq-field input,
+[data-theme="dark"] .cq-field select { background: #0F172A; color: #E2E8F0; border-color: #334155; }
+[data-theme="dark"] .cq-field label { color: #94A3B8; }
+[data-theme="dark"] .cq-modal-title { color: #E2E8F0; }
+[data-theme="dark"] .cq-payment-row { border-color: #334155; }
+[data-theme="dark"] .cq-payment-row:hover { background: #334155; }
+[data-theme="dark"] .cq-btn-cancel { background: #1E293B; color: #94A3B8; border-color: #334155; }

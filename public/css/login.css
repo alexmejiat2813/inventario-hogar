@@ -180,3 +180,13 @@
     .lang-btn.lang-active { border-color: #082F49; color: #082F49; background: #F8F8F7; font-weight: 700; }
     .lang-check { display: none; font-size: .65rem; }
     .lang-btn.lang-active .lang-check { display: inline; }
+
+    /* ── Dark mode ── */
+    [data-theme="dark"] body { background: #0F172A; color: #E2E8F0; }
+    [data-theme="dark"] .card { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .card-title,
+    [data-theme="dark"] .card-subtitle { color: #E2E8F0; }
+    [data-theme="dark"] .login-desc,
+    [data-theme="dark"] .card-footer { color: #94A3B8; }
+    [data-theme="dark"] .lang-btn { background: #1E293B; color: #94A3B8; border-color: #334155; }
+    [data-theme="dark"] .lang-btn.lang-active { background: #0C2D48; border-color: #0EA5E9; color: #0EA5E9; }

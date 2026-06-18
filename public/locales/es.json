@@ -640,7 +640,8 @@
       "currency": "Moneda",
       "taxes": "Impuestos",
       "budget": "Presupuesto",
-      "notifications": "Notificaciones"
+      "notifications": "Notificaciones",
+      "appearance": "Apariencia"
     },
     "categories": {
       "title": "Categorías",
@@ -920,6 +921,13 @@
       "today": "Vence hoy",
       "tomorrow": "Mañana",
       "inDays": "En {{n}} días"
+    },
+    "appearance": {
+      "title": "Apariencia",
+      "hint": "Elegí el tema de la aplicación.",
+      "auto": "Automático",
+      "light": "Claro",
+      "dark": "Oscuro"
     }
   },
   "notifications": {
