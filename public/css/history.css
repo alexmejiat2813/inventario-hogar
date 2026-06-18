@@ -317,3 +317,43 @@
       font-size: .875rem; font-weight: 500;
     }
     .btn-modal-cancel:hover { border-color: #082F49; color: #082F49; }
+
+    /* ── Dark mode ── */
+    [data-theme="dark"] body { background: #0F172A; color: #E2E8F0; }
+    [data-theme="dark"] .page-header { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .page-title { color: #E2E8F0; }
+    [data-theme="dark"] .filter-bar { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .filter-btn { background: #334155; color: #94A3B8; border-color: #475569; }
+    [data-theme="dark"] .filter-btn.active { background: #0C2D48; border-color: #0EA5E9; color: #0EA5E9; }
+    [data-theme="dark"] .export-btn { background: #1E293B; border-color: #334155; color: #94A3B8; }
+    [data-theme="dark"] .export-menu { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .export-menu-item { color: #E2E8F0; }
+    [data-theme="dark"] .export-menu-item:hover { background: #0C2D48; }
+    [data-theme="dark"] .month-heading { color: #94A3B8; }
+    [data-theme="dark"] .month-heading-line { background: #334155; }
+    [data-theme="dark"] .session-card { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .session-header { color: #E2E8F0; }
+    [data-theme="dark"] .session-header:hover { background: #263348; }
+    [data-theme="dark"] .session-date,
+    [data-theme="dark"] .session-store,
+    [data-theme="dark"] .session-meta { color: #94A3B8; }
+    [data-theme="dark"] .session-total { color: #E2E8F0; }
+    [data-theme="dark"] .session-items { border-color: #334155; }
+    [data-theme="dark"] .session-item { border-color: #334155; color: #E2E8F0; }
+    [data-theme="dark"] .session-item:hover { background: #263348; }
+    [data-theme="dark"] .item-cat-badge { background: #334155; color: #94A3B8; }
+    [data-theme="dark"] .delete-option { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .delete-option button { color: #E2E8F0; }
+    [data-theme="dark"] .delete-option:hover { background: #263348; }
+    [data-theme="dark"] .modal-overlay { background: rgba(0,0,0,.6); }
+    [data-theme="dark"] .modal-inner { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .modal-inner-title { color: #E2E8F0; }
+    [data-theme="dark"] .modal-inner-head,
+    [data-theme="dark"] .modal-inner-foot { border-color: #334155; }
+    [data-theme="dark"] .btn-modal-cancel { background: #334155; color: #E2E8F0; border-color: #475569; }
+    [data-theme="dark"] .modal-inner-close { background: #334155; color: #94A3B8; border-color: #475569; }
+    [data-theme="dark"] input[type="text"],
+    [data-theme="dark"] input[type="number"],
+    [data-theme="dark"] select { background: #0F172A; border-color: #334155; color: #E2E8F0; }
+    [data-theme="dark"] input:focus,
+    [data-theme="dark"] select:focus { border-color: #0EA5E9; }
