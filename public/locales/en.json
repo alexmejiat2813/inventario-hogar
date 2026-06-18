@@ -293,6 +293,10 @@
   },
   "profile": {
     "language": "Language",
+    "theme": "Theme",
+    "themeAuto": "Auto",
+    "themeLight": "Light",
+    "themeDark": "Dark",
     "settings": "Settings",
     "settingsInventory": "Inventory Settings",
     "manage": "Manage access",

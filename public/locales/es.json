@@ -294,6 +294,10 @@
   },
   "profile": {
     "language": "Idioma",
+    "theme": "Tema",
+    "themeAuto": "Auto",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
     "settings": "Configuración",
     "settingsInventory": "Configuración Inventarios",
     "manage": "Gestionar acceso",

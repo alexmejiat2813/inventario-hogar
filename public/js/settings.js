@@ -469,30 +469,15 @@ function renderResetHistory(resets) {
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
-function initAppearance() {
-  const current = localStorage.getItem('theme') || 'auto';
-  document.querySelectorAll('.theme-opt').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.theme === current);
-    btn.addEventListener('click', () => {
-      const val = btn.dataset.theme;
-      localStorage.setItem('theme', val);
-      const dark = val === 'dark' || (val === 'auto' && matchMedia('(prefers-color-scheme:dark)').matches);
-      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-      document.querySelectorAll('.theme-opt').forEach(b => b.classList.toggle('active', b.dataset.theme === val));
-    });
-  });
-}
-
 function switchTab(tab) {
   state.activeTab = tab;
-  ['categories','units','catalog','stores','currency','taxes','budget','notifications','appearance'].forEach(id => {
+  ['categories','units','catalog','stores','currency','taxes','budget','notifications'].forEach(id => {
     document.getElementById('tab-' + id).hidden = (id !== tab);
   });
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
   if (tab === 'budget') loadBudget();
-  if (tab === 'appearance') initAppearance();
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────

@@ -329,3 +329,23 @@ textarea:focus-visible {
 [data-theme="dark"] .mob-ditem:hover,
 [data-theme="dark"] .mob-ditem.mob-active { background: #0C2D48; color: #0EA5E9; }
 [data-theme="dark"] .mob-ddivider { background: #334155; }
+[data-theme="dark"] .theme-btn {
+  background: #1E293B; color: #94A3B8; border-color: #334155;
+}
+[data-theme="dark"] .theme-btn:hover { border-color: #94A3B8; color: #E2E8F0; }
+[data-theme="dark"] .theme-btn.theme-active {
+  background: #0C2D48; border-color: #0EA5E9; color: #0EA5E9;
+}
+
+/* ── Theme toggle in profile dropdown ── */
+.dropdown-theme { padding: .5rem 1rem .75rem; }
+.theme-btns { display: flex; gap: .3rem; }
+.theme-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 28px; padding: 0 .55rem; min-width: 44px;
+  border: 1px solid #E2E8F0; border-radius: 4px; background: #FFFFFF;
+  font-size: .75rem; font-weight: 600; cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s; color: #64748B;
+}
+.theme-btn:hover { border-color: #64748B; color: #082F49; }
+.theme-btn.theme-active { border-color: #082F49; color: #082F49; background: #F1F5F9; }
