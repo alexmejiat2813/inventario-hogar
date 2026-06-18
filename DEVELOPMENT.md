@@ -264,6 +264,23 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 
 ## Trabajo completado (P4 — Calidad + Mejoras detectadas)
 
+### Sesión 2026-06-17 — #74 y #76: Escáner barras + Modo oscuro (claude)
+
+- **#74 — Escáner barras:** marcado obsoleto. ZXing vendored ya implementado en
+  #196: `public/js/vendor/zxing.js`, funciona en todos los navegadores con cámara,
+  integrado en `shopping-list.js` y `products.js` (cámara en vivo + fallback foto).
+- **#76 — Modo oscuro:** `[data-theme="dark"]` en `styles.css` (todas las
+  variables: bg/surface/border/text/categorías). Dark overrides en `header.css`
+  (header, dropdown, drawer móvil), `settings.css`, `catalog.css`, `login.css`,
+  `personal-budget-cuotas.css` (CSS hardcodeados). Anti-FOUC inline script en los
+  13 HTML sin flash blanco. Tab "Apariencia" en settings → Auto/Claro/Oscuro,
+  persiste en `localStorage`, respeta `prefers-color-scheme` en modo Auto. i18n
+  ES/EN/FR. Bug colateral corregido: `switchTab` no incluía `notifications` en su
+  forEach — al cambiar tab no se ocultaba; ahora incluye `notifications` +
+  `appearance`.
+
+Commit: `0c1b0f6`
+
 ### Sesión 2026-06-18 — Ola 5: Backup R2 (claude)
 
 - **#128 Backup SQLite → Cloudflare R2:** activado el path S3 ya existente en
