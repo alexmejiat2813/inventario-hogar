@@ -83,9 +83,9 @@ riesgo, luego pulido UI, y al final arquitectura (requiere plan formal).
 - **Ola 3.5 — Correcciones auditoría Codex `/products` (Alta→Baja/Baja):**
   #228, #229, #230, #231. ✅
 - **Ola 4 — UI/layout:** #226+#227, #220, #221, #222, #192. ✅
-- **Ola 5 — Arquitectura (requiere `/plan`):** #199 (extraer servicios de
-  `database.js`), #207 (render helpers frontend). Alto blast radius.
-- **Ola 6 — Infra/durabilidad:** #128 (Litestream backup), #70 (minificación).
+- **Ola 5 — Infra/durabilidad:** #128 (backup R2). ✅
+- **Ola 6 — Arquitectura (requiere `/plan`):** #199 (extraer servicios de
+  `database.js`), #207 (render helpers frontend), #70 (minificación). Alto blast radius.
 - **Ola 7 — Requiere dispositivo:** #45 (foto→Dashboard Android).
 - **P5 — Roadmap producto (decisión de negocio):** #129, #130, #131, #132, #74,
   #75, #76, #133.
@@ -239,7 +239,7 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 | 69 | Chart.js lazy load | Chart.js carga en todas las páginas, solo se usa en dashboard de `/inventory`. Moverlo a script condicional. | Baja | Baja | ✅ |
 | 70 | Minificación JS/CSS | Build step con `esbuild` para minificar antes del deploy. ~20-30% adicional sobre gzip. Requiere ajustar CI y rutas de assets. | Media | Media | ⬜ |
 | 127 | Índice compuesto `(user_id, date, type)` en `personal_transactions` | Resuelto junto con #203: índice `idx_personal_tx_user_type_date(user_id, type, date)` (orden equality-first para las sumas income/expense) + reescritura de `strftime` a rango. Verificado SEARCH USING INDEX vía EXPLAIN QUERY PLAN. | Media | Baja | ✅ |
-| 128 | Litestream → R2/S3 backup SQLite | Fly volumes no son S3. Un crash del volumen = pérdida total de datos. Litestream replica WAL continuamente. Diferencia entre "perdimos todo" y "restauramos en 2 minutos". | Alta | Media | ⬜ |
+| 128 | Backup SQLite → Cloudflare R2 | Fly volumes no son S3. Un crash del volumen = pérdida total de datos. Backup diario vía cron (03:00 UTC) + upload S3-compatible a R2. Retención local 7 días. Ver `OPERATIONS.md` para restauración. | Alta | Media | ✅ (claude: activado upload R2 existente en `routes/backup.js`; secrets `S3_*` + `BACKUP_SECRET` en Fly; verificado `uploaded: true` manualmente) |
 | 208 | `updatePurchaseSession` no setea `category_id` al sincronizar `personal_transactions` | Tanto el INSERT como el UPDATE de la tx vinculada en `database.js` (~1816-1828) guardan `category` (texto) pero no `category_id`, a diferencia de `createPurchaseSession` (~1646). Al editar una compra la tx vinculada queda con `category_id=NULL`, debilitando la reconciliación por ID. Fix: resolver el id de `personal_budget_categories` por `(user_id, name)` e incluirlo en ambos paths. (Codex auditoría) (claude: resuelto, catRow en UPDATE+INSERT, 2 tests) | Alta | Baja | ✅ |
 | 209 | Ruta duplicada/divergente para editar compra | `routes/purchases.js` PUT `/:sessionId` aplica resolución de categoría + descuento + `userId`; pero `routes/inventories.js:199` PUT `/:id/purchases/:purchaseId` llama `updatePurchaseSession` sin `budgetCategory`/`discount`/`userId`, así que editar por ese camino pierde el vínculo de presupuesto y el descuento. Unificar en un único camino canónico (o redirigir la ruta de inventories al handler de purchases). (Codex auditoría) (claude: resuelto, ruta inventories llevada a paridad — descuento+budget+userId; era la que usa el frontend y perdía el descuento; 1 test HTTP) | Alta | Baja | ✅ |
 | 210 | `/api/backup` con `BACKUP_SECRET` inalcanzable sin sesión | `routes/backup.js:80` acepta header `x-backup-secret` O sesión admin, pero se monta (`server.js:183`) después de `app.use('/api', requireAuthApi)` (`server.js:158`). Un cron externo sin cookie recibe 401 antes de llegar al handler → la rama del secret nunca corre. Decidir diseño: montar backup antes del guard global con su propia auth por secret, o documentar que es solo admin con sesión y quitar el secret. (Codex auditoría) (claude: resuelto, montado antes de requireAuthApi; 2 tests de reachability) | Alta | Baja | ✅ |
@@ -263,6 +263,18 @@ Ordenado por prioridad descendente. Atacar en orden salvo que haya un motivo exp
 ---
 
 ## Trabajo completado (P4 — Calidad + Mejoras detectadas)
+
+### Sesión 2026-06-18 — Ola 5: Backup R2 (claude)
+
+- **#128 Backup SQLite → Cloudflare R2:** activado el path S3 ya existente en
+  `routes/backup.js`. Creado bucket `inventario-hogar-backups` en Cloudflare R2
+  (free tier). Generado API token R2 con scope `Object Read & Write` restringido
+  al bucket. Secrets `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`,
+  `S3_SECRET_ACCESS_KEY`, `S3_REGION=auto` y `BACKUP_SECRET` seteados en Fly vía
+  `flyctl secrets set`. Verificado manualmente: `POST /api/backup` →
+  `{ ok: true, uploaded: true, s3Status: 200 }`. Archivo visible en R2 dashboard.
+  Cron 03:00 UTC ya configurado en `fly.toml` — próximo backup automático.
+  Documentación completa en `OPERATIONS.md`.
 
 ### Sesión 2026-06-18 — Ola 3.5 Codex audit (claude)
 
