@@ -304,6 +304,18 @@ Commit: `0c1b0f6`
 
 Tests: 202 → 205. Lint: 0 errores.
 
+### Sesión 2026-06-18 — #76 fix UX: selector de tema al dropdown de perfil (claude)
+
+- **#76 fix UX:** Tab "Apariencia" quitado de `/settings` (era contexto de
+  inventario, no global). Toggle Auto/Claro/Oscuro inyectado dinámicamente en el
+  dropdown de perfil desde `header.js` (`_initThemeBtns`) — aplica a todas las
+  páginas incluyendo `/inventories`. CSS en `header.css` (`.theme-btn`,
+  `.theme-active`, dark overrides). Keys `profile.theme/themeAuto/themeLight/
+  themeDark` en ES/EN/FR. `switchTab` y `initAppearance` limpiados de
+  `settings.js`.
+
+Commit: `34c93df`
+
 ### Sesión 2026-06-18 — Gobernanza + Olas 1-2 (claude)
 
 Gobernanza de DEVELOPMENT.md establecida (atribución + numeración mecánica).
