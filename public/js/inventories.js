@@ -454,6 +454,9 @@ function initEvents() {
     }
   });
 
+  // Theme toggle in profile dropdown
+  if (typeof injectDropdownTheme === 'function') injectDropdownTheme();
+
   // Logout
   document.getElementById('btn-logout').addEventListener('click', async () => {
     closeProfileDropdown();

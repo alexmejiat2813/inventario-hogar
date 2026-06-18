@@ -88,25 +88,29 @@ function initProfileMenu() {
     });
   });
 
-  // Inject theme toggle after language selector
+  injectDropdownTheme();
+}
+
+function injectDropdownTheme() {
+  const menu = document.getElementById('profile-dropdown');
+  if (!menu) return;
   const langSection = menu.querySelector('.dropdown-lang');
-  if (langSection && !menu.querySelector('.dropdown-theme')) {
-    const label  = typeof t === 'function' ? t('profile.theme') : 'Tema';
-    const lAuto  = typeof t === 'function' ? t('profile.themeAuto')  : 'Auto';
-    const lLight = typeof t === 'function' ? t('profile.themeLight') : 'Claro';
-    const lDark  = typeof t === 'function' ? t('profile.themeDark')  : 'Oscuro';
-    const wrap = document.createElement('div');
-    wrap.className = 'dropdown-theme';
-    wrap.innerHTML =
-      '<span class="dropdown-lang-label">' + label + '</span>' +
-      '<div class="theme-btns">' +
-        '<button class="theme-btn" data-theme-val="auto">'  + lAuto  + '</button>' +
-        '<button class="theme-btn" data-theme-val="light">' + lLight + '</button>' +
-        '<button class="theme-btn" data-theme-val="dark">'  + lDark  + '</button>' +
-      '</div>';
-    langSection.insertAdjacentElement('afterend', wrap);
-    _initThemeBtns(menu);
-  }
+  if (!langSection || menu.querySelector('.dropdown-theme')) return;
+  const label  = typeof t === 'function' ? t('profile.theme') : 'Tema';
+  const lAuto  = typeof t === 'function' ? t('profile.themeAuto')  : 'Auto';
+  const lLight = typeof t === 'function' ? t('profile.themeLight') : 'Claro';
+  const lDark  = typeof t === 'function' ? t('profile.themeDark')  : 'Oscuro';
+  const wrap = document.createElement('div');
+  wrap.className = 'dropdown-theme';
+  wrap.innerHTML =
+    '<span class="dropdown-lang-label">' + label + '</span>' +
+    '<div class="theme-btns">' +
+      '<button class="theme-btn" data-theme-val="auto">'  + lAuto  + '</button>' +
+      '<button class="theme-btn" data-theme-val="light">' + lLight + '</button>' +
+      '<button class="theme-btn" data-theme-val="dark">'  + lDark  + '</button>' +
+    '</div>';
+  langSection.insertAdjacentElement('afterend', wrap);
+  _initThemeBtns(menu);
 }
 
 function _initThemeBtns(menu) {
